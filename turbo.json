@@ -4,7 +4,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*", "prisma/schema.prisma"],
       "outputs": ["dist/**", "build/**"]
     },
     "lint": {
@@ -16,7 +16,7 @@
     "dev": {
       "cache": false,
       "persistent": true,
-      "env": ["PORT", "NODE_ENV", "LOG_LEVEL", "DATABASE_URL"]
+      "env": ["PORT", "NODE_ENV", "LOG_LEVEL", "DATABASE_URL", "CORS_ORIGIN"]
     },
     "prisma:studio": {
       "cache": false,

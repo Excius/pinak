@@ -1,5 +1,7 @@
 import express from "express";
 import type { Server as HttpServer } from "http";
+import cors from "cors";
+import helmet from "helmet";
 import logger from "./lib/logger.js";
 import config from "./lib/config.js";
 import { ResponseHandler, errorHandler } from "./lib/response.js";
@@ -25,9 +27,49 @@ class Server {
 
     // Body parsing middleware
     this.app.use(express.json());
+
+    // CORS middleware
+    this.app.use(
+      cors({
+        origin: (origin, callback) => {
+          // Allow requests with no origin (like mobile apps or curl requests)
+          if (!origin) return callback(null, true);
+
+          // Check if the origin is in the allowed list
+          if (config.CORS_ORIGINS.includes(origin)) {
+            return callback(null, true);
+          }
+
+          // Reject the request
+          return callback(new Error("Not allowed by CORS"));
+        },
+        credentials: true,
+      }),
+    );
+
+    // Security middleware
+    this.app.use(
+      helmet({
+        contentSecurityPolicy: false, // API only
+        crossOriginResourcePolicy: { policy: "same-site" },
+        crossOriginOpenerPolicy: { policy: "same-origin" },
+        crossOriginEmbedderPolicy: false,
+        referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+        xFrameOptions: { action: "deny" },
+        noSniff: true,
+        // Configure HSTS (only in production with HTTPS)
+        hsts:
+          config.NODE_ENV === "production"
+            ? {
+                maxAge: 31536000,
+                includeSubDomains: true,
+                preload: true,
+              }
+            : false,
+      }),
+    );
+
     // Add other middleware here
-    // this.app.use(cors());
-    // this.app.use(helmet());
     // etc.
   }
 

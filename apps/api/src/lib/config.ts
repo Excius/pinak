@@ -26,17 +26,26 @@ class Config {
    */
   public readonly LOG_LEVEL: string;
 
-  /*
+  /**
    * The database connection URL.
    */
-
   public readonly DATABASE_URL: string;
+
+  /**
+   * The allowed origins for CORS requests.
+   * Comma-separated list of allowed origins.
+   * If undefined or empty, CORS is not restricted.
+   */
+  public readonly CORS_ORIGINS: string[];
 
   constructor() {
     this.NODE_ENV = process.env.NODE_ENV || "development";
     this.PORT = parseInt(process.env.PORT || "3000", 10);
     this.LOG_LEVEL = process.env.LOG_LEVEL || "info";
     this.DATABASE_URL = process.env.DATABASE_URL || "";
+    this.CORS_ORIGINS = process.env.CORS_ORIGIN 
+      ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim())
+      : [];
   }
 }
 
