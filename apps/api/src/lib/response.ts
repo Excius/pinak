@@ -1,4 +1,5 @@
 import { Response } from "express";
+import { BaseError } from "./error.js";
 
 /**
  * API Response Messages
@@ -241,6 +242,85 @@ class ResponseHandler {
     this.badRequest(res, message, errors);
   }
 }
+
+/**
+ * Global error handling middleware
+ * Catches all errors and sends appropriate responses
+ */
+export const errorHandler = (
+  error: Error,
+  req: any,
+  res: Response,
+  next: any,
+): void => {
+  let statusCode: number = 500;
+  let message: string = API_MESSAGES.INTERNAL_SERVER_ERROR;
+  let errors: any = undefined;
+
+  // Handle custom BaseError instances
+  if (error instanceof BaseError) {
+    statusCode = error.statusCode;
+    message = error.message;
+    errors = error.details;
+
+    // Log operational errors as warnings, programming errors as errors
+    if (error.isOperational) {
+      console.warn(`Operational Error: ${error.message}`, {
+        statusCode: error.statusCode,
+        errorCode: error.errorCode,
+        details: error.details,
+        stack: error.stack,
+      });
+    } else {
+      console.error(`Programming Error: ${error.message}`, {
+        statusCode: error.statusCode,
+        errorCode: error.errorCode,
+        details: error.details,
+        stack: error.stack,
+      });
+    }
+  } else {
+    // Handle unknown errors
+    console.error("Unknown Error:", error);
+
+    // In development, include error details
+    if (process.env.NODE_ENV === "development") {
+      errors = {
+        message: error.message,
+        stack: error.stack,
+      };
+    }
+  }
+
+  // Send appropriate response based on status code
+  switch (statusCode) {
+    case 400:
+      ResponseHandler.badRequest(res, message, errors);
+      break;
+    case 401:
+      ResponseHandler.unauthorized(res, message);
+      break;
+    case 403:
+      ResponseHandler.forbidden(res, message);
+      break;
+    case 404:
+      ResponseHandler.notFound(res, message);
+      break;
+    case 409:
+      ResponseHandler.conflict(res, message, errors);
+      break;
+    case 422:
+      ResponseHandler.unprocessableEntity(res, message, errors);
+      break;
+    case 429:
+      ResponseHandler.tooManyRequests(res, message);
+      break;
+    case 500:
+    default:
+      ResponseHandler.internalServerError(res, message, errors);
+      break;
+  }
+};
 
 // Singleton instance (for backward compatibility if needed)
 const responseHandler = ResponseHandler.getInstance();

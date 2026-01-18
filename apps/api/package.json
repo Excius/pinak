@@ -13,6 +13,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.2.1",
     "pino": "^9.7.0"
   },
   "devDependencies": {
@@ -20,6 +21,7 @@
     "@repo/eslint-config": "*",
     "@repo/types": "*",
     "@types/express": "^5.0.6",
+    "@types/express-rate-limit": "^5.1.3",
     "@types/node": "^22.19.7",
     "eslint": "^9.39.1",
     "globals": "^16.5.0",

@@ -2,7 +2,8 @@ import express from "express";
 import type { Server as HttpServer } from "http";
 import logger from "./lib/logger.js";
 import config from "./lib/config.js";
-import { ResponseHandler } from "./lib/response.js";
+import { ResponseHandler, errorHandler } from "./lib/response.js";
+import { createRateLimiter } from "./lib/rateLimit.js";
 
 class Server {
   private app: express.Application;
@@ -19,6 +20,9 @@ class Server {
   }
 
   private initializeMiddleware(): void {
+    // Rate limiting middleware
+    this.app.use(createRateLimiter());
+
     // Body parsing middleware
     this.app.use(express.json());
     // Add other middleware here
@@ -48,6 +52,9 @@ class Server {
 
     // Add other routes here
     // this.app.use('/api', apiRoutes);
+
+    // Add global error handling middleware (must be last)
+    this.app.use(errorHandler);
   }
 
   private setupGracefulShutdown(): void {
