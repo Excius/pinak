@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from "express";
 import { z } from "zod";
-import { ResponseHandler } from "./response.js";
 import { ValidationError } from "./error.js";
 
 /**
