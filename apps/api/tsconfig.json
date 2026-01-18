@@ -4,5 +4,6 @@
     "skipLibCheck": false,
     "outDir": "dist",
     "rootDir": "src"
-  }
+  },
+  "exclude": ["dist", "prisma.config.ts"]
 }
