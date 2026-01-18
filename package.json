@@ -1,0 +1,28 @@
+{
+  "name": "pinak",
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "dev:mobile": "turbo run dev --filter=mobile",
+    "dev:web": "turbo run dev --filter=web",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "check-types": "turbo run check-types",
+    "prisma:studio": "turbo run prisma:studio"
+  },
+  "devDependencies": {
+    "prettier": "^3.7.4",
+    "tsx": "^4.7.0",
+    "turbo": "^2.7.5",
+    "typescript": "5.9.2"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "packageManager": "npm@11.6.4",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
+}
