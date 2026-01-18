@@ -1,15 +1,15 @@
-import { config } from "dotenv";
-config({ path: "../../.env" });
 import express from "express";
+import logger from "./lib/logger.js";
+import config from "./lib/config.js";
 // import { ApiResponse } from "@repo/types";
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = config.PORT;
 
 app.get("/", (req, res) => {
   res.send("Hello, World!");
 });
 
 app.listen(port, () => {
-  console.log(`Server is running at http://localhost:${port}`);
+  logger.info(`Server is running at http://localhost:${port}`);
 });
