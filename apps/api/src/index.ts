@@ -6,6 +6,7 @@ import logger from "./lib/logger.js";
 import config from "./lib/config.js";
 import { ResponseHandler, errorHandler } from "./lib/response.js";
 import { createRateLimiter } from "./lib/rateLimit.js";
+import { prisma } from "./lib/prisma.js";
 
 class Server {
   private app: express.Application;
@@ -164,12 +165,15 @@ class Server {
     // Add your cleanup logic here
     // Close database connections, Redis clients, etc.
 
-    // Example cleanup operations:
-    // if (databaseConnection) {
-    //   await databaseConnection.close();
-    //   logger.info('Database connection closed');
-    // }
+    try {
+      // Close Prisma database connection
+      await prisma.$disconnect();
+      logger.info('Database connection closed');
+    } catch (error) {
+      logger.error('Error closing database connection:', error);
+    }
 
+    // Example cleanup operations for other services:
     // if (redisClient) {
     //   await redisClient.quit();
     //   logger.info('Redis connection closed');
@@ -180,8 +184,6 @@ class Server {
     //   logger.info('Message queue closed');
     // }
 
-    // Simulate async cleanup (remove this in real implementation)
-    await new Promise((resolve) => setTimeout(resolve, 100));
     logger.info("All cleanup operations completed");
   }
 
