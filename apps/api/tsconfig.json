@@ -1,0 +1,8 @@
+{
+  "extends": "../../packages/typescript-config/api.json",
+  "compilerOptions": {
+    "skipLibCheck": false,
+    "outDir": "dist",
+    "rootDir": "src"
+  }
+}
