@@ -1,101 +1,159 @@
-# Turborepo starter
+# Pinak
 
-This Turborepo starter is maintained by the Turborepo core team.
+A modern monorepo project built with Turborepo, featuring a Node.js API, Expo React Native mobile app, and Vite React web app. This setup provides a scalable foundation for full-stack development with shared packages for UI components, TypeScript configurations, and ESLint rules.
 
-## Using this example
+## Tech Stack
 
-Run the following command:
+- **Monorepo Management**: Turborepo
+- **Language**: TypeScript
+- **Linting & Formatting**: ESLint, Prettier
+- **API**: Node.js, Express, Prisma (PostgreSQL), Zod validation
+- **Mobile**: Expo, React Native, Expo Router
+- **Web**: Vite, React
+- **Shared Packages**: UI components (React), TypeScript configs, ESLint configs
 
-```sh
-npx create-turbo@latest
+## Apps and Packages
+
+### Apps
+
+- **`apps/api`**: Node.js REST API with Express, Prisma ORM, PostgreSQL database, rate limiting, logging, and input validation.
+- **`apps/mobile`**: Expo React Native app with navigation, haptic feedback, and shared UI components.
+- **`apps/web`**: Vite-based React web app with shared UI components.
+
+### Packages
+
+- **`packages/ui`**: Shared React component library (buttons, cards, etc.).
+- **`packages/eslint-config`**: Shared ESLint configurations for consistent code quality.
+- **`packages/types`**: Shared TypeScript type definitions.
+- **`packages/typescript-config`**: Shared TypeScript configurations for apps and packages.
+
+## Prerequisites
+
+- Node.js >= 18
+- npm (or yarn/pnpm)
+- PostgreSQL database (local or cloud, e.g., Prisma Postgres)
+- For mobile: Expo CLI (`npm install -g @expo/cli`)
+
+## Setup
+
+1. **Clone the repository**:
+
+   ```bash
+   git clone <repository-url>
+   cd pinak
+   ```
+
+2. **Install dependencies**:
+
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables**:
+   - Copy `.env.example` to `.env` in each app directory:
+     ```bash
+     cp apps/api/.env.example apps/api/.env
+     cp apps/web/.env.example apps/web/.env
+     cp apps/mobile/.env.example apps/mobile/.env
+     ```
+   - Edit each `.env` file with your actual values (see `ENV_SETUP.md` for details).
+   - For the API, ensure `DATABASE_URL` points to your PostgreSQL database.
+
+4. **Set up the database**:
+   - Navigate to the API app:
+     ```bash
+     cd apps/api
+     ```
+   - Generate Prisma client:
+     ```bash
+     npm run prisma:generate
+     ```
+   - Run database migrations:
+     ```bash
+     npm run prisma:migrate:dev
+     ```
+   - (Optional) Open Prisma Studio to view/edit data:
+     ```bash
+     npm run prisma:studio
+     ```
+
+5. **Build shared packages** (if needed):
+   ```bash
+   npm run build
+   ```
+
+## Running the Project
+
+### All Apps
+
+```bash
+npm run dev
 ```
 
-## What's inside?
+### Individual Apps
 
-This Turborepo includes the following packages/apps:
+- **API**:
+  ```bash
+  npm run dev:api  # or cd apps/api && npm run dev
+  ```
+- **Web**:
+  ```bash
+  npm run dev:web  # or cd apps/web && npm run dev
+  ```
+- **Mobile**:
+  ```bash
+  npm run dev:mobile  # or cd apps/mobile && npm run dev
+  ```
+  Then use Expo Go app or simulator.
 
-### Apps and Packages
+## Building
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+### All Apps and Packages
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+```bash
+npm run build
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+### Individual Apps
+
+- **API**: `cd apps/api && npm run build`
+- **Web**: `cd apps/web && npm run build`
+- **Mobile**: `cd apps/mobile && npx expo build`
+
+## Other Commands
+
+- **Linting**: `npm run lint`
+- **Type Checking**: `npm run check-types`
+- **Formatting**: `npm run format`
+- **Prisma Studio**: `npm run prisma:studio`
+
+## Project Structure
 
 ```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
+pinak/
+├── apps/
+│   ├── api/          # Node.js Express API with Prisma
+│   ├── mobile/       # Expo React Native app
+│   └── web/          # Vite React app
+├── packages/
+│   ├── ui/           # Shared React components
+│   ├── eslint-config/# Shared ESLint configs
+│   ├── types/        # Shared TypeScript types
+│   └── typescript-config/  # Shared TS configs
+├── package.json
+├── turbo.json
+└── README.md
 ```
 
-### Develop
+## Contributing
 
-To develop all apps and packages, run the following command:
+1. Follow the existing code style (ESLint + Prettier).
+2. Run tests and linting before committing.
+3. Use conventional commits for PRs.
 
-```
-cd my-turborepo
+## License
 
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
-
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
-
-```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+See `LICENSE` file.
 
 ```
 cd my-turborepo
