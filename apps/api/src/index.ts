@@ -2,6 +2,7 @@ import express from "express";
 import type { Server as HttpServer } from "http";
 import cors from "cors";
 import helmet from "helmet";
+import morgan from "morgan";
 import logger from "./lib/logger.js";
 import config from "./lib/config.js";
 import { ResponseHandler, errorHandler } from "./lib/response.js";
@@ -25,6 +26,13 @@ class Server {
   private initializeMiddleware(): void {
     // Rate limiting middleware
     this.app.use(createRateLimiter());
+
+    // HTTP request logging middleware
+    if (config.NODE_ENV === "development") {
+      this.app.use(morgan("dev"));
+    } else {
+      this.app.use(morgan("combined"));
+    }
 
     // Body parsing middleware
     this.app.use(express.json());
