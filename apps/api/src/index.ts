@@ -8,6 +8,8 @@ import config from "./lib/config.js";
 import { ResponseHandler, errorHandler } from "./lib/response.js";
 import { createRateLimiter } from "./lib/rateLimit.js";
 import { prisma } from "./lib/prisma.js";
+import apiRoutes from "./routes/index.js";
+import cookieParser from "cookie-parser";
 
 class Server {
   private app: express.Application;
@@ -36,6 +38,7 @@ class Server {
 
     // Body parsing middleware
     this.app.use(express.json());
+    this.app.use(cookieParser());
 
     // CORS middleware
     this.app.use(
@@ -83,11 +86,6 @@ class Server {
   }
 
   private initializeRoutes(): void {
-    // Root endpoint
-    this.app.get("/", (req, res) => {
-      ResponseHandler.success(res, { message: "Hello, World!" });
-    });
-
     // Health check endpoint
     this.app.get("/health", (req, res) => {
       ResponseHandler.success(
@@ -102,7 +100,7 @@ class Server {
     });
 
     // Add other routes here
-    // this.app.use('/api', apiRoutes);
+    this.app.use("/api/v1", apiRoutes);
 
     // Add global error handling middleware (must be last)
     this.app.use(errorHandler);
@@ -176,9 +174,9 @@ class Server {
     try {
       // Close Prisma database connection
       await prisma.$disconnect();
-      logger.info('Database connection closed');
+      logger.info("Database connection closed");
     } catch (error) {
-      logger.error('Error closing database connection:', error);
+      logger.error("Error closing database connection:", error);
     }
 
     // Example cleanup operations for other services:
