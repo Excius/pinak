@@ -5,6 +5,7 @@ import { prisma } from "../lib/prisma.js";
 import JWTService from "../lib/jwt.js";
 import { SessionRespository } from "../repositories/session.repository.js";
 import appConfig from "../lib/config.js";
+import { UserRespository } from "../repositories/user.repository.js";
 
 const router = Router();
 
@@ -16,10 +17,29 @@ const jwtService = new JWTService(
   appConfig.REFRESH_TOKEN_EXPIRY,
 );
 const sessionRepository = new SessionRespository(prisma);
-const authService = new AuthService(prisma, jwtService, sessionRepository);
+const userRespository = new UserRespository(prisma);
+const authService = new AuthService(
+  prisma,
+  jwtService,
+  sessionRepository,
+  userRespository,
+);
 const authController = new AuthController(authService);
 
 // Routes
+/**
+ * User Registration Route
+ */
+router.post("/register", authController.register);
+
+/**
+ * User Login Route
+ */
+router.post("/login", authController.login);
+
+/**
+ * Token Refresh Route
+ */
 router.post("/refresh", authController.refresh);
 
 export default router;

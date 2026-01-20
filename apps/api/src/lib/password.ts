@@ -4,7 +4,7 @@ import loggerInstance from "./logger.js";
 /**
  * Password hasher service using Argon2id algorithm.
  */
-class Passwordhasher {
+export class Passwordhasher {
   /**
    * Hashes a plain text password using Argon2id algorithm.
    * @param password The plain text password to hash.
@@ -38,5 +38,3 @@ class Passwordhasher {
     }
   }
 }
-
-export default new Passwordhasher();

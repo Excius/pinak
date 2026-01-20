@@ -5,26 +5,34 @@ import { SessionRespository } from "../repositories/session.repository.js";
 import argon2 from "argon2";
 import loggerInstance from "../lib/logger.js";
 import { UserRoles } from "@repo/types";
+import { UserRespository } from "../repositories/user.repository.js";
+import {
+  ConflictError,
+  InternalServerError,
+  UnauthorizedError,
+} from "../lib/error.js";
+import { Passwordhasher } from "../lib/password.js";
 
 export class AuthService {
   constructor(
     private prisma: PrismaClient,
     private jwt: JWTService,
     private sessions: SessionRespository,
+    private user: UserRespository,
   ) {}
 
-  async login(user: { id: string; role: UserRoles }): Promise<{
-    accessToken: string;
-    refreshToken: string;
-  }> {
+  async generateTokens(
+    userId: string,
+    role: UserRoles,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
     const session = await this.sessions.create({
-      userId: user.id,
+      userId,
       refreshHash: "",
       expiresAt: new Date(Date.now() + appConfig.REFRESH_TOKEN_EXPIRY),
     });
 
     const refreshToken = this.jwt.generateRefreshToken({
-      sub: user.id,
+      sub: userId,
       sessionId: session.id,
     });
 
@@ -33,10 +41,70 @@ export class AuthService {
     });
 
     return {
-      accessToken: this.jwt.generateAccessToken({
-        sub: user.id,
-        role: user.role,
-      }),
+      refreshToken,
+      accessToken: this.jwt.generateAccessToken({ sub: userId, role }),
+    };
+  }
+
+  async register(
+    email: string,
+    password: string,
+  ): Promise<{
+    accessToken: string;
+    refreshToken: string;
+  }> {
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: email },
+    });
+
+    if (existingUser) throw new ConflictError();
+
+    const passwordHash = await Passwordhasher.hashPassword(password);
+
+    const newUser = await this.user.create(email, passwordHash);
+
+    if (!newUser) {
+      loggerInstance.error("Error creating new user");
+      throw new InternalServerError();
+    }
+
+    const { refreshToken, accessToken } = await this.generateTokens(
+      newUser.id,
+      newUser.role as UserRoles,
+    );
+    return {
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+    };
+  }
+
+  async login(user: { email: string; password: string }): Promise<{
+    accessToken: string;
+    refreshToken: string;
+  }> {
+    const dbUser = await this.user.getUserByEmail(user.email);
+
+    if (!dbUser) {
+      throw new UnauthorizedError();
+    }
+
+    if (!dbUser.hashPassword) {
+      // TODO: Need to manage the case of user without password (OAuth user)
+      throw new UnauthorizedError();
+    }
+
+    if (
+      !(await Passwordhasher.verifyPassword(user.password, dbUser.hashPassword))
+    )
+      throw new UnauthorizedError();
+
+    const { refreshToken, accessToken } = await this.generateTokens(
+      dbUser.id,
+      dbUser.role as UserRoles,
+    );
+
+    return {
+      accessToken,
       refreshToken,
     };
   }
@@ -106,7 +174,7 @@ export class AuthService {
       return {
         accessToken: this.jwt.generateAccessToken({
           sub: payload!.sub,
-          role: (user!.role as string).toLowerCase() as UserRoles,
+          role: user!.role as UserRoles,
         }),
         refreshToken: newRefreshToken,
       };

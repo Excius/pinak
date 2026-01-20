@@ -1,6 +1,7 @@
 import jwt, { SignOptions } from "jsonwebtoken";
 import { AccessTokenPayload, RefreshTokenPayload } from "../types/jwt.types.js";
 import loggerInstance from "./logger.js";
+import { InternalServerError } from "./error.js";
 
 /**
  * Service for handling JWT token generation and verification.
@@ -22,7 +23,7 @@ class JWTService {
       } as SignOptions);
     } catch (error) {
       loggerInstance.error("Error generating JWT token:", error);
-      throw error;
+      throw new InternalServerError();
     }
   }
 
@@ -37,7 +38,7 @@ class JWTService {
       );
     } catch (error) {
       loggerInstance.error("Error generating JWT token:", error);
-      throw error;
+      throw new InternalServerError();
     }
   }
 
