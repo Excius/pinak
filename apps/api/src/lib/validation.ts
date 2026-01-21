@@ -60,6 +60,7 @@ export const validate = (
     try {
       const validatedData = schema.parse({
         [property]: req[property],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       }) as Record<string, any>;
       req[property] = validatedData[property];
       next();
@@ -79,39 +80,62 @@ export const validate = (
 
 /**
  * Combined validation middleware for multiple properties
- * @param schemas - Object with property names as keys and schemas as values
+ * @param schemaObj - Object with 'body', 'query', 'params' as optional keys and Zod schemas as values
  */
-export const validateMultiple = (schemas: Record<string, z.ZodSchema>) => {
+export const validateMultiple = (schemaObj: {
+  body?: z.ZodSchema;
+  query?: z.ZodSchema;
+  params?: z.ZodSchema;
+}) => {
   return (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const validatedData: Record<string, any> = {};
+    const validatedData: Record<string, any> = {};
+    const allErrors: Array<{ field: string; message: string }> = [];
 
-      for (const [property, schema] of Object.entries(schemas)) {
-        const result = schema.parse({
-          [property]: req[property as keyof Request],
-        }) as Record<string, any>;
-        validatedData[property] = result[property];
+    // Validate all properties and collect all errors
+    for (const [property, schema] of Object.entries(schemaObj)) {
+      if (!schema) continue; // Skip if no schema for this property
+      const prop = property as keyof Request;
+
+      try {
+        const result = schema.parse(req[prop]) as any;
+        validatedData[property] = result;
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          const propertyErrors = error.issues.map((err: z.ZodIssue) => ({
+            field: err.path.join("."),
+            message: err.message,
+          }));
+          allErrors.push(...propertyErrors);
+        }
       }
-
-      // Merge validated data back into request
-      Object.assign(req, validatedData);
-      next();
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const validationErrors = error.issues.map((err: z.ZodIssue) => ({
-          field: err.path.join("."),
-          message: err.message,
-        }));
-
-        throw new ValidationError("Validation failed", validationErrors);
-      }
-      next(error);
     }
+
+    // If there are any validation errors, throw them all
+    if (allErrors.length > 0) {
+      throw new ValidationError("Validation failed", allErrors);
+    }
+
+    // Merge validated data back into request (skip query as it's read-only)
+    if (validatedData.body) req.body = validatedData.body;
+    if (validatedData.params) req.params = validatedData.params;
+    // Note: req.query is read-only in Express, so we don't assign it back
+    next();
   };
 };
 
-/**
- * Type helper to infer validated request types
+/** * Auth validation schemas
+ */
+export const registerSchema = z.object({
+  email: z.email("Invalid email format"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+});
+
+export const loginSchema = z.object({
+  email: z.email("Invalid email format"),
+  password: z.string().min(1, "Password is required"),
+});
+
+/** * Type helper to infer validated request types
  */
 export type ValidatedRequest<T extends z.ZodSchema> = Omit<
   Request,

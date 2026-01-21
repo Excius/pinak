@@ -25,5 +25,8 @@
     "@types/node": "^22.15.3",
     "eslint": "^9.39.1",
     "typescript": "5.9.2"
+  },
+  "dependencies": {
+    "zod": "^4.3.5"
   }
 }

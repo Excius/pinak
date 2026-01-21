@@ -16,7 +16,17 @@
     "dev": {
       "cache": false,
       "persistent": true,
-      "env": ["PORT", "NODE_ENV", "LOG_LEVEL", "DATABASE_URL", "CORS_ORIGIN"]
+      "env": [
+        "PORT",
+        "NODE_ENV",
+        "LOG_LEVEL",
+        "DATABASE_URL",
+        "CORS_ORIGIN",
+        "CORS_ORIGINS",
+        "JWT_SECRET",
+        "REFRESH_TOKEN_EXPIRY",
+        "ACCESS_TOKEN_EXPIRY"
+      ]
     },
     "prisma:studio": {
       "cache": false,
