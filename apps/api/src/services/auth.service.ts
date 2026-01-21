@@ -53,11 +53,10 @@ export class AuthService {
     accessToken: string;
     refreshToken: string;
   }> {
-    const existingUser = await this.prisma.user.findUnique({
-      where: { email: email },
-    });
+    const existingUser = await this.user.getUserByEmail(email);
 
-    if (existingUser) throw new ConflictError();
+    // TODO: Need to send verification email instead of throwing error
+    if (existingUser) throw new ConflictError("Email already in use");
 
     const passwordHash = await Passwordhasher.hashPassword(password);
 
@@ -120,6 +119,13 @@ export class AuthService {
         where: { id: payload?.sessionId },
       });
 
+      if (session && session.expiresAt < new Date()) {
+        await tx.session.delete({
+          where: { id: session.id },
+        });
+        throw new UnauthorizedError("Refresh token expired");
+      }
+
       if (!session || session.isRevoked) {
         await tx.session.updateMany({
           where: { userId: payload?.sub },
@@ -128,7 +134,7 @@ export class AuthService {
         loggerInstance.warn(
           `Refresh token reuse detected for user ${payload?.sub}`,
         );
-        throw new Error("Token reuse detected");
+        throw new UnauthorizedError("Token reuse detected");
       }
 
       if (!(await argon2.verify(session.refreshHash, refreshToken))) {
@@ -140,20 +146,14 @@ export class AuthService {
         loggerInstance.warn(
           `Refresh token hash mismatch for user ${payload!.sub}`,
         );
-        throw new Error("Invalid refresh token");
+        throw new UnauthorizedError("Invalid refresh token");
       }
-
-      await tx.session.update({
-        where: { id: session.id },
-        data: { isRevoked: true },
-      });
 
       const newSession = await tx.session.create({
         data: {
           userId: payload!.sub,
           refreshHash: "",
           expiresAt: new Date(Date.now() + appConfig.REFRESH_TOKEN_EXPIRY),
-          rotatedFrom: session.id,
         },
       });
 
@@ -165,6 +165,10 @@ export class AuthService {
       await tx.session.update({
         where: { id: newSession.id },
         data: { refreshHash: await argon2.hash(newRefreshToken) },
+      });
+
+      await tx.session.deleteMany({
+        where: { OR: [{ id: session.id }, { expiresAt: { lt: new Date() } }] },
       });
 
       const user = await tx.user.findUnique({
@@ -182,6 +186,6 @@ export class AuthService {
   }
 
   async logout(sessionId: string): Promise<void> {
-    await this.sessions.revoke(sessionId);
+    await this.sessions.delete(sessionId);
   }
 }

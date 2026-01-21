@@ -6,6 +6,8 @@ import JWTService from "../lib/jwt.js";
 import { SessionRespository } from "../repositories/session.repository.js";
 import appConfig from "../lib/config.js";
 import { UserRespository } from "../repositories/user.repository.js";
+import { validateMultiple } from "../lib/validation.js";
+import { AuthTypes } from "@repo/types";
 
 const router = Router();
 
@@ -30,16 +32,28 @@ const authController = new AuthController(authService);
 /**
  * User Registration Route
  */
-router.post("/register", authController.register);
+router.post(
+  "/register",
+  validateMultiple(AuthTypes.RegisterUser),
+  authController.register,
+);
 
 /**
  * User Login Route
  */
-router.post("/login", authController.login);
+router.post(
+  "/login",
+  validateMultiple(AuthTypes.LoginUser),
+  authController.login,
+);
 
 /**
  * Token Refresh Route
  */
-router.post("/refresh", authController.refresh);
+router.post(
+  "/refresh",
+  validateMultiple(AuthTypes.RefreshToken),
+  authController.refresh,
+);
 
 export default router;

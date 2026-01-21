@@ -1,6 +1,7 @@
 // Common types used across the monorepo
 
 export * from './user.js';
+export * from './api/auth.js';
 
 export interface ApiResponse<T = unknown> {
   success: boolean;

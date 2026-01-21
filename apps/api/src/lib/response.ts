@@ -295,7 +295,7 @@ export const errorHandler = (
   // Send appropriate response based on status code
   switch (statusCode) {
     case 400:
-      ResponseHandler.badRequest(res, message);
+      ResponseHandler.badRequest(res, message, errors);
       break;
     case 401:
       ResponseHandler.unauthorized(res, message);

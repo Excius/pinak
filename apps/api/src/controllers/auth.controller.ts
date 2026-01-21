@@ -8,12 +8,6 @@ export class AuthController {
 
   register = async (req: Request, res: Response) => {
     const { email, password } = req.body;
-    if (!password || !email) {
-      return ResponseHandler.badRequest(
-        res,
-        "Email or Password is not provided.",
-      );
-    }
 
     const tokens = await this.auth.register(email, password);
 

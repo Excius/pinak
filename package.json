@@ -3,13 +3,15 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
+    "build:packages": "turbo run build --filter=./packages/*",
     "dev": "turbo run dev",
     "dev:mobile": "turbo run dev --filter=mobile",
-    "dev:web": "turbo run dev --filter=web",
+    "dev:api": "turbo run dev --filter=api",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
-    "prisma:studio": "turbo run prisma:studio"
+    "prisma:studio": "turbo run prisma:studio",
+    "prisma:generate": "turbo run prisma:generate"
   },
   "devDependencies": {
     "prettier": "^3.7.4",

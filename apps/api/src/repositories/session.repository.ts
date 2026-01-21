@@ -48,4 +48,10 @@ export class SessionRespository {
       data,
     });
   }
+
+  delete(id: string) {
+    return this.prisma.session.delete({
+      where: { id },
+    });
+  }
 }
