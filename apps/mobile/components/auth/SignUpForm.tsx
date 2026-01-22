@@ -1,4 +1,4 @@
-import { View, Text, TextInput, TouchableOpacity } from "react-native";
+import { View, Text, TextInput, Pressable } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useState } from "react";
 
@@ -42,7 +42,7 @@ export default function SignUpForm() {
             placeholderTextColor="rgba(181,170,163,0.5)"
           />
 
-          <TouchableOpacity
+          <Pressable
             onPress={() => setShowPassword(!showPassword)}
             className="absolute right-4"
           >
@@ -51,15 +51,15 @@ export default function SignUpForm() {
               size={22}
               color="#ca8881"
             />
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </View>
 
       {/* Sign Up Button */}
       <View className="pt-8">
-        <TouchableOpacity className="h-14 w-full items-center justify-center rounded-xl bg-primary active:opacity-90">
+        <Pressable className="h-14 w-full items-center justify-center rounded-xl bg-primary active:opacity-90">
           <Text className="text-white font-semibold text-base">Sign Up</Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
     </View>
   );

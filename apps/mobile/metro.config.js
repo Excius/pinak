@@ -21,4 +21,10 @@ config.resolver.extraNodeModules = {
   "react-dom": path.resolve(projectRoot, "node_modules/react-dom"),
 };
 
-module.exports = withNativeWind(config, { input: './global.css' })
+module.exports = withNativeWind(config, { 
+  input: './global.css',
+  // Disable CSS interop debugging warnings to prevent navigation context serialization errors
+  features: {
+    transformPercentagePolyfill: false,
+  },
+});

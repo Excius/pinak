@@ -1,11 +1,4 @@
-import {
-  View,
-  Text,
-  ScrollView,
-  Pressable,
-  Image,
-  TouchableOpacity,
-} from "react-native";
+import { View, Text, ScrollView, Pressable, Image } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useState } from "react";
 
@@ -35,7 +28,7 @@ export default function AuthScreen() {
       <View className="flex-1 px-6">
         {/* Segmented Buttons (Login / Sign Up Toggle) */}
         <View className="mb-8 flex-row rounded-2xl bg-primary/10 p-1.5">
-          <TouchableOpacity
+          <Pressable
             onPress={() => setIsLogin(true)}
             className={`flex-1 items-center justify-center rounded-lg py-2.5 ${
               isLogin ? "bg-white shadow-sm" : ""
@@ -48,8 +41,8 @@ export default function AuthScreen() {
             >
               Login
             </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
+          </Pressable>
+          <Pressable
             onPress={() => setIsLogin(false)}
             className={`flex-1 items-center justify-center rounded-lg py-2.5 ${
               !isLogin ? "bg-white shadow-sm" : ""
@@ -62,7 +55,7 @@ export default function AuthScreen() {
             >
               Sign Up
             </Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
 
         {/* Intro Text */}
