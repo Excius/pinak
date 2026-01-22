@@ -1,6 +1,6 @@
 import { View, Text, ScrollView, Pressable, Image } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import { Svg, Path } from 'react-native-svg';
+import { Svg, Path } from "react-native-svg";
 import { useState } from "react";
 
 import SignInForm from "@/components/auth/SigninForm";
