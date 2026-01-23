@@ -6,13 +6,10 @@ import argon2 from "argon2";
 import loggerInstance from "../lib/logger.js";
 import { UserRoles } from "@repo/types";
 import { UserRespository } from "../repositories/user.repository.js";
-import {
-  ConflictError,
-  InternalServerError,
-  UnauthorizedError,
-} from "../lib/error.js";
+import { InternalServerError, UnauthorizedError } from "../lib/error.js";
 import { Passwordhasher } from "../lib/password.js";
 import { MailService } from "./mail.service.js";
+import { MagicLinkService } from "./magicLink.service.js";
 
 export class AuthService {
   constructor(
@@ -20,6 +17,7 @@ export class AuthService {
     private jwt: JWTService,
     private sessions: SessionRespository,
     private user: UserRespository,
+    private magicLink: MagicLinkService,
   ) {}
 
   async generateTokens(
@@ -51,17 +49,29 @@ export class AuthService {
     email: string,
     password: string,
     username: string,
-  ): Promise<{
-    accessToken: string;
-    refreshToken: string;
-  }> {
+    platform: string,
+  ): Promise<void> {
     const existingUser = await this.user.getUserByEmailOrUsername(
       email,
       username,
     );
 
-    // TODO: Need to send verification email instead of throwing error
-    if (existingUser) throw new ConflictError("Email already in use");
+    if (existingUser) {
+      const delay = 1000 + Math.random() * 500; // Mitigate user enumeration
+      if (existingUser.username === username) {
+        loggerInstance.warn(
+          `Attempt to register with existing username: ${username}`,
+        );
+        setTimeout(() => {}, delay);
+        throw new UnauthorizedError("Username already in use");
+      } else if (existingUser.email === email) {
+        loggerInstance.warn(
+          `Attempt to register with existing email: ${email}`,
+        );
+        setTimeout(() => {}, delay);
+        return;
+      }
+    }
 
     const passwordHash = await Passwordhasher.hashPassword(password);
 
@@ -72,30 +82,40 @@ export class AuthService {
       throw new InternalServerError();
     }
 
-    MailService.sendWelcomeEmail(newUser.email, newUser.username).catch(
-      (err) => {
-        loggerInstance.error("Failed to send welcome email:", err);
-      },
-    );
+    const token = await this.magicLink.createEmailVerificationToken(newUser.id);
 
-    const { refreshToken, accessToken } = await this.generateTokens(
-      newUser.id,
-      newUser.role as UserRoles,
-    );
-    return {
-      accessToken: accessToken,
-      refreshToken: refreshToken,
-    };
+    const verificationLink =
+      platform === "mobile"
+        ? `${appConfig.MOBILE_APP_URL}/verify-email?token=${token}`
+        : `${appConfig.FRONTEND_URL}/verify-email?token=${token}`;
+
+    MailService.sendVerificationEmail({
+      name: newUser.username,
+      to: newUser.email,
+      verificationLink,
+    }).catch((err) => {
+      loggerInstance.error("Failed to send welcome email:", err);
+    });
+
+    return;
   }
 
   async login(user: { email: string; password: string }): Promise<{
     accessToken: string;
     refreshToken: string;
   }> {
-    const dbUser = await this.user.getUserByEmail(user.email);
+    const userEmail = user.email.trim();
+    const dbUser = await this.user.getUserByEmail(userEmail);
 
     if (!dbUser) {
       throw new UnauthorizedError();
+    }
+
+    if (dbUser.isEmailVerified === false) {
+      loggerInstance.warn(
+        `Unverified email login attempt for user ID: ${dbUser.id}`,
+      );
+      throw new UnauthorizedError("Email not verified");
     }
 
     if (!dbUser.hashPassword) {
@@ -220,5 +240,29 @@ export class AuthService {
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };
+  }
+
+  async verifyEmail(
+    token: string,
+    userId: string,
+  ): Promise<{
+    accessToken: string;
+    refreshToken: string;
+  }> {
+    const dbUserId = await this.magicLink.validateEmailVerificationToken(token);
+    if (!dbUserId) {
+      throw new UnauthorizedError("Invalid or expired verification token");
+    }
+
+    if (dbUserId !== userId) {
+      throw new UnauthorizedError("Token does not match user");
+    }
+
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: { isEmailVerified: true },
+    });
+
+    return await this.generateTokens(userId, user.role as UserRoles);
   }
 }

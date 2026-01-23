@@ -31,7 +31,12 @@
         "SMTP_PORT",
         "SMTP_USER",
         "SMTP_PASS",
-        "SMTP_SECURE"
+        "SMTP_SECURE",
+        "FORGOT_PASSWWORD_EXPIRY_MINUTES",
+        "EMAIL_VERIFICATION_EXPIRY_HOURS",
+        "BACKEND_URL",
+        "FRONTEND_URL",
+        "MOBILE_APP_URL"
       ]
     },
     "prisma:studio": {

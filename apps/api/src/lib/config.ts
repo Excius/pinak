@@ -86,6 +86,34 @@ class Config {
    */
   public readonly SMTP_PASS?: string;
 
+  /**
+   * The expiry time for forgot password links in minutes.
+   */
+  public readonly FORGOT_PASSWWORD_EXPIRY_MINUTES: number;
+
+  /**
+   * The expiry time for email verification links in hours.
+   */
+  public readonly EMAIL_VERIFICATION_EXPIRY_HOURS: number;
+
+  /**
+   * The backend URL of the application.
+   * Used for constructing links in emails.
+   */
+  public readonly BACKEND_URL: string;
+
+  /**
+   * The mobile app URL scheme.
+   * Used for constructing links in emails for mobile platforms.
+   */
+  public readonly MOBILE_APP_URL: string;
+
+  /**
+   * The frontend URL of the application.
+   * Used for constructing links in emails.
+   */
+  public readonly FRONTEND_URL: string;
+
   constructor() {
     this.NODE_ENV = process.env.NODE_ENV || "development";
     this.PORT = parseInt(process.env.PORT || "3000", 10);
@@ -135,6 +163,20 @@ class Config {
     this.SMTP_USER = process.env.SMTP_USER;
 
     this.SMTP_PASS = process.env.SMTP_PASS;
+
+    this.FORGOT_PASSWWORD_EXPIRY_MINUTES = parseInt(
+      process.env.FORGOT_PASSWWORD_EXPIRY_MINUTES || "15",
+      10,
+    ); // Default: 15 minutes
+
+    this.EMAIL_VERIFICATION_EXPIRY_HOURS = parseInt(
+      process.env.EMAIL_VERIFICATION_EXPIRY_HOURS || "24",
+      10,
+    ); // Default: 24 hours
+
+    this.BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3000";
+    this.MOBILE_APP_URL = process.env.MOBILE_APP_URL || "myapp://app";
+    this.FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
   }
 }
 
