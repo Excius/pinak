@@ -25,7 +25,11 @@ export class AuthController {
       maxAge: appConfig.REFRESH_TOKEN_EXPIRY,
     });
 
-    ResponseHandler.success(res, {}, "Registration successful");
+    ResponseHandler.success(
+      res,
+      { accessToken: tokens.accessToken },
+      "Registration successful",
+    );
   };
 
   login = async (req: Request, res: Response) => {
@@ -51,7 +55,11 @@ export class AuthController {
       maxAge: appConfig.REFRESH_TOKEN_EXPIRY,
     });
 
-    ResponseHandler.success(res, {}, "Login successful");
+    ResponseHandler.success(
+      res,
+      { accessToken: tokens.accessToken },
+      "Login successful",
+    );
   };
 
   refresh = async (req: Request, res: Response) => {
@@ -72,7 +80,11 @@ export class AuthController {
       maxAge: appConfig.REFRESH_TOKEN_EXPIRY,
     });
 
-    ResponseHandler.success(res, {}, "Token refresh successful");
+    ResponseHandler.success(
+      res,
+      { accessToken: tokens.accessToken },
+      "Token refresh successful",
+    );
   };
 
   logout = async (_req: Request, res: Response) => {

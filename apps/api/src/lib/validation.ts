@@ -86,6 +86,7 @@ export const validateMultiple = (schemaObj: {
   body?: z.ZodSchema;
   query?: z.ZodSchema;
   params?: z.ZodSchema;
+  response?: z.ZodSchema; // Ignored for input validation
 }) => {
   return (req: Request, res: Response, next: NextFunction) => {
     const validatedData: Record<string, any> = {};
@@ -93,11 +94,13 @@ export const validateMultiple = (schemaObj: {
 
     // Validate all properties and collect all errors
     for (const [property, schema] of Object.entries(schemaObj)) {
-      if (!schema) continue; // Skip if no schema for this property
-      const prop = property as keyof Request;
+      // Only validate input properties: body, query, params
+      if (property === "response" || !schema) continue;
+      const prop = property as "body" | "query" | "params";
 
       try {
-        const result = schema.parse(req[prop]) as any;
+        const input = req[prop] !== undefined ? req[prop] : {};
+        const result = schema.parse(input) as any;
         validatedData[property] = result;
       } catch (error) {
         if (error instanceof z.ZodError) {

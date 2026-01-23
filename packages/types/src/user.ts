@@ -1,4 +1,5 @@
 // User-related types
+import { z } from "zod";
 
 export type UserRoles = "ADMIN" | "MODERATOR" | "USER";
 export type UserStatus = "ACTIVE" | "INACTIVE" | "DELETED";
@@ -12,6 +13,16 @@ export interface User {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export const UserSchema = z.object({
+  id: z.string(),
+  email: z.string(),
+  username: z.string(),
+  name: z.string().nullable(),
+  role: z.enum(["ADMIN", "MODERATOR", "USER"]),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
 
 export interface CreateUserRequest {
   email: string;

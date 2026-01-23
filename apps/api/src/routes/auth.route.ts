@@ -8,6 +8,7 @@ import appConfig from "../lib/config.js";
 import { UserRespository } from "../repositories/user.repository.js";
 import { validateMultiple } from "../lib/validation.js";
 import { AuthTypes } from "@repo/types";
+import { AuthMiddleware } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
@@ -27,6 +28,7 @@ const authService = new AuthService(
   userRespository,
 );
 const authController = new AuthController(authService);
+const authMiddleware = new AuthMiddleware(jwtService);
 
 // Routes
 /**
@@ -68,6 +70,11 @@ router.post(
 /**
  * Get Current User Route
  */
-router.get("/me", authController.me);
+router.get(
+  "/me",
+  validateMultiple(AuthTypes.Me),
+  authMiddleware.authenticate,
+  authController.me,
+);
 
 export default router;
