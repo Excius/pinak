@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { UserSchema } from "../user.js";
 
 export const AuthTypes = {
   RegisterUser: {
@@ -19,6 +20,9 @@ export const AuthTypes = {
       // optional query example
       redirect: z.string().optional(),
     }),
+    response: z.object({
+      accessToken: z.string(),
+    }),
   },
 
   LoginUser: {
@@ -28,18 +32,32 @@ export const AuthTypes = {
     }),
     params: z.object({}),
     query: z.object({}),
+    response: z.object({
+      accessToken: z.string(),
+    }),
   },
 
   RefreshToken: {
     body: z.object({}),
     params: z.object({}),
     query: z.object({}),
+    response: z.object({
+      accessToken: z.string(),
+    }),
   },
 
   LogoutUser: {
     body: z.object({}),
     params: z.object({}),
     query: z.object({}),
+    response: z.object({}),
+  },
+
+  Me: {
+    body: z.object({}),
+    params: z.object({}),
+    query: z.object({}),
+    response: UserSchema,
   },
 };
 
@@ -55,3 +73,15 @@ export type RefreshTokenQuery = z.infer<typeof AuthTypes.RefreshToken.query>;
 export type LogoutUserBody = z.infer<typeof AuthTypes.LogoutUser.body>;
 export type LogoutUserParams = z.infer<typeof AuthTypes.LogoutUser.params>;
 export type LogoutUserQuery = z.infer<typeof AuthTypes.LogoutUser.query>;
+export type MeBody = z.infer<typeof AuthTypes.Me.body>;
+export type MeParams = z.infer<typeof AuthTypes.Me.params>;
+export type MeQuery = z.infer<typeof AuthTypes.Me.query>;
+export type RegisterUserResponse = z.infer<
+  typeof AuthTypes.RegisterUser.response
+>;
+export type LoginUserResponse = z.infer<typeof AuthTypes.LoginUser.response>;
+export type RefreshTokenResponse = z.infer<
+  typeof AuthTypes.RefreshToken.response
+>;
+export type LogoutUserResponse = z.infer<typeof AuthTypes.LogoutUser.response>;
+export type MeResponse = z.infer<typeof AuthTypes.Me.response>;
