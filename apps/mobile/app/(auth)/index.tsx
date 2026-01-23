@@ -60,18 +60,23 @@ export default function AuthScreen() {
         </View>
 
         {/* Intro Text */}
-        <View className="mb-8">
-          <Text className="font-display text-2xl font-bold text-[#181211] mb-2">
-            Welcome back
-          </Text>
-          <Text className="text-muted-taupe text-sm">
-            Experience the ritual of expert-led beauty.
-          </Text>
-        </View>
+        {isLogin && (
+          <View className="mb-8">
+            <Text className="font-display text-2xl font-bold text-[#181211] mb-2">
+              Welcome back
+            </Text>
+            <Text className="text-muted-taupe text-sm">
+              Experience the ritual of expert-led beauty.
+            </Text>
+          </View>
+        )}
 
         {/* Login Form */}
-        {isLogin ? <SignInForm /> : <SignUpForm />}
-
+        {isLogin ? (
+          <SignInForm />
+        ) : (
+          <SignUpForm onSuccess={() => setIsLogin(true)} />
+        )}
         {/* Divider */}
         <View className="my-8 flex-row items-center gap-4">
           <View className="flex-1 h-px bg-soft-border/60" />

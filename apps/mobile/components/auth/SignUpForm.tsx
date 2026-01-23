@@ -1,11 +1,45 @@
-import { View, Text, TextInput, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  ActivityIndicator,
+} from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useState } from "react";
+import { signup } from "@/services/auth.service";
+import { toastSucess, toastError } from "@/libs/toast";
 
-export default function SignUpForm() {
+type Props = {
+  onSuccess?: () => void;
+};
+
+export default function SignUpForm({ onSuccess }: Props) {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const isFormValid = email.trim() && username.trim() && password.trim();
+
+  const handlleSignUp = async () => {
+    if (!isFormValid) return;
+
+    setIsLoading(true);
+    try {
+      await signup(email, username, password);
+      toastSucess("Sign-up successful! Welcome aboard.");
+      setEmail("");
+      setUsername("");
+      setPassword("");
+      onSuccess?.();
+    } catch (err: any) {
+      toastError("Sign-up failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <View className="space-y-4">
@@ -21,6 +55,23 @@ export default function SignUpForm() {
           autoCapitalize="none"
           value={email}
           onChangeText={setEmail}
+          className="h-14 w-full rounded-xl border border-soft-border bg-white px-4 text-base text-[#181211]"
+          placeholderTextColor="rgba(181,170,163,0.5)"
+        />
+      </View>
+
+      {/* Username Field */}
+      <View className="flex flex-col pt-5">
+        <Text className="text-muted-taupe text-xs font-semibold uppercase tracking-wider pb-1.5 pl-1">
+          Username
+        </Text>
+
+        <TextInput
+          placeholder="Enter your username"
+          keyboardType="default"
+          autoCapitalize="none"
+          value={username}
+          onChangeText={setUsername}
           className="h-14 w-full rounded-xl border border-soft-border bg-white px-4 text-base text-[#181211]"
           placeholderTextColor="rgba(181,170,163,0.5)"
         />
@@ -57,8 +108,20 @@ export default function SignUpForm() {
 
       {/* Sign Up Button */}
       <View className="pt-8">
-        <Pressable className="h-14 w-full items-center justify-center rounded-xl bg-primary active:opacity-90">
-          <Text className="text-white font-semibold text-base">Sign Up</Text>
+        <Pressable
+          onPress={handlleSignUp}
+          disabled={!isFormValid || isLoading}
+          className={`h-14 w-full items-center justify-center rounded-xl ${
+            isFormValid && !isLoading
+              ? "bg-primary active:opacity-90"
+              : "bg-primary/50"
+          }`}
+        >
+          {isLoading ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Text className="text-white font-semibold text-base">Sign Up</Text>
+          )}
         </Pressable>
       </View>
     </View>
