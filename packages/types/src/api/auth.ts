@@ -7,6 +7,9 @@ export const AuthTypes = {
       password: z
         .string()
         .min(8, "Password must be at least 8 characters long"),
+      username: z
+        .string()
+        .min(3, "Username must be at least 3 characters long"),
     }),
     params: z.object({
       // no path params for register by default; add here if needed
@@ -32,6 +35,12 @@ export const AuthTypes = {
     params: z.object({}),
     query: z.object({}),
   },
+
+  LogoutUser: {
+    body: z.object({}),
+    params: z.object({}),
+    query: z.object({}),
+  },
 };
 
 export type RegisterUserBody = z.infer<typeof AuthTypes.RegisterUser.body>;
@@ -43,3 +52,6 @@ export type LoginUserQuery = z.infer<typeof AuthTypes.LoginUser.query>;
 export type RefreshTokenBody = z.infer<typeof AuthTypes.RefreshToken.body>;
 export type RefreshTokenParams = z.infer<typeof AuthTypes.RefreshToken.params>;
 export type RefreshTokenQuery = z.infer<typeof AuthTypes.RefreshToken.query>;
+export type LogoutUserBody = z.infer<typeof AuthTypes.LogoutUser.body>;
+export type LogoutUserParams = z.infer<typeof AuthTypes.LogoutUser.params>;
+export type LogoutUserQuery = z.infer<typeof AuthTypes.LogoutUser.query>;

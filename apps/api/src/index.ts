@@ -118,7 +118,7 @@ class Server {
     });
 
     process.on("unhandledRejection", (reason, promise) => {
-      logger.fatal("Unhandled Rejection at:", promise, "reason:", reason);
+      logger.fatal("Unhandled Rejection", { promise, reason });
       this.forceShutdown(1);
     });
   }

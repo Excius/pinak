@@ -12,6 +12,7 @@ import {
   UnauthorizedError,
 } from "../lib/error.js";
 import { Passwordhasher } from "../lib/password.js";
+import { MailService } from "./mail.service.js";
 
 export class AuthService {
   constructor(
@@ -49,23 +50,33 @@ export class AuthService {
   async register(
     email: string,
     password: string,
+    username: string,
   ): Promise<{
     accessToken: string;
     refreshToken: string;
   }> {
-    const existingUser = await this.user.getUserByEmail(email);
+    const existingUser = await this.user.getUserByEmailOrUsername(
+      email,
+      username,
+    );
 
     // TODO: Need to send verification email instead of throwing error
     if (existingUser) throw new ConflictError("Email already in use");
 
     const passwordHash = await Passwordhasher.hashPassword(password);
 
-    const newUser = await this.user.create(email, passwordHash);
+    const newUser = await this.user.create(email, passwordHash, username);
 
     if (!newUser) {
       loggerInstance.error("Error creating new user");
       throw new InternalServerError();
     }
+
+    MailService.sendWelcomeEmail(newUser.email, newUser.username).catch(
+      (err) => {
+        loggerInstance.error("Failed to send welcome email:", err);
+      },
+    );
 
     const { refreshToken, accessToken } = await this.generateTokens(
       newUser.id,
@@ -187,5 +198,27 @@ export class AuthService {
 
   async logout(sessionId: string): Promise<void> {
     await this.sessions.delete(sessionId);
+  }
+
+  async me(userId: string | undefined) {
+    if (!userId) {
+      throw new UnauthorizedError("User not authenticated");
+    }
+
+    const user = await this.user.getUserById(userId);
+
+    if (!user) {
+      throw new UnauthorizedError("User not found");
+    }
+
+    return {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      name: user.name,
+      role: user.role,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
   }
 }

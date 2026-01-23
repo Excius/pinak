@@ -10,8 +10,7 @@
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
-    "prisma:studio": "turbo run prisma:studio",
-    "prisma:generate": "turbo run prisma:generate"
+    "prisma:studio": "turbo run prisma:studio"
   },
   "devDependencies": {
     "prettier": "^3.7.4",

@@ -56,6 +56,36 @@ class Config {
    */
   public readonly ACCESS_TOKEN_EXPIRY: number;
 
+  /**
+   * The email address used as the sender in outgoing emails.
+   */
+  public readonly MAIL_FROM: string;
+
+  /**
+   * The SMTP server host for sending emails.
+   */
+  public readonly SMTP_HOST: string;
+
+  /**
+   * The SMTP server port.
+   */
+  public readonly SMTP_PORT: number;
+
+  /**
+   * Whether to use a secure connection (TLS) for SMTP.
+   */
+  public readonly SMTP_SECURE: boolean;
+
+  /**
+   * The SMTP username for authentication (if required).
+   */
+  public readonly SMTP_USER?: string;
+
+  /**
+   * The SMTP password for authentication (if required).
+   */
+  public readonly SMTP_PASS?: string;
+
   constructor() {
     this.NODE_ENV = process.env.NODE_ENV || "development";
     this.PORT = parseInt(process.env.PORT || "3000", 10);
@@ -78,7 +108,6 @@ class Config {
     if (this.CORS_ORIGINS.length === 0) {
       throw new Error("CORS_ORIGINS environment variable is required");
     }
-
     this.REFRESH_TOKEN_EXPIRY = parseInt(
       process.env.REFRESH_TOKEN_EXPIRY || "2592000000",
       10,
@@ -88,6 +117,24 @@ class Config {
       process.env.ACCESS_TOKEN_EXPIRY || "900000",
       10,
     ); // Default: 15 minutes
+
+    if (!process.env.MAIL_FROM) {
+      throw new Error("MAIL_FROM environment variable is required");
+    }
+    this.MAIL_FROM = process.env.MAIL_FROM;
+
+    if (!process.env.SMTP_HOST) {
+      throw new Error("SMTP_HOST environment variable is required");
+    }
+    this.SMTP_HOST = process.env.SMTP_HOST;
+
+    this.SMTP_PORT = parseInt(process.env.SMTP_PORT || "587", 10); // Default: 587
+
+    this.SMTP_SECURE = process.env.SMTP_SECURE === "true"; // Default: false
+
+    this.SMTP_USER = process.env.SMTP_USER;
+
+    this.SMTP_PASS = process.env.SMTP_PASS;
   }
 }
 
