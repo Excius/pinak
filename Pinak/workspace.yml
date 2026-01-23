@@ -6,7 +6,11 @@ info:
 collections:
   - name: "Auth"
     path: "collections/Auth"
+  - name: "Mis"
+    path: "collections/Mis"
 
 specs:
 
 docs: ''
+
+activeEnvironmentUid: 1yeqfcn00000000000000

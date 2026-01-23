@@ -7,9 +7,9 @@ export class AuthController {
   constructor(private auth: AuthService) {}
 
   register = async (req: Request, res: Response) => {
-    const { email, password } = req.body;
+    const { email, password, username } = req.body;
 
-    const tokens = await this.auth.register(email, password);
+    const tokens = await this.auth.register(email, password, username);
 
     res.cookie("accessToken", tokens.accessToken, {
       httpOnly: true,
@@ -73,5 +73,19 @@ export class AuthController {
     });
 
     ResponseHandler.success(res, {}, "Token refresh successful");
+  };
+
+  logout = async (_req: Request, res: Response) => {
+    res.clearCookie("accessToken");
+    res.clearCookie("refreshToken");
+
+    ResponseHandler.success(res, {}, "Logout successful");
+  };
+
+  me = async (req: Request, res: Response) => {
+    const userId = req.user?.id;
+
+    const user = await this.auth.me(userId);
+    return ResponseHandler.success(res, user, "User fetched successfully");
   };
 }

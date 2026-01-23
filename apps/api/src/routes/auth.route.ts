@@ -56,4 +56,18 @@ router.post(
   authController.refresh,
 );
 
+/**
+ * User Logout Route
+ */
+router.post(
+  "/logout",
+  validateMultiple(AuthTypes.LogoutUser),
+  authController.logout,
+);
+
+/**
+ * Get Current User Route
+ */
+router.get("/me", authController.me);
+
 export default router;

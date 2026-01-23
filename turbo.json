@@ -25,7 +25,13 @@
         "CORS_ORIGINS",
         "JWT_SECRET",
         "REFRESH_TOKEN_EXPIRY",
-        "ACCESS_TOKEN_EXPIRY"
+        "ACCESS_TOKEN_EXPIRY",
+        "MAIL_FROM",
+        "SMTP_HOST",
+        "SMTP_PORT",
+        "SMTP_USER",
+        "SMTP_PASS",
+        "SMTP_SECURE"
       ]
     },
     "prisma:studio": {
