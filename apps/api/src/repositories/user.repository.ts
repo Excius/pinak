@@ -36,4 +36,11 @@ export class UserRespository {
       data: { email: email, hashPassword: hashPassword, username: username },
     });
   }
+
+  updateUserPassword(userId: string, newHashedPassword: string) {
+    return this.primsa.user.update({
+      where: { id: userId },
+      data: { hashPassword: newHashedPassword },
+    });
+  }
 }

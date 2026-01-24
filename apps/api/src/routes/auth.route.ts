@@ -11,6 +11,7 @@ import { AuthTypes } from "@repo/types";
 import { AuthMiddleware } from "../middlewares/auth.middleware.js";
 import { MagicLinkService } from "../services/magicLink.service.js";
 import { MagicLinkRepository } from "../repositories/magicLink.repository.js";
+import { createAuthRateLimiter } from "../lib/rateLimit.js";
 
 const router = Router();
 
@@ -34,8 +35,7 @@ const authService = new AuthService(
 );
 const authController = new AuthController(authService);
 const authMiddleware = new AuthMiddleware(jwtService);
-
-//TODO: limit the requests more that normal
+const authRateLimiter = createAuthRateLimiter();
 
 // Routes
 /**
@@ -43,6 +43,7 @@ const authMiddleware = new AuthMiddleware(jwtService);
  */
 router.post(
   "/register",
+  authRateLimiter,
   validateMultiple(AuthTypes.RegisterUser),
   authController.register,
 );
@@ -52,6 +53,7 @@ router.post(
  */
 router.post(
   "/login",
+  authRateLimiter,
   validateMultiple(AuthTypes.LoginUser),
   authController.login,
 );
@@ -61,6 +63,7 @@ router.post(
  */
 router.post(
   "/refresh",
+  authRateLimiter,
   validateMultiple(AuthTypes.RefreshToken),
   authController.refresh,
 );
@@ -70,8 +73,39 @@ router.post(
  */
 router.post(
   "/logout",
+  authRateLimiter,
   validateMultiple(AuthTypes.LogoutUser),
   authController.logout,
+);
+
+/**
+ * Forgot Password Route
+ */
+router.post(
+  "/forgot-password",
+  authRateLimiter,
+  validateMultiple(AuthTypes.ForgotPassword),
+  authController.forgotPassword,
+);
+
+/**
+ * Email Verification Route
+ */
+router.post(
+  "/verify-email",
+  authRateLimiter,
+  validateMultiple(AuthTypes.VerifyEmail),
+  authController.verifyEmail,
+);
+
+/**
+ * Verify Password Route
+ */
+router.post(
+  "/verify-password",
+  authRateLimiter,
+  validateMultiple(AuthTypes.VerifyPassword),
+  authController.verifyPassword,
 );
 
 /**
@@ -84,13 +118,6 @@ router.get(
   authController.me,
 );
 
-router.post(
-  "/verify-email",
-  validateMultiple(AuthTypes.VerifyEmail),
-  authMiddleware.authenticate,
-  authController.verifyEmail,
-);
-
-//TODO: Add routes for password reset, username etc.
+//TODO: Add routes for username etc.
 
 export default router;
