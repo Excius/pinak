@@ -1,11 +1,38 @@
-import { View, Text, TextInput, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  ActivityIndicator,
+} from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useState } from "react";
+import { login } from "@/services/auth.service";
+import { toastError, toastSuccess } from "@/libs/toast";
 
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const isFormValid = email.trim() && password.trim();
+
+  const handleLogin = async () => {
+    if (!isFormValid) return;
+
+    setIsLoading(true);
+    try {
+      await login(email, password);
+      toastSuccess("Welcome Back");
+      setEmail("");
+      setPassword("");
+    } catch (err) {
+      toastError("Login Failed, Please try again");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <View className="space-y-4">
@@ -66,8 +93,20 @@ export default function SignInForm() {
 
       {/* Sign In Button */}
       <View className="pt-4">
-        <Pressable className="h-14 w-full items-center justify-center rounded-xl bg-primary active:opacity-90">
-          <Text className="text-white font-semibold text-base">Sign In</Text>
+        <Pressable
+          onPress={handleLogin}
+          disabled={!isFormValid || isLoading}
+          className={`h-14 w-full items-center justify-center rounded-xl ${
+            isFormValid && !isLoading
+              ? "bg-primary active:opacity-90"
+              : "bg-primary/50"
+          }`}
+        >
+          {isLoading ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Text className="text-white font-semibold text-base">Sign In</Text>
+          )}
         </Pressable>
       </View>
     </View>

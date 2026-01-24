@@ -8,7 +8,7 @@ import {
 import { MaterialIcons } from "@expo/vector-icons";
 import { useState } from "react";
 import { signup } from "@/services/auth.service";
-import { toastSucess, toastError } from "@/libs/toast";
+import { toastSuccess, toastError } from "@/libs/toast";
 
 type Props = {
   onSuccess?: () => void;
@@ -23,13 +23,13 @@ export default function SignUpForm({ onSuccess }: Props) {
 
   const isFormValid = email.trim() && username.trim() && password.trim();
 
-  const handlleSignUp = async () => {
+  const handleSignUp = async () => {
     if (!isFormValid) return;
 
     setIsLoading(true);
     try {
       await signup(email, username, password);
-      toastSucess("Sign-up successful! Welcome aboard.");
+      toastSuccess("Sign-up successful! Welcome aboard.");
       setEmail("");
       setUsername("");
       setPassword("");
@@ -109,7 +109,7 @@ export default function SignUpForm({ onSuccess }: Props) {
       {/* Sign Up Button */}
       <View className="pt-8">
         <Pressable
-          onPress={handlleSignUp}
+          onPress={handleSignUp}
           disabled={!isFormValid || isLoading}
           className={`h-14 w-full items-center justify-center rounded-xl ${
             isFormValid && !isLoading

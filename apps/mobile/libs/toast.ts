@@ -1,6 +1,6 @@
 import Toast from "react-native-toast-message";
 
-export function toastSucess(msg: string) {
+export function toastSuccess(msg: string) {
     Toast.show({
         type: "success",
         text1: msg,
