@@ -7,10 +7,17 @@ export const AuthTypes = {
       email: z.email("Invalid email format"),
       password: z
         .string()
-        .min(8, "Password must be at least 8 characters long"),
+        .min(8, "Password must be at least 8 characters long")
+        .max(64, "Password must be at most 64 characters long"),
       username: z
         .string()
-        .min(3, "Username must be at least 3 characters long"),
+        .min(3, "Username must be at least 3 characters long")
+        .max(30, "Username must be at most 30 characters long")
+        .regex(
+          /^[a-zA-Z][a-zA-Z0-9_]*$/,
+          "Username must start with a letter and contain only letters, numbers, and underscores",
+        ),
+      platform: z.literal("web").or(z.literal("mobile")),
     }),
     params: z.object({
       // no path params for register by default; add here if needed
@@ -21,19 +28,28 @@ export const AuthTypes = {
       redirect: z.string().optional(),
     }),
     response: z.object({
-      accessToken: z.string(),
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({}).nullable(),
     }),
   },
 
   LoginUser: {
     body: z.object({
       email: z.email("Invalid email format"),
-      password: z.string(),
+      password: z
+        .string()
+        .min(8, "Password must be at least 8 characters long")
+        .max(64, "Password must be at most 64 characters long"),
     }),
     params: z.object({}),
     query: z.object({}),
     response: z.object({
-      accessToken: z.string(),
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({
+        accessToken: z.string(),
+      }),
     }),
   },
 
@@ -42,7 +58,11 @@ export const AuthTypes = {
     params: z.object({}),
     query: z.object({}),
     response: z.object({
-      accessToken: z.string(),
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({
+        accessToken: z.string(),
+      }),
     }),
   },
 
@@ -50,14 +70,37 @@ export const AuthTypes = {
     body: z.object({}),
     params: z.object({}),
     query: z.object({}),
-    response: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({}).nullable(),
+    }),
   },
 
   Me: {
     body: z.object({}),
     params: z.object({}),
     query: z.object({}),
-    response: UserSchema,
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: UserSchema,
+    }),
+  },
+
+  VerifyEmail: {
+    body: z.object({
+      token: z.string().min(1, "Token is required"),
+    }),
+    params: z.object({}),
+    query: z.object({}),
+    response: z.object({
+      success: z.boolean(),
+      message: z.string(),
+      data: z.object({
+        accessToken: z.string(),
+      }),
+    }),
   },
 };
 
@@ -85,3 +128,9 @@ export type RefreshTokenResponse = z.infer<
 >;
 export type LogoutUserResponse = z.infer<typeof AuthTypes.LogoutUser.response>;
 export type MeResponse = z.infer<typeof AuthTypes.Me.response>;
+export type VerifyEmailBody = z.infer<typeof AuthTypes.VerifyEmail.body>;
+export type VerifyEmailParams = z.infer<typeof AuthTypes.VerifyEmail.params>;
+export type VerifyEmailQuery = z.infer<typeof AuthTypes.VerifyEmail.query>;
+export type VerifyEmailResponse = z.infer<
+  typeof AuthTypes.VerifyEmail.response
+>;
