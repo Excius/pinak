@@ -7,7 +7,10 @@ import { UnauthorizedError } from "../lib/error.js";
 export class MagicLinkService {
   constructor(private readonly magicLinkRepository: MagicLinkRepository) {}
 
-  async createPasswordResetToken(userId: string): Promise<string> {
+  async createPasswordResetLink(
+    userId: string,
+    platform: string,
+  ): Promise<string> {
     const token = crypto.randomBytes(32).toString("base64url");
 
     await this.magicLinkRepository.createMagicLink({
@@ -19,17 +22,22 @@ export class MagicLinkService {
       ), // 15 minutes from now
     });
 
-    return token;
+    return platform === "MOBILE"
+      ? `${appConfig.MOBILE_APP_URL}/reset-password?token=${token}`
+      : `${appConfig.FRONTEND_URL}/reset-password?token=${token}`;
   }
 
-  async validatePasswordResetToken(token: string): Promise<boolean> {
+  async validatePasswordResetLink(token: string): Promise<string> {
     const magicLink =
       await this.magicLinkRepository.getMagicLinkByTokenHash(token);
     if (!magicLink) {
       throw new UnauthorizedError("Invalid or expired password reset token.");
     }
 
-    if (magicLink.expiresAt < new Date()) {
+    if (
+      magicLink.expiresAt < new Date() ||
+      magicLink.type !== "PASSWORD_RESET"
+    ) {
       throw new UnauthorizedError("Invalid or expired password reset token.");
     }
 
@@ -40,10 +48,13 @@ export class MagicLinkService {
 
     await this.magicLinkRepository.deleteMagicLinkById(magicLink.id);
 
-    return isValid;
+    return magicLink.userId;
   }
 
-  async createEmailVerificationToken(userId: string): Promise<string> {
+  async createEmailVerificationLink(
+    userId: string,
+    platform: string,
+  ): Promise<string> {
     const token = crypto.randomBytes(32).toString("base64url");
 
     await this.magicLinkRepository.createMagicLink({
@@ -55,10 +66,12 @@ export class MagicLinkService {
       ), // 24 hours from now
     });
 
-    return token;
+    return platform === "MOBILE"
+      ? `${appConfig.MOBILE_APP_URL}/verify-email?token=${token}`
+      : `${appConfig.FRONTEND_URL}/verify-email?token=${token}`;
   }
 
-  async validateEmailVerificationToken(token: string): Promise<string> {
+  async validateEmailVerificationLink(token: string): Promise<string> {
     const magicLink =
       await this.magicLinkRepository.getMagicLinkByTokenHash(token);
     if (!magicLink) {
@@ -67,7 +80,10 @@ export class MagicLinkService {
       );
     }
 
-    if (magicLink.expiresAt < new Date()) {
+    if (
+      magicLink.expiresAt < new Date() ||
+      magicLink.type !== "EMAIL_VERIFICATION"
+    ) {
       throw new UnauthorizedError(
         "Invalid or expired email verification token.",
       );

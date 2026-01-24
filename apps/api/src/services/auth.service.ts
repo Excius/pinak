@@ -82,12 +82,10 @@ export class AuthService {
       throw new InternalServerError();
     }
 
-    const token = await this.magicLink.createEmailVerificationToken(newUser.id);
-
-    const verificationLink =
-      platform === "mobile"
-        ? `${appConfig.MOBILE_APP_URL}/verify-email?token=${token}`
-        : `${appConfig.FRONTEND_URL}/verify-email?token=${token}`;
+    const verificationLink = await this.magicLink.createEmailVerificationLink(
+      newUser.id,
+      platform,
+    );
 
     MailService.sendVerificationEmail({
       name: newUser.username,
@@ -103,12 +101,24 @@ export class AuthService {
   async login(user: { email: string; password: string }): Promise<{
     accessToken: string;
     refreshToken: string;
+    user: {
+      id: string;
+      email: string;
+      username: string;
+      name: string | null;
+      role: UserRoles;
+      createdAt: Date;
+      updatedAt: Date;
+    };
   }> {
     const userEmail = user.email.trim();
     const dbUser = await this.user.getUserByEmail(userEmail);
 
     if (!dbUser) {
-      throw new UnauthorizedError();
+      // Mitigate user enumeration with delay
+      const delay = 1000 + Math.random() * 500;
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      throw new UnauthorizedError("Email or password incorrect");
     }
 
     if (dbUser.isEmailVerified === false) {
@@ -136,6 +146,15 @@ export class AuthService {
     return {
       accessToken,
       refreshToken,
+      user: {
+        id: dbUser.id,
+        email: dbUser.email,
+        username: dbUser.username,
+        name: dbUser.name,
+        role: dbUser.role,
+        createdAt: dbUser.createdAt,
+        updatedAt: dbUser.updatedAt,
+      },
     };
   }
 
@@ -216,8 +235,16 @@ export class AuthService {
     });
   }
 
-  async logout(sessionId: string): Promise<void> {
-    await this.sessions.delete(sessionId);
+  async logout(refreshToken: string): Promise<void> {
+    try {
+      const payload = this.jwt.verifyRefreshToken(refreshToken);
+      if (payload?.sessionId) {
+        await this.sessions.delete(payload.sessionId);
+      }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      // Ignore errors during logout to ensure session cleanup
+    }
   }
 
   async me(userId: string | undefined) {
@@ -242,27 +269,59 @@ export class AuthService {
     };
   }
 
-  async verifyEmail(
-    token: string,
-    userId: string,
-  ): Promise<{
+  async verifyEmail(token: string): Promise<{
     accessToken: string;
     refreshToken: string;
   }> {
-    const dbUserId = await this.magicLink.validateEmailVerificationToken(token);
+    const dbUserId = await this.magicLink.validateEmailVerificationLink(token);
     if (!dbUserId) {
       throw new UnauthorizedError("Invalid or expired verification token");
     }
 
-    if (dbUserId !== userId) {
-      throw new UnauthorizedError("Token does not match user");
-    }
-
     const user = await this.prisma.user.update({
-      where: { id: userId },
+      where: { id: dbUserId },
       data: { isEmailVerified: true },
     });
 
-    return await this.generateTokens(userId, user.role as UserRoles);
+    return await this.generateTokens(dbUserId, user.role as UserRoles);
+  }
+
+  async forgotPassword(email: string, platform: string): Promise<void> {
+    const dbUser = await this.user.getUserByEmail(email);
+
+    if (!dbUser) {
+      setTimeout(() => {}, Math.random() * 500 + 1000);
+
+      return;
+    }
+
+    const resetLink = await this.magicLink.createPasswordResetLink(
+      dbUser.id,
+      platform,
+    );
+
+    MailService.sendPasswordResetEmail(
+      dbUser.email,
+      dbUser.username,
+      resetLink,
+    ).catch((error) => {
+      loggerInstance.warn("Failed to send welcome email:", error);
+    });
+
+    return;
+  }
+
+  async verifyPassword(token: string, newPassword: string): Promise<void> {
+    const dbUserId = await this.magicLink.validatePasswordResetLink(token);
+
+    if (!dbUserId) {
+      throw new UnauthorizedError("Invalid or expired password reset token.");
+    }
+
+    const newHashedPassword = await Passwordhasher.hashPassword(newPassword);
+
+    await this.user.updateUserPassword(dbUserId, newHashedPassword);
+
+    return;
   }
 }
