@@ -10,7 +10,8 @@
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
-    "prisma:studio": "turbo run prisma:studio"
+    "prisma:studio": "turbo run prisma:studio",
+    "setup:backend": "npm install && npm run build:packages && cd apps/api && npx prisma generate"
   },
   "devDependencies": {
     "prettier": "^3.7.4",

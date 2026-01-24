@@ -9,6 +9,8 @@ import { UserRespository } from "../repositories/user.repository.js";
 import { validateMultiple } from "../lib/validation.js";
 import { AuthTypes } from "@repo/types";
 import { AuthMiddleware } from "../middlewares/auth.middleware.js";
+import { MagicLinkService } from "../services/magicLink.service.js";
+import { MagicLinkRepository } from "../repositories/magicLink.repository.js";
 
 const router = Router();
 
@@ -21,14 +23,19 @@ const jwtService = new JWTService(
 );
 const sessionRepository = new SessionRespository(prisma);
 const userRespository = new UserRespository(prisma);
+const magicLinkRepository = new MagicLinkRepository(prisma);
+const magicEmail = new MagicLinkService(magicLinkRepository);
 const authService = new AuthService(
   prisma,
   jwtService,
   sessionRepository,
   userRespository,
+  magicEmail,
 );
 const authController = new AuthController(authService);
 const authMiddleware = new AuthMiddleware(jwtService);
+
+//TODO: limit the requests more that normal
 
 // Routes
 /**
@@ -76,5 +83,14 @@ router.get(
   authMiddleware.authenticate,
   authController.me,
 );
+
+router.post(
+  "/verify-email",
+  validateMultiple(AuthTypes.VerifyEmail),
+  authMiddleware.authenticate,
+  authController.verifyEmail,
+);
+
+//TODO: Add routes for password reset, username etc.
 
 export default router;
