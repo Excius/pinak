@@ -10,6 +10,7 @@ import { InternalServerError, UnauthorizedError } from "../lib/error.js";
 import { Passwordhasher } from "../lib/password.js";
 import { MailService } from "./mail.service.js";
 import { MagicLinkService } from "./magicLink.service.js";
+import { delayGenerator } from "../lib/sercurity.js";
 
 export class AuthService {
   constructor(
@@ -57,18 +58,19 @@ export class AuthService {
     );
 
     if (existingUser) {
-      const delay = 1000 + Math.random() * 500; // Mitigate user enumeration
+      const delay = 500 + Math.random() * 500; // Mitigate user enumeration
       if (existingUser.username === username) {
         loggerInstance.warn(
           `Attempt to register with existing username: ${username}`,
         );
-        setTimeout(() => {}, delay);
+        delayGenerator(delay);
         throw new UnauthorizedError("Username already in use");
       } else if (existingUser.email === email) {
         loggerInstance.warn(
           `Attempt to register with existing email: ${email}`,
         );
-        setTimeout(() => {}, delay);
+        delayGenerator(delay);
+        // Never reveal that the email is already registered
         return;
       }
     }
@@ -115,9 +117,8 @@ export class AuthService {
     const dbUser = await this.user.getUserByEmail(userEmail);
 
     if (!dbUser) {
-      // Mitigate user enumeration with delay
-      const delay = 1000 + Math.random() * 500;
-      await new Promise((resolve) => setTimeout(resolve, delay));
+      // Never reveal that the email is not registered
+      delayGenerator(500 + Math.random() * 500);
       throw new UnauthorizedError("Email or password incorrect");
     }
 
@@ -290,8 +291,8 @@ export class AuthService {
     const dbUser = await this.user.getUserByEmail(email);
 
     if (!dbUser) {
-      setTimeout(() => {}, Math.random() * 500 + 1000);
-
+      // Never reveal that the email is not registered
+      delayGenerator(500 + Math.random() * 500);
       return;
     }
 
