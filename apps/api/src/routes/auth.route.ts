@@ -12,6 +12,7 @@ import { AuthMiddleware } from "../middlewares/auth.middleware.js";
 import { MagicLinkService } from "../services/magicLink.service.js";
 import { MagicLinkRepository } from "../repositories/magicLink.repository.js";
 import { createAuthRateLimiter } from "../lib/rateLimit.js";
+import { AuthProviderRepository } from "../repositories/authProvider.repository.js";
 
 const router = Router();
 
@@ -26,12 +27,14 @@ const sessionRepository = new SessionRespository(prisma);
 const userRespository = new UserRespository(prisma);
 const magicLinkRepository = new MagicLinkRepository(prisma);
 const magicEmail = new MagicLinkService(magicLinkRepository);
+const authProvider = new AuthProviderRepository(prisma);
 const authService = new AuthService(
   prisma,
   jwtService,
   sessionRepository,
   userRespository,
   magicEmail,
+  authProvider,
 );
 const authController = new AuthController(authService);
 const authMiddleware = new AuthMiddleware(jwtService);
@@ -106,6 +109,26 @@ router.post(
   authRateLimiter,
   validateMultiple(AuthTypes.VerifyPassword),
   authController.verifyPassword,
+);
+
+/**
+ * Google OAuth Routes
+ */
+router.get(
+  "/google",
+  authRateLimiter,
+  validateMultiple(AuthTypes.GoogleOauth),
+  authController.googleOauth,
+);
+
+/**
+ * Google OAuth Callback Route
+ */
+router.post(
+  "/google/callback",
+  authRateLimiter,
+  validateMultiple(AuthTypes.GoogleOauthCallback),
+  authController.googleOauthCallback,
 );
 
 /**
