@@ -134,30 +134,51 @@ export const AuthTypes = {
       data: z.object({}).nullable(),
     }),
   },
+
+  GoogleOauth: {
+    body: z.object({}),
+    params: z.object({}),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({
+        url: z.string(),
+      }),
+    }),
+  },
+
+  GoogleOauthCallback: {
+    body: z.object({}),
+    params: z.object({}),
+    query: z.object({
+      code: z.string().min(1, "Code is required"),
+    }),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({
+        accessToken: z.string(),
+        user: UserSchema,
+      }),
+    }),
+  },
 };
 
 export type BodyTypes = {
-  [K in keyof typeof AuthTypes]: z.infer<
-    (typeof AuthTypes)[K]["body"]
-  >;
+  [K in keyof typeof AuthTypes]: z.infer<(typeof AuthTypes)[K]["body"]>;
 };
 
 export type ParamsTypes = {
-  [K in keyof typeof AuthTypes]: z.infer<
-    (typeof AuthTypes)[K]["params"]
-  >;
+  [K in keyof typeof AuthTypes]: z.infer<(typeof AuthTypes)[K]["params"]>;
 };
 
 export type QueryTypes = {
-  [K in keyof typeof AuthTypes]: z.infer<
-    (typeof AuthTypes)[K]["query"]
-  >;
+  [K in keyof typeof AuthTypes]: z.infer<(typeof AuthTypes)[K]["query"]>;
 };
 
 export type ResponseTypes = {
-  [K in keyof typeof AuthTypes]: z.infer<
-    (typeof AuthTypes)[K]["response"]
-  >;
+  [K in keyof typeof AuthTypes]: z.infer<(typeof AuthTypes)[K]["response"]>;
 };
 
 // Legacy individual exports for backward compatibility

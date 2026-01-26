@@ -1,4 +1,4 @@
-import { PrismaClient } from "../generated/prisma/client.js";
+import { AuthProviderType, PrismaClient } from "../generated/prisma/client.js";
 import appConfig from "../lib/config.js";
 import JWTService from "../lib/jwt.js";
 import { SessionRespository } from "../repositories/session.repository.js";
@@ -11,6 +11,10 @@ import { Passwordhasher } from "../lib/password.js";
 import { MailService } from "./mail.service.js";
 import { MagicLinkService } from "./magicLink.service.js";
 import { delayGenerator } from "../lib/sercurity.js";
+import axios from "axios";
+import { AuthMethod } from "../generated/prisma/client.js";
+import { AuthProviderRepository } from "../repositories/authProvider.repository.js";
+import { OAuth2Client } from "google-auth-library";
 
 export class AuthService {
   constructor(
@@ -19,16 +23,19 @@ export class AuthService {
     private sessions: SessionRespository,
     private user: UserRespository,
     private magicLink: MagicLinkService,
+    private authProvider: AuthProviderRepository,
   ) {}
 
   async generateTokens(
     userId: string,
     role: UserRoles,
+    authMethod: AuthMethod = AuthMethod.PASSWORD,
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const session = await this.sessions.create({
       userId,
       refreshHash: "",
       expiresAt: new Date(Date.now() + appConfig.REFRESH_TOKEN_EXPIRY),
+      authMethod,
     });
 
     const refreshToken = this.jwt.generateRefreshToken({
@@ -59,6 +66,19 @@ export class AuthService {
 
     if (existingUser) {
       const delay = 500 + Math.random() * 500; // Mitigate user enumeration
+
+      // If user has OAuth providers, prevent password registration
+      if (existingUser.authProviders && existingUser.authProviders.length > 0) {
+        loggerInstance.warn(
+          `Attempt to register with existing OAuth account for email: ${email}`,
+        );
+        delayGenerator(delay);
+        throw new UnauthorizedError(
+          "An account with this email already exists. Please log in using Google.",
+        );
+      }
+
+      // Existing password-only user
       if (existingUser.username === username) {
         loggerInstance.warn(
           `Attempt to register with existing username: ${username}`,
@@ -113,7 +133,7 @@ export class AuthService {
       updatedAt: Date;
     };
   }> {
-    const userEmail = user.email.trim();
+    const userEmail = user.email.toLowerCase().trim();
     const dbUser = await this.user.getUserByEmail(userEmail);
 
     if (!dbUser) {
@@ -130,8 +150,9 @@ export class AuthService {
     }
 
     if (!dbUser.hashPassword) {
-      // TODO: Need to manage the case of user without password (OAuth user)
-      throw new UnauthorizedError();
+      // User registered via OAuth, no password set, cannot login with password
+      delayGenerator(500 + Math.random() * 500);
+      throw new UnauthorizedError("Email or password incorrect");
     }
 
     if (
@@ -142,6 +163,7 @@ export class AuthService {
     const { refreshToken, accessToken } = await this.generateTokens(
       dbUser.id,
       dbUser.role as UserRoles,
+      AuthMethod.PASSWORD,
     );
 
     return {
@@ -205,6 +227,7 @@ export class AuthService {
           userId: payload!.sub,
           refreshHash: "",
           expiresAt: new Date(Date.now() + appConfig.REFRESH_TOKEN_EXPIRY),
+          authMethod: session.authMethod,
         },
       });
 
@@ -279,12 +302,24 @@ export class AuthService {
       throw new UnauthorizedError("Invalid or expired verification token");
     }
 
-    const user = await this.prisma.user.update({
-      where: { id: dbUserId },
-      data: { isEmailVerified: true },
+    const user = await this.prisma.$transaction(async (tx) => {
+      const data = await tx.user.update({
+        where: { id: dbUserId },
+        data: { isEmailVerified: true },
+      });
+
+      await tx.session.deleteMany({
+        where: { userId: dbUserId, isRevoked: false },
+      });
+
+      return data;
     });
 
-    return await this.generateTokens(dbUserId, user.role as UserRoles);
+    return await this.generateTokens(
+      dbUserId,
+      user.role as UserRoles,
+      AuthMethod.PASSWORD,
+    );
   }
 
   async forgotPassword(email: string, platform: string): Promise<void> {
@@ -294,6 +329,15 @@ export class AuthService {
       // Never reveal that the email is not registered
       delayGenerator(500 + Math.random() * 500);
       return;
+    }
+
+    // If user is OAuth-only (no password), skip password reset
+    if (!dbUser.hashPassword) {
+      loggerInstance.info(
+        `Password reset attempted for OAuth-only user: ${dbUser.id}`,
+      );
+      delayGenerator(500 + Math.random() * 500);
+      return; // Silently ignore, as they can't reset a non-existent password
     }
 
     const resetLink = await this.magicLink.createPasswordResetLink(
@@ -324,5 +368,179 @@ export class AuthService {
     await this.user.updateUserPassword(dbUserId, newHashedPassword);
 
     return;
+  }
+
+  async googleOauthCallback(code: string): Promise<{
+    accessToken: string;
+    refreshToken: string;
+    user: {
+      id: string;
+      email: string;
+      username: string;
+      name: string | null;
+      role: UserRoles;
+      createdAt: Date;
+      updatedAt: Date;
+    };
+  }> {
+    if (!code) {
+      throw new UnauthorizedError("No authorization code provided");
+    }
+
+    let res;
+
+    try {
+      res = await axios.post(
+        "https://oauth2.googleapis.com/token",
+        new URLSearchParams({
+          client_id: appConfig.CLIENT_ID,
+          client_secret: appConfig.CLIENT_SECRET,
+          code: decodeURIComponent(code),
+          redirect_uri: appConfig.REDIRECT_URI,
+          grant_type: "authorization_code",
+        }),
+        {
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+        },
+      );
+    } catch (error) {
+      loggerInstance.error("Error fetching Google OAuth token:", error);
+      throw new UnauthorizedError("Failed to authenticate with Google");
+    }
+
+    const { id_token } = res.data;
+    const client = new OAuth2Client(appConfig.CLIENT_ID);
+
+    const ticket = await client.verifyIdToken({
+      idToken: id_token,
+      audience: appConfig.CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    if (!payload || !payload.sub) {
+      throw new UnauthorizedError("Invalid ID token received from Google");
+    }
+
+    if (!payload.email_verified) {
+      throw new UnauthorizedError("Google email is not verified");
+    }
+
+    const providerId = payload.sub;
+    const email = payload.email?.toLowerCase().trim();
+    if (!email) {
+      loggerInstance.warn("Google ID token missing email");
+      throw new UnauthorizedError("Google account does not provide an email");
+    }
+    const name = payload.name ?? null;
+
+    const existingProvider = await this.authProvider.getExistingProvider(
+      AuthProviderType.GOOGLE,
+      providerId,
+    );
+
+    // If user with this OAuth provider already exists, log them in
+    if (existingProvider) {
+      const { refreshToken, accessToken } = await this.generateTokens(
+        existingProvider.user.id,
+        existingProvider.user.role as UserRoles,
+        AuthMethod.OAUTH,
+      );
+
+      return {
+        accessToken,
+        refreshToken,
+        user: {
+          id: existingProvider.user.id,
+          email: existingProvider.user.email,
+          username: existingProvider.user.username,
+          name: existingProvider.user.name,
+          role: existingProvider.user.role,
+          createdAt: existingProvider.user.createdAt,
+          updatedAt: existingProvider.user.updatedAt,
+        },
+      };
+    }
+
+    // If user doesn't exists. Check if email already exists
+    const existingUser = await this.user.getUserByEmail(email);
+
+    if (existingUser) {
+      // Link Google provider to existing user
+
+      await this.prisma.$transaction(async (tx) => {
+        await tx.authProvider.create({
+          data: {
+            provider: AuthProviderType.GOOGLE,
+            providerId,
+            userId: existingUser.id,
+          },
+        });
+
+        await tx.user.update({
+          where: { id: existingUser.id },
+          data: { name: name, isEmailVerified: true },
+        });
+      });
+
+      const { refreshToken, accessToken } = await this.generateTokens(
+        existingUser.id,
+        existingUser.role as UserRoles,
+        AuthMethod.OAUTH,
+      );
+
+      return {
+        accessToken,
+        refreshToken,
+        user: {
+          id: existingUser.id,
+          email: existingUser.email,
+          username: existingUser.username,
+          name: existingUser.name,
+          role: existingUser.role,
+          createdAt: existingUser.createdAt,
+          updatedAt: existingUser.updatedAt,
+        },
+      };
+    }
+
+    // No user or provider exists, create new user
+
+    const usernameBase = email.includes("@") ? email.split("@")[0] : email;
+    const username = usernameBase || `user_${Date.now()}`; // Fallback
+
+    const existingUsername = await this.user.getUserByUsername(username);
+    const finalUsername = existingUsername
+      ? `${username}_${Date.now()}`
+      : username;
+
+    const newUser = await this.user.createOauthUser(
+      email,
+      finalUsername,
+      AuthProviderType.GOOGLE,
+      providerId,
+      name,
+    );
+
+    const { refreshToken, accessToken } = await this.generateTokens(
+      newUser.id,
+      newUser.role as UserRoles,
+      AuthMethod.OAUTH,
+    );
+
+    return {
+      accessToken,
+      refreshToken,
+      user: {
+        id: newUser.id,
+        email: newUser.email,
+        username: newUser.username,
+        name: newUser.name,
+        role: newUser.role,
+        createdAt: newUser.createdAt,
+        updatedAt: newUser.updatedAt,
+      },
+    };
   }
 }

@@ -4,6 +4,8 @@ import argon from "argon2";
 import appConfig from "../lib/config.js";
 import { UnauthorizedError } from "../lib/error.js";
 
+const MAGIC_LINK_SALT = Buffer.from("fixedsaltformagiclinks123456789012"); // 32 bytes
+
 export class MagicLinkService {
   constructor(private readonly magicLinkRepository: MagicLinkRepository) {}
 
@@ -15,10 +17,10 @@ export class MagicLinkService {
 
     await this.magicLinkRepository.createMagicLink({
       userId,
-      tokenHash: await argon.hash(token),
+      tokenHash: await argon.hash(token, { salt: MAGIC_LINK_SALT }),
       tokenType: "PASSWORD_RESET",
       expiresAt: new Date(
-        Date.now() + appConfig.FORGOT_PASSWWORD_EXPIRY_MINUTES * 60 * 1000,
+        Date.now() + appConfig.FORGOT_PASSWORD_EXPIRY_MINUTES * 60 * 1000,
       ), // 15 minutes from now
     });
 
@@ -28,8 +30,9 @@ export class MagicLinkService {
   }
 
   async validatePasswordResetLink(token: string): Promise<string> {
+    const hashToken = await argon.hash(token, { salt: MAGIC_LINK_SALT });
     const magicLink =
-      await this.magicLinkRepository.getMagicLinkByTokenHash(token);
+      await this.magicLinkRepository.getMagicLinkByTokenHash(hashToken);
     if (!magicLink) {
       throw new UnauthorizedError("Invalid or expired password reset token.");
     }
@@ -59,7 +62,7 @@ export class MagicLinkService {
 
     await this.magicLinkRepository.createMagicLink({
       userId,
-      tokenHash: await argon.hash(token),
+      tokenHash: await argon.hash(token, { salt: MAGIC_LINK_SALT }),
       tokenType: "EMAIL_VERIFICATION",
       expiresAt: new Date(
         Date.now() + appConfig.EMAIL_VERIFICATION_EXPIRY_HOURS * 60 * 60 * 1000,
@@ -72,8 +75,9 @@ export class MagicLinkService {
   }
 
   async validateEmailVerificationLink(token: string): Promise<string> {
+    const hashToken = await argon.hash(token, { salt: MAGIC_LINK_SALT });
     const magicLink =
-      await this.magicLinkRepository.getMagicLinkByTokenHash(token);
+      await this.magicLinkRepository.getMagicLinkByTokenHash(hashToken);
     if (!magicLink) {
       throw new UnauthorizedError(
         "Invalid or expired email verification token.",

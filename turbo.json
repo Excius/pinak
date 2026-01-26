@@ -32,11 +32,14 @@
         "SMTP_USER",
         "SMTP_PASS",
         "SMTP_SECURE",
-        "FORGOT_PASSWWORD_EXPIRY_MINUTES",
+        "FORGOT_PASSWORD_EXPIRY_MINUTES",
         "EMAIL_VERIFICATION_EXPIRY_HOURS",
         "BACKEND_URL",
         "FRONTEND_URL",
-        "MOBILE_APP_URL"
+        "MOBILE_APP_URL",
+        "CLIENT_ID",
+        "CLIENT_SECRET",
+        "REDIRECT_URI"
       ]
     },
     "prisma:studio": {

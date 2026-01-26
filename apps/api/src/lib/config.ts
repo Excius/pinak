@@ -89,7 +89,7 @@ class Config {
   /**
    * The expiry time for forgot password links in minutes.
    */
-  public readonly FORGOT_PASSWWORD_EXPIRY_MINUTES: number;
+  public readonly FORGOT_PASSWORD_EXPIRY_MINUTES: number;
 
   /**
    * The expiry time for email verification links in hours.
@@ -113,6 +113,21 @@ class Config {
    * Used for constructing links in emails.
    */
   public readonly FRONTEND_URL: string;
+
+  /**
+   * OAuth2 Client ID for third-party authentication.
+   */
+  public readonly CLIENT_ID: string;
+
+  /**
+   * OAuth2 Client Secret for third-party authentication.
+   */
+  public readonly CLIENT_SECRET: string;
+
+  /**
+   * OAuth2 Redirect URI for third-party authentication.
+   */
+  public readonly REDIRECT_URI: string;
 
   constructor() {
     this.NODE_ENV = process.env.NODE_ENV || "development";
@@ -164,8 +179,8 @@ class Config {
 
     this.SMTP_PASS = process.env.SMTP_PASS;
 
-    this.FORGOT_PASSWWORD_EXPIRY_MINUTES = parseInt(
-      process.env.FORGOT_PASSWWORD_EXPIRY_MINUTES || "15",
+    this.FORGOT_PASSWORD_EXPIRY_MINUTES = parseInt(
+      process.env.FORGOT_PASSWORD_EXPIRY_MINUTES || "15",
       10,
     ); // Default: 15 minutes
 
@@ -177,6 +192,21 @@ class Config {
     this.BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3000";
     this.MOBILE_APP_URL = process.env.MOBILE_APP_URL || "myapp://app";
     this.FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+
+    if (!process.env.CLIENT_ID) {
+      throw new Error("CLIENT_ID environment variable is required");
+    }
+    this.CLIENT_ID = process.env.CLIENT_ID;
+
+    if (!process.env.CLIENT_SECRET) {
+      throw new Error("CLIENT_SECRET environment variable is required");
+    }
+    this.CLIENT_SECRET = process.env.CLIENT_SECRET;
+
+    if (!process.env.REDIRECT_URI) {
+      throw new Error("REDIRECT_URI environment variable is required");
+    }
+    this.REDIRECT_URI = process.env.REDIRECT_URI;
   }
 }
 

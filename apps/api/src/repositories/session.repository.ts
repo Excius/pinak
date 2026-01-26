@@ -1,4 +1,4 @@
-import { PrismaClient } from "../generated/prisma/client.js";
+import { AuthMethod, PrismaClient } from "../generated/prisma/client.js";
 
 export class SessionRespository {
   constructor(private prisma: PrismaClient) {}
@@ -27,7 +27,7 @@ export class SessionRespository {
     userId: string;
     refreshHash: string;
     expiresAt: Date;
-    rotatedFrom?: string;
+    authMethod: AuthMethod;
   }) {
     return this.prisma.session.create({
       data,

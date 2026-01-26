@@ -6,7 +6,11 @@ import appConfig from "../lib/config.js";
 export class AuthController {
   constructor(private auth: AuthService) {}
 
-  private setAuthCookies(res: Response, accessToken: string, refreshToken: string) {
+  private setAuthCookies(
+    res: Response,
+    accessToken: string,
+    refreshToken: string,
+  ) {
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: appConfig.NODE_ENV === "production",
@@ -37,7 +41,7 @@ export class AuthController {
     const { email, password, username, platform } = req.body;
 
     await this.auth.register(
-      email.trim(),
+      email.toLowerCase().trim(),
       password.trim(),
       username.trim(),
       platform.trim(),
@@ -130,7 +134,7 @@ export class AuthController {
   forgotPassword = async (req: Request, res: Response) => {
     const { email, platform } = req.body;
 
-    await this.auth.forgotPassword(email.trim(), platform);
+    await this.auth.forgotPassword(email.toLowerCase().trim(), platform);
 
     ResponseHandler.success(res, {}, "Forgot mail sent successfully");
   };
@@ -141,5 +145,25 @@ export class AuthController {
     await this.auth.verifyPassword(token, newPassword);
 
     ResponseHandler.success(res, {}, "Password reset successfully");
+  };
+
+  googleOauth = async (req: Request, res: Response) => {
+    const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${appConfig.CLIENT_ID}&redirect_uri=${appConfig.REDIRECT_URI}&response_type=code&scope=profile%20email`;
+
+    ResponseHandler.success(res, { url }, "Google OAuth URL fetched");
+  };
+
+  googleOauthCallback = async (req: Request, res: Response) => {
+    const { code } = req.query;
+
+    const data = await this.auth.googleOauthCallback(code as string);
+
+    this.setAuthCookies(res, data.accessToken, data.refreshToken);
+
+    ResponseHandler.success(
+      res,
+      { accessToken: data.accessToken, user: data.user },
+      "Google OAuth callback handled",
+    );
   };
 }
