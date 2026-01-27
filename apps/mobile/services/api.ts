@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosError } from 'axios';
+import axios, { AxiosInstance, AxiosError, AxiosResponse } from 'axios';
 import { getAccessToken, deleteAccessToken, setAccessToken } from '@/utils/token';
 // import * as SecureStore from 'expo-secure-store';
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL
@@ -66,8 +66,8 @@ api.interceptors.response.use(
             isRefreshing = true;
 
             try {
-                const res = await api.post("/auth/refresh");
-                const newAccessToken = res.data.accessToken;
+                const refreshResponse = await apiRequest<{ accessToken: string }>('post', '/auth/refresh');
+                const newAccessToken = refreshResponse.accessToken;
 
                 await setAccessToken(newAccessToken);
                 processQueue(null, newAccessToken);
@@ -90,5 +90,15 @@ api.interceptors.response.use(
         return Promise.reject(new Error(message));
     }
 );
+
+export async function apiRequest<T>(
+    method: 'get' | 'post' | 'put' | 'patch' | 'delete',
+    url: string,
+    data?: any,
+    config?: any
+): Promise<T> {
+    const response: AxiosResponse<T> = await api[method](url, data, config);
+    return response.data;
+}
 
 export default api;

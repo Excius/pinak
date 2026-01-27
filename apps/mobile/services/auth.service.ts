@@ -1,17 +1,22 @@
-import api from "./api";
+import api, { apiRequest } from "./api";
 import { setAccessToken, deleteAccessToken } from "@/utils/token";
+import {
+   
+    LoginUserResponse,
+    RegisterUserResponse,
+} from "@repo/types";
 
-export async function login(email: string, password: string) {
-    const res = await api.post("/auth/login", {
-        email,
-        password,
-    });
-
-    await setAccessToken(res.data.data.accessToken);
-    return res.data;
+export async function loginService(email: string, password: string) {
+    const loginResponse = await apiRequest<LoginUserResponse>(
+        'post',
+        '/auth/login',
+        { email, password }
+    );
+    await setAccessToken(loginResponse.data.accessToken);
+    return loginResponse;
 }
 
-export async function signup(email: string, username: string, password: string) {
+export async function signupService(email: string, username: string, password: string) {
     try {
         const payload = {
             email,
@@ -20,16 +25,13 @@ export async function signup(email: string, username: string, password: string) 
         };
         console.log("Signup Payload:", payload);
 
-        const res = await api.post("/auth/register", payload);
+        const registerResponse = await apiRequest<RegisterUserResponse>(
+            'post',
+            '/auth/register',
+            payload
+        );
 
-        // Extract the token from the nested data object
-        const accessToken = res.data.data.accessToken;
-        if (typeof accessToken !== "string") {
-            throw new Error("Invalid token format received");
-        }
-
-        await setAccessToken(accessToken);
-        return res.data;
+        return registerResponse;
     } catch (error: any) {
         console.error("Signup Error:", {
             message: error.message,
@@ -41,9 +43,9 @@ export async function signup(email: string, username: string, password: string) 
     }
 }
 
-export async function logout() {
+export async function logoutService() {
     try {
-        await api.post("/auth/logout");
+        await apiRequest('post', '/auth/logout');
     } finally {
         await deleteAccessToken();
     }

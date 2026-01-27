@@ -7,10 +7,13 @@ import {
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useState } from "react";
-import { login } from "@/services/auth.service";
+// import { login } from "@/services/auth.service";
+// using the context function now
+import { useAuth } from "@/contexts/AuthContext";
 import { toastError, toastSuccess } from "@/libs/toast";
 
 export default function SignInForm() {
+  const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

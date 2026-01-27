@@ -7,7 +7,7 @@ import {
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useState } from "react";
-import { signup } from "@/services/auth.service";
+import { useAuth } from "@/contexts/AuthContext";
 import { toastSuccess, toastError } from "@/libs/toast";
 
 type Props = {
@@ -15,6 +15,8 @@ type Props = {
 };
 
 export default function SignUpForm({ onSuccess }: Props) {
+
+  const {signup} = useAuth()
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
