@@ -1,5 +1,16 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { getAccessToken, deleteAccessToken } from "@/utils/token";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useMemo,
+} from "react";
+import { z } from "zod";
+import {
+  getAccessToken,
+  setAccessToken,
+  deleteAccessToken,
+} from "@/utils/token";
 import {
   loginService as apiLogin,
   logoutService as apiLogout,
@@ -11,13 +22,9 @@ import {
   LoginUserResponse,
   RegisterUserResponse,
 } from "@repo/types";
-// interface User : MeRespons {
-//   id: String;
-//   email: String;
-//   username: String;
-//   role: "Admin"
-// }
-type User = MeResponse["data"];
+import { UserSchema } from "@repo/types";
+
+type User = z.infer<typeof UserSchema>;
 
 interface AuthContextType {
   user: User | null;
@@ -63,7 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         setUser(userData.data);
       }
     } catch (err) {
-      console.error("Auth check failed");
+      console.error("Auth check failed" + err);
       await deleteAccessToken();
     } finally {
       setIsLoading(false);
@@ -71,36 +78,60 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const login = async (email: string, password: string) => {
-    const loginResponse: LoginUserResponse = await apiLogin(email, password);
+    try {
+      setError(null);
+      const loginResponse: LoginUserResponse = await apiLogin(email, password);
+      if (loginResponse.data?.accessToken && loginResponse.data?.user) {
+        await setAccessToken(loginResponse.data.accessToken);
+        setUser(loginResponse.data.user);
+      } else {
+        throw new Error("Invalid login response");
+      }
+    } catch (err: any) {
+      const errorMessage = err?.message || "Login failed";
+      setError(errorMessage);
+      throw err;
+    }
   };
 
-  const signup = async (email: string, password: string, username: string) => {
-    const signUpResponse: RegisterUserResponse = await apiSignup(
-      email,
-      username,
-      password,
-    );
+  const signup = async (email: string, username: string, password: string) => {
+    try {
+      setError(null);
+      await apiSignup(email, username, password);
+      // Signup successful - user will need to verify email or login
+    } catch (err: any) {
+      const errorMessage = err?.message || "Signup failed";
+      setError(errorMessage);
+      throw err;
+    }
   };
 
   const logout = async () => {
     try {
       await apiLogout();
+    } catch (err) {
+      console.error("Logout failed:", err);
     } finally {
       setUser(null);
+      await deleteAccessToken();
     }
   };
 
   const clearError = () => setError(null);
 
-  const value: AuthContextType = {
-    user,
-    isLoading,
-    isAuthenticated: !!user,
-    error,
-    login,
-    signup,
-    logout,
-    clearError,
-  };
-  return <AuthContext.Provider value={value}> {children}</AuthContext.Provider>;
+  const value: AuthContextType = useMemo(
+    () => ({
+      user,
+      isLoading,
+      isAuthenticated: !!user,
+      error,
+      login,
+      signup,
+      logout,
+      clearError,
+    }),
+    [user, isLoading, error],
+  );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
