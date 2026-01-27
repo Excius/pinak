@@ -38,13 +38,12 @@ export class AuthController {
   }
 
   register = async (req: Request, res: Response) => {
-    const { email, password, username, platform } = req.body;
+    const { email, password, username } = req.body;
 
     await this.auth.register(
       email.toLowerCase().trim(),
       password.trim(),
       username.trim(),
-      platform.trim(),
     );
 
     ResponseHandler.success(
@@ -132,9 +131,9 @@ export class AuthController {
   };
 
   forgotPassword = async (req: Request, res: Response) => {
-    const { email, platform } = req.body;
+    const { email } = req.body;
 
-    await this.auth.forgotPassword(email.toLowerCase().trim(), platform);
+    await this.auth.forgotPassword(email.toLowerCase().trim());
 
     ResponseHandler.success(res, {}, "Forgot mail sent successfully");
   };

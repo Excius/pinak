@@ -141,6 +141,6 @@ router.get(
   authController.me,
 );
 
-//TODO: Add routes for username etc.
+//TODO: Add routes for username and verify-username etc.
 
 export default router;
