@@ -11,8 +11,10 @@ import { useState } from "react";
 // using the context function now
 import { useAuth } from "@/contexts/AuthContext";
 import { toastError, toastSuccess } from "@/libs/toast";
+import { useRouter } from "expo-router";
 
 export default function SignInForm() {
+  const router = useRouter();
   const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
@@ -28,6 +30,7 @@ export default function SignInForm() {
     try {
       await login(email, password);
       toastSuccess("Welcome Back");
+      router.replace("/(home)");
       setEmail("");
       setPassword("");
     } catch (err) {

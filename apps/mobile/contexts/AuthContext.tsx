@@ -66,7 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       const token = await getAccessToken();
       if (token) {
-        const userData = await apiRequest<MeResponse>("get", "/me");
+        const userData = await apiRequest<MeResponse>("get", "/auth/me");
         setUser(userData.data);
       }
     } catch (err) {
