@@ -1,19 +1,18 @@
 meta {
-  name: Login
+  name: Verify email
   type: http
-  seq: 3
+  seq: 8
 }
 
 post {
-  url: {{baseUrl}}/api/v1/auth/login
+  url: {{baseUrl}}/api/v1/auth/verify-email
   body: json
   auth: inherit
 }
 
 body:json {
   {
-    "email": "daksh.k23@iiits.in",
-    "password": "12345678"
+    "token": "xAQD0-zSobS66IKV_KXreF_Tx6teMu_71k8Mj7UqD_c"
   }
 }
 

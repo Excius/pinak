@@ -115,6 +115,8 @@ class ResponseHandler {
       success: false,
       message,
     };
+    res.clearCookie("accessToken");
+    res.clearCookie("refreshToken");
     res.status(401).json(response);
   }
 

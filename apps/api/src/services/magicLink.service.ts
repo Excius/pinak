@@ -4,32 +4,43 @@ import argon from "argon2";
 import appConfig from "../lib/config.js";
 import { UnauthorizedError } from "../lib/error.js";
 
+const MAGIC_LINK_SALT = Buffer.from("fixedsaltformagiclinks123456789012"); // 32 bytes
+
 export class MagicLinkService {
   constructor(private readonly magicLinkRepository: MagicLinkRepository) {}
 
-  async createPasswordResetToken(userId: string): Promise<string> {
+  async createPasswordResetLink(
+    userId: string,
+    platform: string,
+  ): Promise<string> {
     const token = crypto.randomBytes(32).toString("base64url");
 
     await this.magicLinkRepository.createMagicLink({
       userId,
-      tokenHash: await argon.hash(token),
+      tokenHash: await argon.hash(token, { salt: MAGIC_LINK_SALT }),
       tokenType: "PASSWORD_RESET",
       expiresAt: new Date(
-        Date.now() + appConfig.FORGOT_PASSWWORD_EXPIRY_MINUTES * 60 * 1000,
+        Date.now() + appConfig.FORGOT_PASSWORD_EXPIRY_MINUTES * 60 * 1000,
       ), // 15 minutes from now
     });
 
-    return token;
+    return platform === "MOBILE"
+      ? `${appConfig.MOBILE_APP_URL}/reset-password?token=${token}`
+      : `${appConfig.FRONTEND_URL}/reset-password?token=${token}`;
   }
 
-  async validatePasswordResetToken(token: string): Promise<boolean> {
+  async validatePasswordResetLink(token: string): Promise<string> {
+    const hashToken = await argon.hash(token, { salt: MAGIC_LINK_SALT });
     const magicLink =
-      await this.magicLinkRepository.getMagicLinkByTokenHash(token);
+      await this.magicLinkRepository.getMagicLinkByTokenHash(hashToken);
     if (!magicLink) {
       throw new UnauthorizedError("Invalid or expired password reset token.");
     }
 
-    if (magicLink.expiresAt < new Date()) {
+    if (
+      magicLink.expiresAt < new Date() ||
+      magicLink.type !== "PASSWORD_RESET"
+    ) {
       throw new UnauthorizedError("Invalid or expired password reset token.");
     }
 
@@ -40,34 +51,43 @@ export class MagicLinkService {
 
     await this.magicLinkRepository.deleteMagicLinkById(magicLink.id);
 
-    return isValid;
+    return magicLink.userId;
   }
 
-  async createEmailVerificationToken(userId: string): Promise<string> {
+  async createEmailVerificationLink(
+    userId: string,
+    platform: string,
+  ): Promise<string> {
     const token = crypto.randomBytes(32).toString("base64url");
 
     await this.magicLinkRepository.createMagicLink({
       userId,
-      tokenHash: await argon.hash(token),
+      tokenHash: await argon.hash(token, { salt: MAGIC_LINK_SALT }),
       tokenType: "EMAIL_VERIFICATION",
       expiresAt: new Date(
         Date.now() + appConfig.EMAIL_VERIFICATION_EXPIRY_HOURS * 60 * 60 * 1000,
       ), // 24 hours from now
     });
 
-    return token;
+    return platform === "MOBILE"
+      ? `${appConfig.MOBILE_APP_URL}/verify-email?token=${token}`
+      : `${appConfig.FRONTEND_URL}/verify-email?token=${token}`;
   }
 
-  async validateEmailVerificationToken(token: string): Promise<string> {
+  async validateEmailVerificationLink(token: string): Promise<string> {
+    const hashToken = await argon.hash(token, { salt: MAGIC_LINK_SALT });
     const magicLink =
-      await this.magicLinkRepository.getMagicLinkByTokenHash(token);
+      await this.magicLinkRepository.getMagicLinkByTokenHash(hashToken);
     if (!magicLink) {
       throw new UnauthorizedError(
         "Invalid or expired email verification token.",
       );
     }
 
-    if (magicLink.expiresAt < new Date()) {
+    if (
+      magicLink.expiresAt < new Date() ||
+      magicLink.type !== "EMAIL_VERIFICATION"
+    ) {
       throw new UnauthorizedError(
         "Invalid or expired email verification token.",
       );

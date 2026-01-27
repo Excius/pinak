@@ -49,6 +49,7 @@ export const AuthTypes = {
       success: z.boolean(),
       data: z.object({
         accessToken: z.string(),
+        user: UserSchema,
       }),
     }),
   },
@@ -102,35 +103,122 @@ export const AuthTypes = {
       }),
     }),
   },
+
+  ForgotPassword: {
+    body: z.object({
+      email: z.email("Invalid email format"),
+      platform: z.literal("web").or(z.literal("mobile")),
+    }),
+    params: z.object({}),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({}).nullable(),
+    }),
+  },
+
+  VerifyPassword: {
+    body: z.object({
+      token: z.string().min(1, "Token is required"),
+      newPassword: z
+        .string()
+        .min(8, "Password must be at least 8 characters long")
+        .max(64, "Password must be at most 64 characters long"),
+    }),
+    params: z.object({}),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({}).nullable(),
+    }),
+  },
+
+  GoogleOauth: {
+    body: z.object({}),
+    params: z.object({}),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({
+        url: z.string(),
+      }),
+    }),
+  },
+
+  GoogleOauthCallback: {
+    body: z.object({}),
+    params: z.object({}),
+    query: z.object({
+      code: z.string().min(1, "Code is required"),
+    }),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({
+        accessToken: z.string(),
+        user: UserSchema,
+      }),
+    }),
+  },
 };
 
-export type RegisterUserBody = z.infer<typeof AuthTypes.RegisterUser.body>;
-export type RegisterUserParams = z.infer<typeof AuthTypes.RegisterUser.params>;
-export type RegisterUserQuery = z.infer<typeof AuthTypes.RegisterUser.query>;
-export type LoginUserBody = z.infer<typeof AuthTypes.LoginUser.body>;
-export type LoginUserParams = z.infer<typeof AuthTypes.LoginUser.params>;
-export type LoginUserQuery = z.infer<typeof AuthTypes.LoginUser.query>;
-export type RefreshTokenBody = z.infer<typeof AuthTypes.RefreshToken.body>;
-export type RefreshTokenParams = z.infer<typeof AuthTypes.RefreshToken.params>;
-export type RefreshTokenQuery = z.infer<typeof AuthTypes.RefreshToken.query>;
-export type LogoutUserBody = z.infer<typeof AuthTypes.LogoutUser.body>;
-export type LogoutUserParams = z.infer<typeof AuthTypes.LogoutUser.params>;
-export type LogoutUserQuery = z.infer<typeof AuthTypes.LogoutUser.query>;
-export type MeBody = z.infer<typeof AuthTypes.Me.body>;
-export type MeParams = z.infer<typeof AuthTypes.Me.params>;
-export type MeQuery = z.infer<typeof AuthTypes.Me.query>;
-export type RegisterUserResponse = z.infer<
-  typeof AuthTypes.RegisterUser.response
->;
-export type LoginUserResponse = z.infer<typeof AuthTypes.LoginUser.response>;
-export type RefreshTokenResponse = z.infer<
-  typeof AuthTypes.RefreshToken.response
->;
-export type LogoutUserResponse = z.infer<typeof AuthTypes.LogoutUser.response>;
-export type MeResponse = z.infer<typeof AuthTypes.Me.response>;
-export type VerifyEmailBody = z.infer<typeof AuthTypes.VerifyEmail.body>;
-export type VerifyEmailParams = z.infer<typeof AuthTypes.VerifyEmail.params>;
-export type VerifyEmailQuery = z.infer<typeof AuthTypes.VerifyEmail.query>;
-export type VerifyEmailResponse = z.infer<
-  typeof AuthTypes.VerifyEmail.response
->;
+export type BodyTypes = {
+  [K in keyof typeof AuthTypes]: z.infer<(typeof AuthTypes)[K]["body"]>;
+};
+
+export type ParamsTypes = {
+  [K in keyof typeof AuthTypes]: z.infer<(typeof AuthTypes)[K]["params"]>;
+};
+
+export type QueryTypes = {
+  [K in keyof typeof AuthTypes]: z.infer<(typeof AuthTypes)[K]["query"]>;
+};
+
+export type ResponseTypes = {
+  [K in keyof typeof AuthTypes]: z.infer<(typeof AuthTypes)[K]["response"]>;
+};
+
+// Legacy individual exports for backward compatibility
+export type RegisterUserBody = BodyTypes["RegisterUser"];
+export type RegisterUserParams = ParamsTypes["RegisterUser"];
+export type RegisterUserQuery = QueryTypes["RegisterUser"];
+export type LoginUserBody = BodyTypes["LoginUser"];
+export type LoginUserParams = ParamsTypes["LoginUser"];
+export type LoginUserQuery = QueryTypes["LoginUser"];
+export type RefreshTokenBody = BodyTypes["RefreshToken"];
+export type RefreshTokenParams = ParamsTypes["RefreshToken"];
+export type RefreshTokenQuery = QueryTypes["RefreshToken"];
+export type LogoutUserBody = BodyTypes["LogoutUser"];
+export type LogoutUserParams = ParamsTypes["LogoutUser"];
+export type LogoutUserQuery = QueryTypes["LogoutUser"];
+export type MeBody = BodyTypes["Me"];
+export type MeParams = ParamsTypes["Me"];
+export type MeQuery = QueryTypes["Me"];
+export type RegisterUserResponse = ResponseTypes["RegisterUser"];
+export type LoginUserResponse = ResponseTypes["LoginUser"];
+export type RefreshTokenResponse = ResponseTypes["RefreshToken"];
+export type LogoutUserResponse = ResponseTypes["LogoutUser"];
+export type MeResponse = ResponseTypes["Me"];
+export type VerifyEmailBody = BodyTypes["VerifyEmail"];
+export type VerifyEmailParams = ParamsTypes["VerifyEmail"];
+export type VerifyEmailQuery = QueryTypes["VerifyEmail"];
+export type VerifyEmailResponse = ResponseTypes["VerifyEmail"];
+export type ForgotPasswordBody = BodyTypes["ForgotPassword"];
+export type ForgotPasswordParams = ParamsTypes["ForgotPassword"];
+export type ForgotPasswordQuery = QueryTypes["ForgotPassword"];
+export type ForgotPasswordResponse = ResponseTypes["ForgotPassword"];
+export type VerifyPasswordBody = BodyTypes["VerifyPassword"];
+export type VerifyPasswordParams = ParamsTypes["VerifyPassword"];
+export type VerifyPasswordQuery = QueryTypes["VerifyPassword"];
+export type VerifyPasswordResponse = ResponseTypes["VerifyPassword"];
+
+/**
+ * Example use case:
+ * import type { BodyTypes, ResponseTypes } from '@repo/types';
+ *
+ * type LoginBody = BodyTypes['LoginUser'];
+ * type LoginResponse = ResponseTypes['LoginUser'];
+ */

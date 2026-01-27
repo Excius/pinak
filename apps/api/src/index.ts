@@ -102,6 +102,11 @@ class Server {
     // Add other routes here
     this.app.use("/api/v1", apiRoutes);
 
+    // Not found handler
+    this.app.use((req, res) => {
+      ResponseHandler.notFound(res, "Resource not found");
+    });
+
     // Add global error handling middleware (must be last)
     this.app.use(errorHandler);
   }

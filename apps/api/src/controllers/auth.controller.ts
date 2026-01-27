@@ -6,11 +6,42 @@ import appConfig from "../lib/config.js";
 export class AuthController {
   constructor(private auth: AuthService) {}
 
+  private setAuthCookies(
+    res: Response,
+    accessToken: string,
+    refreshToken: string,
+  ) {
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: appConfig.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: appConfig.ACCESS_TOKEN_EXPIRY,
+    });
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: appConfig.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: appConfig.REFRESH_TOKEN_EXPIRY,
+    });
+  }
+
+  private extractRefreshToken(req: Request): string | null {
+    let refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) {
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith("Bearer ")) {
+        refreshToken = authHeader.substring(7);
+      }
+    }
+    return refreshToken || null;
+  }
+
   register = async (req: Request, res: Response) => {
     const { email, password, username, platform } = req.body;
 
     await this.auth.register(
-      email.trim(),
+      email.toLowerCase().trim(),
       password.trim(),
       username.trim(),
       platform.trim(),
@@ -29,57 +60,27 @@ export class AuthController {
       return ResponseHandler.unauthorized(res, "User not authenticated");
     }
 
-    const tokens = await this.auth.login(user);
+    const data = await this.auth.login(user);
 
     // Set cookies for access and refresh tokens
-    res.cookie("accessToken", tokens.accessToken, {
-      httpOnly: true,
-      secure: appConfig.NODE_ENV === "production", // Use secure in production
-      sameSite: "strict",
-      maxAge: appConfig.ACCESS_TOKEN_EXPIRY,
-    });
-
-    res.cookie("refreshToken", tokens.refreshToken, {
-      httpOnly: true,
-      secure: appConfig.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: appConfig.REFRESH_TOKEN_EXPIRY,
-    });
+    this.setAuthCookies(res, data.accessToken, data.refreshToken);
 
     ResponseHandler.success(
       res,
-      { accessToken: tokens.accessToken },
+      { accessToken: data.accessToken, user: data.user },
       "Login successful",
     );
   };
 
   refresh = async (req: Request, res: Response) => {
-    let refreshToken = req.cookies.refreshToken;
-    if (!refreshToken) {
-      const authHeader = req.headers.authorization;
-      if (authHeader && authHeader.startsWith("Bearer ")) {
-        refreshToken = authHeader.substring(7);
-      }
-    }
+    const refreshToken = this.extractRefreshToken(req);
     if (!refreshToken) {
       return ResponseHandler.unauthorized(res, "No refresh token provided");
     }
 
     const tokens = await this.auth.refresh(refreshToken);
 
-    res.cookie("accessToken", tokens.accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: appConfig.ACCESS_TOKEN_EXPIRY,
-    });
-
-    res.cookie("refreshToken", tokens.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: appConfig.REFRESH_TOKEN_EXPIRY,
-    });
+    this.setAuthCookies(res, tokens.accessToken, tokens.refreshToken);
 
     ResponseHandler.success(
       res,
@@ -88,7 +89,13 @@ export class AuthController {
     );
   };
 
-  logout = async (_req: Request, res: Response) => {
+  logout = async (req: Request, res: Response) => {
+    const refreshToken = this.extractRefreshToken(req);
+
+    if (refreshToken) {
+      await this.auth.logout(refreshToken);
+    }
+
     res.clearCookie("accessToken");
     res.clearCookie("refreshToken");
 
@@ -105,7 +112,7 @@ export class AuthController {
   verifyEmail = async (req: Request, res: Response) => {
     const { token } = req.body;
 
-    const tokens = await this.auth.verifyEmail(token, req.user!.id);
+    const tokens = await this.auth.verifyEmail(token);
 
     if (!tokens) {
       return ResponseHandler.unauthorized(
@@ -115,24 +122,48 @@ export class AuthController {
     }
 
     // Set cookies for access and refresh tokens
-    res.cookie("accessToken", tokens.accessToken, {
-      httpOnly: true,
-      secure: appConfig.NODE_ENV === "production", // Use secure in production
-      sameSite: "strict",
-      maxAge: appConfig.ACCESS_TOKEN_EXPIRY,
-    });
-
-    res.cookie("refreshToken", tokens.refreshToken, {
-      httpOnly: true,
-      secure: appConfig.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: appConfig.REFRESH_TOKEN_EXPIRY,
-    });
+    this.setAuthCookies(res, tokens.accessToken, tokens.refreshToken);
 
     ResponseHandler.success(
       res,
       { accessToken: tokens.accessToken },
       "Email verified successfully",
+    );
+  };
+
+  forgotPassword = async (req: Request, res: Response) => {
+    const { email, platform } = req.body;
+
+    await this.auth.forgotPassword(email.toLowerCase().trim(), platform);
+
+    ResponseHandler.success(res, {}, "Forgot mail sent successfully");
+  };
+
+  verifyPassword = async (req: Request, res: Response) => {
+    const { token, newPassword } = req.body;
+
+    await this.auth.verifyPassword(token, newPassword);
+
+    ResponseHandler.success(res, {}, "Password reset successfully");
+  };
+
+  googleOauth = async (req: Request, res: Response) => {
+    const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${appConfig.CLIENT_ID}&redirect_uri=${appConfig.REDIRECT_URI}&response_type=code&scope=profile%20email`;
+
+    ResponseHandler.success(res, { url }, "Google OAuth URL fetched");
+  };
+
+  googleOauthCallback = async (req: Request, res: Response) => {
+    const { code } = req.query;
+
+    const data = await this.auth.googleOauthCallback(code as string);
+
+    this.setAuthCookies(res, data.accessToken, data.refreshToken);
+
+    ResponseHandler.success(
+      res,
+      { accessToken: data.accessToken, user: data.user },
+      "Google OAuth callback handled",
     );
   };
 }

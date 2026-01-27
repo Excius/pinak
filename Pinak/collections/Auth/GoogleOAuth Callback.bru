@@ -1,0 +1,30 @@
+meta {
+  name: GoogleOAuth Callback
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{baseUrl}}/api/v1/auth/google/callback?code=4%2F0ASc3gC0vV24fJWt5KkInsaaM-L4aFiqxcWkTSAW9JYpF4iIa-npQm0kwzBbx4Eqjl1KaFg
+  body: none
+  auth: inherit
+}
+
+params:query {
+  code: 4%2F0ASc3gC0vV24fJWt5KkInsaaM-L4aFiqxcWkTSAW9JYpF4iIa-npQm0kwzBbx4Eqjl1KaFg
+}
+
+body:json {
+  {
+    "code": ""
+  }
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

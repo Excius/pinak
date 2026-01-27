@@ -11,6 +11,8 @@ import { AuthTypes } from "@repo/types";
 import { AuthMiddleware } from "../middlewares/auth.middleware.js";
 import { MagicLinkService } from "../services/magicLink.service.js";
 import { MagicLinkRepository } from "../repositories/magicLink.repository.js";
+import { createAuthRateLimiter } from "../lib/rateLimit.js";
+import { AuthProviderRepository } from "../repositories/authProvider.repository.js";
 
 const router = Router();
 
@@ -25,17 +27,18 @@ const sessionRepository = new SessionRespository(prisma);
 const userRespository = new UserRespository(prisma);
 const magicLinkRepository = new MagicLinkRepository(prisma);
 const magicEmail = new MagicLinkService(magicLinkRepository);
+const authProvider = new AuthProviderRepository(prisma);
 const authService = new AuthService(
   prisma,
   jwtService,
   sessionRepository,
   userRespository,
   magicEmail,
+  authProvider,
 );
 const authController = new AuthController(authService);
 const authMiddleware = new AuthMiddleware(jwtService);
-
-//TODO: limit the requests more that normal
+const authRateLimiter = createAuthRateLimiter();
 
 // Routes
 /**
@@ -43,6 +46,7 @@ const authMiddleware = new AuthMiddleware(jwtService);
  */
 router.post(
   "/register",
+  authRateLimiter,
   validateMultiple(AuthTypes.RegisterUser),
   authController.register,
 );
@@ -52,6 +56,7 @@ router.post(
  */
 router.post(
   "/login",
+  authRateLimiter,
   validateMultiple(AuthTypes.LoginUser),
   authController.login,
 );
@@ -61,6 +66,7 @@ router.post(
  */
 router.post(
   "/refresh",
+  authRateLimiter,
   validateMultiple(AuthTypes.RefreshToken),
   authController.refresh,
 );
@@ -70,8 +76,59 @@ router.post(
  */
 router.post(
   "/logout",
+  authRateLimiter,
   validateMultiple(AuthTypes.LogoutUser),
   authController.logout,
+);
+
+/**
+ * Forgot Password Route
+ */
+router.post(
+  "/forgot-password",
+  authRateLimiter,
+  validateMultiple(AuthTypes.ForgotPassword),
+  authController.forgotPassword,
+);
+
+/**
+ * Email Verification Route
+ */
+router.post(
+  "/verify-email",
+  authRateLimiter,
+  validateMultiple(AuthTypes.VerifyEmail),
+  authController.verifyEmail,
+);
+
+/**
+ * Verify Password Route
+ */
+router.post(
+  "/verify-password",
+  authRateLimiter,
+  validateMultiple(AuthTypes.VerifyPassword),
+  authController.verifyPassword,
+);
+
+/**
+ * Google OAuth Routes
+ */
+router.get(
+  "/google",
+  authRateLimiter,
+  validateMultiple(AuthTypes.GoogleOauth),
+  authController.googleOauth,
+);
+
+/**
+ * Google OAuth Callback Route
+ */
+router.post(
+  "/google/callback",
+  authRateLimiter,
+  validateMultiple(AuthTypes.GoogleOauthCallback),
+  authController.googleOauthCallback,
 );
 
 /**
@@ -84,13 +141,6 @@ router.get(
   authController.me,
 );
 
-router.post(
-  "/verify-email",
-  validateMultiple(AuthTypes.VerifyEmail),
-  authMiddleware.authenticate,
-  authController.verifyEmail,
-);
-
-//TODO: Add routes for password reset, username etc.
+//TODO: Add routes for username etc.
 
 export default router;
