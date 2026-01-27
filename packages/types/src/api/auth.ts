@@ -17,7 +17,6 @@ export const AuthTypes = {
           /^[a-zA-Z][a-zA-Z0-9_]*$/,
           "Username must start with a letter and contain only letters, numbers, and underscores",
         ),
-      platform: z.literal("web").or(z.literal("mobile")),
     }),
     params: z.object({
       // no path params for register by default; add here if needed
@@ -107,7 +106,6 @@ export const AuthTypes = {
   ForgotPassword: {
     body: z.object({
       email: z.email("Invalid email format"),
-      platform: z.literal("web").or(z.literal("mobile")),
     }),
     params: z.object({}),
     query: z.object({}),

@@ -57,7 +57,6 @@ export class AuthService {
     email: string,
     password: string,
     username: string,
-    platform: string,
   ): Promise<void> {
     const existingUser = await this.user.getUserByEmailOrUsername(
       email,
@@ -106,7 +105,6 @@ export class AuthService {
 
     const verificationLink = await this.magicLink.createEmailVerificationLink(
       newUser.id,
-      platform,
     );
 
     MailService.sendVerificationEmail({
@@ -241,6 +239,7 @@ export class AuthService {
         data: { refreshHash: await argon2.hash(newRefreshToken) },
       });
 
+      // NOTE: Need to shift this to a background job if scaling issues arise
       await tx.session.deleteMany({
         where: { OR: [{ id: session.id }, { expiresAt: { lt: new Date() } }] },
       });
@@ -308,8 +307,9 @@ export class AuthService {
         data: { isEmailVerified: true },
       });
 
-      await tx.session.deleteMany({
+      await tx.session.updateMany({
         where: { userId: dbUserId, isRevoked: false },
+        data: { isRevoked: true },
       });
 
       return data;
@@ -322,7 +322,7 @@ export class AuthService {
     );
   }
 
-  async forgotPassword(email: string, platform: string): Promise<void> {
+  async forgotPassword(email: string): Promise<void> {
     const dbUser = await this.user.getUserByEmail(email);
 
     if (!dbUser) {
@@ -340,10 +340,7 @@ export class AuthService {
       return; // Silently ignore, as they can't reset a non-existent password
     }
 
-    const resetLink = await this.magicLink.createPasswordResetLink(
-      dbUser.id,
-      platform,
-    );
+    const resetLink = await this.magicLink.createPasswordResetLink(dbUser.id);
 
     MailService.sendPasswordResetEmail(
       dbUser.email,

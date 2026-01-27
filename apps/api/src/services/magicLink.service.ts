@@ -9,10 +9,7 @@ const MAGIC_LINK_SALT = Buffer.from("fixedsaltformagiclinks123456789012"); // 32
 export class MagicLinkService {
   constructor(private readonly magicLinkRepository: MagicLinkRepository) {}
 
-  async createPasswordResetLink(
-    userId: string,
-    platform: string,
-  ): Promise<string> {
+  async createPasswordResetLink(userId: string): Promise<string> {
     const token = crypto.randomBytes(32).toString("base64url");
 
     await this.magicLinkRepository.createMagicLink({
@@ -24,9 +21,7 @@ export class MagicLinkService {
       ), // 15 minutes from now
     });
 
-    return platform === "MOBILE"
-      ? `${appConfig.MOBILE_APP_URL}/reset-password?token=${token}`
-      : `${appConfig.FRONTEND_URL}/reset-password?token=${token}`;
+    return `${appConfig.FRONTEND_URL}/reset-password?token=${token}`;
   }
 
   async validatePasswordResetLink(token: string): Promise<string> {
@@ -54,10 +49,7 @@ export class MagicLinkService {
     return magicLink.userId;
   }
 
-  async createEmailVerificationLink(
-    userId: string,
-    platform: string,
-  ): Promise<string> {
+  async createEmailVerificationLink(userId: string): Promise<string> {
     const token = crypto.randomBytes(32).toString("base64url");
 
     await this.magicLinkRepository.createMagicLink({
@@ -69,9 +61,7 @@ export class MagicLinkService {
       ), // 24 hours from now
     });
 
-    return platform === "MOBILE"
-      ? `${appConfig.MOBILE_APP_URL}/verify-email?token=${token}`
-      : `${appConfig.FRONTEND_URL}/verify-email?token=${token}`;
+    return `${appConfig.FRONTEND_URL}/verify-email?token=${token}`;
   }
 
   async validateEmailVerificationLink(token: string): Promise<string> {
