@@ -367,6 +367,152 @@ export class AuthService {
     return;
   }
 
+  async googleOauthMobile(idToken: string): Promise<{
+    accessToken: string;
+    refreshToken: string;
+    user: {
+      id: string;
+      email: string;
+      username: string;
+      name: string | null;
+      role: UserRoles;
+      createdAt: Date;
+      updatedAt: Date;
+    };
+  }> {
+    const client = new OAuth2Client(appConfig.CLIENT_ID_MOBILE);
+
+    const ticket = await client.verifyIdToken({
+      idToken: idToken,
+      audience: appConfig.CLIENT_ID_MOBILE,
+    });
+
+    const payload = ticket.getPayload();
+    if (!payload || !payload.sub) {
+      throw new UnauthorizedError("Invalid ID token received from Google");
+    }
+
+    if (!payload.email_verified) {
+      throw new UnauthorizedError("Google email is not verified");
+    }
+
+    const providerId = payload.sub;
+    const email = payload.email?.toLowerCase().trim();
+    if (!email) {
+      loggerInstance.warn("Google ID token missing email");
+      throw new UnauthorizedError("Google account does not provide an email");
+    }
+    const name = payload.name ?? null;
+
+    const existingProvider = await this.authProvider.getExistingProvider(
+      AuthProviderType.GOOGLE,
+      providerId,
+    );
+
+    // If user with this OAuth provider already exists, log them in
+    if (existingProvider) {
+      const { refreshToken, accessToken } = await this.generateTokens(
+        existingProvider.user.id,
+        existingProvider.user.role as UserRoles,
+        AuthMethod.OAUTH,
+      );
+
+      return {
+        accessToken,
+        refreshToken,
+        user: {
+          id: existingProvider.user.id,
+          email: existingProvider.user.email,
+          username: existingProvider.user.username,
+          name: existingProvider.user.name,
+          role: existingProvider.user.role,
+          createdAt: existingProvider.user.createdAt,
+          updatedAt: existingProvider.user.updatedAt,
+        },
+      };
+    }
+
+    // If user doesn't exists. Check if email already exists
+    const existingUser = await this.user.getUserByEmail(email);
+
+    if (existingUser) {
+      // Link Google provider to existing user
+
+      await this.prisma.$transaction(async (tx) => {
+        await tx.authProvider.create({
+          data: {
+            provider: AuthProviderType.GOOGLE,
+            providerId,
+            userId: existingUser.id,
+          },
+        });
+
+        await tx.user.update({
+          where: { id: existingUser.id },
+          data: { name: name, isEmailVerified: true },
+        });
+      });
+
+      const { refreshToken, accessToken } = await this.generateTokens(
+        existingUser.id,
+        existingUser.role as UserRoles,
+        AuthMethod.OAUTH,
+      );
+
+      return {
+        accessToken,
+        refreshToken,
+        user: {
+          id: existingUser.id,
+          email: existingUser.email,
+          username: existingUser.username,
+          name: existingUser.name,
+          role: existingUser.role,
+          createdAt: existingUser.createdAt,
+          updatedAt: existingUser.updatedAt,
+        },
+      };
+    }
+
+    // No user or provider exists, create new user
+
+    const usernameBase = email.includes("@") ? email.split("@")[0] : email;
+    const username = usernameBase || `user_${Date.now()}`; // Fallback
+
+    const existingUsername = await this.user.getUserByUsername(username);
+    const finalUsername = existingUsername
+      ? `${username}_${Date.now()}`
+      : username;
+
+    const newUser = await this.user.createOauthUser(
+      email,
+      finalUsername,
+      AuthProviderType.GOOGLE,
+      providerId,
+      name,
+    );
+
+    const { refreshToken, accessToken } = await this.generateTokens(
+      newUser.id,
+      newUser.role as UserRoles,
+      AuthMethod.OAUTH,
+    );
+
+    return {
+      accessToken,
+      refreshToken,
+      user: {
+        id: newUser.id,
+        email: newUser.email,
+        username: newUser.username,
+        name: newUser.name,
+        role: newUser.role,
+        createdAt: newUser.createdAt,
+        updatedAt: newUser.updatedAt,
+      },
+    };
+  }
+
   async googleOauthCallback(code: string): Promise<{
     accessToken: string;
     refreshToken: string;
@@ -390,7 +536,7 @@ export class AuthService {
       res = await axios.post(
         "https://oauth2.googleapis.com/token",
         new URLSearchParams({
-          client_id: appConfig.CLIENT_ID,
+          client_id: appConfig.CLIENT_ID_WEB,
           client_secret: appConfig.CLIENT_SECRET,
           code: decodeURIComponent(code),
           redirect_uri: appConfig.REDIRECT_URI,
@@ -408,11 +554,11 @@ export class AuthService {
     }
 
     const { id_token } = res.data;
-    const client = new OAuth2Client(appConfig.CLIENT_ID);
+    const client = new OAuth2Client(appConfig.CLIENT_ID_WEB);
 
     const ticket = await client.verifyIdToken({
       idToken: id_token,
-      audience: appConfig.CLIENT_ID,
+      audience: appConfig.CLIENT_ID_WEB,
     });
 
     const payload = ticket.getPayload();

@@ -122,6 +122,16 @@ router.get(
 );
 
 /**
+ * Google OAuth Mobile Route
+ */
+router.post(
+  "/google/mobile",
+  authRateLimiter,
+  validateMultiple(AuthTypes.GoogleOauthMobile),
+  authController.googleOauthMobile,
+);
+
+/**
  * Google OAuth Callback Route
  */
 router.post(
