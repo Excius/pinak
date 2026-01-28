@@ -115,9 +115,14 @@ class Config {
   public readonly FRONTEND_URL: string;
 
   /**
-   * OAuth2 Client ID for third-party authentication.
+   * OAuth2 Client ID for third-party authentication for website.
    */
-  public readonly CLIENT_ID: string;
+  public readonly CLIENT_ID_WEB: string;
+
+  /**
+   * OAuth2 Client ID for third-party authentication for mobile apps.
+   */
+  public readonly CLIENT_ID_MOBILE: string;
 
   /**
    * OAuth2 Client Secret for third-party authentication.
@@ -193,10 +198,15 @@ class Config {
     this.MOBILE_APP_URL = process.env.MOBILE_APP_URL || "myapp://app";
     this.FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
-    if (!process.env.CLIENT_ID) {
+    if (!process.env.CLIENT_ID_WEB) {
       throw new Error("CLIENT_ID environment variable is required");
     }
-    this.CLIENT_ID = process.env.CLIENT_ID;
+    this.CLIENT_ID_WEB = process.env.CLIENT_ID_WEB;
+
+    if (!process.env.CLIENT_ID_MOBILE) {
+      throw new Error("CLIENT_ID_MOBILE environment variable is required");
+    }
+    this.CLIENT_ID_MOBILE = process.env.CLIENT_ID_MOBILE;
 
     if (!process.env.CLIENT_SECRET) {
       throw new Error("CLIENT_SECRET environment variable is required");
