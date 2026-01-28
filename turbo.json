@@ -16,7 +16,31 @@
     "dev": {
       "cache": false,
       "persistent": true,
-      "env": ["PORT", "NODE_ENV", "LOG_LEVEL", "DATABASE_URL", "CORS_ORIGIN"]
+      "env": [
+        "PORT",
+        "NODE_ENV",
+        "LOG_LEVEL",
+        "DATABASE_URL",
+        "CORS_ORIGIN",
+        "CORS_ORIGINS",
+        "JWT_SECRET",
+        "REFRESH_TOKEN_EXPIRY",
+        "ACCESS_TOKEN_EXPIRY",
+        "MAIL_FROM",
+        "SMTP_HOST",
+        "SMTP_PORT",
+        "SMTP_USER",
+        "SMTP_PASS",
+        "SMTP_SECURE",
+        "FORGOT_PASSWORD_EXPIRY_MINUTES",
+        "EMAIL_VERIFICATION_EXPIRY_HOURS",
+        "BACKEND_URL",
+        "FRONTEND_URL",
+        "MOBILE_APP_URL",
+        "CLIENT_ID",
+        "CLIENT_SECRET",
+        "REDIRECT_URI"
+      ]
     },
     "prisma:studio": {
       "cache": false,

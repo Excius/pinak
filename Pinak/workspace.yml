@@ -1,0 +1,16 @@
+opencollection: 1.0.0
+info:
+  name: "Pinak"
+  type: workspace
+
+collections:
+  - name: "Auth"
+    path: "collections/Auth"
+  - name: "Mis"
+    path: "collections/Mis"
+
+specs:
+
+docs: ''
+
+activeEnvironmentUid: eygp3o000000000000000

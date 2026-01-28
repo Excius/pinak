@@ -2,11 +2,14 @@ import express from "express";
 import type { Server as HttpServer } from "http";
 import cors from "cors";
 import helmet from "helmet";
+import morgan from "morgan";
 import logger from "./lib/logger.js";
 import config from "./lib/config.js";
 import { ResponseHandler, errorHandler } from "./lib/response.js";
 import { createRateLimiter } from "./lib/rateLimit.js";
 import { prisma } from "./lib/prisma.js";
+import apiRoutes from "./routes/index.js";
+import cookieParser from "cookie-parser";
 
 class Server {
   private app: express.Application;
@@ -26,8 +29,16 @@ class Server {
     // Rate limiting middleware
     this.app.use(createRateLimiter());
 
+    // HTTP request logging middleware
+    if (config.NODE_ENV === "development") {
+      this.app.use(morgan("dev"));
+    } else {
+      this.app.use(morgan("combined"));
+    }
+
     // Body parsing middleware
     this.app.use(express.json());
+    this.app.use(cookieParser());
 
     // CORS middleware
     this.app.use(
@@ -75,11 +86,6 @@ class Server {
   }
 
   private initializeRoutes(): void {
-    // Root endpoint
-    this.app.get("/", (req, res) => {
-      ResponseHandler.success(res, { message: "Hello, World!" });
-    });
-
     // Health check endpoint
     this.app.get("/health", (req, res) => {
       ResponseHandler.success(
@@ -94,7 +100,12 @@ class Server {
     });
 
     // Add other routes here
-    // this.app.use('/api', apiRoutes);
+    this.app.use("/api/v1", apiRoutes);
+
+    // Not found handler
+    this.app.use((req, res) => {
+      ResponseHandler.notFound(res, "Resource not found");
+    });
 
     // Add global error handling middleware (must be last)
     this.app.use(errorHandler);
@@ -112,7 +123,7 @@ class Server {
     });
 
     process.on("unhandledRejection", (reason, promise) => {
-      logger.fatal("Unhandled Rejection at:", promise, "reason:", reason);
+      logger.fatal("Unhandled Rejection", { promise, reason });
       this.forceShutdown(1);
     });
   }
@@ -168,9 +179,9 @@ class Server {
     try {
       // Close Prisma database connection
       await prisma.$disconnect();
-      logger.info('Database connection closed');
+      logger.info("Database connection closed");
     } catch (error) {
-      logger.error('Error closing database connection:', error);
+      logger.error("Error closing database connection:", error);
     }
 
     // Example cleanup operations for other services:

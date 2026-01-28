@@ -115,6 +115,8 @@ class ResponseHandler {
       success: false,
       message,
     };
+    res.clearCookie("accessToken");
+    res.clearCookie("refreshToken");
     res.status(401).json(response);
   }
 
@@ -307,17 +309,17 @@ export const errorHandler = (
       ResponseHandler.notFound(res, message);
       break;
     case 409:
-      ResponseHandler.conflict(res, message, errors);
+      ResponseHandler.conflict(res, message);
       break;
     case 422:
-      ResponseHandler.unprocessableEntity(res, message, errors);
+      ResponseHandler.unprocessableEntity(res, message);
       break;
     case 429:
       ResponseHandler.tooManyRequests(res, message);
       break;
     case 500:
     default:
-      ResponseHandler.internalServerError(res, message, errors);
+      ResponseHandler.internalServerError(res, message);
       break;
   }
 };

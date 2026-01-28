@@ -6,13 +6,19 @@ const workspaceRoot = path.resolve(projectRoot, "../..");
 
 const config = getDefaultConfig(projectRoot);
 
-// Allow metro to read files from monorepo
-config.watchFolders = [workspaceRoot];
+// ✅ EXTEND watchFolders instead of replacing
+config.watchFolders = [...config.watchFolders, workspaceRoot];
 
-// Resolve shared packages
+// ✅ Force single React resolution
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, "node_modules"),
   path.resolve(workspaceRoot, "node_modules"),
 ];
+
+// ✅ Ensure React resolves from mobile app only
+config.resolver.extraNodeModules = {
+  react: path.resolve(projectRoot, "node_modules/react"),
+  "react-dom": path.resolve(projectRoot, "node_modules/react-dom"),
+};
 
 module.exports = config;
