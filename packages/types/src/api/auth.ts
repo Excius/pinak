@@ -146,6 +146,22 @@ export const AuthTypes = {
     }),
   },
 
+  GoogleOauthMobile: {
+    body: z.object({
+      idToken: z.string().min(1, "idToken is required"),
+    }),
+    params: z.object({}),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({
+        accessToken: z.string(),
+        user: UserSchema,
+      }),
+    }),
+  },
+
   GoogleOauthCallback: {
     body: z.object({}),
     params: z.object({}),
