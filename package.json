@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
+    "build:backend": "turbo run build --filter=api",
     "build:packages": "turbo run build --filter=./packages/*",
     "dev": "turbo run dev",
     "dev:mobile": "turbo run dev --filter=mobile",
