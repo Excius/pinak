@@ -6,7 +6,11 @@ import argon2 from "argon2";
 import loggerInstance from "../lib/logger.js";
 import { UserRoles } from "@repo/types";
 import { UserRespository } from "../repositories/user.repository.js";
-import { InternalServerError, UnauthorizedError } from "../lib/error.js";
+import {
+  BadRequestError,
+  InternalServerError,
+  UnauthorizedError,
+} from "../lib/error.js";
 import { Passwordhasher } from "../lib/password.js";
 import { MailService } from "./mail.service.js";
 import { MagicLinkService } from "./magicLink.service.js";
@@ -685,5 +689,16 @@ export class AuthService {
         updatedAt: newUser.updatedAt,
       },
     };
+  }
+
+  async usernameAvailablity(username: string): Promise<boolean> {
+    const user = await this.user.getUserByUsername(username);
+
+    if (user) {
+      loggerInstance.warn("Username already exists.");
+      throw new BadRequestError("Username is not available.");
+    }
+
+    return true;
   }
 }

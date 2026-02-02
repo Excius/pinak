@@ -53,6 +53,28 @@ export const AuthTypes = {
     }),
   },
 
+  username: {
+    body: z.object({}),
+    params: z.object({}),
+    query: z.object({
+      username: z
+        .string()
+        .min(3, "Username must be at least 3 characters long")
+        .max(30, "Username must be at most 30 characters long")
+        .regex(
+          /^[a-zA-Z][a-zA-Z0-9_]*$/,
+          "Username must start with a letter and constain only letters, numbers, and underscores",
+        ),
+    }),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({
+        username: z.string(),
+      }),
+    }),
+  },
+
   RefreshToken: {
     body: z.object({}),
     params: z.object({}),

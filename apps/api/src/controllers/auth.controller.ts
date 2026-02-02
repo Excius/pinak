@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { ResponseHandler } from "../lib/response.js";
 import { AuthService } from "../services/auth.service.js";
 import appConfig from "../lib/config.js";
+import loggerInstance from "../lib/logger.js";
 
 export class AuthController {
   constructor(private auth: AuthService) {}
@@ -178,5 +179,24 @@ export class AuthController {
       { accessToken: data.accessToken, user: data.user },
       "Google OAuth callback handled",
     );
+  };
+
+  usernameAvailability = async (req: Request, res: Response) => {
+    const data = req.query;
+
+    const username = (data.username as string)?.trim();
+
+    if (!username) {
+      loggerInstance.info(
+        "Username is not provided in the usernameCheck route.",
+      );
+      return ResponseHandler.badRequest(res, "Username is not provided!");
+    }
+
+    const isAvailable: boolean = await this.auth.usernameAvailablity(username);
+
+    if (isAvailable) {
+      ResponseHandler.success(res, { username }, "Username available.");
+    }
   };
 }
