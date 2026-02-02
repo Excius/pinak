@@ -62,6 +62,16 @@ router.post(
 );
 
 /**
+ * Username Availability Check Route
+ */
+router.get(
+  "/username",
+  authRateLimiter,
+  validateMultiple(AuthTypes.username),
+  authController.usernameAvailability,
+);
+
+/**
  * Token Refresh Route
  */
 router.post(
@@ -150,7 +160,5 @@ router.get(
   authMiddleware.authenticate,
   authController.me,
 );
-
-//TODO: Add routes for username and verify-username etc.
 
 export default router;
