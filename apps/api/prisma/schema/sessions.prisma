@@ -3,13 +3,15 @@ model Session {
   userId      String
   refreshHash String
   isRevoked   Boolean    @default(false)
-  createdAt   DateTime   @default(now())
-  expiresAt   DateTime
   lastUsedAt  DateTime   @updatedAt
   ipAddress   String?
   userAgent   String?
   authMethod  AuthMethod
-  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  expiresAt DateTime
 
   @@index([userId])
   @@index([expiresAt])

@@ -1,0 +1,36 @@
+model User {
+  id              String     @id @default(uuid())
+  email           String     @unique
+  hashPassword    String?
+  username        String     @unique
+  name            String?
+  role            UserRole   @default(USER)
+  status          UserStatus @default(ACTIVE)
+  isEmailVerified Boolean    @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sessions      Session[]
+  magicLinks    MagicLink[]
+  authProviders AuthProvider[]
+
+  orders       Order[]
+  cart         Cart?
+  wishlist     Wishlist?
+  reviews      Review[]
+  couponUsages CouponUsage[]
+  auditLogs    AuditLog[]
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  DELETED
+}
+
+enum UserRole {
+  ADMIN
+  USER
+  MODERATOR
+}

@@ -3,9 +3,13 @@ model MagicLink {
   userId    String
   tokenHash String        @unique
   type      MagicLinkType
+
   expiresAt DateTime
-  createdAt DateTime      @default(now())
-  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 enum MagicLinkType {

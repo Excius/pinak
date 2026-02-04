@@ -1,0 +1,36 @@
+model InventoryReservation {
+  id               String  @id @default(cuid())
+  productVariantId String
+  quantity         Int
+  orderId          String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  expiresAt DateTime
+
+  productVariant ProductVariant @relation(fields: [productVariantId], references: [id])
+
+  @@index([productVariantId])
+  @@index([expiresAt])
+  @@index([orderId])
+}
+
+model AuditLog {
+  id        String  @id @default(cuid())
+  entity    String // e.g., "Product", "Order", "User"
+  entityId  String
+  action    String // e.g., "CREATE", "UPDATE", "DELETE"
+  before    Json?
+  after     Json?
+  actorId   String? // user/admin/system that performed the action
+  actorRole String? // e.g., "USER", "ADMIN", "SYSTEM"
+
+  source String? // e.g., "API", "Admin Panel", "System", "Webhook", "cron", etc.
+
+  createdAt DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id])
+
+  @@index([actorId])
+  @@index([entity, entityId])
+}
