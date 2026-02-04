@@ -1,0 +1,71 @@
+model Order {
+  id     String @id @default(cuid())
+  userId String
+
+  status        OrderStatus   @default(PENDING)
+  paymentStatus PaymentStatus @default(PENDING)
+
+  subtotalAmount Int
+  taxAmount      Int
+  discountAmount Int @default(0)
+  shippingAmount Int
+  totalAmount    Int
+
+  gstPercentage Float   @default(0.0)
+  gstNumber     String?
+  getBreakup    Json?
+
+  couponcode     String?
+  couponDiscount Int     @default(0)
+
+  items OrderItem[]
+  user  User        @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  couponUsages CouponUsage[]
+
+  isDeleted Boolean @default(false)
+
+  @@index([userId])
+}
+
+model OrderItem {
+  id      String @id @default(cuid())
+  orderId String
+
+  productId        String?
+  productVariantId String?
+  comboKitId       String?
+
+  productName    String
+  variantDetails Json?
+  price          Int
+  quantity       Int    @default(1)
+
+  order          Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product        Product?        @relation(fields: [productId], references: [id])
+  productVariant ProductVariant? @relation(fields: [productVariantId], references: [id])
+  comboKit       ComboKit?       @relation(fields: [comboKitId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([orderId])
+  @@index([productVariantId])
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}

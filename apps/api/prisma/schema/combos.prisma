@@ -1,0 +1,34 @@
+model ComboKit {
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  description String?
+  audience    String?
+  price       Int
+  isActive    Boolean @default(true)
+
+  items      ComboKitItem[]
+  orderItems OrderItem[]
+  cartItems  CartItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  isDeleted Boolean @default(false)
+}
+
+model ComboKitItem {
+  id               String @id @default(cuid())
+  comboKitId       String
+  productVariantId String
+  quantity         Int    @default(1)
+
+  comboKit       ComboKit       @relation(fields: [comboKitId], references: [id], onDelete: Cascade)
+  productVariant ProductVariant @relation(fields: [productVariantId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([comboKitId])
+  @@index([productVariantId])
+}
