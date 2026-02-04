@@ -1,0 +1,21 @@
+model Session {
+  id          String     @id @default(uuid())
+  userId      String
+  refreshHash String
+  isRevoked   Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  expiresAt   DateTime
+  lastUsedAt  DateTime   @updatedAt
+  ipAddress   String?
+  userAgent   String?
+  authMethod  AuthMethod
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+enum AuthMethod {
+  PASSWORD
+  OAUTH
+}
