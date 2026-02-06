@@ -148,23 +148,16 @@ export class AuthController {
   };
 
   googleOauth = async (req: Request, res: Response) => {
-    const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${appConfig.CLIENT_ID_WEB}&redirect_uri=${appConfig.REDIRECT_URI}&response_type=code&scope=profile%20email`;
+    const platform = (req.query.platform as string) || "web";
+    const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${appConfig.CLIENT_ID_WEB}&redirect_uri=${platform === "WEB" ? appConfig.REDIRECT_URI_WEB : appConfig.REDIRECT_URI_BACKEND}&response_type=code&scope=profile%20email`;
 
     ResponseHandler.success(res, { url }, "Google OAuth URL fetched");
   };
 
   googleOauthMobile = async (req: Request, res: Response) => {
-    const { idToken } = req.body;
+    const code = req.params.code;
 
-    const data = await this.auth.googleOauthMobile(idToken);
-
-    this.setAuthCookies(res, data.accessToken, data.refreshToken);
-
-    ResponseHandler.success(
-      res,
-      { accessToken: data.accessToken, user: data.user },
-      "Google OAuth mobile login successful",
-    );
+    res.redirect(`${appConfig.REDIRECT_URI_MOBILE}?code=${code}`);
   };
 
   googleOauthCallback = async (req: Request, res: Response) => {
