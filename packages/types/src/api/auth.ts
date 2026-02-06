@@ -158,7 +158,9 @@ export const AuthTypes = {
   GoogleOauth: {
     body: z.object({}),
     params: z.object({}),
-    query: z.object({}),
+    query: z.object({
+      platform: z.enum(["WEB", "MOBILE"]).optional(),
+    }),
     response: z.object({
       message: z.string(),
       success: z.boolean(),
@@ -169,18 +171,13 @@ export const AuthTypes = {
   },
 
   GoogleOauthMobile: {
-    body: z.object({
-      idToken: z.string().min(1, "idToken is required"),
-    }),
+    body: z.object({}),
     params: z.object({}),
-    query: z.object({}),
+    query: z.object({ code: z.string().min(1, "Code is required") }),
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: z.object({
-        accessToken: z.string(),
-        user: UserSchema,
-      }),
+      data: z.object({}).nullable(),
     }),
   },
 
