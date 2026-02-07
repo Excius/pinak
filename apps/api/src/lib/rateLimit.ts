@@ -32,7 +32,7 @@ export const createRateLimiter = () => {
 export const createAuthRateLimiter = () => {
   return rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 50, // Limit each IP to 10 auth requests per windowMs
+    max: 5000, // Limit each IP to 10 auth requests per windowMs
     message: {
       success: false,
       message: "Too many authentication attempts, please try again later.",
