@@ -19,7 +19,8 @@ const HERO_ITEMS: HeroItem[] = [
     description: "Complete radiance for your special day.",
     buttonText: "Shop The Kit",
     buttonStyle: "primary",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAEb2pQStV0ALPl6ZWPfTmzXrt4P5tjrZ9OkvxNC3vTupem8OoVyZmvGsSn94VYu677wqDLv7d6k--BOscMyxpr7n62IQXIEzwv54WIbv45W8MQu_A74A52S9muKOoShuUZ2tdsniJFXv9FpywVCmct_2V9BaNPOiqo1PdrTvMwnsQ_9qkU0Op-0U89GeSz55s-8WDxKaok6ou2-E0U2rr93nKG9YIREfxyFj-P1qH4P0XGZpOERjKPIRm4f5QGAZ3WQRTXJtaSWRk",
+    image:
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuAEb2pQStV0ALPl6ZWPfTmzXrt4P5tjrZ9OkvxNC3vTupem8OoVyZmvGsSn94VYu677wqDLv7d6k--BOscMyxpr7n62IQXIEzwv54WIbv45W8MQu_A74A52S9muKOoShuUZ2tdsniJFXv9FpywVCmct_2V9BaNPOiqo1PdrTvMwnsQ_9qkU0Op-0U89GeSz55s-8WDxKaok6ou2-E0U2rr93nKG9YIREfxyFj-P1qH4P0XGZpOERjKPIRm4f5QGAZ3WQRTXJtaSWRk",
   },
   {
     id: "2",
@@ -28,7 +29,8 @@ const HERO_ITEMS: HeroItem[] = [
     description: "3 Shades of elegance in one box.",
     buttonText: "View Shades",
     buttonStyle: "secondary",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBYR9Cx_ccB8jdclpNBxxOtIRFyqNyChvbBQenV4AYrcC67ro5J2mcJKciz2zTWeT4eg-R0Rugix6wdRfp2sZE_FDtJRtyk0-PhWk_7d3Mcey_F5IiNVDtYoTZCsFhpTXCL5-5W9H7_-S2xnMxCQSFfdvQCW_fAoJfRTHCMKUtCUMWj0dcVmUEEHiLS2d_oH6W8WkV53V0HdwRUknnAI6gCSnYC6bMmu4DOtQ8--HBgJwyjkYk3tCBxudM0Mah5XoinGzLDdV6pQEk",
+    image:
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuBYR9Cx_ccB8jdclpNBxxOtIRFyqNyChvbBQenV4AYrcC67ro5J2mcJKciz2zTWeT4eg-R0Rugix6wdRfp2sZE_FDtJRtyk0-PhWk_7d3Mcey_F5IiNVDtYoTZCsFhpTXCL5-5W9H7_-S2xnMxCQSFfdvQCW_fAoJfRTHCMKUtCUMWj0dcVmUEEHiLS2d_oH6W8WkV53V0HdwRUknnAI6gCSnYC6bMmu4DOtQ8--HBgJwyjkYk3tCBxudM0Mah5XoinGzLDdV6pQEk",
   },
 ];
 

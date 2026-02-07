@@ -20,7 +20,21 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.lightshadow1101.mobile"
+      "package": "com.pinak.mobile",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify":true,
+          "category":["BROWSABLE","DEFAULT"],
+          "data":[
+            {
+              "scheme":"https",
+              "host":"pinak.onrender.com",
+              "pathPrefix":"/"
+            }
+          ]
+        }
+      ]
     },
     "web": {
       "output": "static",

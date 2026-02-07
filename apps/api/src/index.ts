@@ -73,17 +73,20 @@ class Server {
         hsts:
           config.NODE_ENV === "production"
             ? {
-                maxAge: 31536000,
-                includeSubDomains: true,
-                preload: true,
-              }
+              maxAge: 31536000,
+              includeSubDomains: true,
+              preload: true,
+            }
             : false,
       }),
     );
-
+    // static file serving middleware 
+    // this.app.use(express.static('public'));
     // Add other middleware here
     // etc.
   }
+
+
 
   private initializeRoutes(): void {
     // Health check endpoint
@@ -96,6 +99,25 @@ class Server {
           uptime: process.uptime(),
         },
         "Health check successful",
+      );
+    });
+
+    // static files were havign issue being served so served it liek this
+    // usecase: app uses it to verify the domain for deeplinking
+    this.app.get('/.well-known/assetlinks.json', (req, res) => {
+      res.setHeader('Content-Type', 'application/json');
+      res.send([
+        {
+          "relation": ["delegate_permission/common.handle_all_urls"],
+          "target": {
+            "namespace": "android_app",
+            "package_name": "com.pinak.mobile",
+            "sha256_cert_fingerprints": [
+              "95:21:43:CD:CE:D7:46:56:E0:33:C0:9E:32:95:B1:C7:EA:55:09:F2:B1:9C:09:E4:1C:1A:79:70:9B:5A:76:A1"
+            ]
+          }
+        }
+      ]
       );
     });
 

@@ -5,7 +5,7 @@ import appConfig from "../lib/config.js";
 import loggerInstance from "../lib/logger.js";
 
 export class AuthController {
-  constructor(private auth: AuthService) {}
+  constructor(private auth: AuthService) { }
 
   private setAuthCookies(
     res: Response,
@@ -155,7 +155,8 @@ export class AuthController {
   };
 
   googleOauthMobile = async (req: Request, res: Response) => {
-    const code = req.params.code;
+    const code = req.query.code as string;
+    loggerInstance.info("Received Google OAuth code for mobile:", { code });
 
     res.redirect(`${appConfig.REDIRECT_URI_MOBILE}?code=${code}`);
   };
