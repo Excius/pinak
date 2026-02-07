@@ -1,0 +1,47 @@
+model QuizQuestion {
+  id       String       @id @default(cuid())
+  questoin String
+  type     QuizType
+  options  QuizOption[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  isDeleted Boolean @default(false)
+}
+
+model QuizOption {
+  id         String  @id @default(cuid())
+  text       String
+  isCorrect  Boolean @default(false)
+  questionId String
+
+  question QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  isDeleted Boolean @default(false)
+
+  @@index([questionId])
+}
+
+model QuizRule {
+  id         String  @id @default(cuid())
+  condition  Json
+  productId  String?
+  comboKitId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  isDeleted Boolean @default(false)
+
+  @@index([productId])
+  @@index([comboKitId])
+}
+
+enum QuizType {
+  SINGLE_CHOICE
+  MULTIPLE_CHOICE
+}

@@ -1,0 +1,26 @@
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String     @unique
+  user      User       @relation(fields: [userId], references: [id])
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model CartItem {
+  id               String  @id @default(cuid())
+  cartId           String
+  productVariantId String?
+  comboKitId       String?
+  quantity         Int     @default(1)
+
+  cart           Cart            @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productVariant ProductVariant? @relation(fields: [productVariantId], references: [id])
+  comboKit       ComboKit?       @relation(fields: [comboKitId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([cartId])
+  @@index([productVariantId])
+}

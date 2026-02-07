@@ -1,0 +1,32 @@
+model FeaturedSection {
+  id       String       @id @default(cuid())
+  title    String
+  type     FeaturedType
+  priority Int          @default(0)
+
+  products FeaturedProduct[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FeaturedProduct {
+  id        String @id @default(cuid())
+  sectionId String
+  prodcutId String
+
+  section FeaturedSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  product Product         @relation(fields: [prodcutId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sectionId])
+  @@index([prodcutId])
+}
+
+enum FeaturedType {
+  EXPERT_PICKS
+  HOMEPAGE_HERO
+  DEALS
+}

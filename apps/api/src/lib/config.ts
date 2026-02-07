@@ -120,19 +120,24 @@ class Config {
   public readonly CLIENT_ID_WEB: string;
 
   /**
-   * OAuth2 Client ID for third-party authentication for mobile apps.
-   */
-  public readonly CLIENT_ID_MOBILE: string;
-
-  /**
    * OAuth2 Client Secret for third-party authentication.
    */
   public readonly CLIENT_SECRET: string;
 
   /**
-   * OAuth2 Redirect URI for third-party authentication.
+   * OAuth2 Redirect URI for third-party authentication for web application.
    */
-  public readonly REDIRECT_URI: string;
+  public readonly REDIRECT_URI_WEB: string;
+
+  /**
+   * OAuth2 Redirect URI for third-party authentication for mobile apps.
+   */
+  public readonly REDIRECT_URI_MOBILE: string;
+
+  /**
+   * OAuth2 Redirect URI for third-party authentication for backend (used in Google OAuth flow).
+   */
+  public readonly REDIRECT_URI_BACKEND: string;
 
   constructor() {
     this.NODE_ENV = process.env.NODE_ENV || "development";
@@ -203,20 +208,25 @@ class Config {
     }
     this.CLIENT_ID_WEB = process.env.CLIENT_ID_WEB;
 
-    if (!process.env.CLIENT_ID_MOBILE) {
-      throw new Error("CLIENT_ID_MOBILE environment variable is required");
-    }
-    this.CLIENT_ID_MOBILE = process.env.CLIENT_ID_MOBILE;
-
     if (!process.env.CLIENT_SECRET) {
       throw new Error("CLIENT_SECRET environment variable is required");
     }
     this.CLIENT_SECRET = process.env.CLIENT_SECRET;
 
-    if (!process.env.REDIRECT_URI) {
+    if (!process.env.REDIRECT_URI_WEB) {
       throw new Error("REDIRECT_URI environment variable is required");
     }
-    this.REDIRECT_URI = process.env.REDIRECT_URI;
+    this.REDIRECT_URI_WEB = process.env.REDIRECT_URI_WEB;
+
+    if (!process.env.REDIRECT_URI_MOBILE) {
+      throw new Error("REDIRECT_URI_MOBILE environment variable is required");
+    }
+    this.REDIRECT_URI_MOBILE = process.env.REDIRECT_URI_MOBILE;
+
+    if (!process.env.REDIRECT_URI_BACKEND) {
+      throw new Error("REDIRECT_URI_BACKEND environment variable is required");
+    }
+    this.REDIRECT_URI_BACKEND = process.env.REDIRECT_URI_BACKEND;
   }
 }
 

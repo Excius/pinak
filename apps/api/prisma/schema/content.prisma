@@ -1,0 +1,21 @@
+model Article {
+  id          String      @id @default(cuid())
+  title       String
+  slug        String      @unique
+  content     String
+  type        ContentType
+  author      String
+  publishedAt DateTime?
+  isActive    Boolean     @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  isDeleted Boolean @default(false)
+}
+
+enum ContentType {
+  BLOG
+  NEWS
+  TUTORIAL
+}
