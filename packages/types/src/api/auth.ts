@@ -53,6 +53,28 @@ export const AuthTypes = {
     }),
   },
 
+  username: {
+    body: z.object({}),
+    params: z.object({}),
+    query: z.object({
+      username: z
+        .string()
+        .min(3, "Username must be at least 3 characters long")
+        .max(30, "Username must be at most 30 characters long")
+        .regex(
+          /^[a-zA-Z][a-zA-Z0-9_]*$/,
+          "Username must start with a letter and constain only letters, numbers, and underscores",
+        ),
+    }),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({
+        username: z.string(),
+      }),
+    }),
+  },
+
   RefreshToken: {
     body: z.object({}),
     params: z.object({}),
@@ -136,13 +158,26 @@ export const AuthTypes = {
   GoogleOauth: {
     body: z.object({}),
     params: z.object({}),
-    query: z.object({}),
+    query: z.object({
+      platform: z.enum(["WEB", "MOBILE"]).optional(),
+    }),
     response: z.object({
       message: z.string(),
       success: z.boolean(),
       data: z.object({
         url: z.string(),
       }),
+    }),
+  },
+
+  GoogleOauthMobile: {
+    body: z.object({}),
+    params: z.object({}),
+    query: z.object({ code: z.string().min(1, "Code is required") }),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({}).nullable(),
     }),
   },
 

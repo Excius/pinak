@@ -1,0 +1,50 @@
+model Coupon {
+  id   String @id @default(cuid())
+  code String @unique
+
+  discountType  CouponDiscountType
+  discountValue Int
+
+  minOderValue     Int?
+  maxDiscountValue Int?
+
+  validFrom  DateTime
+  validUntil DateTime
+
+  maxTotalUsers  Int?
+  maxUsesPerUser Int?
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  couponUsages CouponUsage[]
+
+  isDeleted Boolean @default(false)
+}
+
+model CouponUsage {
+  id       String @id @default(cuid())
+  couponId String
+  userId   String
+  oderId   String
+
+  discountAmount Int
+
+  coupon Coupon @relation(fields: [couponId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+  order  Order  @relation(fields: [oderId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([couponId])
+  @@index([userId])
+  @@index([oderId])
+}
+
+enum CouponDiscountType {
+  PERCENTAGE
+  FLAT
+}

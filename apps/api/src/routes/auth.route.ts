@@ -1,18 +1,18 @@
+import { AuthTypes } from "@repo/types";
 import { Router } from "express";
 import { AuthController } from "../controllers/auth.controller.js";
-import { AuthService } from "../services/auth.service.js";
-import { prisma } from "../lib/prisma.js";
-import JWTService from "../lib/jwt.js";
-import { SessionRespository } from "../repositories/session.repository.js";
 import appConfig from "../lib/config.js";
-import { UserRespository } from "../repositories/user.repository.js";
-import { validateMultiple } from "../lib/validation.js";
-import { AuthTypes } from "@repo/types";
-import { AuthMiddleware } from "../middlewares/auth.middleware.js";
-import { MagicLinkService } from "../services/magicLink.service.js";
-import { MagicLinkRepository } from "../repositories/magicLink.repository.js";
+import JWTService from "../lib/jwt.js";
+import { prisma } from "../lib/prisma.js";
 import { createAuthRateLimiter } from "../lib/rateLimit.js";
+import { validateMultiple } from "../lib/validation.js";
+import { AuthMiddleware } from "../middlewares/auth.middleware.js";
 import { AuthProviderRepository } from "../repositories/authProvider.repository.js";
+import { MagicLinkRepository } from "../repositories/magicLink.repository.js";
+import { SessionRespository } from "../repositories/session.repository.js";
+import { UserRespository } from "../repositories/user.repository.js";
+import { AuthService } from "../services/auth.service.js";
+import { MagicLinkService } from "../services/magicLink.service.js";
 
 const router = Router();
 
@@ -59,6 +59,16 @@ router.post(
   authRateLimiter,
   validateMultiple(AuthTypes.LoginUser),
   authController.login,
+);
+
+/**
+ * Username Availability Check Route
+ */
+router.get(
+  "/username",
+  authRateLimiter,
+  validateMultiple(AuthTypes.username),
+  authController.usernameAvailability,
 );
 
 /**
@@ -122,6 +132,16 @@ router.get(
 );
 
 /**
+ * Google OAuth Mobile Route
+ */
+router.get(
+  "/google/mobile/callback",
+  authRateLimiter,
+  validateMultiple(AuthTypes.GoogleOauthMobile),
+  authController.googleOauthMobile,
+);
+
+/**
  * Google OAuth Callback Route
  */
 router.post(
@@ -140,7 +160,5 @@ router.get(
   authMiddleware.authenticate,
   authController.me,
 );
-
-//TODO: Add routes for username and verify-username etc.
 
 export default router;

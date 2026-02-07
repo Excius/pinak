@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { ResponseHandler } from "../lib/response.js";
 import { AuthService } from "../services/auth.service.js";
 import appConfig from "../lib/config.js";
+import loggerInstance from "../lib/logger.js";
 
 export class AuthController {
   constructor(private auth: AuthService) {}
@@ -147,9 +148,16 @@ export class AuthController {
   };
 
   googleOauth = async (req: Request, res: Response) => {
-    const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${appConfig.CLIENT_ID}&redirect_uri=${appConfig.REDIRECT_URI}&response_type=code&scope=profile%20email`;
+    const platform = (req.query.platform as string) || "web";
+    const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${appConfig.CLIENT_ID_WEB}&redirect_uri=${platform === "WEB" ? appConfig.REDIRECT_URI_WEB : appConfig.REDIRECT_URI_BACKEND}&response_type=code&scope=profile%20email`;
 
     ResponseHandler.success(res, { url }, "Google OAuth URL fetched");
+  };
+
+  googleOauthMobile = async (req: Request, res: Response) => {
+    const code = req.params.code;
+
+    res.redirect(`${appConfig.REDIRECT_URI_MOBILE}?code=${code}`);
   };
 
   googleOauthCallback = async (req: Request, res: Response) => {
@@ -164,5 +172,24 @@ export class AuthController {
       { accessToken: data.accessToken, user: data.user },
       "Google OAuth callback handled",
     );
+  };
+
+  usernameAvailability = async (req: Request, res: Response) => {
+    const data = req.query;
+
+    const username = (data.username as string)?.trim();
+
+    if (!username) {
+      loggerInstance.info(
+        "Username is not provided in the usernameCheck route.",
+      );
+      return ResponseHandler.badRequest(res, "Username is not provided!");
+    }
+
+    const isAvailable: boolean = await this.auth.usernameAvailablity(username);
+
+    if (isAvailable) {
+      ResponseHandler.success(res, { username }, "Username available.");
+    }
   };
 }

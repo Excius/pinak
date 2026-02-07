@@ -6,7 +6,11 @@ import argon2 from "argon2";
 import loggerInstance from "../lib/logger.js";
 import { UserRoles } from "@repo/types";
 import { UserRespository } from "../repositories/user.repository.js";
-import { InternalServerError, UnauthorizedError } from "../lib/error.js";
+import {
+  BadRequestError,
+  InternalServerError,
+  UnauthorizedError,
+} from "../lib/error.js";
 import { Passwordhasher } from "../lib/password.js";
 import { MailService } from "./mail.service.js";
 import { MagicLinkService } from "./magicLink.service.js";
@@ -390,10 +394,10 @@ export class AuthService {
       res = await axios.post(
         "https://oauth2.googleapis.com/token",
         new URLSearchParams({
-          client_id: appConfig.CLIENT_ID,
+          client_id: appConfig.CLIENT_ID_WEB,
           client_secret: appConfig.CLIENT_SECRET,
           code: decodeURIComponent(code),
-          redirect_uri: appConfig.REDIRECT_URI,
+          redirect_uri: appConfig.REDIRECT_URI_WEB,
           grant_type: "authorization_code",
         }),
         {
@@ -408,11 +412,11 @@ export class AuthService {
     }
 
     const { id_token } = res.data;
-    const client = new OAuth2Client(appConfig.CLIENT_ID);
+    const client = new OAuth2Client(appConfig.CLIENT_ID_WEB);
 
     const ticket = await client.verifyIdToken({
       idToken: id_token,
-      audience: appConfig.CLIENT_ID,
+      audience: appConfig.CLIENT_ID_WEB,
     });
 
     const payload = ticket.getPayload();
@@ -539,5 +543,16 @@ export class AuthService {
         updatedAt: newUser.updatedAt,
       },
     };
+  }
+
+  async usernameAvailablity(username: string): Promise<boolean> {
+    const user = await this.user.getUserByUsername(username);
+
+    if (user) {
+      loggerInstance.warn("Username already exists.");
+      throw new BadRequestError("Username is not available.");
+    }
+
+    return true;
   }
 }

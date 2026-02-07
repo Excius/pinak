@@ -37,9 +37,12 @@
         "BACKEND_URL",
         "FRONTEND_URL",
         "MOBILE_APP_URL",
-        "CLIENT_ID",
+        "CLIENT_ID_WEB",
+        "CLIENT_ID_MOBILE",
         "CLIENT_SECRET",
-        "REDIRECT_URI"
+        "REDIRECT_URI_WEB",
+        "REDIRECT_URI_MOBILE",
+        "REDIRECT_URI_BACKEND"
       ]
     },
     "prisma:studio": {

@@ -1,0 +1,17 @@
+model Store {
+  id        String  @id @default(cuid())
+  name      String
+  address   String
+  city      String
+  state     String
+  zipCode   String
+  phone     String?
+  latitude  Float
+  longitude Float
+  isActive  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  isDeleted Boolean @default(false)
+}
