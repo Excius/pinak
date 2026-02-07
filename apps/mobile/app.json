@@ -19,11 +19,27 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.pinak.mobile",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify":true,
+          "category":["BROWSABLE","DEFAULT"],
+          "data":[
+            {
+              "scheme":"https",
+              "host":"pinak.onrender.com",
+              "pathPrefix":"/"
+            }
+          ]
+        }
+      ]
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/favicon.png",
+      "bundler": "metro"
     },
     "plugins": [
       "expo-router",
@@ -38,11 +54,19 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "expo-font",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": false
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "b640239d-4389-4c34-a9c1-0c46541af755"
+      }
     }
   }
 }
