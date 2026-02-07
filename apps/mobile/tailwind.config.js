@@ -6,21 +6,21 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: "#ca8881",
-        "background-light": "#fbfaf8",
-        "background-dark": "#1d1615",
-        "muted-taupe": "#856460",
-        "soft-border": "#e1d7d6",
+        primary: "#b08d55",
+        "primary-dark": "#8c6b3d",
+        "background-light": "#FFF9F5",
+        "surface-light": "#FFFFFF",
+        "blush": "#FFF0F0",
+        "whatsapp": "#25D366",
       },
       fontFamily: {
-        display: ["Noto Serif", "serif"],
-        sans: ["Noto Sans", "sans-serif"],
+        display: ["Playfair Display", "serif"],
+        body: ["Lato", "sans-serif"],
       },
       borderRadius: {
-        DEFAULT: "0.5rem",
-        lg: "1rem",
-        xl: "1.5rem",
-        full: "9999px",
+        DEFAULT: "0.75rem",
+        xl: "1rem",
+        "2xl": "1.5rem",
       },
     },
   },
