@@ -1,0 +1,36 @@
+meta {
+  name: Hard Delete Product Variant (Admin Only)
+  type: http
+  seq: 33
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/products/admin/variants/{{variantId}}/hard
+  body: none
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  authToken: your-admin-jwt-token-here
+  variantId: your-variant-id-here
+}
+
+docs {
+  Permanently delete a product variant.
+
+  Requires: Admin role only
+
+  WARNING: This action cannot be undone!
+
+  Path Parameters:
+  - id: Variant ID
+}

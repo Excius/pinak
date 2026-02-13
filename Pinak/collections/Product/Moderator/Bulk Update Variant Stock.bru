@@ -1,0 +1,47 @@
+meta {
+  name: Bulk Update Variant Stock
+  type: http
+  seq: 31
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/products/variants/stock/bulk
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:json {
+  [
+    {
+      "variantId": "variant-id-1",
+      "newStock": 50
+    },
+    {
+      "variantId": "variant-id-2",
+      "newStock": 30
+    }
+  ]
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  authToken: your-jwt-token-here
+}
+
+docs {
+  Bulk update stock quantities for multiple variants.
+
+  Requires: Moderator or Admin role
+
+  Body Parameters: Array of objects
+  - variantId: Product variant ID
+  - newStock: New stock quantity (integer)
+}

@@ -1,0 +1,33 @@
+meta {
+  name: Get Products by Category
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/products/category/{{categoryId}}?page=1&limit=10
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  categoryId: your-category-id-here
+}
+
+docs {
+  Get products filtered by category.
+
+  Path Parameters:
+  - categoryId: Category ID
+
+  Query Parameters:
+  - page: Page number (default: 1)
+  - limit: Items per page (default: 10, max: 100)
+  - sortBy: Field to sort by
+  - sortOrder: Sort order (asc/desc)
+}
