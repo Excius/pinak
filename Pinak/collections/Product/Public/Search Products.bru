@@ -1,0 +1,33 @@
+meta {
+  name: Search Products
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/v1/products/search?q={{searchQuery}}&page=1&limit=10
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  searchQuery: nike
+}
+
+docs {
+  Search products by query string.
+
+  Query Parameters:
+  - q: Search query (required)
+  - page: Page number (default: 1)
+  - limit: Items per page (default: 10, max: 100)
+  - categoryId: Filter by category
+  - brand: Filter by brand
+  - minPrice: Minimum price filter
+  - maxPrice: Maximum price filter
+}

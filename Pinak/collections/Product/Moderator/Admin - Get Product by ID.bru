@@ -1,0 +1,34 @@
+meta {
+  name: Admin - Get Product by ID
+  type: http
+  seq: 12
+}
+
+get {
+  url: {{baseUrl}}/api/v1/products/admin/{{productId}}
+  body: none
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  authToken: your-jwt-token-here
+  productId: your-product-id-here
+}
+
+docs {
+  Admin endpoint to get a product by ID (bypasses active status filter).
+
+  Requires: Moderator or Admin role
+
+  Path Parameters:
+  - id: Product ID
+}

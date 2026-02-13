@@ -1,0 +1,27 @@
+meta {
+  name: Get Product by Slug
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/products/slug/{{productSlug}}
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  productSlug: vitamin-c-serum
+}
+
+docs {
+  Get a single product by its slug (URL-friendly identifier).
+  
+  Path Parameters:
+  - slug: Product slug
+}

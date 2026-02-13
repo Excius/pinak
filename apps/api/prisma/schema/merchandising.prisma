@@ -13,16 +13,16 @@ model FeaturedSection {
 model FeaturedProduct {
   id        String @id @default(cuid())
   sectionId String
-  prodcutId String
+  productId String
 
   section FeaturedSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
-  product Product         @relation(fields: [prodcutId], references: [id])
+  product Product         @relation(fields: [productId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([sectionId])
-  @@index([prodcutId])
+  @@index([productId])
 }
 
 enum FeaturedType {

@@ -1,0 +1,33 @@
+meta {
+  name: Get Low Stock Products
+  type: http
+  seq: 29
+}
+
+get {
+  url: {{baseUrl}}/api/v1/products/admin/stock/low-stock?threshold=10
+  body: none
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  authToken: your-jwt-token-here
+}
+
+docs {
+  Get products with low stock levels.
+
+  Requires: Moderator or Admin role
+
+  Query Parameters:
+  - threshold: Stock threshold (default: 10)
+}
