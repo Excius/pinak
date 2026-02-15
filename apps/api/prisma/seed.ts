@@ -72,6 +72,7 @@ async function main() {
           size: "30ml",
           price: 4500,
           stock: 25,
+          tags: ["matte", "foundation", "light"],
         },
         {
           sku: "RGF-002",
@@ -79,6 +80,7 @@ async function main() {
           size: "30ml",
           price: 4500,
           stock: 30,
+          tags: ["matte", "foundation", "medium"],
         },
         {
           sku: "RGF-003",
@@ -86,6 +88,7 @@ async function main() {
           size: "30ml",
           price: 4500,
           stock: 20,
+          tags: ["matte", "foundation", "deep"],
         },
       ],
     },
@@ -102,6 +105,7 @@ async function main() {
           size: "4g",
           price: 2800,
           stock: 40,
+          tags: ["matte", "lipstick", "red"],
         },
         {
           sku: "VML-002",
@@ -109,6 +113,7 @@ async function main() {
           size: "4g",
           price: 2800,
           stock: 35,
+          tags: ["matte", "lipstick", "nude"],
         },
         {
           sku: "VML-003",
@@ -116,6 +121,7 @@ async function main() {
           size: "4g",
           price: 2800,
           stock: 28,
+          tags: ["matte", "lipstick", "plum"],
         },
       ],
     },
@@ -132,6 +138,7 @@ async function main() {
           size: "10ml",
           price: 2200,
           stock: 50,
+          tags: ["mascara", "volume", "black"],
         },
         {
           sku: "VBM-002",
@@ -139,6 +146,7 @@ async function main() {
           size: "10ml",
           price: 2200,
           stock: 45,
+          tags: ["mascara", "volume", "brown"],
         },
       ],
     },
@@ -155,6 +163,7 @@ async function main() {
           size: "12g",
           price: 3800,
           stock: 15,
+          tags: ["eyeshadow", "shimmer", "warm"],
         },
         {
           sku: "SEP-002",
@@ -162,6 +171,7 @@ async function main() {
           size: "12g",
           price: 3800,
           stock: 18,
+          tags: ["eyeshadow", "shimmer", "cool"],
         },
       ],
     },
@@ -172,8 +182,22 @@ async function main() {
       brand: "SkinCare Plus",
       categoryId: categories[4].id,
       variants: [
-        { sku: "HFM-001", shade: null, size: "50ml", price: 3200, stock: 60 },
-        { sku: "HFM-002", shade: null, size: "100ml", price: 5200, stock: 40 },
+        {
+          sku: "HFM-001",
+          shade: null,
+          size: "50ml",
+          price: 3200,
+          stock: 60,
+          tags: ["moisturizer", "skincare", "hydration"],
+        },
+        {
+          sku: "HFM-002",
+          shade: null,
+          size: "100ml",
+          price: 5200,
+          stock: 40,
+          tags: ["moisturizer", "skincare", "hydration"],
+        },
       ],
     },
     {
@@ -189,6 +213,7 @@ async function main() {
           size: "35ml",
           price: 4800,
           stock: 22,
+          tags: ["foundation", "glow", "porcelain"],
         },
         {
           sku: "LGF-002",
@@ -196,8 +221,16 @@ async function main() {
           size: "35ml",
           price: 4800,
           stock: 28,
+          tags: ["foundation", "glow", "ivory"],
         },
-        { sku: "LGF-003", shade: "Sand", size: "35ml", price: 4800, stock: 19 },
+        {
+          sku: "LGF-003",
+          shade: "Sand",
+          size: "35ml",
+          price: 4800,
+          stock: 19,
+          tags: ["foundation", "glow", "sand"],
+        },
       ],
     },
     {
@@ -207,9 +240,30 @@ async function main() {
       brand: "LipLux",
       categoryId: categories[1].id,
       variants: [
-        { sku: "SL-001", shade: "Coral", size: "4g", price: 2600, stock: 32 },
-        { sku: "SL-002", shade: "Rose", size: "4g", price: 2600, stock: 29 },
-        { sku: "SL-003", shade: "Berry", size: "4g", price: 2600, stock: 24 },
+        {
+          sku: "SL-001",
+          shade: "Coral",
+          size: "4g",
+          price: 2600,
+          stock: 32,
+          tags: ["lipstick", "satin", "coral"],
+        },
+        {
+          sku: "SL-002",
+          shade: "Rose",
+          size: "4g",
+          price: 2600,
+          stock: 29,
+          tags: ["lipstick", "satin", "rose"],
+        },
+        {
+          sku: "SL-003",
+          shade: "Berry",
+          size: "4g",
+          price: 2600,
+          stock: 24,
+          tags: ["lipstick", "satin", "berry"],
+        },
       ],
     },
     {
@@ -225,6 +279,7 @@ async function main() {
           size: "8ml",
           price: 2500,
           stock: 38,
+          tags: ["mascara", "waterproof", "black"],
         },
         {
           sku: "WM-002",
@@ -232,6 +287,7 @@ async function main() {
           size: "8ml",
           price: 2500,
           stock: 42,
+          tags: ["mascara", "waterproof", "brown"],
         },
       ],
     },
@@ -248,8 +304,16 @@ async function main() {
           size: "15g",
           price: 4200,
           stock: 12,
+          tags: ["eyeshadow", "matte", "neutral"],
         },
-        { sku: "MEP-002", shade: "Smoky", size: "15g", price: 4200, stock: 16 },
+        {
+          sku: "MEP-002",
+          shade: "Smoky",
+          size: "15g",
+          price: 4200,
+          stock: 16,
+          tags: ["eyeshadow", "matte", "smoky"],
+        },
       ],
     },
     {
@@ -259,8 +323,22 @@ async function main() {
       brand: "SkinCare Plus",
       categoryId: categories[4].id,
       variants: [
-        { sku: "VCS-001", shade: null, size: "30ml", price: 5800, stock: 25 },
-        { sku: "VCS-002", shade: null, size: "50ml", price: 8500, stock: 15 },
+        {
+          sku: "VCS-001",
+          shade: null,
+          size: "30ml",
+          price: 5800,
+          stock: 25,
+          tags: ["serum", "skincare", "vitamin-c"],
+        },
+        {
+          sku: "VCS-002",
+          shade: null,
+          size: "50ml",
+          price: 8500,
+          stock: 15,
+          tags: ["serum", "skincare", "vitamin-c"],
+        },
       ],
     },
   ];
@@ -286,6 +364,7 @@ async function main() {
           size: variant.size,
           price: variant.price,
           stock: variant.stock,
+          tags: variant.tags || [],
         },
       });
 

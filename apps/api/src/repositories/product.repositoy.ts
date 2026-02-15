@@ -46,12 +46,14 @@ export class ProductRepository {
       // Price filtering through variants
       ...((pagination.minPrice ||
         pagination.maxPrice ||
-        pagination.inStock) && {
+        pagination.inStock ||
+        pagination.tags) && {
         variants: {
           some: {
             ...(pagination.minPrice && { price: { gte: pagination.minPrice } }),
             ...(pagination.maxPrice && { price: { lte: pagination.maxPrice } }),
             ...(pagination.inStock && { stock: { gt: 0 } }),
+            ...(pagination.tags && { tags: { hasSome: pagination.tags } }),
           },
         },
       }),
@@ -150,12 +152,14 @@ export class ProductRepository {
       // Price filtering through variants
       ...((pagination.minPrice ||
         pagination.maxPrice ||
-        pagination.inStock) && {
+        pagination.inStock ||
+        pagination.tags) && {
         variants: {
           some: {
             ...(pagination.minPrice && { price: { gte: pagination.minPrice } }),
             ...(pagination.maxPrice && { price: { lte: pagination.maxPrice } }),
             ...(pagination.inStock && { stock: { gt: 0 } }),
+            ...(pagination.tags && { tags: { hasSome: pagination.tags } }),
           },
         },
       }),
@@ -421,12 +425,14 @@ export class ProductRepository {
       // Price filtering through variants
       ...((pagination.minPrice ||
         pagination.maxPrice ||
-        pagination.inStock) && {
+        pagination.inStock ||
+        pagination.tags) && {
         variants: {
           some: {
             ...(pagination.minPrice && { price: { gte: pagination.minPrice } }),
             ...(pagination.maxPrice && { price: { lte: pagination.maxPrice } }),
             ...(pagination.inStock && { stock: { gt: 0 } }),
+            ...(pagination.tags && { tags: { hasSome: pagination.tags } }),
           },
         },
       }),
@@ -485,12 +491,14 @@ export class ProductRepository {
       // Price filtering through variants
       ...((pagination.minPrice ||
         pagination.maxPrice ||
-        pagination.inStock) && {
+        pagination.inStock ||
+        pagination.tags) && {
         variants: {
           some: {
             ...(pagination.minPrice && { price: { gte: pagination.minPrice } }),
             ...(pagination.maxPrice && { price: { lte: pagination.maxPrice } }),
             ...(pagination.inStock && { stock: { gt: 0 } }),
+            ...(pagination.tags && { tags: { hasSome: pagination.tags } }),
           },
         },
       }),

@@ -23,6 +23,7 @@ export class ProductController {
         : undefined,
       brand: req.query.brand as string,
       inStock: req.query.inStock ? req.query.inStock === "true" : undefined,
+      tags: req.query.tags ? (req.query.tags as string).split(',') : undefined,
     };
 
     const products = await this.productService.getProducts(pagination);

@@ -210,7 +210,7 @@ router.patch(
 router.delete(
   "/variants/:id",
   rateLimiter,
-  validateMultiple(ProductTypes.SoftDeleteProduct),
+  validateMultiple(ProductTypes.SoftDeleteProductVariant),
   authMiddleware.authenticate,
   authMiddleware.requireModeratorOrAdmin,
   productController.softDeleteProductVariant,
@@ -219,7 +219,7 @@ router.delete(
 router.patch(
   "/variants/:id/restore",
   rateLimiter,
-  validateMultiple(ProductTypes.RestoreProduct),
+  validateMultiple(ProductTypes.RestoreProductVariant),
   authMiddleware.authenticate,
   authMiddleware.requireModeratorOrAdmin,
   productController.restoreProductVariant,
@@ -308,7 +308,7 @@ router.delete(
 router.delete(
   "/admin/variants/:id/hard",
   rateLimiter,
-  validateMultiple(ProductTypes.HardDeleteProduct),
+  validateMultiple(ProductTypes.HardDeleteProductVariant),
   authMiddleware.authenticate,
   authMiddleware.requireAdmin,
   productController.hardDeleteProductVariant,
