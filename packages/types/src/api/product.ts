@@ -16,6 +16,7 @@ export const ProductTypes = {
       maxPrice: z.coerce.number().min(0).optional(),
       brand: z.string().optional(),
       inStock: z.coerce.boolean().optional(),
+      tags: z.string().optional().transform((val) => val ? val.split(',') : undefined),
     }),
     response: z.object({
       message: z.string(),
@@ -38,6 +39,7 @@ export const ProductTypes = {
             size: z.string().nullable(),
             price: z.number(),
             stock: z.number(),
+            tags: z.array(z.string()),
           })),
         })),
         pagination: z.object({
@@ -83,6 +85,7 @@ export const ProductTypes = {
           size: z.string().nullable(),
           price: z.number(),
           stock: z.number(),
+          tags: z.array(z.string()),
           images: z.array(z.object({
             id: z.string(),
             url: z.string(),
@@ -125,6 +128,7 @@ export const ProductTypes = {
           size: z.string().nullable(),
           price: z.number(),
           stock: z.number(),
+          tags: z.array(z.string()),
           images: z.array(z.object({
             id: z.string(),
             url: z.string(),
@@ -161,6 +165,15 @@ export const ProductTypes = {
           categoryId: z.string(),
           createdAt: z.date(),
           updatedAt: z.date(),
+          variants: z.array(z.object({
+            id: z.string(),
+            sku: z.string(),
+            shade: z.string().nullable(),
+            size: z.string().nullable(),
+            price: z.number(),
+            stock: z.number(),
+            tags: z.array(z.string()),
+          })),
         })),
         pagination: z.object({
           page: z.number(),
@@ -196,6 +209,15 @@ export const ProductTypes = {
           categoryId: z.string(),
           createdAt: z.date(),
           updatedAt: z.date(),
+          variants: z.array(z.object({
+            id: z.string(),
+            sku: z.string(),
+            shade: z.string().nullable(),
+            size: z.string().nullable(),
+            price: z.number(),
+            stock: z.number(),
+            tags: z.array(z.string()),
+          })),
         })),
         pagination: z.object({
           page: z.number(),
@@ -260,6 +282,7 @@ export const ProductTypes = {
         size: z.string().nullable(),
         price: z.number(),
         stock: z.number(),
+        tags: z.array(z.string()),
         images: z.array(z.object({
           id: z.string(),
           url: z.string(),
@@ -295,6 +318,21 @@ export const ProductTypes = {
           isDeleted: z.boolean(),
           createdAt: z.date(),
           updatedAt: z.date(),
+          variants: z.array(z.object({
+            id: z.string(),
+            sku: z.string(),
+            shade: z.string().nullable(),
+            size: z.string().nullable(),
+            price: z.number(),
+            stock: z.number(),
+            tags: z.array(z.string()),
+            images: z.array(z.object({
+              id: z.string(),
+              url: z.string(),
+              isPrimary: z.boolean(),
+              altText: z.string().nullable(),
+            })),
+          })),
         })),
         pagination: z.object({
           page: z.number(),
@@ -391,6 +429,7 @@ export const ProductTypes = {
       size: z.string().optional(),
       price: z.coerce.number().min(0),
       stock: z.coerce.number().min(0).default(0),
+      tags: z.array(z.string()).default([]),
     }),
     params: z.object({
       productId: z.string(),
@@ -406,6 +445,7 @@ export const ProductTypes = {
         size: z.string().nullable(),
         price: z.number(),
         stock: z.number(),
+        tags: z.array(z.string()),
         createdAt: z.date(),
         updatedAt: z.date(),
       }),
@@ -419,6 +459,7 @@ export const ProductTypes = {
       size: z.string().optional(),
       price: z.coerce.number().min(0).optional(),
       stock: z.coerce.number().min(0).optional(),
+      tags: z.array(z.string()).optional(),
     }),
     params: z.object({
       id: z.string(),
@@ -434,6 +475,7 @@ export const ProductTypes = {
         size: z.string().nullable(),
         price: z.number(),
         stock: z.number(),
+        tags: z.array(z.string()),
         createdAt: z.date(),
         updatedAt: z.date(),
       }),
@@ -575,6 +617,45 @@ export const ProductTypes = {
   },
 
   HardDeleteProduct: {
+    body: z.object({}),
+    params: z.object({
+      id: z.string(),
+    }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({}),
+    }),
+  },
+
+  SoftDeleteProductVariant: {
+    body: z.object({}),
+    params: z.object({
+      id: z.string(),
+    }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({}),
+    }),
+  },
+
+  RestoreProductVariant: {
+    body: z.object({}),
+    params: z.object({
+      id: z.string(),
+    }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({}),
+    }),
+  },
+
+  HardDeleteProductVariant: {
     body: z.object({}),
     params: z.object({
       id: z.string(),

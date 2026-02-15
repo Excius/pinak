@@ -255,6 +255,9 @@ export class ProductService {
     if (sanitizedData.size) {
       sanitizedData.size = (sanitizedData.size as string).trim();
     }
+    if (sanitizedData.tags) {
+      sanitizedData.tags = (sanitizedData.tags as string[]).map(tag => tag.trim()).filter(tag => tag.length > 0);
+    }
 
     // Validate price (must be positive)
     if (sanitizedData.price && (sanitizedData.price as number) <= 0) {
@@ -316,6 +319,9 @@ export class ProductService {
     }
     if (sanitizedData.size) {
       sanitizedData.size = (sanitizedData.size as string).trim();
+    }
+    if (sanitizedData.tags) {
+      sanitizedData.tags = (sanitizedData.tags as string[]).map(tag => tag.trim()).filter(tag => tag.length > 0);
     }
 
     // Validate price (must be positive)

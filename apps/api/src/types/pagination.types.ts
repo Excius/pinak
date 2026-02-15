@@ -15,6 +15,7 @@ export interface ProductPaginationOptions extends BasePaginationOptions {
   maxPrice?: number;
   brand?: string;
   inStock?: boolean;
+  tags?: string[];
 }
 
 // Generic paginated response
