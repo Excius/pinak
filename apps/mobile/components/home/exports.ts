@@ -11,7 +11,6 @@
  */
 
 export { HomeScreen } from "./index";
-export { BrandHeader } from "./BrandHeader";
 export { HeroCarousel } from "./HeroCarousel";
 export { FeatureRow } from "./FeatureRow";
 export { ShopByCategory } from "./ShopByCategory";
@@ -21,4 +20,3 @@ export { ComboKits } from "./ComboKits";
 export { BeautyAdvisor } from "./BeautyAdvisor";
 export { Testimonials } from "./Testimonials";
 export { WhatsAppAndStoreCTA } from "./WhatsAppCTA";
-export { BottomNavigation } from "./BottomNavigation";

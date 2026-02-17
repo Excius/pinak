@@ -1,11 +1,21 @@
 import { Stack } from "expo-router";
+import { BottomNavigation } from "../../components/BottomNavigation";
+import { BrandHeader } from "@/components/BrandHeader";
+import { SafeAreaView } from "react-native-safe-area-context";
+
 export default function HomeLayout() {
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        animation: "slide_from_right",
-      }}
-    />
+    <>
+      <SafeAreaView edges={["top", "left", "right"]}>
+        <BrandHeader />
+      </SafeAreaView>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          animation: "fade",
+        }}
+      />
+      <BottomNavigation />
+    </>
   );
 }
