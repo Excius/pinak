@@ -16,32 +16,39 @@ export const ProductTypes = {
       maxPrice: z.coerce.number().min(0).optional(),
       brand: z.string().optional(),
       inStock: z.coerce.boolean().optional(),
-      tags: z.string().optional().transform((val) => val ? val.split(',') : undefined),
+      tags: z
+        .string()
+        .optional()
+        .transform((val) => (val ? val.split(",") : undefined)),
     }),
     response: z.object({
       message: z.string(),
       success: z.boolean(),
       data: z.object({
-        data: z.array(z.object({
-          id: z.string(),
-          name: z.string(),
-          slug: z.string(),
-          description: z.string().nullable(),
-          brand: z.string().nullable(),
-          isActive: z.boolean(),
-          categoryId: z.string(),
-          createdAt: z.date(),
-          updatedAt: z.date(),
-          variants: z.array(z.object({
+        data: z.array(
+          z.object({
             id: z.string(),
-            sku: z.string(),
-            shade: z.string().nullable(),
-            size: z.string().nullable(),
-            price: z.number(),
-            stock: z.number(),
-            tags: z.array(z.string()),
-          })),
-        })),
+            name: z.string(),
+            slug: z.string(),
+            description: z.string().nullable(),
+            brand: z.string().nullable(),
+            isActive: z.boolean(),
+            categoryId: z.string(),
+            createdAt: z.date(),
+            updatedAt: z.date(),
+            variants: z.array(
+              z.object({
+                id: z.string(),
+                sku: z.string(),
+                shade: z.string().nullable(),
+                size: z.string().nullable(),
+                price: z.number(),
+                stock: z.number(),
+                tags: z.array(z.string()),
+              }),
+            ),
+          }),
+        ),
         pagination: z.object({
           page: z.number(),
           limit: z.number(),
@@ -71,28 +78,38 @@ export const ProductTypes = {
         brand: z.string().nullable(),
         isActive: z.boolean(),
         categoryId: z.string(),
-        category: z.object({
-          id: z.string(),
-          name: z.string(),
-          slug: z.string(),
-        }).optional(),
+        category: z
+          .object({
+            id: z.string(),
+            name: z.string(),
+            slug: z.string(),
+          })
+          .optional(),
         createdAt: z.date(),
         updatedAt: z.date(),
-        variants: z.array(z.object({
-          id: z.string(),
-          sku: z.string(),
-          shade: z.string().nullable(),
-          size: z.string().nullable(),
-          price: z.number(),
-          stock: z.number(),
-          tags: z.array(z.string()),
-          images: z.array(z.object({
-            id: z.string(),
-            url: z.string(),
-            isPrimary: z.boolean(),
-            altText: z.string().nullable(),
-          })).optional(),
-        })).optional(),
+        variants: z
+          .array(
+            z.object({
+              id: z.string(),
+              sku: z.string(),
+              shade: z.string().nullable(),
+              size: z.string().nullable(),
+              price: z.number(),
+              stock: z.number(),
+              tags: z.array(z.string()),
+              images: z
+                .array(
+                  z.object({
+                    id: z.string(),
+                    url: z.string(),
+                    isPrimary: z.boolean(),
+                    altText: z.string().nullable(),
+                  }),
+                )
+                .optional(),
+            }),
+          )
+          .optional(),
       }),
     }),
   },
@@ -114,28 +131,38 @@ export const ProductTypes = {
         brand: z.string().nullable(),
         isActive: z.boolean(),
         categoryId: z.string(),
-        category: z.object({
-          id: z.string(),
-          name: z.string(),
-          slug: z.string(),
-        }).optional(),
+        category: z
+          .object({
+            id: z.string(),
+            name: z.string(),
+            slug: z.string(),
+          })
+          .optional(),
         createdAt: z.date(),
         updatedAt: z.date(),
-        variants: z.array(z.object({
-          id: z.string(),
-          sku: z.string(),
-          shade: z.string().nullable(),
-          size: z.string().nullable(),
-          price: z.number(),
-          stock: z.number(),
-          tags: z.array(z.string()),
-          images: z.array(z.object({
-            id: z.string(),
-            url: z.string(),
-            isPrimary: z.boolean(),
-            altText: z.string().nullable(),
-          })).optional(),
-        })).optional(),
+        variants: z
+          .array(
+            z.object({
+              id: z.string(),
+              sku: z.string(),
+              shade: z.string().nullable(),
+              size: z.string().nullable(),
+              price: z.number(),
+              stock: z.number(),
+              tags: z.array(z.string()),
+              images: z
+                .array(
+                  z.object({
+                    id: z.string(),
+                    url: z.string(),
+                    isPrimary: z.boolean(),
+                    altText: z.string().nullable(),
+                  }),
+                )
+                .optional(),
+            }),
+          )
+          .optional(),
       }),
     }),
   },
@@ -155,26 +182,30 @@ export const ProductTypes = {
       message: z.string(),
       success: z.boolean(),
       data: z.object({
-        data: z.array(z.object({
-          id: z.string(),
-          name: z.string(),
-          slug: z.string(),
-          description: z.string().nullable(),
-          brand: z.string().nullable(),
-          isActive: z.boolean(),
-          categoryId: z.string(),
-          createdAt: z.date(),
-          updatedAt: z.date(),
-          variants: z.array(z.object({
+        data: z.array(
+          z.object({
             id: z.string(),
-            sku: z.string(),
-            shade: z.string().nullable(),
-            size: z.string().nullable(),
-            price: z.number(),
-            stock: z.number(),
-            tags: z.array(z.string()),
-          })),
-        })),
+            name: z.string(),
+            slug: z.string(),
+            description: z.string().nullable(),
+            brand: z.string().nullable(),
+            isActive: z.boolean(),
+            categoryId: z.string(),
+            createdAt: z.date(),
+            updatedAt: z.date(),
+            variants: z.array(
+              z.object({
+                id: z.string(),
+                sku: z.string(),
+                shade: z.string().nullable(),
+                size: z.string().nullable(),
+                price: z.number(),
+                stock: z.number(),
+                tags: z.array(z.string()),
+              }),
+            ),
+          }),
+        ),
         pagination: z.object({
           page: z.number(),
           limit: z.number(),
@@ -199,26 +230,30 @@ export const ProductTypes = {
       message: z.string(),
       success: z.boolean(),
       data: z.object({
-        data: z.array(z.object({
-          id: z.string(),
-          name: z.string(),
-          slug: z.string(),
-          description: z.string().nullable(),
-          brand: z.string().nullable(),
-          isActive: z.boolean(),
-          categoryId: z.string(),
-          createdAt: z.date(),
-          updatedAt: z.date(),
-          variants: z.array(z.object({
+        data: z.array(
+          z.object({
             id: z.string(),
-            sku: z.string(),
-            shade: z.string().nullable(),
-            size: z.string().nullable(),
-            price: z.number(),
-            stock: z.number(),
-            tags: z.array(z.string()),
-          })),
-        })),
+            name: z.string(),
+            slug: z.string(),
+            description: z.string().nullable(),
+            brand: z.string().nullable(),
+            isActive: z.boolean(),
+            categoryId: z.string(),
+            createdAt: z.date(),
+            updatedAt: z.date(),
+            variants: z.array(
+              z.object({
+                id: z.string(),
+                sku: z.string(),
+                shade: z.string().nullable(),
+                size: z.string().nullable(),
+                price: z.number(),
+                stock: z.number(),
+                tags: z.array(z.string()),
+              }),
+            ),
+          }),
+        ),
         pagination: z.object({
           page: z.number(),
           limit: z.number(),
@@ -243,17 +278,19 @@ export const ProductTypes = {
       message: z.string(),
       success: z.boolean(),
       data: z.object({
-        data: z.array(z.object({
-          id: z.string(),
-          name: z.string(),
-          slug: z.string(),
-          description: z.string().nullable(),
-          brand: z.string().nullable(),
-          isActive: z.boolean(),
-          categoryId: z.string(),
-          createdAt: z.date(),
-          updatedAt: z.date(),
-        })),
+        data: z.array(
+          z.object({
+            id: z.string(),
+            name: z.string(),
+            slug: z.string(),
+            description: z.string().nullable(),
+            brand: z.string().nullable(),
+            isActive: z.boolean(),
+            categoryId: z.string(),
+            createdAt: z.date(),
+            updatedAt: z.date(),
+          }),
+        ),
         pagination: z.object({
           page: z.number(),
           limit: z.number(),
@@ -275,21 +312,25 @@ export const ProductTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: z.array(z.object({
-        id: z.string(),
-        sku: z.string(),
-        shade: z.string().nullable(),
-        size: z.string().nullable(),
-        price: z.number(),
-        stock: z.number(),
-        tags: z.array(z.string()),
-        images: z.array(z.object({
+      data: z.array(
+        z.object({
           id: z.string(),
-          url: z.string(),
-          isPrimary: z.boolean(),
-          altText: z.string().nullable(),
-        })),
-      })),
+          sku: z.string(),
+          shade: z.string().nullable(),
+          size: z.string().nullable(),
+          price: z.number(),
+          stock: z.number(),
+          tags: z.array(z.string()),
+          images: z.array(
+            z.object({
+              id: z.string(),
+              url: z.string(),
+              isPrimary: z.boolean(),
+              altText: z.string().nullable(),
+            }),
+          ),
+        }),
+      ),
     }),
   },
 
@@ -307,33 +348,39 @@ export const ProductTypes = {
       message: z.string(),
       success: z.boolean(),
       data: z.object({
-        data: z.array(z.object({
-          id: z.string(),
-          name: z.string(),
-          slug: z.string(),
-          description: z.string().nullable(),
-          brand: z.string().nullable(),
-          isActive: z.boolean(),
-          categoryId: z.string(),
-          isDeleted: z.boolean(),
-          createdAt: z.date(),
-          updatedAt: z.date(),
-          variants: z.array(z.object({
+        data: z.array(
+          z.object({
             id: z.string(),
-            sku: z.string(),
-            shade: z.string().nullable(),
-            size: z.string().nullable(),
-            price: z.number(),
-            stock: z.number(),
-            tags: z.array(z.string()),
-            images: z.array(z.object({
-              id: z.string(),
-              url: z.string(),
-              isPrimary: z.boolean(),
-              altText: z.string().nullable(),
-            })),
-          })),
-        })),
+            name: z.string(),
+            slug: z.string(),
+            description: z.string().nullable(),
+            brand: z.string().nullable(),
+            isActive: z.boolean(),
+            categoryId: z.string(),
+            isDeleted: z.boolean(),
+            createdAt: z.date(),
+            updatedAt: z.date(),
+            variants: z.array(
+              z.object({
+                id: z.string(),
+                sku: z.string(),
+                shade: z.string().nullable(),
+                size: z.string().nullable(),
+                price: z.number(),
+                stock: z.number(),
+                tags: z.array(z.string()),
+                images: z.array(
+                  z.object({
+                    id: z.string(),
+                    url: z.string(),
+                    isPrimary: z.boolean(),
+                    altText: z.string().nullable(),
+                  }),
+                ),
+              }),
+            ),
+          }),
+        ),
         pagination: z.object({
           page: z.number(),
           limit: z.number(),
@@ -600,19 +647,23 @@ export const ProductTypes = {
   },
 
   BulkUpdateVariantStock: {
-    body: z.array(z.object({
-      variantId: z.string(),
-      newStock: z.coerce.number().min(0),
-    })),
+    body: z.array(
+      z.object({
+        variantId: z.string(),
+        newStock: z.coerce.number().min(0),
+      }),
+    ),
     params: z.object({}),
     query: z.object({}),
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: z.array(z.object({
-        id: z.string(),
-        stock: z.number(),
-      })),
+      data: z.array(
+        z.object({
+          id: z.string(),
+          stock: z.number(),
+        }),
+      ),
     }),
   },
 
@@ -667,16 +718,4 @@ export const ProductTypes = {
       data: z.object({}),
     }),
   },
-
-  // TODO: Add validation schemas for future features
-  // - BulkProductOperations
-  // - ProductAnalytics
-  // - ProductReviews
-  // - CategoryManagement
-  // - BulkImport
-  // - BulkExport
-  // - SearchSuggestions
-  // - ImageUpload (multipart/form-data)
-  // - AdvancedFiltering
-  // - ProductRecommendations
 };

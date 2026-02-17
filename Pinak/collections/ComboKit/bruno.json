@@ -1,6 +1,6 @@
 {
   "version": "1",
-  "name": "Product",
+  "name": "ComboKit",
   "type": "collection",
   "ignore": ["node_modules", ".git"]
 }

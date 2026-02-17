@@ -1,6 +1,7 @@
 import { AuthProviderType, PrismaClient } from "../generated/prisma/client.js";
 import { InternalServerError, NotFoundError } from "../lib/error.js";
 import loggerInstance from "../lib/logger.js";
+import { normalizeEmail } from "../lib/email.js";
 
 export class UserRespository {
   constructor(private primsa: PrismaClient) {}
@@ -8,9 +9,10 @@ export class UserRespository {
   // User-facing methods (excludes soft deleted users)
   getUserByEmail(email: string) {
     try {
+      const normalized = normalizeEmail(email);
       return this.primsa.user.findFirst({
         where: { 
-          email,
+          email: normalized,
           status: { not: 'DELETED' }
         },
       });
@@ -39,9 +41,10 @@ export class UserRespository {
   }
 
   getUserByEmailOrUsername(email: string, username: string) {
+    const normalized = normalizeEmail(email);
     return this.primsa.user.findFirst({
       where: {
-        OR: [{ email }, { username }],
+        OR: [{ email: normalized }, { username }],
         status: { not: 'DELETED' }
       },
       include: { authProviders: true },
@@ -51,8 +54,9 @@ export class UserRespository {
   // Admin-facing methods (includes soft deleted users)
   getUserByEmailAdmin(email: string) {
     try {
+      const normalized = normalizeEmail(email);
       return this.primsa.user.findFirst({
-        where: { email },
+        where: { email: normalized },
       });
     } catch (error) {
       loggerInstance.error("Error fetching user by email:", error);
@@ -73,9 +77,10 @@ export class UserRespository {
   }
 
   getUserByEmailOrUsernameAdmin(email: string, username: string) {
+    const normalized = normalizeEmail(email);
     return this.primsa.user.findFirst({
       where: {
-        OR: [{ email }, { username }],
+        OR: [{ email: normalized }, { username }],
       },
       include: { authProviders: true },
     });
@@ -112,8 +117,9 @@ export class UserRespository {
   }
 
   create(email: string, hashPassword: string, username: string) {
+    const normalized = normalizeEmail(email);
     return this.primsa.user.create({
-      data: { email: email, hashPassword: hashPassword, username: username },
+      data: { email: normalized, hashPassword: hashPassword, username: username },
     });
   }
 
@@ -124,10 +130,11 @@ export class UserRespository {
     providerId: string,
     name?: string | null,
   ) {
+    const normalized = normalizeEmail(email);
     return this.primsa.$transaction(async (tx) => {
       const user = await tx.user.create({
         data: {
-          email: email,
+          email: normalized,
           username: username,
           name: name,
           isEmailVerified: true,

@@ -28,6 +28,7 @@ const authMiddleware = new AuthMiddleware(jwtService);
 // Public routes
 router.get(
   "/",
+  authMiddleware.authenticate,
   rateLimiter,
   validateMultiple(ProductTypes.GetProducts),
   productController.getProducts,
@@ -35,6 +36,7 @@ router.get(
 
 router.get(
   "/:id",
+  authMiddleware.authenticate,
   rateLimiter,
   validateMultiple(ProductTypes.GetProductById),
   productController.getProductById,
@@ -42,6 +44,7 @@ router.get(
 
 router.get(
   "/slug/:slug",
+  authMiddleware.authenticate,
   rateLimiter,
   validateMultiple(ProductTypes.GetProductBySlug),
   productController.getProductBySlug,
@@ -49,6 +52,7 @@ router.get(
 
 router.get(
   "/category/:categoryId",
+  authMiddleware.authenticate,
   rateLimiter,
   validateMultiple(ProductTypes.GetProductsWithCategory),
   productController.getProductsWithCategory,
@@ -56,6 +60,7 @@ router.get(
 
 router.get(
   "/featured",
+  authMiddleware.authenticate,
   rateLimiter,
   validateMultiple(ProductTypes.GetFeaturedProducts),
   productController.getFeaturedProducts,
@@ -63,6 +68,7 @@ router.get(
 
 router.get(
   "/featured/section/:sectionId",
+  authMiddleware.authenticate,
   rateLimiter,
   validateMultiple(ProductTypes.GetFeaturedProducts),
   productController.getFeaturedProductsBySection,
@@ -70,6 +76,7 @@ router.get(
 
 router.get(
   "/search",
+  authMiddleware.authenticate,
   rateLimiter,
   validateMultiple(ProductTypes.SearchProducts),
   productController.searchProducts,
@@ -77,6 +84,7 @@ router.get(
 
 router.get(
   "/:productId/variants",
+  authMiddleware.authenticate,
   rateLimiter,
   validateMultiple(ProductTypes.GetProductVariants),
   productController.getProductVariants,
@@ -84,6 +92,7 @@ router.get(
 
 router.get(
   "/:id/details",
+  authMiddleware.authenticate,
   rateLimiter,
   validateMultiple(ProductTypes.GetProductById),
   productController.getProductWithDetails,

@@ -430,7 +430,38 @@ export class ProductService {
       throw new ValidationError("Product variant is already deleted");
     }
 
-    // TODO: Check if variant has active cart items or orders before deletion
+    // Prevent deletion when the variant is referenced by active carts/orders/reservations/etc.
+    const [cartCount, orderCount, reservationCount, wishlistCount, comboKitCount] =
+      await Promise.all([
+        this.productRepository.prismaClient.cartItem.count({ where: { productVariantId: id } }),
+        this.productRepository.prismaClient.orderItem.count({
+          where: {
+            productVariantId: id,
+            order: { isDeleted: false, status: { not: "CANCELLED" } },
+          },
+        }),
+        this.productRepository.prismaClient.inventoryReservation.count({
+          where: { productVariantId: id, expiresAt: { gt: new Date() } },
+        }),
+        this.productRepository.prismaClient.wishlistItem.count({ where: { productVariantId: id } }),
+        this.productRepository.prismaClient.comboKitItem.count({ where: { productVariantId: id } }),
+      ]);
+
+    if (cartCount > 0) {
+      throw new ValidationError("Cannot delete variant: it exists in user carts");
+    }
+    if (orderCount > 0) {
+      throw new ValidationError("Cannot delete variant: it is referenced by existing orders");
+    }
+    if (reservationCount > 0) {
+      throw new ValidationError("Cannot delete variant: there are active inventory reservations");
+    }
+    if (wishlistCount > 0) {
+      throw new ValidationError("Cannot delete variant: it is present in user wishlists");
+    }
+    if (comboKitCount > 0) {
+      throw new ValidationError("Cannot delete variant: it is part of a combo kit");
+    }
 
     return this.productRepository.softDeleteProductVariant(id);
   }
@@ -562,8 +593,65 @@ export class ProductService {
       throw new ValidationError("Product not found");
     }
 
-    // TODO: Check for any dependencies before hard deletion
-    // This should check for orders, cart items, etc.
+    // Collect variant ids (if any) and run dependency checks in parallel
+    const variantRows = await this.productRepository.prismaClient.productVariant.findMany({
+      where: { productId: id },
+      select: { id: true },
+    });
+    const variantIds = variantRows.map(v => v.id);
+
+    const [productOrderCount, variantOrderCount, cartCount, wishlistCount, reservationCount, featuredCount, reviewCount, comboKitCount, activeVariantCount] =
+      await Promise.all([
+        // order items that reference product directly
+        this.productRepository.prismaClient.orderItem.count({
+          where: { productId: id, order: { isDeleted: false, status: { not: "CANCELLED" } } },
+        }),
+        // order items that reference variants of this product
+        variantIds.length
+          ? this.productRepository.prismaClient.orderItem.count({
+              where: { productVariantId: { in: variantIds }, order: { isDeleted: false, status: { not: "CANCELLED" } } },
+            })
+          : Promise.resolve(0),
+        // cart items referencing any variant
+        variantIds.length
+          ? this.productRepository.prismaClient.cartItem.count({ where: { productVariantId: { in: variantIds } } })
+          : Promise.resolve(0),
+        // wishlist items referencing any variant
+        variantIds.length
+          ? this.productRepository.prismaClient.wishlistItem.count({ where: { productVariantId: { in: variantIds } } })
+          : Promise.resolve(0),
+        // active inventory reservations for any variant
+        variantIds.length
+          ? this.productRepository.prismaClient.inventoryReservation.count({ where: { productVariantId: { in: variantIds } } })
+          : Promise.resolve(0),
+        // featured references
+        this.productRepository.prismaClient.featuredProduct.count({ where: { productId: id } }),
+        // reviews
+        this.productRepository.prismaClient.review.count({ where: { productId: id } }),
+        // combo kit references (via variants)
+        variantIds.length
+          ? this.productRepository.prismaClient.comboKitItem.count({ where: { productVariantId: { in: variantIds } } })
+          : Promise.resolve(0),
+        // ensure there are no active (non-deleted) variants
+        this.productRepository.prismaClient.productVariant.count({ where: { productId: id, isDeleted: false } }),
+      ]);
+
+    const blockers: string[] = [];
+    if (productOrderCount || variantOrderCount) blockers.push("orders");
+    if (cartCount) blockers.push("carts");
+    if (wishlistCount) blockers.push("wishlists");
+    if (reservationCount) blockers.push("inventory reservations");
+    if (featuredCount) blockers.push("featured sections");
+    if (reviewCount) blockers.push("reviews");
+    if (comboKitCount) blockers.push("combo kits");
+    if (activeVariantCount) blockers.push("active variants");
+
+    if (blockers.length > 0) {
+      logger.warn(`Preventing hard-delete for product ${id} due to dependencies: ${blockers.join(", ")}`);
+      throw new ValidationError(
+        `Cannot hard-delete product: dependent resources exist (${blockers.join(", ")}). Delete or detach those resources first.`,
+      );
+    }
 
     return this.productRepository.hardDeleteProduct(id);
   }
@@ -580,7 +668,33 @@ export class ProductService {
       throw new ValidationError("Product variant not found");
     }
 
-    // TODO: Check for any dependencies before hard deletion
+    // Prevent hard-delete when variant is referenced elsewhere
+    const [cartCount, orderCount, wishlistCount, reservationCount, comboKitCount, imageCount] =
+      await Promise.all([
+        this.productRepository.prismaClient.cartItem.count({ where: { productVariantId: id } }),
+        this.productRepository.prismaClient.orderItem.count({
+          where: { productVariantId: id, order: { isDeleted: false, status: { not: "CANCELLED" } } },
+        }),
+        this.productRepository.prismaClient.wishlistItem.count({ where: { productVariantId: id } }),
+        this.productRepository.prismaClient.inventoryReservation.count({ where: { productVariantId: id } }),
+        this.productRepository.prismaClient.comboKitItem.count({ where: { productVariantId: id } }),
+        this.productRepository.prismaClient.productImage.count({ where: { productVariantId: id } }),
+      ]);
+
+    const blockers: string[] = [];
+    if (cartCount) blockers.push(`${cartCount} cart item(s)`);
+    if (orderCount) blockers.push(`${orderCount} order item(s)`);
+    if (wishlistCount) blockers.push(`${wishlistCount} wishlist item(s)`);
+    if (reservationCount) blockers.push(`${reservationCount} inventory reservation(s)`);
+    if (comboKitCount) blockers.push(`${comboKitCount} combo kit item(s)`);
+    if (imageCount) blockers.push(`${imageCount} image(s)`);
+
+    if (blockers.length > 0) {
+      logger.warn(`Preventing hard-delete for variant ${id} due to dependencies: ${blockers.join(", ")}`);
+      throw new ValidationError(
+        `Cannot hard-delete product variant — dependent resources exist: ${blockers.join(", ")}`,
+      );
+    }
 
     return this.productRepository.hardDeleteProductVariant(id);
   }
