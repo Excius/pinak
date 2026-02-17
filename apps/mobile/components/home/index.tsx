@@ -14,7 +14,6 @@ import { WhatsAppAndStoreCTA } from "./WhatsAppCTA";
 export function HomeScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background-light\">
-
       <ScrollView
         showsVerticalScrollIndicator={false}
         className="flex-1"
