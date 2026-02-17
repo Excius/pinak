@@ -10,7 +10,7 @@ import { BestSellers } from "./BestSellers";
 import { ComboKits } from "./ComboKits";
 import { BeautyAdvisor } from "./BeautyAdvisor";
 import { Testimonials } from "./Testimonials";
-import { WhatsAppCTA } from "./WhatsAppCTA";
+import { WhatsAppAndStoreCTA } from "./WhatsAppCTA";
 import { BottomNavigation } from "./BottomNavigation";
 
 export function HomeScreen() {
@@ -48,7 +48,7 @@ export function HomeScreen() {
         <Testimonials />
 
         {/* WhatsApp CTA */}
-        <WhatsAppCTA />
+        <WhatsAppAndStoreCTA />
 
         {/* Spacer for bottom nav */}
         <View className="h-20" />

@@ -1,9 +1,22 @@
 import { View, Text, TouchableOpacity, Linking, Alert } from "react-native";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
-export function WhatsAppCTA() {
+export function WhatsAppAndStoreCTA() {
+  const handleStoreLocator = () => {
+    const LATTITUDE = "20.421684";
+    const LONGITUDE = "72.841062";
+
+    const url = `https://www.google.com/maps?q=${LATTITUDE},${LONGITUDE}`;
+    Linking.openURL(url).catch((err) => {
+      console.error("Error opening store locator:", err);
+      Alert.alert("Unable to Open Store Locator", "Please try again later.", [
+        { text: "OK" },
+      ]);
+    });
+  };
+
   const handleWhatsAppPress = async () => {
-    const phoneNumber = '917688992293';
+    const phoneNumber = "917688992293";
     const whatsappUrl = `whatsapp://send?phone=${phoneNumber}`;
     const webUrl = `https://wa.me/${phoneNumber}`;
 
@@ -17,11 +30,11 @@ export function WhatsAppCTA() {
         await Linking.openURL(webUrl);
       }
     } catch (error) {
-      console.error('Error opening WhatsApp:', error);
+      console.error("Error opening WhatsApp:", error);
       Alert.alert(
-        'WhatsApp Not Available',
-        'Please make sure WhatsApp is installed on your device.',
-        [{ text: 'OK' }]
+        "WhatsApp Not Available",
+        "Please make sure WhatsApp is installed on your device.",
+        [{ text: "OK" }],
       );
     }
   };
@@ -37,14 +50,18 @@ export function WhatsAppCTA() {
         {/* Buttons */}
         <View className="w-full gap-3 md:gap-4">
           {/* Store Locator Button */}
-          <TouchableOpacity className="w-full rounded-full border-2 border-primary py-4 md:py-4 min-h-[48px] flex items-center justify-center">
+          <TouchableOpacity
+            onPress={handleStoreLocator}
+            className="w-full rounded-full border-2 border-primary py-4 md:py-4 min-h-[48px] flex items-center justify-center"
+            // onPress={handleStoreLocator}
+          >
             <Text className="text-center font-bold text-primary text-base md:text-base">
               Find a Store Near You
             </Text>
           </TouchableOpacity>
 
           {/* WhatsApp Button */}
-          <TouchableOpacity 
+          <TouchableOpacity
             className="w-full flex-row items-center justify-center gap-2 rounded-full bg-whatsapp py-4 md:py-4 shadow-lg shadow-whatsapp/20 min-h-[48px]"
             onPress={handleWhatsAppPress}
           >

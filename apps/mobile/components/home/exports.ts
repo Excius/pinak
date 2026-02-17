@@ -20,5 +20,5 @@ export { BestSellers } from "./BestSellers";
 export { ComboKits } from "./ComboKits";
 export { BeautyAdvisor } from "./BeautyAdvisor";
 export { Testimonials } from "./Testimonials";
-export { WhatsAppCTA } from "./WhatsAppCTA";
+export { WhatsAppAndStoreCTA } from "./WhatsAppCTA";
 export { BottomNavigation } from "./BottomNavigation";
