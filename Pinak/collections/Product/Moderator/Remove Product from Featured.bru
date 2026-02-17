@@ -1,0 +1,34 @@
+meta {
+  name: Remove Product from Featured
+  type: http
+  seq: 27
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/products/featured/{{featuredProductId}}
+  body: none
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  authToken: your-jwt-token-here
+  featuredProductId: your-featured-product-id-here
+}
+
+docs {
+  Remove a product from featured products.
+
+  Requires: Moderator or Admin role
+
+  Path Parameters:
+  - featuredProductId: Featured product relationship ID
+}

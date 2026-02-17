@@ -1,0 +1,52 @@
+meta {
+  name: Update Product
+  type: http
+  seq: 14
+}
+
+put {
+  url: {{baseUrl}}/api/v1/products/{{productId}}
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:json {
+  {
+    "name": "Nike Air Max 90 Updated",
+    "description": "Updated description for Nike Air Max 90",
+    "brand": "Nike",
+    "categoryId": "your-category-id-here",
+    "isActive": true
+  }
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  authToken: your-jwt-token-here
+  productId: your-product-id-here
+}
+
+docs {
+  Update an existing product.
+
+  Requires: Moderator or Admin role
+
+  Path Parameters:
+  - id: Product ID
+
+  Body Parameters (all optional):
+  - name: Product name (1-255 chars)
+  - slug: URL slug (1-255 chars)
+  - description: Product description
+  - brand: Product brand
+  - categoryId: Category ID
+  - isActive: Active status
+}

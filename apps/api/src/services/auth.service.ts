@@ -1,6 +1,7 @@
 import { AuthProviderType, PrismaClient } from "../generated/prisma/client.js";
 import appConfig from "../lib/config.js";
 import JWTService from "../lib/jwt.js";
+import { normalizeEmail } from "../lib/email.js";
 import { SessionRespository } from "../repositories/session.repository.js";
 import argon2 from "argon2";
 import loggerInstance from "../lib/logger.js";
@@ -62,8 +63,10 @@ export class AuthService {
     password: string,
     username: string,
   ): Promise<void> {
+    const normalizedEmail = normalizeEmail(email);
+
     const existingUser = await this.user.getUserByEmailOrUsername(
-      email,
+      normalizedEmail,
       username,
     );
 
@@ -88,9 +91,9 @@ export class AuthService {
         );
         delayGenerator(delay);
         throw new UnauthorizedError("Username already in use");
-      } else if (existingUser.email === email) {
+      } else if (existingUser.email === normalizedEmail) {
         loggerInstance.warn(
-          `Attempt to register with existing email: ${email}`,
+          `Attempt to register with existing email: ${normalizedEmail}`,
         );
         delayGenerator(delay);
         // Never reveal that the email is already registered
@@ -135,7 +138,7 @@ export class AuthService {
       updatedAt: Date;
     };
   }> {
-    const userEmail = user.email.toLowerCase().trim();
+    const userEmail = normalizeEmail(user.email);
     const dbUser = await this.user.getUserByEmail(userEmail);
 
     if (!dbUser) {
@@ -327,7 +330,8 @@ export class AuthService {
   }
 
   async forgotPassword(email: string): Promise<void> {
-    const dbUser = await this.user.getUserByEmail(email);
+    const normalized = normalizeEmail(email);
+    const dbUser = await this.user.getUserByEmail(normalized);
 
     if (!dbUser) {
       // Never reveal that the email is not registered
@@ -429,7 +433,7 @@ export class AuthService {
     }
 
     const providerId = payload.sub;
-    const email = payload.email?.toLowerCase().trim();
+    const email = normalizeEmail(payload.email ?? "");
     if (!email) {
       loggerInstance.warn("Google ID token missing email");
       throw new UnauthorizedError("Google account does not provide an email");

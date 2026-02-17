@@ -1,7 +1,7 @@
 import jwt, { SignOptions } from "jsonwebtoken";
 import { AccessTokenPayload, RefreshTokenPayload } from "../types/jwt.types.js";
 import loggerInstance from "./logger.js";
-import { InternalServerError } from "./error.js";
+import { InternalServerError, BadRequestError } from "./error.js";
 
 /**
  * Service for handling JWT token generation and verification.
@@ -49,7 +49,7 @@ class JWTService {
         this.accessSecret,
       ) as AccessTokenPayload;
       if (decoded.tokenType !== "access") {
-        throw new Error("Invalid token type");
+        throw new BadRequestError("Invalid token type");
       }
       return decoded;
     } catch (error) {
@@ -65,7 +65,7 @@ class JWTService {
         this.refreshSecret,
       ) as RefreshTokenPayload;
       if (decoded.tokenType !== "refresh") {
-        throw new Error("Invalid token type");
+        throw new BadRequestError("Invalid token type");
       }
       return decoded;
     } catch (error) {

@@ -20,6 +20,12 @@ class Server {
   constructor() {
     this.app = express();
     this.port = config.PORT;
+
+    // Trust proxy for accurate IP detection behind load balancers/proxies
+    if (config.NODE_ENV === "production") {
+      this.app.set("trust proxy", true);
+    }
+
     this.initializeMiddleware();
     this.initializeRoutes();
     this.setupGracefulShutdown();

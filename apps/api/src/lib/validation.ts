@@ -3,51 +3,6 @@ import { z } from "zod";
 import { ValidationError } from "./error.js";
 
 /**
- * Common validation schemas
- */
-export const commonSchemas = {
-  // ID parameter schema
-  idParam: z.object({
-    id: z.string().min(1, "ID is required"),
-  }),
-
-  // Pagination schema
-  pagination: z.object({
-    page: z.coerce.number().int().min(1).default(1),
-    limit: z.coerce.number().int().min(1).max(100).default(10),
-  }),
-
-  // User schemas
-  createUser: z.object({
-    body: z.object({
-      name: z.string().min(2, "Name must be at least 2 characters"),
-      email: z.string().email("Invalid email format"),
-      password: z.string().min(8, "Password must be at least 8 characters"),
-    }),
-  }),
-
-  updateUser: z.object({
-    params: z.object({
-      id: z.string().min(1, "ID is required"),
-    }),
-    body: z.object({
-      name: z.string().min(2, "Name must be at least 2 characters").optional(),
-      email: z.string().email("Invalid email format").optional(),
-    }),
-  }),
-
-  // Example product schema
-  createProduct: z.object({
-    body: z.object({
-      name: z.string().min(1, "Product name is required"),
-      price: z.number().positive("Price must be positive"),
-      description: z.string().optional(),
-      category: z.string().min(1, "Category is required"),
-    }),
-  }),
-};
-
-/**
  * Validation middleware factory
  * @param schema - Zod schema to validate against
  * @param property - Request property to validate ('body', 'query', 'params')
@@ -125,18 +80,6 @@ export const validateMultiple = (schemaObj: {
     next();
   };
 };
-
-/** * Auth validation schemas
- */
-export const registerSchema = z.object({
-  email: z.email("Invalid email format"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-});
-
-export const loginSchema = z.object({
-  email: z.email("Invalid email format"),
-  password: z.string().min(1, "Password is required"),
-});
 
 /** * Type helper to infer validated request types
  */

@@ -1,0 +1,34 @@
+meta {
+  name: Soft Delete Image
+  type: http
+  seq: 24
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/products/images/{{imageId}}
+  body: none
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  authToken: your-jwt-token-here
+  imageId: your-image-id-here
+}
+
+docs {
+  Soft delete a product image.
+
+  Requires: Moderator or Admin role
+
+  Path Parameters:
+  - id: Image ID
+}

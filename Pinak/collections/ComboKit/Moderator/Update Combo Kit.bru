@@ -1,0 +1,39 @@
+meta {
+  name: Update Combo Kit
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{baseUrl}}/api/v1/combo-kits/{{id}}
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:json {
+  {
+    "name": "Weekend Essentials Pack — Updated",
+    "description": "Updated description",
+    "audience": "women",
+    "price": 4599,
+    "isActive": true
+  }
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  authToken: your-jwt-token-here
+  id: combo-kit-id-here
+}
+
+docs {
+  Update combo kit fields. `audience` can be updated as well.
+}
