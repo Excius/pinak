@@ -14,7 +14,9 @@ export async function loginService(email: string, password: string) {
         { email, password }
     );
     await setAccessToken(loginResponse.data.accessToken);
-    await setRefreshToken((loginResponse.data as any).refreshToken);
+    if (loginResponse.data.refreshToken) {
+        await setRefreshToken(loginResponse.data.refreshToken);
+    }
     return loginResponse;
 }
 

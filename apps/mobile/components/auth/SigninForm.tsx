@@ -35,6 +35,7 @@ export default function SignInForm() {
       setPassword("");
     } catch (err) {
       toastError("Login Failed, Please try again");
+      console.error("Login error: ", err);
     } finally {
       setIsLoading(false);
     }
