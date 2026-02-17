@@ -8,9 +8,13 @@ collections:
     path: "collections/Auth"
   - name: "Mis"
     path: "collections/Mis"
+  - name: "Product"
+    path: "collections/Product"
+  - name: "ComboKit"
+    path: "collections/ComboKit"
 
 specs:
 
-docs: ''
+docs: ""
 
 activeEnvironmentUid: eygp3o000000000000000

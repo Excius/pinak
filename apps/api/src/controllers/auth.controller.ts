@@ -3,6 +3,7 @@ import { ResponseHandler } from "../lib/response.js";
 import { AuthService } from "../services/auth.service.js";
 import appConfig from "../lib/config.js";
 import loggerInstance from "../lib/logger.js";
+import { normalizeEmail } from "../lib/email.js";
 
 export class AuthController {
   constructor(private auth: AuthService) { }
@@ -42,7 +43,7 @@ export class AuthController {
     const { email, password, username } = req.body;
 
     await this.auth.register(
-      email.toLowerCase().trim(),
+      normalizeEmail(email),
       password.trim(),
       username.trim(),
     );
@@ -134,7 +135,7 @@ export class AuthController {
   forgotPassword = async (req: Request, res: Response) => {
     const { email } = req.body;
 
-    await this.auth.forgotPassword(email.toLowerCase().trim());
+    await this.auth.forgotPassword(normalizeEmail(email));
 
     ResponseHandler.success(res, {}, "Forgot mail sent successfully");
   };

@@ -1,0 +1,34 @@
+meta {
+  name: Restore Product
+  type: http
+  seq: 21
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/products/{{productId}}/restore
+  body: none
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  authToken: your-jwt-token-here
+  productId: your-product-id-here
+}
+
+docs {
+  Restore a soft-deleted product.
+
+  Requires: Moderator or Admin role
+
+  Path Parameters:
+  - id: Product ID
+}

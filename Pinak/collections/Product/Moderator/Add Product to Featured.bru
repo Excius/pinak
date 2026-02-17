@@ -1,0 +1,43 @@
+meta {
+  name: Add Product to Featured
+  type: http
+  seq: 26
+}
+
+post {
+  url: {{baseUrl}}/api/v1/products/featured/{{sectionId}}
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:json {
+  {
+    "productId": "your-product-id-here"
+  }
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  authToken: your-jwt-token-here
+  sectionId: your-section-id-here
+}
+
+docs {
+  Add a product to featured products in a specific section.
+
+  Requires: Moderator or Admin role
+
+  Path Parameters:
+  - sectionId: Featured section ID
+
+  Body Parameters:
+  - productId: Product ID to add to featured
+}

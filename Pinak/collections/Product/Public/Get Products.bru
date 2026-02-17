@@ -1,0 +1,36 @@
+meta {
+  name: Get Products
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/products?page=1&limit=10
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+}
+
+docs {
+  Get a paginated list of products with optional filters.
+
+  Query Parameters:
+  - page: Page number (default: 1)
+  - limit: Items per page (default: 10, max: 100)
+  - sortBy: Field to sort by
+  - sortOrder: Sort order (asc/desc)
+  - search: Search term
+  - categoryId: Filter by category
+  - isActive: Filter by active status
+  - minPrice: Minimum price filter
+  - maxPrice: Maximum price filter
+  - brand: Filter by brand
+  - inStock: Filter by stock availability
+}
