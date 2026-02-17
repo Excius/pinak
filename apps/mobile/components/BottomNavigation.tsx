@@ -20,6 +20,15 @@ export function BottomNavigation() {
   const insets = useSafeAreaInsets();
   const pathname = usePathname();
 
+  const isActive = (itemId: string): boolean => {
+    if (itemId === "home" && pathname === "/") return true;
+    if (itemId === "categories" && pathname.includes("categories")) return true;
+    if (itemId === "camera" && pathname.includes("camera")) return true;
+    if (itemId === "wishlist" && pathname.includes("wishlist")) return true;
+    if (itemId === "profile" && pathname.includes("profile")) return true;
+    return false;
+  };
+
   return (
     <View
       style={{ paddingBottom: insets.bottom }}
@@ -33,7 +42,7 @@ export function BottomNavigation() {
           }`}
           onPress={() => {
             if (item.id === "home") router.push("/");
-            // if (item.id === "categories") router.push("/categories");
+            if (item.id === "categories") router.push("/(tabs)/categories");
             if (item.id === "camera") router.push("/(tabs)/camera");
             // if (item.id === "wishlist") router.push("/wishlist");
             if (item.id === "profile") router.push("/(tabs)/profile");
@@ -52,11 +61,11 @@ export function BottomNavigation() {
               <MaterialCommunityIcons
                 name={item.icon}
                 size={20}
-                color={item.id === "home" ? "#b08d55" : "#a0aec0"}
+                color={isActive(item.id) ? "#b08d55" : "#a0aec0"}
               />
               <Text
                 className={`mt-1 text-[0.55rem] font-medium ${
-                  item.id === "home" ? "text-primary" : "text-gray-400"
+                  isActive(item.id) ? "text-primary" : "text-gray-400"
                 }`}
               >
                 {item.label}
