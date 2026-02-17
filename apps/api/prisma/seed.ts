@@ -1,4 +1,5 @@
 import { prisma } from "../src/lib/prisma.js";
+import { normalizeEmail } from "../src/lib/email.js";
 
 async function cleanup() {
   console.log("🧹 Cleaning up existing data...");
@@ -7,6 +8,11 @@ async function cleanup() {
   await prisma.featuredProduct.deleteMany();
   await prisma.featuredSection.deleteMany();
   await prisma.productImage.deleteMany();
+
+  // Remove combo kit items and combo kits before product variants (they reference productVariant)
+  await prisma.comboKitItem.deleteMany();
+  await prisma.comboKit.deleteMany();
+
   await prisma.productVariant.deleteMany();
   await prisma.product.deleteMany();
   await prisma.category.deleteMany();
@@ -478,7 +484,7 @@ async function main() {
   for (const userData of users) {
     await prisma.user.create({
       data: {
-        email: userData.email,
+        email: normalizeEmail(userData.email),
         username: userData.username,
         name: userData.name,
         role: userData.role,
@@ -490,6 +496,101 @@ async function main() {
 
   console.log("✅ Created users");
 
+  // --- Seed ComboKits ---
+  const variantSkus = [
+    "RGF-001", // Radiant Glow Foundation - Light Beige
+    "VML-002", // Velvet Matte Lipstick - Nude Pink
+    "SEP-001", // Shimmer Eyeshadow Palette - Warm Tones
+    "HFM-001", // Hydrating Face Moisturizer - 50ml
+    "LGF-001", // Liquid Glow Foundation - Porcelain
+    "VBM-001", // Volume Boost Mascara - Black
+    "WM-001", // Waterproof Mascara - Jet Black
+  ];
+
+  const variants = await prisma.productVariant.findMany({
+    where: { sku: { in: variantSkus } },
+  });
+  const vBySku = Object.fromEntries(variants.map((v) => [v.sku, v]));
+
+  const comboKits: Array<{ items?: Array<{ id: string }> }> = [];
+
+  if (vBySku["RGF-001"] && vBySku["VML-002"] && vBySku["SEP-001"]) {
+    const starterPrice =
+      vBySku["RGF-001"].price +
+      vBySku["VML-002"].price +
+      vBySku["SEP-001"].price;
+    const starter = await prisma.comboKit.create({
+      data: {
+        name: "Starter Makeup Kit",
+        slug: "starter-makeup-kit",
+        description:
+          "Foundation, lipstick and eyeshadow — curated starter set.",
+        audience: "ALL",
+        price: Math.round(starterPrice * 0.85), // 15% off
+        items: {
+          create: [
+            { productVariantId: vBySku["RGF-001"].id, quantity: 1 },
+            { productVariantId: vBySku["VML-002"].id, quantity: 1 },
+            { productVariantId: vBySku["SEP-001"].id, quantity: 1 },
+          ],
+        },
+      },
+      include: { items: true },
+    });
+    comboKits.push(starter);
+  } else {
+    console.warn("⚠️ Skipping Starter Makeup Kit - missing variant(s)");
+  }
+
+  if (vBySku["HFM-001"] && vBySku["LGF-001"]) {
+    const hydraPrice = vBySku["HFM-001"].price + vBySku["LGF-001"].price;
+    const hydra = await prisma.comboKit.create({
+      data: {
+        name: "Hydration & Glow Set",
+        slug: "hydration-glow-set",
+        description: "Moisturizer + buildable glow foundation.",
+        audience: "UNISEX",
+        price: Math.round(hydraPrice * 0.9), // 10% off
+        items: {
+          create: [
+            { productVariantId: vBySku["HFM-001"].id, quantity: 1 },
+            { productVariantId: vBySku["LGF-001"].id, quantity: 1 },
+          ],
+        },
+      },
+      include: { items: true },
+    });
+    comboKits.push(hydra);
+  } else {
+    console.warn("⚠️ Skipping Hydration & Glow Set - missing variant(s)");
+  }
+
+  if (vBySku["VBM-001"] && vBySku["WM-001"]) {
+    const lashPrice = vBySku["VBM-001"].price + vBySku["WM-001"].price;
+    const lashes = await prisma.comboKit.create({
+      data: {
+        name: "Lash & Define Duo",
+        slug: "lash-define-duo",
+        description: "Volume + waterproof for all-day drama.",
+        audience: "WOMEN",
+        price: Math.round(lashPrice * 0.88), // 12% off
+        items: {
+          create: [
+            { productVariantId: vBySku["VBM-001"].id, quantity: 1 },
+            { productVariantId: vBySku["WM-001"].id, quantity: 1 },
+          ],
+        },
+      },
+      include: { items: true },
+    });
+    comboKits.push(lashes);
+  } else {
+    console.warn("⚠️ Skipping Lash & Define Duo - missing variant(s)");
+  }
+
+  console.log(`✅ Created ${comboKits.length} combo kits (seed)`);
+
+  // Final summary
   console.log("🎉 Database seeding completed successfully!");
   console.log(`📊 Summary:
   - ${categories.length} categories
@@ -499,6 +600,8 @@ async function main() {
   - ${featuredSections.length} featured sections
   - ${featuredProducts.length} featured products
   - ${users.length} users
+  - ${comboKits.length} combo kits
+  - ${comboKits.reduce((acc, c) => acc + (c.items?.length || 0), 0)} combo kit items
   `);
 }
 

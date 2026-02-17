@@ -1,0 +1,45 @@
+meta {
+  name: Create Combo Kit
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/combo-kits
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:json {
+  {
+    "name": "Weekend Essentials Pack",
+    "slug": "weekend-essentials-pack",
+    "description": "A curated pack for weekend wear",
+    "audience": "unisex",
+    "price": 4999,
+    "isActive": true,
+    "items": [
+      { "productVariantId": "variant-id-1", "quantity": 1 },
+      { "productVariantId": "variant-id-2", "quantity": 2 }
+    ]
+  }
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  authToken: your-jwt-token-here
+}
+
+docs {
+  Create a new combo kit. Requires Moderator or Admin role.
+
+  New: `audience` (optional string) — can be used by frontend to target kit to a specific audience.
+}
