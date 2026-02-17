@@ -48,6 +48,7 @@ export const AuthTypes = {
       success: z.boolean(),
       data: z.object({
         accessToken: z.string(),
+        refreshToken: z.string(),
         user: UserSchema,
       }),
     }),
@@ -84,6 +85,7 @@ export const AuthTypes = {
       success: z.boolean(),
       data: z.object({
         accessToken: z.string(),
+        refreshToken: z.string(),
       }),
     }),
   },
