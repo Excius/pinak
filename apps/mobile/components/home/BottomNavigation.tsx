@@ -32,9 +32,9 @@ export function BottomNavigation() {
             item.id === "camera" ? "mb-4" : ""
           }`}
           onPress={() => {
-            if (item.id === "home") router.push("/(home)");
+            if (item.id === "home") router.push("/(tabs)");
             // if (item.id === "categories") router.push("/categories");
-            if (item.id === "camera") router.push("/(camera)");
+            if (item.id === "camera") router.push("/(tabs)/camera");
             // if (item.id === "wishlist") router.push("/wishlist");
             // if (item.id === "profile") router.push("/profile");
           }}

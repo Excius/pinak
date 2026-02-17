@@ -30,7 +30,7 @@ export default function SignInForm() {
     try {
       await login(email, password);
       toastSuccess("Welcome Back");
-      router.replace("/(home)");
+      router.replace("/(tabs)");
       setEmail("");
       setPassword("");
     } catch (err) {
