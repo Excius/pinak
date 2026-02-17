@@ -1,7 +1,8 @@
-import api, { apiRequest } from "./api";
-import { setAccessToken, deleteAccessToken } from "@/utils/token";
+import api, { apiRequest, BASE_URL } from "./api";
+import { setAccessToken, deleteAccessToken, setRefreshToken, deleteRefreshToken, getRefreshToken } from "@/utils/token";
+import axios from 'axios';
 import {
-   
+
     LoginUserResponse,
     RegisterUserResponse,
 } from "@repo/types";
@@ -13,6 +14,7 @@ export async function loginService(email: string, password: string) {
         { email, password }
     );
     await setAccessToken(loginResponse.data.accessToken);
+    await setRefreshToken((loginResponse.data as any).refreshToken);
     return loginResponse;
 }
 
@@ -45,8 +47,21 @@ export async function signupService(email: string, username: string, password: s
 
 export async function logoutService() {
     try {
-        await apiRequest('post', '/auth/logout');
+        const refreshToken = await getRefreshToken();
+        if (refreshToken) {
+            await axios.post(
+                `${BASE_URL}/auth/logout`,
+                {},
+                {
+                    headers: {
+                        Authorization: `Bearer ${refreshToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
+        }
     } finally {
         await deleteAccessToken();
+        await deleteRefreshToken();
     }
 }
