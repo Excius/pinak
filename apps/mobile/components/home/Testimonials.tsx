@@ -41,12 +41,12 @@ export function Testimonials() {
     <View className="overflow-hidden bg-background-light py-12">
       {/* Header */}
       <View className="mb-8 items-center px-4">
-        <Text className="text-xs font-bold uppercase tracking-widest text-primary">
-          Real Results
+        <Text className="text-lg font-bold uppercase tracking-widest text-primary">
+          Testimonials
         </Text>
-        <Text className="mt-1 italic text-2xl font-bold font-display text-gray-900">
+        {/* <Text className="mt-1 italic text-2xl font-bold font-display text-gray-900">
           Real Testimonialss
-        </Text>
+        </Text> */}
       </View>
 
       {/* Testimonials Carousel */}
