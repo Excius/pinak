@@ -1,7 +1,6 @@
 import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { BrandHeader } from "./BrandHeader";
 import { HeroCarousel } from "./HeroCarousel";
 import { FeatureRow } from "./FeatureRow";
 import { ShopByCategory } from "./ShopByCategory";
@@ -10,14 +9,11 @@ import { BestSellers } from "./BestSellers";
 import { ComboKits } from "./ComboKits";
 import { BeautyAdvisor } from "./BeautyAdvisor";
 import { Testimonials } from "./Testimonials";
-import { WhatsAppCTA } from "./WhatsAppCTA";
-import { BottomNavigation } from "./BottomNavigation";
+import { WhatsAppAndStoreCTA } from "./WhatsAppCTA";
 
 export function HomeScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background-light\">
-      <BrandHeader />
-
       <ScrollView
         showsVerticalScrollIndicator={false}
         className="flex-1"
@@ -48,14 +44,11 @@ export function HomeScreen() {
         <Testimonials />
 
         {/* WhatsApp CTA */}
-        <WhatsAppCTA />
+        <WhatsAppAndStoreCTA />
 
         {/* Spacer for bottom nav */}
         <View className="h-20" />
       </ScrollView>
-
-      {/* Bottom Navigation */}
-      <BottomNavigation />
     </SafeAreaView>
   );
 }

@@ -30,11 +30,12 @@ export default function SignInForm() {
     try {
       await login(email, password);
       toastSuccess("Welcome Back");
-      router.replace("/(home)");
+      router.replace("/(tabs)");
       setEmail("");
       setPassword("");
     } catch (err) {
       toastError("Login Failed, Please try again");
+      console.error("Login error: ", err);
     } finally {
       setIsLoading(false);
     }

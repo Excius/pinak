@@ -1,5 +1,13 @@
-import { View, Text, TouchableOpacity, ScrollView, Image } from "react-native";
-import { useState } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  Image,
+  Dimensions,
+} from "react-native";
+import { useState, useRef, useEffect } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 
 interface HeroItem {
   id: string;
@@ -34,66 +42,103 @@ const HERO_ITEMS: HeroItem[] = [
   },
 ];
 
+const screenWidth = Dimensions.get("window").width;
+
 export function HeroCarousel() {
   const [activeIndex, setActiveIndex] = useState(0);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Auto-scroll effect - only when screen is focused
+  useFocusEffect(
+    useRef(() => {
+      intervalRef.current = setInterval(() => {
+        setActiveIndex((prevIndex) => {
+          const nextIndex = (prevIndex + 1) % HERO_ITEMS.length;
+          scrollViewRef.current?.scrollTo({
+            x: nextIndex * screenWidth,
+            animated: true,
+          });
+          return nextIndex;
+        });
+      }, 5000); // Auto-scroll every 5 seconds
+
+      return () => {
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+        }
+      };
+    }).current,
+  );
+
+  const handleScroll = (event: any) => {
+    const contentOffsetX = event.nativeEvent.contentOffset.x;
+    const index = Math.round(contentOffsetX / screenWidth);
+    setActiveIndex(index % HERO_ITEMS.length);
+  };
 
   return (
     <View className="relative mt-2">
       <ScrollView
+        ref={scrollViewRef}
         horizontal
         scrollEventThrottle={16}
         showsHorizontalScrollIndicator={false}
-        snapToInterval={320}
+        snapToInterval={screenWidth}
         decelerationRate="fast"
-        className="pb-4"
+        onScroll={handleScroll}
+        scrollEnabled={true}
       >
         {HERO_ITEMS.map((item) => (
           <View
             key={item.id}
-            className="relative mx-4 h-80 w-72 overflow-hidden rounded-3xl shadow-lg"
+            style={{ width: screenWidth }}
+            className="flex-1 px-4"
           >
-            <Image
-              source={{ uri: item.image }}
-              className="absolute inset-0 h-full w-full"
-              resizeMode="cover"
-            />
-            <View className="absolute inset-0 bg-black/50" />
-            <View className="absolute bottom-0 left-0 right-0 p-6">
-              <Text className="mb-2 text-center text-xs font-bold uppercase tracking-widest text-primary">
-                {item.badge}
-              </Text>
-              <Text className="mb-2 text-center text-4xl font-bold text-white font-display">
-                {item.title}
-              </Text>
-              <Text className="mb-6 text-center text-sm font-light text-gray-200">
-                {item.description}
-              </Text>
-              <TouchableOpacity
-                className={`w-full rounded-full py-3 ${
-                  item.buttonStyle === "primary" ? "bg-primary" : "bg-white"
-                }`}
-              >
-                <Text
-                  className={`text-center font-bold ${
-                    item.buttonStyle === "primary"
-                      ? "text-white"
-                      : "text-gray-900"
+            <View className="relative h-80 overflow-hidden rounded-3xl shadow-lg">
+              <Image
+                source={{ uri: item.image }}
+                className="absolute inset-0 h-full w-full"
+                resizeMode="cover"
+              />
+              <View className="absolute inset-0 bg-black/50" />
+              <View className="absolute bottom-0 left-0 right-0 p-6">
+                <Text className="mb-2 text-center text-xs font-bold uppercase tracking-widest text-primary">
+                  {item.badge}
+                </Text>
+                <Text className="mb-2 text-center text-4xl font-bold text-white font-display">
+                  {item.title}
+                </Text>
+                <Text className="mb-6 text-center text-sm font-light text-gray-200">
+                  {item.description}
+                </Text>
+                <TouchableOpacity
+                  className={`w-full rounded-full py-3 ${
+                    item.buttonStyle === "primary" ? "bg-primary" : "bg-white"
                   }`}
                 >
-                  {item.buttonText}
-                </Text>
-              </TouchableOpacity>
+                  <Text
+                    className={`text-center font-bold ${
+                      item.buttonStyle === "primary"
+                        ? "text-white"
+                        : "text-gray-900"
+                    }`}
+                  >
+                    {item.buttonText}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         ))}
       </ScrollView>
 
       {/* Carousel Indicators */}
-      <View className="flex-row justify-center space-x-2">
+      <View className="flex-row justify-center space-x-2 mt-4 gap-2">
         {HERO_ITEMS.map((_, index) => (
           <View
             key={index}
-            className={`h-2 w-2 rounded-full ${
+            className={`h-2 w-2 rounded-full transition-colors ${
               index === activeIndex
                 ? "bg-primary"
                 : "bg-gray-300 dark:bg-gray-700"
