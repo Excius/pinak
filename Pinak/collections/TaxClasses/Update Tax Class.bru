@@ -1,0 +1,36 @@
+meta {
+  name: Update Tax Class
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/api/v1/tax-classes/{{taxClassId}}
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "GST 12%",
+    "rate": 12.0
+  }
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  taxClassId: your-taxclass-id-here
+  authToken: your-jwt-token-here
+}
+
+docs {
+  Update a tax class (Moderator/Admin required).
+}

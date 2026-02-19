@@ -1,0 +1,35 @@
+meta {
+  name: Update Variant Stock
+  type: http
+  seq: 5
+}
+
+put {
+  url: {{baseUrl}}/api/v1/variants/{{variantId}}/stock
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "stock": 20
+  }
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  variantId: your-variant-id-here
+  authToken: your-jwt-token-here
+}
+
+docs {
+  Update stock for a variant (Moderator/Admin required).
+}

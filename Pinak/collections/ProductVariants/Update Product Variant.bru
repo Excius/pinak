@@ -1,0 +1,36 @@
+meta {
+  name: Update Product Variant
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{baseUrl}}/api/v1/variants/{{variantId}}
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "price": 1200,
+    "stock": 5
+  }
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  variantId: your-variant-id-here
+  authToken: your-jwt-token-here
+}
+
+docs {
+  Update a product variant (Moderator/Admin required).
+}

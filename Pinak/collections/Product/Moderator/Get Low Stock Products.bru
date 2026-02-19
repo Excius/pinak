@@ -7,7 +7,11 @@ meta {
 get {
   url: {{baseUrl}}/api/v1/products/admin/stock/low-stock?threshold=10
   body: none
-  auth: bearer
+  auth: inherit
+}
+
+params:query {
+  threshold: 10
 }
 
 headers {

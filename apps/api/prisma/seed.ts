@@ -1,22 +1,52 @@
 import { prisma } from "../src/lib/prisma.js";
 import { normalizeEmail } from "../src/lib/email.js";
 
+// ---------------------------------------------------------------------------
+// Cleanup — strict reverse-dependency order so FK constraints are satisfied
+// ---------------------------------------------------------------------------
 async function cleanup() {
   console.log("🧹 Cleaning up existing data...");
 
-  // Delete in order to respect foreign key constraints
+  // Order-dependent pivot tables first
+  await prisma.couponUsage.deleteMany();
+  await prisma.orderItem.deleteMany();
+  await prisma.order.deleteMany();
+  await prisma.coupon.deleteMany();
+
+  await prisma.review.deleteMany();
+  await prisma.auditLog.deleteMany();
+
+  // Featured
   await prisma.featuredProduct.deleteMany();
   await prisma.featuredSection.deleteMany();
-  await prisma.productImage.deleteMany();
 
-  // Remove combo kit items and combo kits before product variants (they reference productVariant)
+  // Product-related (images, combo kits, variants, products)
+  await prisma.productImage.deleteMany();
   await prisma.comboKitItem.deleteMany();
   await prisma.comboKit.deleteMany();
-
   await prisma.productVariant.deleteMany();
   await prisma.product.deleteMany();
+
+  // Supporting structures
   await prisma.category.deleteMany();
   await prisma.user.deleteMany();
+
+  // Content / misc
+  await prisma.article.deleteMany();
+  await prisma.store.deleteMany();
+  await prisma.quizOption.deleteMany();
+  await prisma.quizRule.deleteMany();
+  await prisma.quizQuestion.deleteMany();
+
+  // Lookup tables (clean so re-seeding always starts fresh)
+  await prisma.filterValue.deleteMany();
+  await prisma.filterGroup.deleteMany();
+  await prisma.optionValue.deleteMany();
+  await prisma.option.deleteMany();
+  await prisma.brand.deleteMany();
+  await prisma.taxClass.deleteMany();
+  await prisma.lengthClass.deleteMany();
+  await prisma.weightClass.deleteMany();
 
   console.log("✅ Cleanup completed");
 }
@@ -27,50 +57,265 @@ async function main() {
   // Clean up existing data first
   await cleanup();
 
-  // Create categories
-  const categories = await Promise.all([
-    prisma.category.create({
-      data: {
-        name: "Foundation",
-        slug: "foundation",
-      },
-    }),
-    prisma.category.create({
-      data: {
-        name: "Lipstick",
-        slug: "lipstick",
-      },
-    }),
-    prisma.category.create({
-      data: {
-        name: "Mascara",
-        slug: "mascara",
-      },
-    }),
-    prisma.category.create({
-      data: {
-        name: "Eyeshadow",
-        slug: "eyeshadow",
-      },
-    }),
-    prisma.category.create({
-      data: {
-        name: "Skincare",
-        slug: "skincare",
-      },
-    }),
-  ]);
+  // -------------------------------------------------------------------------
+  // 1. Lookup tables (cleanup already ran, so use create not upsert)
+  // -------------------------------------------------------------------------
+  const brandMap: Record<string, { id: string }> = {};
+  for (const bName of [
+    "GlowBeauty",
+    "LipLux",
+    "LashQueen",
+    "EyeGlow",
+    "SkinCare Plus",
+  ]) {
+    const slug = bName.toLowerCase().replace(/\s+/g, "-");
+    const b = await prisma.brand.create({ data: { name: bName, slug } });
+    brandMap[bName] = b;
+  }
 
-  console.log("✅ Created categories");
+  const taxClassMap: Record<string, { id: string }> = {};
+  for (const tc of [
+    { name: "GST 5%", rate: 5.0 },
+    { name: "GST 12%", rate: 12.0 },
+    { name: "GST 18%", rate: 18.0 },
+    { name: "GST 28%", rate: 28.0 },
+    { name: "Zero Rated", rate: 0.0 },
+  ]) {
+    taxClassMap[tc.name] = await prisma.taxClass.create({ data: tc });
+  }
 
-  // Create products with variants
-  const products = [
+  const lengthClassMap: Record<string, { id: string }> = {};
+  for (const lc of [
+    { name: "Centimeter", unit: "cm" },
+    { name: "Inch", unit: "in" },
+    { name: "Millimeter", unit: "mm" },
+  ]) {
+    lengthClassMap[lc.name] = await prisma.lengthClass.create({ data: lc });
+  }
+
+  const weightClassMap: Record<string, { id: string }> = {};
+  for (const wc of [
+    { name: "Gram", unit: "g" },
+    { name: "Kilogram", unit: "kg" },
+    { name: "Pound", unit: "lb" },
+    { name: "Ounce", unit: "oz" },
+  ]) {
+    weightClassMap[wc.name] = await prisma.weightClass.create({ data: wc });
+  }
+
+  console.log("✅ Created lookup tables");
+
+  // -------------------------------------------------------------------------
+  // 2. Options + OptionValues
+  // -------------------------------------------------------------------------
+  const optionSize = await prisma.option.create({ data: { name: "Size" } });
+  const optionShade = await prisma.option.create({ data: { name: "Shade" } });
+
+  const sizeValues = [
+    "30ml",
+    "35ml",
+    "50ml",
+    "100ml",
+    "200ml",
+    "4g",
+    "8ml",
+    "10ml",
+    "12g",
+    "15g",
+  ];
+  const shadeValues = [
+    "Light Beige",
+    "Medium Beige",
+    "Deep Beige",
+    "Ruby Red",
+    "Nude Pink",
+    "Deep Plum",
+    "Black",
+    "Brown",
+    "Porcelain",
+    "Ivory",
+    "Sand",
+    "Coral",
+    "Rose",
+    "Berry",
+    "Jet Black",
+    "Deep Brown",
+    // Palette-specific shades (were missing previously)
+    "Warm Tones",
+    "Cool Tones",
+    "Neutral",
+    "Smoky",
+  ];
+
+  const optionValueMap: Record<string, Record<string, { id: string }>> = {
+    Size: {},
+    Shade: {},
+  };
+
+  for (const v of sizeValues) {
+    optionValueMap.Size[v] = await prisma.optionValue.create({
+      data: { optionId: optionSize.id, value: v },
+    });
+  }
+  for (const v of shadeValues) {
+    optionValueMap.Shade[v] = await prisma.optionValue.create({
+      data: { optionId: optionShade.id, value: v },
+    });
+  }
+
+  console.log("✅ Created options & option values");
+
+  // -------------------------------------------------------------------------
+  // 3. Categories — 2-level hierarchy
+  // -------------------------------------------------------------------------
+  const catMakeup = await prisma.category.create({
+    data: { name: "Makeup", slug: "makeup" },
+  });
+  const catSkincareParent = await prisma.category.create({
+    data: { name: "Skincare", slug: "skincare" },
+  });
+  const catFoundation = await prisma.category.create({
+    data: { name: "Foundation", slug: "foundation", parentId: catMakeup.id },
+  });
+  const catLipstick = await prisma.category.create({
+    data: { name: "Lipstick", slug: "lipstick", parentId: catMakeup.id },
+  });
+  const catMascara = await prisma.category.create({
+    data: { name: "Mascara", slug: "mascara", parentId: catMakeup.id },
+  });
+  const catEyeshadow = await prisma.category.create({
+    data: { name: "Eyeshadow", slug: "eyeshadow", parentId: catMakeup.id },
+  });
+  const catMoisturizers = await prisma.category.create({
+    data: {
+      name: "Moisturizers",
+      slug: "moisturizers",
+      parentId: catSkincareParent.id,
+    },
+  });
+  const catSerums = await prisma.category.create({
+    data: { name: "Serums", slug: "serums", parentId: catSkincareParent.id },
+  });
+
+  console.log(
+    "✅ Created categories (2-level hierarchy: Makeup → Foundation/Lipstick/Mascara/Eyeshadow, Skincare → Moisturizers/Serums)",
+  );
+
+  // Seed filter groups and values used for faceted search (Color, Finish, Skin Type)
+  const filterGroupsData = [
     {
-      name: "Radiant Glow Foundation",
-      slug: "radiant-glow-foundation",
-      description: "A lightweight foundation that provides natural coverage",
-      brand: "GlowBeauty",
-      categoryId: categories[0].id,
+      name: "Color",
+      slug: "color",
+      values: [
+        "Light Beige",
+        "Medium Beige",
+        "Deep Beige",
+        "Ruby Red",
+        "Nude Pink",
+        "Deep Plum",
+        "Black",
+        "Brown",
+        "Porcelain",
+        "Ivory",
+        "Sand",
+        "Coral",
+        "Rose",
+        "Berry",
+        "Jet Black",
+        "Deep Brown",
+      ],
+    },
+    {
+      name: "Finish",
+      slug: "finish",
+      values: ["Matte", "Satin", "Shimmer", "Dewy", "Glossy"],
+    },
+    {
+      name: "Skin Type",
+      slug: "skin-type",
+      values: ["Oily", "Dry", "Combination", "Normal", "Sensitive"],
+    },
+  ];
+
+  // -------------------------------------------------------------------------
+  // 4. Filter groups & values
+  // -------------------------------------------------------------------------
+  const filterValueMap: Record<string, Record<string, { id: string }>> = {};
+
+  for (const fg of filterGroupsData) {
+    const group = await prisma.filterGroup.create({
+      data: { name: fg.name, slug: fg.slug, sortOrder: 0, isActive: true },
+    });
+
+    filterValueMap[fg.slug] = {};
+    for (const v of fg.values) {
+      const vSlug = v
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, "")
+        .replace(/\s+/g, "-");
+      const fv = await prisma.filterValue.create({
+        data: { filterGroupId: group.id, name: v, slug: vSlug },
+      });
+      filterValueMap[fg.slug][vSlug] = fv;
+    }
+  }
+
+  console.log("✅ Created filter groups & values");
+
+  // Helper to resolve a filter value id by slug across all groups
+  function fv(slug: string): string {
+    for (const group of Object.values(filterValueMap)) {
+      if (group[slug]) return group[slug].id;
+    }
+    console.warn(`⚠️  FilterValue slug '${slug}' not found`);
+    return "";
+  }
+
+  // Shared IDs for product creation
+  const gst12Id = taxClassMap["GST 12%"].id;
+  const gst18Id = taxClassMap["GST 18%"].id;
+  const gramId = weightClassMap["Gram"].id;
+  const mmId = lengthClassMap["Millimeter"].id;
+
+  // -------------------------------------------------------------------------
+  // 5. Products with variants, images, option values, filter values
+  // -------------------------------------------------------------------------
+  type ProductDef = {
+    productData: {
+      name: string;
+      slug: string;
+      description: string;
+      brandId: string;
+      categoryId: string;
+      taxClassId: string;
+      weightClassId: string;
+      lengthClassId: string;
+      weightGrams: number;
+    };
+    variants: Array<{
+      sku: string;
+      shade: string | null;
+      size: string;
+      price: number;
+      stock: number;
+      tags: string[];
+    }>;
+    filterSlugs: string[];
+  };
+
+  const productDefs: ProductDef[] = [
+    {
+      productData: {
+        name: "Radiant Glow Foundation",
+        slug: "radiant-glow-foundation",
+        description: "A lightweight foundation that provides natural coverage",
+        brandId: brandMap["GlowBeauty"].id,
+        categoryId: catFoundation.id,
+        taxClassId: gst12Id,
+        weightClassId: gramId,
+        lengthClassId: mmId,
+        weightGrams: 30,
+      },
       variants: [
         {
           sku: "RGF-001",
@@ -97,13 +342,20 @@ async function main() {
           tags: ["matte", "foundation", "deep"],
         },
       ],
+      filterSlugs: ["light-beige", "medium-beige", "deep-beige", "matte"],
     },
     {
-      name: "Velvet Matte Lipstick",
-      slug: "velvet-matte-lipstick",
-      description: "Long-lasting matte lipstick with intense color payoff",
-      brand: "LipLux",
-      categoryId: categories[1].id,
+      productData: {
+        name: "Velvet Matte Lipstick",
+        slug: "velvet-matte-lipstick",
+        description: "Long-lasting matte lipstick with intense color payoff",
+        brandId: brandMap["LipLux"].id,
+        categoryId: catLipstick.id,
+        taxClassId: gst12Id,
+        weightClassId: gramId,
+        lengthClassId: mmId,
+        weightGrams: 4,
+      },
       variants: [
         {
           sku: "VML-001",
@@ -130,13 +382,20 @@ async function main() {
           tags: ["matte", "lipstick", "plum"],
         },
       ],
+      filterSlugs: ["ruby-red", "nude-pink", "deep-plum", "matte"],
     },
     {
-      name: "Volume Boost Mascara",
-      slug: "volume-boost-mascara",
-      description: "Dramatic volume and length for your lashes",
-      brand: "LashQueen",
-      categoryId: categories[2].id,
+      productData: {
+        name: "Volume Boost Mascara",
+        slug: "volume-boost-mascara",
+        description: "Dramatic volume and length for your lashes",
+        brandId: brandMap["LashQueen"].id,
+        categoryId: catMascara.id,
+        taxClassId: gst12Id,
+        weightClassId: gramId,
+        lengthClassId: mmId,
+        weightGrams: 10,
+      },
       variants: [
         {
           sku: "VBM-001",
@@ -155,13 +414,20 @@ async function main() {
           tags: ["mascara", "volume", "brown"],
         },
       ],
+      filterSlugs: ["black", "brown"],
     },
     {
-      name: "Shimmer Eyeshadow Palette",
-      slug: "shimmer-eyeshadow-palette",
-      description: "12 shades of shimmering eyeshadows for versatile looks",
-      brand: "EyeGlow",
-      categoryId: categories[3].id,
+      productData: {
+        name: "Shimmer Eyeshadow Palette",
+        slug: "shimmer-eyeshadow-palette",
+        description: "12 shades of shimmering eyeshadows for versatile looks",
+        brandId: brandMap["EyeGlow"].id,
+        categoryId: catEyeshadow.id,
+        taxClassId: gst12Id,
+        weightClassId: gramId,
+        lengthClassId: mmId,
+        weightGrams: 12,
+      },
       variants: [
         {
           sku: "SEP-001",
@@ -180,13 +446,20 @@ async function main() {
           tags: ["eyeshadow", "shimmer", "cool"],
         },
       ],
+      filterSlugs: ["shimmer"],
     },
     {
-      name: "Hydrating Face Moisturizer",
-      slug: "hydrating-face-moisturizer",
-      description: "Deep hydration for all skin types",
-      brand: "SkinCare Plus",
-      categoryId: categories[4].id,
+      productData: {
+        name: "Hydrating Face Moisturizer",
+        slug: "hydrating-face-moisturizer",
+        description: "Deep hydration for all skin types",
+        brandId: brandMap["SkinCare Plus"].id,
+        categoryId: catMoisturizers.id,
+        taxClassId: gst18Id,
+        weightClassId: gramId,
+        lengthClassId: mmId,
+        weightGrams: 50,
+      },
       variants: [
         {
           sku: "HFM-001",
@@ -205,13 +478,20 @@ async function main() {
           tags: ["moisturizer", "skincare", "hydration"],
         },
       ],
+      filterSlugs: ["dry", "normal", "dewy"],
     },
     {
-      name: "Liquid Glow Foundation",
-      slug: "liquid-glow-foundation",
-      description: "Buildable coverage with a natural glow finish",
-      brand: "GlowBeauty",
-      categoryId: categories[0].id,
+      productData: {
+        name: "Liquid Glow Foundation",
+        slug: "liquid-glow-foundation",
+        description: "Buildable coverage with a natural glow finish",
+        brandId: brandMap["GlowBeauty"].id,
+        categoryId: catFoundation.id,
+        taxClassId: gst12Id,
+        weightClassId: gramId,
+        lengthClassId: mmId,
+        weightGrams: 35,
+      },
       variants: [
         {
           sku: "LGF-001",
@@ -238,13 +518,20 @@ async function main() {
           tags: ["foundation", "glow", "sand"],
         },
       ],
+      filterSlugs: ["porcelain", "ivory", "sand", "dewy"],
     },
     {
-      name: "Satin Lipstick",
-      slug: "satin-lipstick",
-      description: "Creamy satin finish lipstick that feels luxurious",
-      brand: "LipLux",
-      categoryId: categories[1].id,
+      productData: {
+        name: "Satin Lipstick",
+        slug: "satin-lipstick",
+        description: "Creamy satin finish lipstick that feels luxurious",
+        brandId: brandMap["LipLux"].id,
+        categoryId: catLipstick.id,
+        taxClassId: gst12Id,
+        weightClassId: gramId,
+        lengthClassId: mmId,
+        weightGrams: 4,
+      },
       variants: [
         {
           sku: "SL-001",
@@ -271,13 +558,20 @@ async function main() {
           tags: ["lipstick", "satin", "berry"],
         },
       ],
+      filterSlugs: ["coral", "rose", "berry", "satin"],
     },
     {
-      name: "Waterproof Mascara",
-      slug: "waterproof-mascara",
-      description: "Smudge-proof, waterproof formula for all-day wear",
-      brand: "LashQueen",
-      categoryId: categories[2].id,
+      productData: {
+        name: "Waterproof Mascara",
+        slug: "waterproof-mascara",
+        description: "Smudge-proof, waterproof formula for all-day wear",
+        brandId: brandMap["LashQueen"].id,
+        categoryId: catMascara.id,
+        taxClassId: gst12Id,
+        weightClassId: gramId,
+        lengthClassId: mmId,
+        weightGrams: 8,
+      },
       variants: [
         {
           sku: "WM-001",
@@ -296,13 +590,20 @@ async function main() {
           tags: ["mascara", "waterproof", "brown"],
         },
       ],
+      filterSlugs: ["jet-black", "deep-brown"],
     },
     {
-      name: "Matte Eyeshadow Palette",
-      slug: "matte-eyeshadow-palette",
-      description: "Highly pigmented matte shades for professional looks",
-      brand: "EyeGlow",
-      categoryId: categories[3].id,
+      productData: {
+        name: "Matte Eyeshadow Palette",
+        slug: "matte-eyeshadow-palette",
+        description: "Highly pigmented matte shades for professional looks",
+        brandId: brandMap["EyeGlow"].id,
+        categoryId: catEyeshadow.id,
+        taxClassId: gst12Id,
+        weightClassId: gramId,
+        lengthClassId: mmId,
+        weightGrams: 15,
+      },
       variants: [
         {
           sku: "MEP-001",
@@ -321,13 +622,20 @@ async function main() {
           tags: ["eyeshadow", "matte", "smoky"],
         },
       ],
+      filterSlugs: ["matte"],
     },
     {
-      name: "Vitamin C Serum",
-      slug: "vitamin-c-serum",
-      description: "Brightening serum with 20% Vitamin C for radiant skin",
-      brand: "SkinCare Plus",
-      categoryId: categories[4].id,
+      productData: {
+        name: "Vitamin C Serum",
+        slug: "vitamin-c-serum",
+        description: "Brightening serum with 20% Vitamin C for radiant skin",
+        brandId: brandMap["SkinCare Plus"].id,
+        categoryId: catSerums.id,
+        taxClassId: gst18Id,
+        weightClassId: gramId,
+        lengthClassId: mmId,
+        weightGrams: 30,
+      },
       variants: [
         {
           sku: "VCS-001",
@@ -346,109 +654,216 @@ async function main() {
           tags: ["serum", "skincare", "vitamin-c"],
         },
       ],
+      filterSlugs: ["oily", "combination", "sensitive"],
     },
   ];
 
-  for (const productData of products) {
+  const createdProducts: Array<{ id: string; slug: string }> = [];
+  const createdVariants: Array<{ id: string; sku: string; price: number }> = [];
+
+  for (const { productData, variants, filterSlugs } of productDefs) {
     const product = await prisma.product.create({
       data: {
         name: productData.name,
         slug: productData.slug,
         description: productData.description,
-        brand: productData.brand,
-        categoryId: productData.categoryId,
+        brandId: productData.brandId,
+        taxClassId: productData.taxClassId,
+        weightClassId: productData.weightClassId,
+        lengthClassId: productData.lengthClassId,
+        weightGrams: productData.weightGrams,
+        categories: { create: [{ categoryId: productData.categoryId }] },
       },
     });
+    createdProducts.push({ id: product.id, slug: product.slug });
 
-    // Create variants for this product
-    for (const variant of productData.variants) {
+    for (const variant of variants) {
       const createdVariant = await prisma.productVariant.create({
         data: {
           productId: product.id,
           sku: variant.sku,
-          shade: variant.shade,
-          size: variant.size,
           price: variant.price,
           stock: variant.stock,
-          tags: variant.tags || [],
+          tags: variant.tags,
         },
       });
+      createdVariants.push({
+        id: createdVariant.id,
+        sku: variant.sku,
+        price: variant.price,
+      });
 
-      // Add a sample image for each variant
+      if (variant.size) {
+        const ov = optionValueMap.Size[variant.size];
+        if (ov)
+          await prisma.variantOptionValue.create({
+            data: { variantId: createdVariant.id, optionValueId: ov.id },
+          });
+        else console.warn(`⚠️  Missing OptionValue Size='${variant.size}'`);
+      }
+      if (variant.shade) {
+        const ov = optionValueMap.Shade[variant.shade];
+        if (ov)
+          await prisma.variantOptionValue.create({
+            data: { variantId: createdVariant.id, optionValueId: ov.id },
+          });
+        else console.warn(`⚠️  Missing OptionValue Shade='${variant.shade}'`);
+      }
+
       await prisma.productImage.create({
         data: {
           productVariantId: createdVariant.id,
           url: `https://example.com/images/${productData.slug}-${variant.sku.toLowerCase()}.jpg`,
-          altText: `${productData.name} - ${variant.shade || variant.size}`,
+          altText: `${productData.name} — ${variant.shade ?? variant.size}`,
           isPrimary: true,
         },
       });
     }
+
+    // Attach filter values for this product
+    const pfData = filterSlugs
+      .map((slug) => fv(slug))
+      .filter(Boolean)
+      .map((filterValueId) => ({ productId: product.id, filterValueId }));
+    if (pfData.length) {
+      await prisma.productFilterValue.createMany({
+        data: pfData,
+        skipDuplicates: true,
+      });
+    }
   }
 
-  console.log("✅ Created products with variants and images");
+  const slugToId = Object.fromEntries(
+    createdProducts.map((p) => [p.slug, p.id]),
+  );
+  const skuToVariant = Object.fromEntries(
+    createdVariants.map((v) => [v.sku, v]),
+  );
 
-  // Create featured sections
-  const featuredSections = await Promise.all([
+  console.log(
+    `✅ Created ${productDefs.length} products with variants, images & filter values`,
+  );
+
+  // -------------------------------------------------------------------------
+  // 6. Related products
+  // -------------------------------------------------------------------------
+  const relatedPairs = [
+    {
+      product: "radiant-glow-foundation",
+      related: "liquid-glow-foundation",
+      sortOrder: 1,
+    },
+    {
+      product: "radiant-glow-foundation",
+      related: "hydrating-face-moisturizer",
+      sortOrder: 2,
+    },
+    {
+      product: "velvet-matte-lipstick",
+      related: "satin-lipstick",
+      sortOrder: 1,
+    },
+    {
+      product: "volume-boost-mascara",
+      related: "waterproof-mascara",
+      sortOrder: 1,
+    },
+    {
+      product: "hydrating-face-moisturizer",
+      related: "vitamin-c-serum",
+      sortOrder: 1,
+    },
+    {
+      product: "shimmer-eyeshadow-palette",
+      related: "matte-eyeshadow-palette",
+      sortOrder: 1,
+    },
+  ];
+
+  const relatedData = relatedPairs
+    .filter((r) => slugToId[r.product] && slugToId[r.related])
+    .map((r) => ({
+      productId: slugToId[r.product],
+      relatedProductId: slugToId[r.related],
+      sortOrder: r.sortOrder,
+    }));
+
+  if (relatedData.length) {
+    await prisma.relatedProduct.createMany({
+      data: relatedData,
+      skipDuplicates: true,
+    });
+  }
+  console.log(`✅ Created ${relatedData.length} related product links`);
+
+  // -------------------------------------------------------------------------
+  // 7. Featured sections & products
+  // -------------------------------------------------------------------------
+  const [sectionExpertPicks, sectionHero, sectionDeals] = await Promise.all([
     prisma.featuredSection.create({
-      data: {
-        title: "Expert Picks",
-        type: "EXPERT_PICKS",
-        priority: 10,
-      },
+      data: { title: "Expert Picks", type: "EXPERT_PICKS", priority: 10 },
     }),
     prisma.featuredSection.create({
-      data: {
-        title: "Homepage Hero",
-        type: "HOMEPAGE_HERO",
-        priority: 20,
-      },
+      data: { title: "Homepage Hero", type: "HOMEPAGE_HERO", priority: 20 },
     }),
     prisma.featuredSection.create({
-      data: {
-        title: "Special Deals",
-        type: "DEALS",
-        priority: 5,
-      },
+      data: { title: "Special Deals", type: "DEALS", priority: 5 },
     }),
   ]);
 
-  console.log("✅ Created featured sections");
+  const featuredEntries = [
+    {
+      sectionId: sectionHero.id,
+      productId: slugToId["radiant-glow-foundation"],
+    },
+    { sectionId: sectionHero.id, productId: slugToId["velvet-matte-lipstick"] },
+    {
+      sectionId: sectionExpertPicks.id,
+      productId: slugToId["volume-boost-mascara"],
+    },
+    {
+      sectionId: sectionExpertPicks.id,
+      productId: slugToId["shimmer-eyeshadow-palette"],
+    },
+    {
+      sectionId: sectionExpertPicks.id,
+      productId: slugToId["hydrating-face-moisturizer"],
+    },
+    {
+      sectionId: sectionExpertPicks.id,
+      productId: slugToId["vitamin-c-serum"],
+    },
+    {
+      sectionId: sectionDeals.id,
+      productId: slugToId["liquid-glow-foundation"],
+    },
+    { sectionId: sectionDeals.id, productId: slugToId["satin-lipstick"] },
+    { sectionId: sectionDeals.id, productId: slugToId["waterproof-mascara"] },
+  ].filter((e) => e.productId);
 
-  // Get all created products to feature some of them
-  const allProducts = await prisma.product.findMany({ take: 10 });
+  await prisma.featuredProduct.createMany({ data: featuredEntries });
+  console.log(
+    `✅ Created 3 featured sections + ${featuredEntries.length} featured products`,
+  );
 
-  // Add featured products to sections
-  const featuredProducts = [
-    // Homepage Hero - top priority products
-    { sectionId: featuredSections[1].id, productId: allProducts[0].id }, // Radiant Glow Foundation
-    { sectionId: featuredSections[1].id, productId: allProducts[1].id }, // Velvet Matte Lipstick
+  // -------------------------------------------------------------------------
+  // 8. Users (admin + moderator + regular)
+  // -------------------------------------------------------------------------
+  const DUMMY_HASH = "$argon2id$v=19$m=65536,t=3,p=4$dummy_hash_for_testing";
 
-    // Expert Picks - curated selection
-    { sectionId: featuredSections[0].id, productId: allProducts[2].id }, // Volume Boost Mascara
-    { sectionId: featuredSections[0].id, productId: allProducts[3].id }, // Shimmer Eyeshadow
-    { sectionId: featuredSections[0].id, productId: allProducts[4].id }, // Hydrating Moisturizer
-
-    // Special Deals - discounted items
-    { sectionId: featuredSections[2].id, productId: allProducts[5].id }, // Liquid Glow Foundation
-    { sectionId: featuredSections[2].id, productId: allProducts[6].id }, // Satin Lipstick
-  ];
-
-  for (const featured of featuredProducts) {
-    await prisma.featuredProduct.create({
-      data: featured,
-    });
-  }
-
-  console.log("✅ Created featured products");
-
-  // Create users
-  const users = [
+  const usersData = [
     {
       email: "admin@pinak.com",
       username: "admin",
       name: "Admin User",
       role: "ADMIN" as const,
+      isEmailVerified: true,
+    },
+    {
+      email: "moderator@pinak.com",
+      username: "moderator",
+      name: "Moderator User",
+      role: "MODERATOR" as const,
       isEmailVerified: true,
     },
     {
@@ -481,127 +896,482 @@ async function main() {
     },
   ];
 
-  for (const userData of users) {
-    await prisma.user.create({
+  const createdUsers: Record<string, { id: string }> = {};
+  for (const u of usersData) {
+    const created = await prisma.user.create({
       data: {
-        email: normalizeEmail(userData.email),
-        username: userData.username,
-        name: userData.name,
-        role: userData.role,
-        isEmailVerified: userData.isEmailVerified,
-        hashPassword: "$argon2id$v=19$m=65536,t=3,p=4$dummy_hash_for_testing", // Dummy hash
+        email: normalizeEmail(u.email),
+        username: u.username,
+        name: u.name,
+        role: u.role,
+        isEmailVerified: u.isEmailVerified,
+        hashPassword: DUMMY_HASH,
       },
     });
+    createdUsers[u.username] = created;
   }
+  console.log(
+    `✅ Created ${usersData.length} users (admin, moderator, ${usersData.length - 2} regular)`,
+  );
 
-  console.log("✅ Created users");
+  // -------------------------------------------------------------------------
+  // 9. Combo kits
+  // -------------------------------------------------------------------------
+  const comboKits: Array<{ id: string; items?: Array<{ id: string }> }> = [];
 
-  // --- Seed ComboKits ---
-  const variantSkus = [
-    "RGF-001", // Radiant Glow Foundation - Light Beige
-    "VML-002", // Velvet Matte Lipstick - Nude Pink
-    "SEP-001", // Shimmer Eyeshadow Palette - Warm Tones
-    "HFM-001", // Hydrating Face Moisturizer - 50ml
-    "LGF-001", // Liquid Glow Foundation - Porcelain
-    "VBM-001", // Volume Boost Mascara - Black
-    "WM-001", // Waterproof Mascara - Jet Black
-  ];
+  for (const def of [
+    {
+      name: "Starter Makeup Kit",
+      slug: "starter-makeup-kit",
+      description: "Foundation, lipstick and eyeshadow — curated starter set.",
+      audience: "ALL",
+      discount: 0.85,
+      skus: ["RGF-001", "VML-002", "SEP-001"],
+    },
+    {
+      name: "Hydration & Glow Set",
+      slug: "hydration-glow-set",
+      description: "Moisturizer + buildable glow foundation.",
+      audience: "UNISEX",
+      discount: 0.9,
+      skus: ["HFM-001", "LGF-001"],
+    },
+    {
+      name: "Lash & Define Duo",
+      slug: "lash-define-duo",
+      description: "Volume + waterproof mascara for all-day drama.",
+      audience: "WOMEN",
+      discount: 0.88,
+      skus: ["VBM-001", "WM-001"],
+    },
+  ]) {
+    const vs = def.skus.map((s) => skuToVariant[s]).filter(Boolean);
+    if (vs.length !== def.skus.length) {
+      console.warn(`⚠️  Skipping '${def.name}' - missing variant(s)`);
+      continue;
+    }
+    const kit = await prisma.comboKit.create({
+      data: {
+        name: def.name,
+        slug: def.slug,
+        description: def.description,
+        audience: def.audience,
+        price: Math.round(vs.reduce((s, v) => s + v.price, 0) * def.discount),
+        items: {
+          create: vs.map((v) => ({ productVariantId: v.id, quantity: 1 })),
+        },
+      },
+      include: { items: true },
+    });
+    comboKits.push(kit);
+  }
+  console.log(`✅ Created ${comboKits.length} combo kits`);
 
-  const variants = await prisma.productVariant.findMany({
-    where: { sku: { in: variantSkus } },
+  // -------------------------------------------------------------------------
+  // 10. Coupons
+  // -------------------------------------------------------------------------
+  const now = new Date();
+  const in6Months = new Date(now.getTime() + 180 * 24 * 60 * 60 * 1000);
+
+  await prisma.coupon.createMany({
+    data: [
+      {
+        code: "WELCOME10",
+        discountType: "PERCENTAGE",
+        discountValue: 10,
+        minOderValue: 1000,
+        maxDiscountValue: 500,
+        validFrom: now,
+        validUntil: in6Months,
+        maxTotalUsers: 1000,
+        maxUsesPerUser: 1,
+        isActive: true,
+      },
+      {
+        code: "FLAT200",
+        discountType: "FLAT",
+        discountValue: 200,
+        minOderValue: 2000,
+        validFrom: now,
+        validUntil: in6Months,
+        maxUsesPerUser: 2,
+        isActive: true,
+      },
+      {
+        code: "SKINCARE15",
+        discountType: "PERCENTAGE",
+        discountValue: 15,
+        minOderValue: 3000,
+        maxDiscountValue: 750,
+        validFrom: now,
+        validUntil: in6Months,
+        isActive: true,
+      },
+    ],
   });
-  const vBySku = Object.fromEntries(variants.map((v) => [v.sku, v]));
+  console.log("✅ Created 3 coupons (WELCOME10, FLAT200, SKINCARE15)");
 
-  const comboKits: Array<{ items?: Array<{ id: string }> }> = [];
+  // -------------------------------------------------------------------------
+  // 11. Orders with order items
+  // -------------------------------------------------------------------------
+  const johnId = createdUsers["johndoe"].id;
+  const janeId = createdUsers["janesmith"].id;
+  const sarahId = createdUsers["sarahw"].id;
 
-  if (vBySku["RGF-001"] && vBySku["VML-002"] && vBySku["SEP-001"]) {
-    const starterPrice =
-      vBySku["RGF-001"].price +
-      vBySku["VML-002"].price +
-      vBySku["SEP-001"].price;
-    const starter = await prisma.comboKit.create({
-      data: {
-        name: "Starter Makeup Kit",
-        slug: "starter-makeup-kit",
-        description:
-          "Foundation, lipstick and eyeshadow — curated starter set.",
-        audience: "ALL",
-        price: Math.round(starterPrice * 0.85), // 15% off
-        items: {
-          create: [
-            { productVariantId: vBySku["RGF-001"].id, quantity: 1 },
-            { productVariantId: vBySku["VML-002"].id, quantity: 1 },
-            { productVariantId: vBySku["SEP-001"].id, quantity: 1 },
-          ],
-        },
-      },
-      include: { items: true },
+  async function productIdBySku(sku: string): Promise<string | null> {
+    const v = await prisma.productVariant.findUnique({
+      where: { sku },
+      select: { productId: true },
     });
-    comboKits.push(starter);
-  } else {
-    console.warn("⚠️ Skipping Starter Makeup Kit - missing variant(s)");
+    return v?.productId ?? null;
   }
 
-  if (vBySku["HFM-001"] && vBySku["LGF-001"]) {
-    const hydraPrice = vBySku["HFM-001"].price + vBySku["LGF-001"].price;
-    const hydra = await prisma.comboKit.create({
-      data: {
-        name: "Hydration & Glow Set",
-        slug: "hydration-glow-set",
-        description: "Moisturizer + buildable glow foundation.",
-        audience: "UNISEX",
-        price: Math.round(hydraPrice * 0.9), // 10% off
-        items: {
-          create: [
-            { productVariantId: vBySku["HFM-001"].id, quantity: 1 },
-            { productVariantId: vBySku["LGF-001"].id, quantity: 1 },
-          ],
-        },
+  const rgf001 = skuToVariant["RGF-001"];
+  const vml001 = skuToVariant["VML-001"];
+  const hfm001 = skuToVariant["HFM-001"];
+  const vcs001 = skuToVariant["VCS-001"];
+  const lgf001 = skuToVariant["LGF-001"];
+  const sep001 = skuToVariant["SEP-001"];
+
+  const johnOrder = await prisma.order.create({
+    data: {
+      userId: johnId,
+      status: "DELIVERED",
+      paymentStatus: "COMPLETED",
+      subtotalAmount: rgf001.price + vml001.price,
+      taxAmount: Math.round((rgf001.price + vml001.price) * 0.12),
+      shippingAmount: 99,
+      totalAmount: Math.round((rgf001.price + vml001.price) * 1.12) + 99,
+    },
+  });
+  await prisma.orderItem.createMany({
+    data: [
+      {
+        orderId: johnOrder.id,
+        productId: await productIdBySku("RGF-001"),
+        productVariantId: rgf001.id,
+        productName: "Radiant Glow Foundation — Light Beige 30ml",
+        price: rgf001.price,
+        quantity: 1,
       },
-      include: { items: true },
-    });
-    comboKits.push(hydra);
-  } else {
-    console.warn("⚠️ Skipping Hydration & Glow Set - missing variant(s)");
-  }
-
-  if (vBySku["VBM-001"] && vBySku["WM-001"]) {
-    const lashPrice = vBySku["VBM-001"].price + vBySku["WM-001"].price;
-    const lashes = await prisma.comboKit.create({
-      data: {
-        name: "Lash & Define Duo",
-        slug: "lash-define-duo",
-        description: "Volume + waterproof for all-day drama.",
-        audience: "WOMEN",
-        price: Math.round(lashPrice * 0.88), // 12% off
-        items: {
-          create: [
-            { productVariantId: vBySku["VBM-001"].id, quantity: 1 },
-            { productVariantId: vBySku["WM-001"].id, quantity: 1 },
-          ],
-        },
+      {
+        orderId: johnOrder.id,
+        productId: await productIdBySku("VML-001"),
+        productVariantId: vml001.id,
+        productName: "Velvet Matte Lipstick — Ruby Red 4g",
+        price: vml001.price,
+        quantity: 2,
       },
-      include: { items: true },
+    ],
+  });
+
+  const janeOrder = await prisma.order.create({
+    data: {
+      userId: janeId,
+      status: "PROCESSING",
+      paymentStatus: "COMPLETED",
+      subtotalAmount: hfm001.price + vcs001.price,
+      taxAmount: Math.round((hfm001.price + vcs001.price) * 0.18),
+      shippingAmount: 0,
+      totalAmount: Math.round((hfm001.price + vcs001.price) * 1.18),
+    },
+  });
+  await prisma.orderItem.createMany({
+    data: [
+      {
+        orderId: janeOrder.id,
+        productId: await productIdBySku("HFM-001"),
+        productVariantId: hfm001.id,
+        productName: "Hydrating Face Moisturizer 50ml",
+        price: hfm001.price,
+        quantity: 1,
+      },
+      {
+        orderId: janeOrder.id,
+        productId: await productIdBySku("VCS-001"),
+        productVariantId: vcs001.id,
+        productName: "Vitamin C Serum 30ml",
+        price: vcs001.price,
+        quantity: 1,
+      },
+    ],
+  });
+
+  const sarahOrder = await prisma.order.create({
+    data: {
+      userId: sarahId,
+      status: "SHIPPED",
+      paymentStatus: "COMPLETED",
+      subtotalAmount: lgf001.price + sep001.price,
+      taxAmount: Math.round((lgf001.price + sep001.price) * 0.12),
+      shippingAmount: 99,
+      totalAmount: Math.round((lgf001.price + sep001.price) * 1.12) + 99,
+    },
+  });
+  await prisma.orderItem.createMany({
+    data: [
+      {
+        orderId: sarahOrder.id,
+        productId: await productIdBySku("LGF-001"),
+        productVariantId: lgf001.id,
+        productName: "Liquid Glow Foundation — Porcelain 35ml",
+        price: lgf001.price,
+        quantity: 1,
+      },
+      {
+        orderId: sarahOrder.id,
+        productId: await productIdBySku("SEP-001"),
+        productVariantId: sep001.id,
+        productName: "Shimmer Eyeshadow Palette — Warm Tones 12g",
+        price: sep001.price,
+        quantity: 1,
+      },
+    ],
+  });
+
+  console.log("✅ Created 3 orders (DELIVERED, PROCESSING, SHIPPED)");
+
+  // -------------------------------------------------------------------------
+  // 12. Reviews
+  // -------------------------------------------------------------------------
+  for (const r of [
+    {
+      username: "johndoe",
+      slug: "radiant-glow-foundation",
+      rating: 5,
+      body: "Amazing coverage, feels so light on the skin!",
+    },
+    {
+      username: "johndoe",
+      slug: "velvet-matte-lipstick",
+      rating: 4,
+      body: "Great color payoff, lasts all day.",
+    },
+    {
+      username: "janesmith",
+      slug: "hydrating-face-moisturizer",
+      rating: 5,
+      body: "My skin feels so soft after using this. Highly recommend.",
+    },
+    {
+      username: "janesmith",
+      slug: "vitamin-c-serum",
+      rating: 4,
+      body: "Noticed a visible improvement in brightness within 2 weeks.",
+    },
+    {
+      username: "sarahw",
+      slug: "liquid-glow-foundation",
+      rating: 5,
+      body: "Perfect finish for my skin type. Absolutely love it!",
+    },
+    {
+      username: "sarahw",
+      slug: "shimmer-eyeshadow-palette",
+      rating: 4,
+      body: "Beautiful pigmentation, the warm tones palette is stunning.",
+    },
+  ]) {
+    const user = createdUsers[r.username];
+    const productId = slugToId[r.slug];
+    if (!user || !productId) {
+      console.warn(`⚠️  Skipping review for ${r.slug}`);
+      continue;
+    }
+    await prisma.review.create({
+      data: { productId, userId: user.id, rating: r.rating, body: r.body },
     });
-    comboKits.push(lashes);
-  } else {
-    console.warn("⚠️ Skipping Lash & Define Duo - missing variant(s)");
   }
+  console.log("✅ Created 6 reviews");
 
-  console.log(`✅ Created ${comboKits.length} combo kits (seed)`);
+  // -------------------------------------------------------------------------
+  // 13. Articles
+  // -------------------------------------------------------------------------
+  await prisma.article.createMany({
+    data: [
+      {
+        title: "5 Foundation Tips for a Flawless Look",
+        slug: "5-foundation-tips-flawless-look",
+        content: "Foundation is the base of every great makeup look...",
+        type: "BLOG",
+        author: "Beauty Expert",
+        publishedAt: new Date("2025-12-01"),
+        isActive: true,
+      },
+      {
+        title: "How to Build a Skincare Routine",
+        slug: "how-to-build-skincare-routine",
+        content:
+          "A great skincare routine starts with cleansing, toning, moisturizing and SPF...",
+        type: "TUTORIAL",
+        author: "Skincare Specialist",
+        publishedAt: new Date("2026-01-10"),
+        isActive: true,
+      },
+      {
+        title: "Spring 2026 Makeup Trends",
+        slug: "spring-2026-makeup-trends",
+        content:
+          "This season is all about dewy skin, bold lips and natural brows...",
+        type: "NEWS",
+        author: "Editor",
+        publishedAt: new Date("2026-02-01"),
+        isActive: true,
+      },
+    ],
+  });
+  console.log("✅ Created 3 articles");
 
-  // Final summary
-  console.log("🎉 Database seeding completed successfully!");
-  console.log(`📊 Summary:
-  - ${categories.length} categories
-  - ${products.length} products
-  - ${products.reduce((acc, p) => acc + p.variants.length, 0)} product variants
-  - ${products.reduce((acc, p) => acc + p.variants.length, 0)} product images
-  - ${featuredSections.length} featured sections
-  - ${featuredProducts.length} featured products
-  - ${users.length} users
+  // -------------------------------------------------------------------------
+  // 14. Stores
+  // -------------------------------------------------------------------------
+  await prisma.store.createMany({
+    data: [
+      {
+        name: "Pinak Mumbai Flagship",
+        address: "101, Linking Road",
+        city: "Mumbai",
+        state: "Maharashtra",
+        zipCode: "400054",
+        phone: "+91-22-4000-1000",
+        latitude: 19.0596,
+        longitude: 72.8295,
+      },
+      {
+        name: "Pinak Delhi Store",
+        address: "45, Connaught Place",
+        city: "New Delhi",
+        state: "Delhi",
+        zipCode: "110001",
+        phone: "+91-11-4000-2000",
+        latitude: 28.6315,
+        longitude: 77.2167,
+      },
+      {
+        name: "Pinak Bangalore Store",
+        address: "12, Brigade Road",
+        city: "Bangalore",
+        state: "Karnataka",
+        zipCode: "560001",
+        phone: "+91-80-4000-3000",
+        latitude: 12.9758,
+        longitude: 77.6095,
+      },
+    ],
+  });
+  console.log("✅ Created 3 stores");
+
+  // -------------------------------------------------------------------------
+  // 15. Quiz questions, options & rules
+  // -------------------------------------------------------------------------
+  const q1 = await prisma.quizQuestion.create({
+    data: {
+      questoin: "What is your skin type?",
+      type: "SINGLE_CHOICE",
+      options: {
+        create: [
+          { text: "Oily" },
+          { text: "Dry" },
+          { text: "Combination" },
+          { text: "Normal" },
+          { text: "Sensitive" },
+        ],
+      },
+    },
+  });
+  const q2 = await prisma.quizQuestion.create({
+    data: {
+      questoin: "What is your preferred makeup finish?",
+      type: "SINGLE_CHOICE",
+      options: {
+        create: [
+          { text: "Matte" },
+          { text: "Dewy / Glow" },
+          { text: "Satin / Natural" },
+          { text: "Shimmer" },
+        ],
+      },
+    },
+  });
+  await prisma.quizQuestion.create({
+    data: {
+      questoin:
+        "Which concerns do you want to address? (Select all that apply)",
+      type: "MULTIPLE_CHOICE",
+      options: {
+        create: [
+          { text: "Dryness" },
+          { text: "Dullness / Uneven tone" },
+          { text: "Fine lines" },
+          { text: "Acne / Breakouts" },
+          { text: "Dark circles" },
+        ],
+      },
+    },
+  });
+  await prisma.quizRule.createMany({
+    data: [
+      {
+        condition: { questionId: q1.id, answer: "Dry" },
+        productId: slugToId["hydrating-face-moisturizer"],
+      },
+      {
+        condition: { questionId: q1.id, answer: "Oily" },
+        productId: slugToId["vitamin-c-serum"],
+      },
+      {
+        condition: { questionId: q2.id, answer: "Matte" },
+        productId: slugToId["velvet-matte-lipstick"],
+      },
+      {
+        condition: { questionId: q2.id, answer: "Dewy / Glow" },
+        productId: slugToId["liquid-glow-foundation"],
+      },
+    ].filter((r) => r.productId) as Array<{
+      condition: object;
+      productId: string;
+    }>,
+  });
+  console.log("✅ Created 3 quiz questions with options & rules");
+
+  // -------------------------------------------------------------------------
+  // 16. Backfill purchasedCount from seeded orders
+  // -------------------------------------------------------------------------
+  const metricSums = await prisma.orderItem.groupBy({
+    by: ["productId"],
+    where: {
+      productId: { not: null },
+      order: { isDeleted: false, status: { not: "CANCELLED" } },
+    },
+    _sum: { quantity: true },
+  });
+  for (const row of metricSums) {
+    if (!row.productId) continue;
+    await prisma.product.update({
+      where: { id: row.productId },
+      data: { purchasedCount: row._sum.quantity ?? 0 },
+    });
+  }
+  console.log(`✅ Backfilled purchasedCount for ${metricSums.length} products`);
+
+  // -------------------------------------------------------------------------
+  // Summary
+  // -------------------------------------------------------------------------
+  const totalVariants = productDefs.reduce(
+    (acc, p) => acc + p.variants.length,
+    0,
+  );
+  console.log(`
+🎉 Database seeding completed successfully!
+📊 Summary:
+  - 2 parent + 6 leaf categories (2-level hierarchy)
+  - ${productDefs.length} products (linked to taxClass, lengthClass, weightClass)
+  - ${totalVariants} product variants + ${totalVariants} images
+  - 3 featured sections + ${featuredEntries.length} featured products
+  - ${usersData.length} users (1 admin, 1 moderator, ${usersData.length - 2} regular)
   - ${comboKits.length} combo kits
-  - ${comboKits.reduce((acc, c) => acc + (c.items?.length || 0), 0)} combo kit items
+  - 3 coupons · 3 orders · 6 reviews · 3 articles · 3 stores
+  - 3 quiz questions with options & rules
   `);
 }
 

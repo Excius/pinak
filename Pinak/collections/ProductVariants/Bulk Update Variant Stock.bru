@@ -1,0 +1,35 @@
+meta {
+  name: Bulk Update Variant Stock
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/v1/variants/stock/bulk
+  body: json
+  auth: inherit
+}
+
+body:json {
+  [{
+    "variantId": "your-variant-id-here",
+    "stock": 50
+  }]
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  authToken: your-jwt-token-here
+}
+
+docs {
+  Bulk update stock for multiple variants (Moderator/Admin required).
+}

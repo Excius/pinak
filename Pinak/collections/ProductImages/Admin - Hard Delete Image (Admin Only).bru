@@ -1,0 +1,29 @@
+meta {
+  name: Admin - Hard Delete Image (Admin Only)
+  type: http
+  seq: 6
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/images/{{imageId}}/hard
+  body: none
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  imageId: your-image-id-here
+  authToken: your-jwt-token-here
+}
+
+docs {
+  Permanently delete an image (Admin only).
+}

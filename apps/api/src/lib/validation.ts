@@ -15,8 +15,7 @@ export const validate = (
     try {
       const validatedData = schema.parse({
         [property]: req[property],
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      }) as Record<string, any>;
+      }) as Record<string, unknown>;
       req[property] = validatedData[property];
       next();
     } catch (error) {
@@ -44,7 +43,7 @@ export const validateMultiple = (schemaObj: {
   response?: z.ZodSchema; // Ignored for input validation
 }) => {
   return (req: Request, res: Response, next: NextFunction) => {
-    const validatedData: Record<string, any> = {};
+    const validatedData: Record<string, unknown> = {};
     const allErrors: Array<{ field: string; message: string }> = [];
 
     // Validate all properties and collect all errors
@@ -55,7 +54,7 @@ export const validateMultiple = (schemaObj: {
 
       try {
         const input = req[prop] !== undefined ? req[prop] : {};
-        const result = schema.parse(input) as any;
+        const result = schema.parse(input) as unknown;
         validatedData[property] = result;
       } catch (error) {
         if (error instanceof z.ZodError) {
@@ -74,8 +73,10 @@ export const validateMultiple = (schemaObj: {
     }
 
     // Merge validated data back into request (skip query as it's read-only)
-    if (validatedData.body) req.body = validatedData.body;
-    if (validatedData.params) req.params = validatedData.params;
+    if (validatedData.body)
+      req.body = validatedData.body as Record<string, unknown>;
+    if (validatedData.params)
+      req.params = validatedData.params as Record<string, string>;
     // Note: req.query is read-only in Express, so we don't assign it back
     next();
   };

@@ -1,0 +1,36 @@
+meta {
+  name: Create Option Value
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/v1/options/{{optionId}}/values
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:json {
+  {
+    "value": "30ml",
+    "sortOrder": 0
+  }
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  optionId: your-option-id-here
+  authToken: your-jwt-token-here
+}
+
+docs {
+  Create a new option value (Moderator/Admin required).
+}

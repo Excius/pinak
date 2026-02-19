@@ -1,7 +1,8 @@
-import { ProductRepository } from "../repositories/product.repositoy.js";
+import { ProductRepository } from "../repositories/product.repository.js";
 import { ProductPaginationOptions } from "../types/pagination.types.js";
 import { Prisma } from "../generated/prisma/client.js";
 import { ValidationError } from "../lib/error.js";
+import { isPrismaP2002 } from "../lib/prisma-errors.js";
 import logger from "../lib/logger.js";
 
 // Input types that extend Prisma types with additional fields for API input
@@ -11,6 +12,45 @@ type ProductCreateInputWithExtras = Prisma.ProductCreateInput & {
 
 type ProductUpdateInputWithExtras = Prisma.ProductUpdateInput & {
   categoryId?: string;
+};
+
+// DTOs accepted from controllers (may include legacy / user-friendly fields)
+type ProductCreateDTO = ProductCreateInputWithExtras & {
+  brand?:
+    | string
+    | Prisma.BrandCreateNestedOneWithoutProductsInput
+    | Prisma.BrandWhereUniqueInput;
+  categoryId?: string;
+  optionValueIds?: string[];
+  optionValues?: unknown;
+  size?: string;
+  shade?: string;
+};
+
+type ProductUpdateDTO = ProductUpdateInputWithExtras & {
+  brand?:
+    | string
+    | Prisma.BrandCreateNestedOneWithoutProductsInput
+    | Prisma.BrandWhereUniqueInput;
+  categoryId?: string;
+  optionValueIds?: string[];
+  optionValues?: unknown;
+  size?: string;
+  shade?: string;
+};
+
+type VariantCreateDTO = Prisma.ProductVariantCreateInput & {
+  optionValueIds?: string[];
+  optionValues?: unknown;
+  size?: string;
+  shade?: string;
+};
+
+type VariantUpdateDTO = Prisma.ProductVariantUpdateInput & {
+  optionValueIds?: string[];
+  optionValues?: unknown;
+  size?: string;
+  shade?: string;
 };
 
 export class ProductService {
@@ -67,6 +107,18 @@ export class ProductService {
     return this.productRepository.getProductWithDetails(id);
   }
 
+  // Metrics
+  async incrementViewCount(productId: string) {
+    return this.productRepository.incrementProductViewCount(productId);
+  }
+
+  async incrementPurchasedCount(productId: string, quantity = 1) {
+    return this.productRepository.incrementProductPurchasedCount(
+      productId,
+      quantity,
+    );
+  }
+
   // Admin methods
   async getProductByIdAdmin(id: string) {
     return this.productRepository.getProductByIdAdmin(id);
@@ -91,7 +143,7 @@ export class ProductService {
     // Business logic validation and data transformation
 
     // Sanitize and validate product data
-    const sanitizedData: ProductCreateInputWithExtras = { ...data };
+    const sanitizedData: ProductCreateDTO = { ...data };
 
     // Generate slug if not provided or sanitize existing slug
     if (!sanitizedData.slug && sanitizedData.name) {
@@ -115,8 +167,10 @@ export class ProductService {
     if (sanitizedData.description) {
       sanitizedData.description = (sanitizedData.description as string).trim();
     }
-    if (sanitizedData.brand) {
-      sanitizedData.brand = (sanitizedData.brand as string).trim();
+    if (sanitizedData.brand && typeof sanitizedData.brand === "string") {
+      sanitizedData.brand = await this.resolveBrandInput(
+        (sanitizedData.brand as string).trim(),
+      );
     }
 
     // Validate category exists
@@ -129,11 +183,11 @@ export class ProductService {
       }
     }
 
-    // Transform categoryId to proper Prisma structure
+    // Transform categoryId to proper Prisma structure (many-to-many)
     if (sanitizedData.categoryId) {
-      sanitizedData.category = {
-        connect: { id: sanitizedData.categoryId },
-      };
+      sanitizedData.categories = {
+        create: [{ category: { connect: { id: sanitizedData.categoryId } } }],
+      } as unknown as Prisma.ProductCreateInput["categories"];
       delete sanitizedData.categoryId;
     }
 
@@ -141,9 +195,15 @@ export class ProductService {
     sanitizedData.isActive = sanitizedData.isActive ?? true;
     sanitizedData.isDeleted = false;
 
-    return this.productRepository.createProduct(
-      sanitizedData as Prisma.ProductCreateInput,
-    );
+    try {
+      return await this.productRepository.createProduct(
+        sanitizedData as Prisma.ProductCreateInput,
+      );
+    } catch (err) {
+      if (isPrismaP2002(err))
+        throw new ValidationError("Product with this slug already exists");
+      throw err;
+    }
   }
 
   async updateProduct(id: string, data: ProductUpdateInputWithExtras) {
@@ -155,10 +215,10 @@ export class ProductService {
       throw new ValidationError("Product not found");
     }
 
-    const sanitizedData: ProductUpdateInputWithExtras = { ...data };
+    const sanitizedData: ProductUpdateDTO = { ...data };
 
     // Handle slug updates with uniqueness validation
-    if (sanitizedData.slug && typeof sanitizedData.slug === 'string') {
+    if (sanitizedData.slug && typeof sanitizedData.slug === "string") {
       const sanitizedSlug = this.sanitizeSlug(sanitizedData.slug);
 
       // Check if slug is different from current
@@ -180,8 +240,10 @@ export class ProductService {
     if (sanitizedData.description) {
       sanitizedData.description = (sanitizedData.description as string).trim();
     }
-    if (sanitizedData.brand) {
-      sanitizedData.brand = (sanitizedData.brand as string).trim();
+    if (sanitizedData.brand && typeof sanitizedData.brand === "string") {
+      sanitizedData.brand = await this.resolveBrandInput(
+        (sanitizedData.brand as string).trim(),
+      );
     }
 
     // Validate category exists if being updated
@@ -194,18 +256,33 @@ export class ProductService {
       }
     }
 
-    // Transform categoryId to proper Prisma structure
+    // Transform categoryId to proper Prisma structure (many-to-many)
+    // Use connectOrCreate so re-sending the same categoryId on update is idempotent.
     if (sanitizedData.categoryId) {
-      sanitizedData.category = {
-        connect: { id: sanitizedData.categoryId },
-      };
+      const catId = sanitizedData.categoryId;
+      sanitizedData.categories = {
+        connectOrCreate: [
+          {
+            where: {
+              productId_categoryId: { productId: id, categoryId: catId },
+            },
+            create: { category: { connect: { id: catId } } },
+          },
+        ],
+      } as unknown as Prisma.ProductUpdateInput["categories"];
       delete sanitizedData.categoryId;
     }
 
-    return this.productRepository.updateProduct(
-      id,
-      sanitizedData as Prisma.ProductUpdateInput,
-    );
+    try {
+      return await this.productRepository.updateProduct(
+        id,
+        sanitizedData as Prisma.ProductUpdateInput,
+      );
+    } catch (err) {
+      if (isPrismaP2002(err))
+        throw new ValidationError("Product with this slug already exists");
+      throw err;
+    }
   }
 
   async updateProductStatus(id: string, isActive: boolean) {
@@ -224,23 +301,21 @@ export class ProductService {
       throw new ValidationError("Product not found");
     }
 
-    const sanitizedData = { ...data };
+    const sanitizedData: VariantCreateDTO = { ...data };
 
-    // Generate SKU if not provided
+    // Generate SKU if not provided (may use option values)
     if (!sanitizedData.sku) {
-      // Get product name for SKU generation
       const product = await this.productRepository.getProductById(productId);
       if (product) {
-        sanitizedData.sku = this.generateSKU(product.name, sanitizedData);
+        sanitizedData.sku = await this.generateSKU(product.name, sanitizedData);
       }
     }
 
     // Validate SKU uniqueness
     if (sanitizedData.sku) {
-      const existingVariant =
-        await this.productRepository.prismaClient.productVariant.findUnique({
-          where: { sku: sanitizedData.sku as string },
-        });
+      const existingVariant = await this.productRepository.findVariantBySku(
+        sanitizedData.sku as string,
+      );
       if (existingVariant) {
         throw new ValidationError(
           "Product variant with this SKU already exists",
@@ -248,15 +323,51 @@ export class ProductService {
       }
     }
 
-    // Sanitize text fields
-    if (sanitizedData.shade) {
-      sanitizedData.shade = (sanitizedData.shade as string).trim();
+    // Support explicit optionValueIds *and* legacy `size` / `shade` strings
+    const explicitOptionValueIds = (sanitizedData.optionValueIds ??
+      sanitizedData.optionValues) as unknown;
+    const attachOptionValueIds: string[] = [];
+
+    if (
+      Array.isArray(explicitOptionValueIds) &&
+      explicitOptionValueIds.length
+    ) {
+      attachOptionValueIds.push(...(explicitOptionValueIds as string[]));
+      delete sanitizedData.optionValueIds;
+      delete sanitizedData.optionValues;
     }
+
+    // Resolve legacy size/shade strings to OptionValue rows (if present)
     if (sanitizedData.size) {
-      sanitizedData.size = (sanitizedData.size as string).trim();
+      const ov = await this.productRepository.findOptionValueByNameAndValue(
+        "Size",
+        sanitizedData.size as string,
+      );
+      if (ov) attachOptionValueIds.push(ov.id);
+      delete sanitizedData.size;
     }
+    if (sanitizedData.shade) {
+      const ov = await this.productRepository.findOptionValueByNameAndValue(
+        "Shade",
+        sanitizedData.shade as string,
+      );
+      if (ov) attachOptionValueIds.push(ov.id);
+      delete sanitizedData.shade;
+    }
+
+    if (attachOptionValueIds.length) {
+      sanitizedData.optionValues = {
+        create: attachOptionValueIds.map((ovId) => ({
+          optionValue: { connect: { id: ovId } },
+        })),
+      };
+    }
+
+    // Sanitize tags
     if (sanitizedData.tags) {
-      sanitizedData.tags = (sanitizedData.tags as string[]).map(tag => tag.trim()).filter(tag => tag.length > 0);
+      sanitizedData.tags = (sanitizedData.tags as string[])
+        .map((tag) => tag.trim())
+        .filter((tag) => tag.length > 0);
     }
 
     // Validate price (must be positive)
@@ -290,22 +401,18 @@ export class ProductService {
     // Business logic validation and data transformation
 
     // Validate variant exists
-    const existingVariant =
-      await this.productRepository.prismaClient.productVariant.findUnique({
-        where: { id },
-      });
+    const existingVariant = await this.productRepository.getVariantById(id);
     if (!existingVariant) {
       throw new ValidationError("Product variant not found");
     }
 
-    const sanitizedData = { ...data };
+    const sanitizedData: VariantUpdateDTO = { ...data };
 
     // Handle SKU updates with uniqueness validation
     if (sanitizedData.sku && sanitizedData.sku !== existingVariant.sku) {
-      const skuExists =
-        await this.productRepository.prismaClient.productVariant.findUnique({
-          where: { sku: sanitizedData.sku as string },
-        });
+      const skuExists = await this.productRepository.findVariantBySku(
+        sanitizedData.sku as string,
+      );
       if (skuExists) {
         throw new ValidationError(
           "Product variant with this SKU already exists",
@@ -313,15 +420,50 @@ export class ProductService {
       }
     }
 
-    // Sanitize text fields
-    if (sanitizedData.shade) {
-      sanitizedData.shade = (sanitizedData.shade as string).trim();
-    }
+    // Map legacy `size` / `shade` strings into OptionValue connects (append)
+    const attachOptionValueIds: string[] = [];
     if (sanitizedData.size) {
-      sanitizedData.size = (sanitizedData.size as string).trim();
+      const ov = await this.productRepository.findOptionValueByNameAndValue(
+        "Size",
+        sanitizedData.size as string,
+      );
+      if (ov) attachOptionValueIds.push(ov.id);
+      delete sanitizedData.size;
     }
+    if (sanitizedData.shade) {
+      const ov = await this.productRepository.findOptionValueByNameAndValue(
+        "Shade",
+        sanitizedData.shade as string,
+      );
+      if (ov) attachOptionValueIds.push(ov.id);
+      delete sanitizedData.shade;
+    }
+
+    // Map explicit optionValueIds into nested creates (append)
+    const explicitOptionValueIds = (sanitizedData.optionValueIds ??
+      sanitizedData.optionValues) as unknown;
+    if (
+      Array.isArray(explicitOptionValueIds) &&
+      explicitOptionValueIds.length
+    ) {
+      attachOptionValueIds.push(...(explicitOptionValueIds as string[]));
+      delete sanitizedData.optionValueIds;
+      delete sanitizedData.optionValues;
+    }
+
+    if (attachOptionValueIds.length) {
+      sanitizedData.optionValues = {
+        create: attachOptionValueIds.map((ovId) => ({
+          optionValue: { connect: { id: ovId } },
+        })),
+      };
+    }
+
+    // Sanitize tags
     if (sanitizedData.tags) {
-      sanitizedData.tags = (sanitizedData.tags as string[]).map(tag => tag.trim()).filter(tag => tag.length > 0);
+      sanitizedData.tags = (sanitizedData.tags as string[])
+        .map((tag) => tag.trim())
+        .filter((tag) => tag.length > 0);
     }
 
     // Validate price (must be positive)
@@ -344,10 +486,7 @@ export class ProductService {
     // Business logic validation and data transformation
 
     // Validate variant exists
-    const variant =
-      await this.productRepository.prismaClient.productVariant.findUnique({
-        where: { id: variantId },
-      });
+    const variant = await this.productRepository.getVariantById(variantId);
     if (!variant) {
       throw new ValidationError("Product variant not found");
     }
@@ -373,17 +512,7 @@ export class ProductService {
       connect: { id: variantId },
     };
 
-    // If this is set as primary, unset other primary images for this variant
-    if (sanitizedData.isPrimary) {
-      await this.productRepository.prismaClient.productImage.updateMany({
-        where: {
-          productVariantId: variantId,
-          isPrimary: true,
-        },
-        data: { isPrimary: false },
-      });
-    }
-
+    // repository.addProductImage handles primary-image transactionally now
     return this.productRepository.addProductImage(variantId, sanitizedData);
   }
 
@@ -391,10 +520,7 @@ export class ProductService {
     // Business logic validation
 
     // Validate image exists
-    const image =
-      await this.productRepository.prismaClient.productImage.findUnique({
-        where: { id: imageId },
-      });
+    const image = await this.productRepository.getProductImageById(imageId);
     if (!image) {
       throw new ValidationError("Image not found");
     }
@@ -418,10 +544,7 @@ export class ProductService {
     // Business logic validation
 
     // Validate variant exists
-    const variant =
-      await this.productRepository.prismaClient.productVariant.findUnique({
-        where: { id },
-      });
+    const variant = await this.productRepository.getVariantById(id);
     if (!variant) {
       throw new ValidationError("Product variant not found");
     }
@@ -431,36 +554,38 @@ export class ProductService {
     }
 
     // Prevent deletion when the variant is referenced by active carts/orders/reservations/etc.
-    const [cartCount, orderCount, reservationCount, wishlistCount, comboKitCount] =
-      await Promise.all([
-        this.productRepository.prismaClient.cartItem.count({ where: { productVariantId: id } }),
-        this.productRepository.prismaClient.orderItem.count({
-          where: {
-            productVariantId: id,
-            order: { isDeleted: false, status: { not: "CANCELLED" } },
-          },
-        }),
-        this.productRepository.prismaClient.inventoryReservation.count({
-          where: { productVariantId: id, expiresAt: { gt: new Date() } },
-        }),
-        this.productRepository.prismaClient.wishlistItem.count({ where: { productVariantId: id } }),
-        this.productRepository.prismaClient.comboKitItem.count({ where: { productVariantId: id } }),
-      ]);
+    const [
+      cartCount,
+      orderCount,
+      reservationCount,
+      wishlistCount,
+      comboKitCount,
+    ] = await this.productRepository.getVariantSoftDeleteDependencies(id);
 
     if (cartCount > 0) {
-      throw new ValidationError("Cannot delete variant: it exists in user carts");
+      throw new ValidationError(
+        "Cannot delete variant: it exists in user carts",
+      );
     }
     if (orderCount > 0) {
-      throw new ValidationError("Cannot delete variant: it is referenced by existing orders");
+      throw new ValidationError(
+        "Cannot delete variant: it is referenced by existing orders",
+      );
     }
     if (reservationCount > 0) {
-      throw new ValidationError("Cannot delete variant: there are active inventory reservations");
+      throw new ValidationError(
+        "Cannot delete variant: there are active inventory reservations",
+      );
     }
     if (wishlistCount > 0) {
-      throw new ValidationError("Cannot delete variant: it is present in user wishlists");
+      throw new ValidationError(
+        "Cannot delete variant: it is present in user wishlists",
+      );
     }
     if (comboKitCount > 0) {
-      throw new ValidationError("Cannot delete variant: it is part of a combo kit");
+      throw new ValidationError(
+        "Cannot delete variant: it is part of a combo kit",
+      );
     }
 
     return this.productRepository.softDeleteProductVariant(id);
@@ -483,9 +608,7 @@ export class ProductService {
 
     // Validate section exists
     const section =
-      await this.productRepository.prismaClient.featuredSection.findUnique({
-        where: { id: sectionId },
-      });
+      await this.productRepository.getFeaturedSectionById(sectionId);
     if (!section) {
       throw new ValidationError("Featured section not found");
     }
@@ -501,12 +624,10 @@ export class ProductService {
 
     // Check if product is already featured in this section
     const existingFeature =
-      await this.productRepository.prismaClient.featuredProduct.findFirst({
-        where: {
-          sectionId,
-          productId,
-        },
-      });
+      await this.productRepository.isProductInFeaturedSection(
+        sectionId,
+        productId,
+      );
     if (existingFeature) {
       throw new ValidationError("Product is already featured in this section");
     }
@@ -530,10 +651,7 @@ export class ProductService {
     // Business logic validation
 
     // Validate variant exists
-    const variant =
-      await this.productRepository.prismaClient.productVariant.findUnique({
-        where: { id: variantId },
-      });
+    const variant = await this.productRepository.getVariantById(variantId);
     if (!variant) {
       throw new ValidationError("Product variant not found");
     }
@@ -561,10 +679,9 @@ export class ProductService {
 
     // Validate all variants exist and stock values are valid
     for (const update of updates) {
-      const variant =
-        await this.productRepository.prismaClient.productVariant.findUnique({
-          where: { id: update.variantId },
-        });
+      const variant = await this.productRepository.getVariantById(
+        update.variantId,
+      );
       if (!variant) {
         throw new ValidationError(
           `Product variant ${update.variantId} not found`,
@@ -593,48 +710,18 @@ export class ProductService {
       throw new ValidationError("Product not found");
     }
 
-    // Collect variant ids (if any) and run dependency checks in parallel
-    const variantRows = await this.productRepository.prismaClient.productVariant.findMany({
-      where: { productId: id },
-      select: { id: true },
-    });
-    const variantIds = variantRows.map(v => v.id);
-
-    const [productOrderCount, variantOrderCount, cartCount, wishlistCount, reservationCount, featuredCount, reviewCount, comboKitCount, activeVariantCount] =
-      await Promise.all([
-        // order items that reference product directly
-        this.productRepository.prismaClient.orderItem.count({
-          where: { productId: id, order: { isDeleted: false, status: { not: "CANCELLED" } } },
-        }),
-        // order items that reference variants of this product
-        variantIds.length
-          ? this.productRepository.prismaClient.orderItem.count({
-              where: { productVariantId: { in: variantIds }, order: { isDeleted: false, status: { not: "CANCELLED" } } },
-            })
-          : Promise.resolve(0),
-        // cart items referencing any variant
-        variantIds.length
-          ? this.productRepository.prismaClient.cartItem.count({ where: { productVariantId: { in: variantIds } } })
-          : Promise.resolve(0),
-        // wishlist items referencing any variant
-        variantIds.length
-          ? this.productRepository.prismaClient.wishlistItem.count({ where: { productVariantId: { in: variantIds } } })
-          : Promise.resolve(0),
-        // active inventory reservations for any variant
-        variantIds.length
-          ? this.productRepository.prismaClient.inventoryReservation.count({ where: { productVariantId: { in: variantIds } } })
-          : Promise.resolve(0),
-        // featured references
-        this.productRepository.prismaClient.featuredProduct.count({ where: { productId: id } }),
-        // reviews
-        this.productRepository.prismaClient.review.count({ where: { productId: id } }),
-        // combo kit references (via variants)
-        variantIds.length
-          ? this.productRepository.prismaClient.comboKitItem.count({ where: { productVariantId: { in: variantIds } } })
-          : Promise.resolve(0),
-        // ensure there are no active (non-deleted) variants
-        this.productRepository.prismaClient.productVariant.count({ where: { productId: id, isDeleted: false } }),
-      ]);
+    // Collect all dependency counts via the repository
+    const {
+      productOrderCount,
+      variantOrderCount,
+      cartCount,
+      wishlistCount,
+      reservationCount,
+      featuredCount,
+      reviewCount,
+      comboKitCount,
+      activeVariantCount,
+    } = await this.productRepository.getProductHardDeleteDependencies(id);
 
     const blockers: string[] = [];
     if (productOrderCount || variantOrderCount) blockers.push("orders");
@@ -647,7 +734,9 @@ export class ProductService {
     if (activeVariantCount) blockers.push("active variants");
 
     if (blockers.length > 0) {
-      logger.warn(`Preventing hard-delete for product ${id} due to dependencies: ${blockers.join(", ")}`);
+      logger.warn(
+        `Preventing hard-delete for product ${id} due to dependencies: ${blockers.join(", ")}`,
+      );
       throw new ValidationError(
         `Cannot hard-delete product: dependent resources exist (${blockers.join(", ")}). Delete or detach those resources first.`,
       );
@@ -660,37 +749,34 @@ export class ProductService {
     // Business logic validation
 
     // Validate variant exists
-    const variant =
-      await this.productRepository.prismaClient.productVariant.findUnique({
-        where: { id },
-      });
+    const variant = await this.productRepository.getVariantById(id);
     if (!variant) {
       throw new ValidationError("Product variant not found");
     }
 
     // Prevent hard-delete when variant is referenced elsewhere
-    const [cartCount, orderCount, wishlistCount, reservationCount, comboKitCount, imageCount] =
-      await Promise.all([
-        this.productRepository.prismaClient.cartItem.count({ where: { productVariantId: id } }),
-        this.productRepository.prismaClient.orderItem.count({
-          where: { productVariantId: id, order: { isDeleted: false, status: { not: "CANCELLED" } } },
-        }),
-        this.productRepository.prismaClient.wishlistItem.count({ where: { productVariantId: id } }),
-        this.productRepository.prismaClient.inventoryReservation.count({ where: { productVariantId: id } }),
-        this.productRepository.prismaClient.comboKitItem.count({ where: { productVariantId: id } }),
-        this.productRepository.prismaClient.productImage.count({ where: { productVariantId: id } }),
-      ]);
+    const [
+      cartCount,
+      orderCount,
+      wishlistCount,
+      reservationCount,
+      comboKitCount,
+      imageCount,
+    ] = await this.productRepository.getVariantHardDeleteDependencies(id);
 
     const blockers: string[] = [];
     if (cartCount) blockers.push(`${cartCount} cart item(s)`);
     if (orderCount) blockers.push(`${orderCount} order item(s)`);
     if (wishlistCount) blockers.push(`${wishlistCount} wishlist item(s)`);
-    if (reservationCount) blockers.push(`${reservationCount} inventory reservation(s)`);
+    if (reservationCount)
+      blockers.push(`${reservationCount} inventory reservation(s)`);
     if (comboKitCount) blockers.push(`${comboKitCount} combo kit item(s)`);
     if (imageCount) blockers.push(`${imageCount} image(s)`);
 
     if (blockers.length > 0) {
-      logger.warn(`Preventing hard-delete for variant ${id} due to dependencies: ${blockers.join(", ")}`);
+      logger.warn(
+        `Preventing hard-delete for variant ${id} due to dependencies: ${blockers.join(", ")}`,
+      );
       throw new ValidationError(
         `Cannot hard-delete product variant — dependent resources exist: ${blockers.join(", ")}`,
       );
@@ -725,14 +811,36 @@ export class ProductService {
   private async validateCategoryExists(categoryId: string): Promise<boolean> {
     try {
       const category =
-        await this.productRepository.prismaClient.category.findUnique({
-          where: { id: categoryId },
-        });
+        await this.productRepository.findCategoryById(categoryId);
       return !!category;
     } catch (error) {
-      logger.warn(`Error validating category existence for ID ${categoryId}:`, error);
+      logger.warn(
+        `Error validating category existence for ID ${categoryId}:`,
+        error,
+      );
       return false;
     }
+  }
+
+  /**
+   * Resolve a raw brand string (id, slug, or name) to a Prisma connect input.
+   * Creates a new Brand row when no match is found.
+   */
+  private async resolveBrandInput(
+    brandInput: string,
+  ): Promise<Prisma.BrandCreateNestedOneWithoutProductsInput> {
+    let brandRecord = await this.productRepository.findBrandById(brandInput);
+    if (!brandRecord) {
+      brandRecord =
+        await this.productRepository.findBrandBySlugOrName(brandInput);
+    }
+    if (!brandRecord) {
+      brandRecord = await this.productRepository.createBrand(
+        brandInput,
+        this.generateSlug(brandInput),
+      );
+    }
+    return { connect: { id: brandRecord.id } };
   }
 
   private async validateProductExists(productId: string): Promise<boolean> {
@@ -740,20 +848,61 @@ export class ProductService {
       const product = await this.productRepository.getProductById(productId);
       return !!product;
     } catch (error) {
-      logger.warn(`Error validating product existence for ID ${productId}:`, error);
+      logger.warn(
+        `Error validating product existence for ID ${productId}:`,
+        error,
+      );
       return false;
     }
   }
 
-  private generateSKU(productName: string, variantData: Partial<Prisma.ProductVariantCreateInput>): string {
+  private async generateSKU(
+    productName: string,
+    variantData: Partial<VariantCreateDTO>,
+  ): Promise<string> {
     const baseName = productName.substring(0, 3).toUpperCase();
-    const size = variantData.size ? `-${variantData.size.toUpperCase()}` : "";
-    const shade = variantData.shade
-      ? `-${variantData.shade.toUpperCase()}`
-      : "";
-    const timestamp = Date.now().toString().slice(-4); // Last 4 digits of timestamp
 
-    return `${baseName}${size}${shade}-${timestamp}`;
+    // Try to derive size/shade from provided optionValues (preferred)
+    let sizeStr = "";
+    let shadeStr = "";
+
+    const rawCreates = variantData.optionValues?.create;
+    type OptCreate = { optionValue?: { connect?: { id?: string } } };
+    const optionValueCreates = Array.isArray(rawCreates)
+      ? (rawCreates as OptCreate[])
+      : rawCreates
+        ? [rawCreates as OptCreate]
+        : [];
+    const explicitIds: string[] = [];
+    for (const item of optionValueCreates) {
+      const id = item?.optionValue?.connect?.id;
+      if (id) explicitIds.push(id);
+    }
+    if (variantData.optionValueIds) {
+      explicitIds.push(...(variantData.optionValueIds as string[]));
+    }
+
+    if (explicitIds.length) {
+      const rows =
+        await this.productRepository.findOptionValuesWithOptions(explicitIds);
+      const sizeOv = rows.find((r) => r.option?.name?.toLowerCase() === "size");
+      const shadeOv = rows.find(
+        (r) => r.option?.name?.toLowerCase() === "shade",
+      );
+      if (sizeOv) sizeStr = `-${sizeOv.value.toUpperCase()}`;
+      if (shadeOv) shadeStr = `-${shadeOv.value.toUpperCase()}`;
+    }
+
+    // Fallback to legacy fields if optionValues didn't provide them
+    if (!sizeStr && variantData.size) {
+      sizeStr = `-${(variantData.size as string).toUpperCase()}`;
+    }
+    if (!shadeStr && variantData.shade) {
+      shadeStr = `-${(variantData.shade as string).toUpperCase()}`;
+    }
+
+    const timestamp = Date.now().toString().slice(-4); // Last 4 digits of timestamp
+    return `${baseName}${sizeStr}${shadeStr}-${timestamp}`;
   }
 
   // TODO: Implement business logic validations
