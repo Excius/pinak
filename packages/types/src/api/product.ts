@@ -101,8 +101,52 @@ export const ProductTypes = {
             description: z.string().nullable(),
             brandId: z.string().nullable(),
             brand: z
-              .object({ id: z.string(), name: z.string(), slug: z.string() })
+              .object({
+                id: z.string(),
+                name: z.string(),
+                slug: z.string(),
+                logoUrl: z.string().nullable(),
+              })
               .nullable()
+              .optional(),
+            taxClassId: z.string().nullable(),
+            taxClass: z
+              .object({ id: z.string(), name: z.string(), rate: z.number() })
+              .nullable()
+              .optional(),
+            lengthClassId: z.string().nullable(),
+            lengthClass: z
+              .object({ id: z.string(), name: z.string(), unit: z.string() })
+              .nullable()
+              .optional(),
+            weightClassId: z.string().nullable(),
+            weightClass: z
+              .object({ id: z.string(), name: z.string(), unit: z.string() })
+              .nullable()
+              .optional(),
+            categories: z
+              .array(
+                z.object({
+                  category: z.object({
+                    id: z.string(),
+                    name: z.string(),
+                    slug: z.string(),
+                    parentId: z.string().nullable(),
+                  }),
+                }),
+              )
+              .optional(),
+            filterValues: z
+              .array(
+                z.object({
+                  filterValue: z.object({
+                    id: z.string(),
+                    name: z.string(),
+                    slug: z.string(),
+                    filterGroupId: z.string(),
+                  }),
+                }),
+              )
               .optional(),
             isActive: z.boolean(),
             frontImageUrl: z.string().nullable(),
@@ -365,6 +409,54 @@ export const ProductTypes = {
             slug: z.string(),
             description: z.string().nullable(),
             brandId: z.string().nullable(),
+            brand: z
+              .object({
+                id: z.string(),
+                name: z.string(),
+                slug: z.string(),
+                logoUrl: z.string().nullable(),
+              })
+              .nullable()
+              .optional(),
+            taxClassId: z.string().nullable(),
+            taxClass: z
+              .object({ id: z.string(), name: z.string(), rate: z.number() })
+              .nullable()
+              .optional(),
+            lengthClassId: z.string().nullable(),
+            lengthClass: z
+              .object({ id: z.string(), name: z.string(), unit: z.string() })
+              .nullable()
+              .optional(),
+            weightClassId: z.string().nullable(),
+            weightClass: z
+              .object({ id: z.string(), name: z.string(), unit: z.string() })
+              .nullable()
+              .optional(),
+            categories: z
+              .array(
+                z.object({
+                  category: z.object({
+                    id: z.string(),
+                    name: z.string(),
+                    slug: z.string(),
+                    parentId: z.string().nullable(),
+                  }),
+                }),
+              )
+              .optional(),
+            filterValues: z
+              .array(
+                z.object({
+                  filterValue: z.object({
+                    id: z.string(),
+                    name: z.string(),
+                    slug: z.string(),
+                    filterGroupId: z.string(),
+                  }),
+                }),
+              )
+              .optional(),
             isActive: z.boolean(),
             frontImageUrl: z.string().nullable(),
             sortOrder: z.number(),
@@ -405,6 +497,54 @@ export const ProductTypes = {
             slug: z.string(),
             description: z.string().nullable(),
             brandId: z.string().nullable(),
+            brand: z
+              .object({
+                id: z.string(),
+                name: z.string(),
+                slug: z.string(),
+                logoUrl: z.string().nullable(),
+              })
+              .nullable()
+              .optional(),
+            taxClassId: z.string().nullable(),
+            taxClass: z
+              .object({ id: z.string(), name: z.string(), rate: z.number() })
+              .nullable()
+              .optional(),
+            lengthClassId: z.string().nullable(),
+            lengthClass: z
+              .object({ id: z.string(), name: z.string(), unit: z.string() })
+              .nullable()
+              .optional(),
+            weightClassId: z.string().nullable(),
+            weightClass: z
+              .object({ id: z.string(), name: z.string(), unit: z.string() })
+              .nullable()
+              .optional(),
+            categories: z
+              .array(
+                z.object({
+                  category: z.object({
+                    id: z.string(),
+                    name: z.string(),
+                    slug: z.string(),
+                    parentId: z.string().nullable(),
+                  }),
+                }),
+              )
+              .optional(),
+            filterValues: z
+              .array(
+                z.object({
+                  filterValue: z.object({
+                    id: z.string(),
+                    name: z.string(),
+                    slug: z.string(),
+                    filterGroupId: z.string(),
+                  }),
+                }),
+              )
+              .optional(),
             isActive: z.boolean(),
             frontImageUrl: z.string().nullable(),
             sortOrder: z.number(),

@@ -90,7 +90,12 @@ export class ProductRepository {
           take,
           orderBy,
           include: {
-            brand: { select: { id: true, name: true, slug: true } },
+            brand: { select: { id: true, name: true, slug: true, logoUrl: true } },
+            taxClass: { select: { id: true, name: true, rate: true } },
+            lengthClass: { select: { id: true, name: true, unit: true } },
+            weightClass: { select: { id: true, name: true, unit: true } },
+            categories: { include: { category: true } },
+            filterValues: { include: { filterValue: true } },
             variants: {
               where: pagination.inStock
                 ? { stock: { gt: 0 }, isDeleted: false }
@@ -213,7 +218,12 @@ export class ProductRepository {
           take,
           orderBy,
           include: {
-            brand: { select: { id: true, name: true, slug: true } },
+            brand: { select: { id: true, name: true, slug: true, logoUrl: true } },
+            taxClass: { select: { id: true, name: true, rate: true } },
+            lengthClass: { select: { id: true, name: true, unit: true } },
+            weightClass: { select: { id: true, name: true, unit: true } },
+            categories: { include: { category: true } },
+            filterValues: { include: { filterValue: true } },
             variants: {
               where: pagination.inStock
                 ? { stock: { gt: 0 }, isDeleted: false }
@@ -265,7 +275,12 @@ export class ProductRepository {
         include: {
           product: {
             include: {
+              brand: { select: { id: true, name: true, slug: true, logoUrl: true } };
+              taxClass: { select: { id: true, name: true, rate: true } };
+              lengthClass: { select: { id: true, name: true, unit: true } };
+              weightClass: { select: { id: true, name: true, unit: true } };
               categories: { include: { category: true } };
+              filterValues: { include: { filterValue: true } };
               variants: {
                 include: { images: true };
               };
@@ -300,7 +315,12 @@ export class ProductRepository {
           include: {
             product: {
               include: {
+                brand: { select: { id: true, name: true, slug: true, logoUrl: true } },
+                taxClass: { select: { id: true, name: true, rate: true } },
+                lengthClass: { select: { id: true, name: true, unit: true } },
+                weightClass: { select: { id: true, name: true, unit: true } },
                 categories: { include: { category: true } },
+                filterValues: { include: { filterValue: true } },
                 variants: {
                   where: { stock: { gt: 0 } },
                   orderBy: { price: "asc" },
