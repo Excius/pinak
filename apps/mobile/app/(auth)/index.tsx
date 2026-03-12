@@ -2,42 +2,58 @@ import { View, Text, ScrollView, Pressable, Image } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Svg, Path } from "react-native-svg";
 import { useState } from "react";
+import { useRouter } from "expo-router";
 
 import SignInForm from "@/components/auth/SigninForm";
 import SignUpForm from "@/components/auth/SignUpForm";
 
 export default function AuthScreen() {
   const [isLogin, setIsLogin] = useState(true);
+  const router = useRouter();
+
+  const handleSkip = () => {
+    // Allow users to browse without logging in
+    router.replace("/(tabs)");
+  };
 
   return (
-    <ScrollView className="flex-1 bg-background-light">
+    <ScrollView className="flex-1 bg-background">
+      {/* Skip Button */}
+      <View className="absolute top-12 right-6 z-10">
+        <Pressable
+          onPress={handleSkip}
+          className="py-2 px-4 rounded-full bg-surface-light/80 border border-surface-border"
+        >
+          <Text className="text-text-secondary text-sm font-medium">Skip</Text>
+        </Pressable>
+      </View>
+
       {/* Header / Branding */}
       <View className="items-center gap-2 px-6 py-8 mt-12">
-        <View className="h-18 w-18 items-center justify-center rounded-full bg-primary mb-1">
-          {/* <MaterialIcons name="eco" size={24} color="#ca8881" /> */}
+        <View className="h-20 w-20 items-center justify-center rounded-full bg-primary/20 border-2 border-primary mb-1">
           <Image
             source={require("../../assets/images/Pinak_Logo_NoBg.png")}
             style={{ width: 64, height: 64 }}
           />
         </View>
-        {/* <Text className="font-display text-2xl font-bold tracking-widest text-primary uppercase">
+        <Text className="font-display text-2xl font-bold tracking-widest text-primary uppercase mt-2">
           Pinak
-        </Text> */}
+        </Text>
       </View>
 
       {/* Main Content */}
       <View className="flex-1 px-6">
         {/* Segmented Buttons (Login / Sign Up Toggle) */}
-        <View className="mb-8 flex-row rounded-2xl bg-primary/10 p-1.5">
+        <View className="mb-8 flex-row rounded-2xl bg-surface p-1.5 border border-surface-border">
           <Pressable
             onPress={() => setIsLogin(true)}
-            className={`flex-1 items-center justify-center rounded-lg py-2.5 ${
-              isLogin ? "bg-white shadow-sm" : ""
+            className={`flex-1 items-center justify-center rounded-xl py-3 ${
+              isLogin ? "bg-primary" : ""
             }`}
           >
             <Text
               className={`text-sm font-semibold ${
-                isLogin ? "text-[#181211]" : "text-muted-taupe"
+                isLogin ? "text-background" : "text-text-secondary"
               }`}
             >
               Login
@@ -45,13 +61,13 @@ export default function AuthScreen() {
           </Pressable>
           <Pressable
             onPress={() => setIsLogin(false)}
-            className={`flex-1 items-center justify-center rounded-lg py-2.5 ${
-              !isLogin ? "bg-white shadow-sm" : ""
+            className={`flex-1 items-center justify-center rounded-xl py-3 ${
+              !isLogin ? "bg-primary" : ""
             }`}
           >
             <Text
               className={`text-sm font-semibold ${
-                !isLogin ? "text-[#181211]" : "text-muted-taupe"
+                !isLogin ? "text-background" : "text-text-secondary"
               }`}
             >
               Sign Up
@@ -62,10 +78,10 @@ export default function AuthScreen() {
         {/* Intro Text */}
         {isLogin && (
           <View className="mb-8">
-            <Text className="font-display text-2xl font-bold text-[#181211] mb-2">
+            <Text className="font-display text-2xl font-bold text-text-primary mb-2">
               Welcome back
             </Text>
-            <Text className="text-muted-taupe text-sm">
+            <Text className="text-text-secondary text-sm">
               Experience the ritual of expert-led beauty.
             </Text>
           </View>
@@ -77,18 +93,19 @@ export default function AuthScreen() {
         ) : (
           <SignUpForm onSuccess={() => setIsLogin(true)} />
         )}
+
         {/* Divider */}
         <View className="my-8 flex-row items-center gap-4">
-          <View className="flex-1 h-px bg-soft-border/60" />
-          <Text className="font-display italic text-muted-taupe text-sm">
+          <View className="flex-1 h-px bg-surface-border" />
+          <Text className="font-display italic text-text-secondary text-sm">
             or
           </Text>
-          <View className="flex-1 h-px bg-soft-border/60" />
+          <View className="flex-1 h-px bg-surface-border" />
         </View>
 
         {/* Google Sign In */}
         <View className="pb-10">
-          <Pressable className="h-14 w-full flex-row items-center justify-center rounded-xl border border-soft-border bg-white gap-3 active:opacity-80">
+          <Pressable className="h-14 w-full flex-row items-center justify-center rounded-xl border border-surface-border bg-surface gap-3 active:opacity-80">
             <Svg width={20} height={20} viewBox="0 0 24 24">
               <Path
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -107,7 +124,7 @@ export default function AuthScreen() {
                 fill="#EA4335"
               />
             </Svg>
-            <Text className="text-[#181211] font-medium text-base">
+            <Text className="text-text-primary font-medium text-base">
               Continue with Google
             </Text>
           </Pressable>

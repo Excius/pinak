@@ -99,11 +99,32 @@ api.interceptors.response.use(
             }
         }
 
-        const message =
-            (error.response?.data as any)?.message ||
-            "Something went wrong";
+        // Handle different error scenarios
+        let message = "Something went wrong";
 
-        return Promise.reject(new Error(message));
+        if (!error.response) {
+            // Network error - no response from server
+            message = "Network error. Please check your connection.";
+        } else if (error.response.status >= 500) {
+            // Server error
+            message = "Server error. Please try again later.";
+        } else if (error.response.data?.message) {
+            // API returned an error message
+            message = error.response.data.message;
+        } else if (error.response.status === 400) {
+            message = "Invalid request. Please check your input.";
+        } else if (error.response.status === 403) {
+            message = "Access denied.";
+        } else if (error.response.status === 404) {
+            message = "Resource not found.";
+        }
+
+        // Create error with response attached for upstream handlers
+        const apiError = new Error(message);
+        (apiError as any).response = error.response;
+        (apiError as any).status = error.response?.status;
+
+        return Promise.reject(apiError);
     }
 );
 

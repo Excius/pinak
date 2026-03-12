@@ -17,18 +17,18 @@ export function FeatureRow() {
     <View className="flex-row items-center justify-between gap-4 px-4 py-6">
       {FEATURES.map((feature, index) => (
         <View key={feature.label} className="flex-1 items-center gap-2">
-          <View className="rounded-full bg-primary/10 p-2">
+          <View className="rounded-full bg-primary/20 p-2 border border-primary/30">
             <MaterialCommunityIcons
               name={feature.icon}
               size={18}
-              color="#b08d55"
+              color="#C9A962"
             />
           </View>
-          <Text className="text-center text-[0.65rem] font-bold uppercase tracking-wider text-gray-600">
+          <Text className="text-center text-[0.65rem] font-bold uppercase tracking-wider text-text-secondary">
             {feature.label}
           </Text>
           {index < FEATURES.length - 1 && (
-            <View className="absolute right-0 h-8 w-px bg-gray-200" />
+            <View className="absolute right-0 h-8 w-px bg-surface-border" />
           )}
         </View>
       ))}

@@ -15,8 +15,7 @@ type Props = {
 };
 
 export default function SignUpForm({ onSuccess }: Props) {
-
-  const {signup} = useAuth()
+  const { signup } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,13 +30,17 @@ export default function SignUpForm({ onSuccess }: Props) {
     setIsLoading(true);
     try {
       await signup(email, username, password);
-      toastSuccess("Sign-up successful! Welcome aboard.");
+      toastSuccess(
+        "Sign-up successful! Please check your email to verify your account.",
+      );
       setEmail("");
       setUsername("");
       setPassword("");
       onSuccess?.();
     } catch (err: any) {
-      toastError("Sign-up failed. Please try again.");
+      // Error message is already formatted in AuthContext
+      const errorMessage = err?.message || "Sign-up failed. Please try again.";
+      toastError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -47,7 +50,7 @@ export default function SignUpForm({ onSuccess }: Props) {
     <View className="space-y-4">
       {/* Email Field */}
       <View className="flex flex-col pt-5">
-        <Text className="text-muted-taupe text-xs font-semibold uppercase tracking-wider pb-1.5 pl-1">
+        <Text className="text-text-secondary text-xs font-semibold uppercase tracking-wider pb-1.5 pl-1">
           Email Address
         </Text>
 
@@ -57,14 +60,14 @@ export default function SignUpForm({ onSuccess }: Props) {
           autoCapitalize="none"
           value={email}
           onChangeText={setEmail}
-          className="h-14 w-full rounded-xl border border-soft-border bg-white px-4 text-base text-[#181211]"
-          placeholderTextColor="rgba(181,170,163,0.5)"
+          className="h-14 w-full rounded-xl border border-surface-border bg-surface px-4 text-base text-text-primary"
+          placeholderTextColor="#8B8B8B"
         />
       </View>
 
       {/* Username Field */}
       <View className="flex flex-col pt-5">
-        <Text className="text-muted-taupe text-xs font-semibold uppercase tracking-wider pb-1.5 pl-1">
+        <Text className="text-text-secondary text-xs font-semibold uppercase tracking-wider pb-1.5 pl-1">
           Username
         </Text>
 
@@ -74,14 +77,14 @@ export default function SignUpForm({ onSuccess }: Props) {
           autoCapitalize="none"
           value={username}
           onChangeText={setUsername}
-          className="h-14 w-full rounded-xl border border-soft-border bg-white px-4 text-base text-[#181211]"
-          placeholderTextColor="rgba(181,170,163,0.5)"
+          className="h-14 w-full rounded-xl border border-surface-border bg-surface px-4 text-base text-text-primary"
+          placeholderTextColor="#8B8B8B"
         />
       </View>
 
       {/* Password Field */}
       <View className="flex flex-col">
-        <Text className="text-muted-taupe text-xs font-semibold uppercase tracking-wider pb-1.5 pl-1 pt-5">
+        <Text className="text-text-secondary text-xs font-semibold uppercase tracking-wider pb-1.5 pl-1 pt-5">
           Password
         </Text>
 
@@ -91,8 +94,8 @@ export default function SignUpForm({ onSuccess }: Props) {
             secureTextEntry={!showPassword}
             value={password}
             onChangeText={setPassword}
-            className="h-14 flex-1 rounded-xl border border-soft-border bg-white px-5 pr-12 text-base text-[#181211] "
-            placeholderTextColor="rgba(181,170,163,0.5)"
+            className="h-14 flex-1 rounded-xl border border-surface-border bg-surface px-5 pr-12 text-base text-text-primary"
+            placeholderTextColor="#8B8B8B"
           />
 
           <Pressable
@@ -102,7 +105,7 @@ export default function SignUpForm({ onSuccess }: Props) {
             <MaterialIcons
               name={showPassword ? "visibility" : "visibility-off"}
               size={22}
-              color="#ca8881"
+              color="#C9A962"
             />
           </Pressable>
         </View>
@@ -116,13 +119,15 @@ export default function SignUpForm({ onSuccess }: Props) {
           className={`h-14 w-full items-center justify-center rounded-xl ${
             isFormValid && !isLoading
               ? "bg-primary active:opacity-90"
-              : "bg-primary/50"
+              : "bg-primary/30"
           }`}
         >
           {isLoading ? (
-            <ActivityIndicator size="small" color="#fff" />
+            <ActivityIndicator size="small" color="#0A0A0A" />
           ) : (
-            <Text className="text-white font-semibold text-base">Sign Up</Text>
+            <Text className="text-background font-semibold text-base">
+              Sign Up
+            </Text>
           )}
         </Pressable>
       </View>

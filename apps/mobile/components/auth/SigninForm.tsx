@@ -33,9 +33,10 @@ export default function SignInForm() {
       router.replace("/(tabs)");
       setEmail("");
       setPassword("");
-    } catch (err) {
-      toastError("Login Failed, Please try again");
-      console.error("Login error: ", err);
+    } catch (err: any) {
+      // Error message is already formatted in AuthContext
+      const errorMessage = err?.message || "Login failed. Please try again.";
+      toastError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -45,7 +46,7 @@ export default function SignInForm() {
     <View className="space-y-4">
       {/* Email Field */}
       <View className="flex flex-col pt-5">
-        <Text className="text-muted-taupe text-xs font-semibold uppercase tracking-wider pb-1.5 pl-1">
+        <Text className="text-text-secondary text-xs font-semibold uppercase tracking-wider pb-1.5 pl-1">
           Email Address
         </Text>
 
@@ -55,14 +56,14 @@ export default function SignInForm() {
           autoCapitalize="none"
           value={email}
           onChangeText={setEmail}
-          className="h-14 w-full rounded-xl border border-soft-border bg-white px-4 text-base text-[#181211]"
-          placeholderTextColor="rgba(181,170,163,0.5)"
+          className="h-14 w-full rounded-xl border border-surface-border bg-surface px-4 text-base text-text-primary"
+          placeholderTextColor="#8B8B8B"
         />
       </View>
 
       {/* Password Field */}
       <View className="flex flex-col">
-        <Text className="text-muted-taupe text-xs font-semibold uppercase tracking-wider pb-1.5 pl-1 pt-5">
+        <Text className="text-text-secondary text-xs font-semibold uppercase tracking-wider pb-1.5 pl-1 pt-5">
           Password
         </Text>
 
@@ -72,8 +73,8 @@ export default function SignInForm() {
             secureTextEntry={!showPassword}
             value={password}
             onChangeText={setPassword}
-            className="h-14 flex-1 rounded-xl border border-soft-border bg-white px-5 pr-12 text-base text-[#181211] "
-            placeholderTextColor="rgba(181,170,163,0.5)"
+            className="h-14 flex-1 rounded-xl border border-surface-border bg-surface px-5 pr-12 text-base text-text-primary"
+            placeholderTextColor="#8B8B8B"
           />
 
           <Pressable
@@ -83,7 +84,7 @@ export default function SignInForm() {
             <MaterialIcons
               name={showPassword ? "visibility" : "visibility-off"}
               size={22}
-              color="#ca8881"
+              color="#C9A962"
             />
           </Pressable>
         </View>
@@ -106,13 +107,15 @@ export default function SignInForm() {
           className={`h-14 w-full items-center justify-center rounded-xl ${
             isFormValid && !isLoading
               ? "bg-primary active:opacity-90"
-              : "bg-primary/50"
+              : "bg-primary/30"
           }`}
         >
           {isLoading ? (
-            <ActivityIndicator size="small" color="#fff" />
+            <ActivityIndicator size="small" color="#0A0A0A" />
           ) : (
-            <Text className="text-white font-semibold text-base">Sign In</Text>
+            <Text className="text-background font-semibold text-base">
+              Sign In
+            </Text>
           )}
         </Pressable>
       </View>

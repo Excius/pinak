@@ -3,11 +3,11 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
 export function BrandHeader() {
   return (
-    <View className="sticky top-0 z-50 bg-background-light px-4 py-3">
+    <View className="sticky top-0 z-50 bg-background px-4 py-3 border-b border-surface-border">
       <View className="flex-row items-center justify-between">
         {/* Menu Button */}
         <TouchableOpacity className="p-1 w-10">
-          <MaterialCommunityIcons name="menu" size={24} color="#b08d55" />
+          <MaterialCommunityIcons name="menu" size={24} color="#C9A962" />
         </TouchableOpacity>
 
         {/* Spacer */}
@@ -18,7 +18,7 @@ export function BrandHeader() {
           <Text className="text-2xl font-bold tracking-wide text-primary font-display">
             PINAK
           </Text>
-          <Text className="text-[0.5rem] uppercase tracking-widest text-gray-500">
+          <Text className="text-[0.55rem] uppercase tracking-widest text-text-secondary">
             The Cosmetic World
           </Text>
         </View>
@@ -29,10 +29,10 @@ export function BrandHeader() {
         {/* Search & Cart */}
         <View className="flex-row items-center space-x-3 w-10 justify-end">
           <TouchableOpacity className="p-1">
-            <MaterialCommunityIcons name="magnify" size={24} color="#b08d55" />
+            <MaterialCommunityIcons name="magnify" size={24} color="#C9A962" />
           </TouchableOpacity>
           <TouchableOpacity className="relative p-1">
-            <MaterialCommunityIcons name="shopping" size={24} color="#b08d55" />
+            <MaterialCommunityIcons name="shopping" size={24} color="#C9A962" />
             <View className="absolute right-0 top-0 h-2 w-2 rounded-full bg-primary" />
           </TouchableOpacity>
         </View>
