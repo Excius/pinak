@@ -1,0 +1,29 @@
+meta {
+  name: Set Primary Image
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{baseUrl}}/api/v1/images/{{imageId}}/primary
+  body: none
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  imageId: your-image-id-here
+  authToken: your-jwt-token-here
+}
+
+docs {
+  Set an image as primary for its variant/product (Moderator/Admin required).
+}

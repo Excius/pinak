@@ -1,0 +1,36 @@
+meta {
+  name: Create Featured Section
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/featured/sections
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "title": "Homepage Hero",
+    "type": "HOMEPAGE_HERO",
+    "priority": 10
+  }
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  authToken: your-jwt-token-here
+}
+
+docs {
+  Create a featured section (Moderator/Admin required).
+}

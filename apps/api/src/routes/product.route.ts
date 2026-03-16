@@ -5,7 +5,7 @@ import JWTService from "../lib/jwt.js";
 import { createRateLimiter } from "../lib/rateLimit.js";
 import { validateMultiple } from "../lib/validation.js";
 import { AuthMiddleware } from "../middlewares/auth.middleware.js";
-import { ProductRepository } from "../repositories/product.repositoy.js";
+import { ProductRepository } from "../repositories/product.repository.js";
 import { ProductService } from "../services/product.service.js";
 import { prisma } from "../lib/prisma.js";
 import { ProductTypes } from "@repo/types";

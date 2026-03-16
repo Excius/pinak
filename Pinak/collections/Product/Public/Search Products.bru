@@ -7,7 +7,13 @@ meta {
 get {
   url: {{baseUrl}}/api/v1/products/search?q={{searchQuery}}&page=1&limit=10
   body: none
-  auth: none
+  auth: inherit
+}
+
+params:query {
+  q: nike
+  page: 1
+  limit: 10
 }
 
 headers {

@@ -1,0 +1,29 @@
+meta {
+  name: Restore Product Variant
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/v1/variants/{{variantId}}/restore
+  body: none
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  variantId: your-variant-id-here
+  authToken: your-jwt-token-here
+}
+
+docs {
+  Restore a soft-deleted product variant (Moderator/Admin required).
+}

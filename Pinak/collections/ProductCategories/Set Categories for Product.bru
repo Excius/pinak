@@ -1,0 +1,35 @@
+meta {
+  name: Set Categories for Product
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/api/v1/products/{{productId}}/categories
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "categoryIds": ["your-category-id-here"]
+  }
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  productId: your-product-id-here
+  authToken: your-jwt-token-here
+}
+
+docs {
+  Replace categories for a product (Moderator/Admin required).
+}

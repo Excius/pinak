@@ -1,0 +1,34 @@
+meta {
+  name: Get Categories
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/api/v1/categories?parentId={{parentId}}&withChildren={{withChildren}}
+  body: none
+  auth: inherit
+}
+
+params:query {
+  parentId: 
+  withChildren: true
+}
+
+headers {
+  Content-Type: application/json
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  parentId: 
+  withChildren: true
+}
+
+docs {
+  List top-level categories or children of a parent.
+
+  Query Parameters:
+  - parentId: If provided, returns children of this category
+  - withChildren: When true, includes immediate children in the response
+}

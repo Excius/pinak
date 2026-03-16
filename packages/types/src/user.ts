@@ -15,13 +15,18 @@ export interface User {
 }
 
 export const UserSchema = z.object({
-  id: z.string(),
-  email: z.string(),
-  username: z.string(),
+  id: z.string("id must be a string"),
+  email: z
+    .string("email must be a string")
+    .email({ message: "Invalid email format" }),
+  username: z.string("username must be a string"),
   name: z.string().nullable(),
-  role: z.enum(["ADMIN", "MODERATOR", "USER"]),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  role: z.enum(
+    ["ADMIN", "MODERATOR", "USER"],
+    "role must be one of ADMIN, MODERATOR, USER",
+  ),
+  createdAt: z.date("createdAt must be a valid Date"),
+  updatedAt: z.date("updatedAt must be a valid Date"),
 });
 
 export interface CreateUserRequest {

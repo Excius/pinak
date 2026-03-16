@@ -1,0 +1,35 @@
+meta {
+  name: Create Tax Class
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/tax-classes
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "GST 18%",
+    "rate": 18.0
+  }
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  authToken: your-jwt-token-here
+}
+
+docs {
+  Create a tax class (Moderator/Admin required).
+}

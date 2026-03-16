@@ -1,0 +1,37 @@
+meta {
+  name: Remove Related Product
+  type: http
+  seq: 79
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/related-products
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "productId": "{{productId}}",
+    "relatedProductId": "{{relatedProductId}}"
+  }
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  productId: your-product-id-here
+  relatedProductId: other-product-id-here
+  authToken: your-jwt-token-here
+}
+
+docs {
+  Remove a related product (Moderator/Admin required).
+}

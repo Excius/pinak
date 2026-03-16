@@ -1,0 +1,24 @@
+meta {
+  name: Get Length Class by ID
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/v1/length-classes/{{lengthClassId}}
+  body: none
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  lengthClassId: your-length-class-id-here
+}
+
+docs {
+  Get a length class by ID (public).
+}
