@@ -45,7 +45,7 @@ export function Testimonials() {
           Real Results
         </Text>
         <Text className="mt-1 italic text-2xl font-bold font-display text-gray-900">
-          Real Testimonials
+          Real Testimonialss
         </Text>
       </View>
 

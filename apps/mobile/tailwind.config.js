@@ -14,8 +14,10 @@ module.exports = {
         "whatsapp": "#25D366",
       },
       fontFamily: {
-        display: ["Playfair Display", "serif"],
-        body: ["Lato", "sans-serif"],
+        display: "System",
+        body: "System",
+        serif: "System",
+        sans: "System",
       },
       borderRadius: {
         DEFAULT: "0.75rem",

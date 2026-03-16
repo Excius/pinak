@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosError, AxiosResponse } from 'axios';
-import { getAccessToken, deleteAccessToken, setAccessToken } from '@/utils/token';
+import { getAccessToken, deleteAccessToken, setAccessToken, getRefreshToken, setRefreshToken, deleteRefreshToken } from '@/utils/token';
 // import * as SecureStore from 'expo-secure-store';
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL
+export const BASE_URL = process.env.EXPO_PUBLIC_API_URL
 
 
 if (!BASE_URL) {
@@ -11,7 +11,6 @@ if (!BASE_URL) {
 const api: AxiosInstance = axios.create({
     baseURL: BASE_URL,
     timeout: 10000,
-    withCredentials: true,
     headers: {
         'Content-Type': 'application/json',
     }
@@ -67,10 +66,25 @@ api.interceptors.response.use(
             isRefreshing = true;
 
             try {
-                const refreshResponse = await apiRequest<{ accessToken: string }>('post', '/auth/refresh');
-                const newAccessToken = refreshResponse.accessToken;
+                const refreshToken = await getRefreshToken();
+                if (!refreshToken) {
+                    throw new Error('No refresh token available');
+                }
+                const refreshResponse = await axios.post<{ message: string; success: boolean; data: { accessToken: string; refreshToken: string } }>(
+                    `${BASE_URL}/auth/refresh`,
+                    {},
+                    {
+                        headers: {
+                            Authorization: `Bearer ${refreshToken}`,
+                            'Content-Type': 'application/json',
+                        },
+                    }
+                );
+                const newAccessToken = refreshResponse.data.data.accessToken;
+                const newRefreshToken = refreshResponse.data.data.refreshToken;
 
                 await setAccessToken(newAccessToken);
+                await setRefreshToken(newRefreshToken);
                 processQueue(null, newAccessToken);
 
                 originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
@@ -78,6 +92,7 @@ api.interceptors.response.use(
             } catch (err) {
                 processQueue(err, null);
                 await deleteAccessToken();
+                await deleteRefreshToken();
                 return Promise.reject(err);
             } finally {
                 isRefreshing = false;

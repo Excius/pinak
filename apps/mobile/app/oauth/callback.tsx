@@ -8,7 +8,7 @@ export default function OAuthCallback() {
   useEffect(() => {
     if (error) {
       // handle OAuth error
-      router.replace("/login");
+    //   router.replace("/login");
       return;
     }
 
