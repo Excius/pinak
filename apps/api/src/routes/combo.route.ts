@@ -23,13 +23,21 @@ const comboController = new ComboController(comboService);
 const rateLimiter = createRateLimiter();
 const authMiddleware = new AuthMiddleware(jwtService);
 
-// Public (users) - read-only
+// Public routes
 router.get(
   "/",
   authMiddleware.authenticate,
   rateLimiter,
   validateMultiple(ComboKitTypes.GetComboKits),
   comboController.getComboKits,
+);
+
+router.get(
+  "/search",
+  authMiddleware.authenticate,
+  rateLimiter,
+  validateMultiple(ComboKitTypes.SearchComboKits),
+  comboController.searchComboKits,
 );
 
 router.get(
@@ -40,7 +48,93 @@ router.get(
   comboController.getComboKitBySlug,
 );
 
-// Manager / Admin - full access
+router.get(
+  "/:id/items",
+  authMiddleware.authenticate,
+  rateLimiter,
+  validateMultiple(ComboKitTypes.GetComboKitItems),
+  comboController.getComboKitItems,
+);
+
+router.get(
+  "/:id",
+  authMiddleware.authenticate,
+  rateLimiter,
+  validateMultiple(ComboKitTypes.GetComboKitById),
+  comboController.getComboKitById,
+);
+
+router.patch(
+  "/:id/increment-view",
+  authMiddleware.authenticate,
+  rateLimiter,
+  validateMultiple(ComboKitTypes.IncrementComboKitView),
+  comboController.incrementComboKitView,
+);
+
+router.patch(
+  "/:id/increment-purchase",
+  authMiddleware.authenticate,
+  rateLimiter,
+  validateMultiple(ComboKitTypes.IncrementComboKitPurchase),
+  comboController.incrementComboKitPurchase,
+);
+
+// Admin / moderator routes
+router.get(
+  "/admin/all",
+  rateLimiter,
+  validateMultiple(ComboKitTypes.GetComboKitsAdmin),
+  authMiddleware.authenticate,
+  authMiddleware.requireModeratorOrAdmin,
+  comboController.getAllComboKitsAdmin,
+);
+
+router.get(
+  "/admin/deleted",
+  rateLimiter,
+  validateMultiple(ComboKitTypes.GetComboKitsAdmin),
+  authMiddleware.authenticate,
+  authMiddleware.requireModeratorOrAdmin,
+  comboController.getDeletedComboKitsAdmin,
+);
+
+router.get(
+  "/admin/inactive",
+  rateLimiter,
+  validateMultiple(ComboKitTypes.GetComboKitsAdmin),
+  authMiddleware.authenticate,
+  authMiddleware.requireModeratorOrAdmin,
+  comboController.getInactiveComboKitsAdmin,
+);
+
+router.get(
+  "/admin/:id",
+  rateLimiter,
+  validateMultiple(ComboKitTypes.GetComboKitAdminById),
+  authMiddleware.authenticate,
+  authMiddleware.requireModeratorOrAdmin,
+  comboController.getComboKitByIdAdmin,
+);
+
+router.get(
+  "/admin/:id/dependencies",
+  rateLimiter,
+  validateMultiple(ComboKitTypes.GetComboKitDependencies),
+  authMiddleware.authenticate,
+  authMiddleware.requireModeratorOrAdmin,
+  comboController.getComboKitDependencies,
+);
+
+router.get(
+  "/admin/:id/analytics",
+  rateLimiter,
+  validateMultiple(ComboKitTypes.GetComboKitAnalytics),
+  authMiddleware.authenticate,
+  authMiddleware.requireModeratorOrAdmin,
+  comboController.getComboKitAnalytics,
+);
+
 router.post(
   "/",
   rateLimiter,
@@ -59,6 +153,33 @@ router.put(
   comboController.updateComboKit,
 );
 
+router.patch(
+  "/:id/status",
+  rateLimiter,
+  validateMultiple(ComboKitTypes.UpdateComboKitStatus),
+  authMiddleware.authenticate,
+  authMiddleware.requireModeratorOrAdmin,
+  comboController.updateComboKitStatus,
+);
+
+router.patch(
+  "/:id/pricing",
+  rateLimiter,
+  validateMultiple(ComboKitTypes.UpdateComboKitPricing),
+  authMiddleware.authenticate,
+  authMiddleware.requireModeratorOrAdmin,
+  comboController.updateComboKitPricing,
+);
+
+router.patch(
+  "/:id/metadata",
+  rateLimiter,
+  validateMultiple(ComboKitTypes.UpdateComboKitMetadata),
+  authMiddleware.authenticate,
+  authMiddleware.requireModeratorOrAdmin,
+  comboController.updateComboKitMetadata,
+);
+
 router.post(
   "/:comboKitId/items",
   rateLimiter,
@@ -66,6 +187,15 @@ router.post(
   authMiddleware.authenticate,
   authMiddleware.requireModeratorOrAdmin,
   comboController.addComboKitItem,
+);
+
+router.put(
+  "/:comboKitId/items/:itemId",
+  rateLimiter,
+  validateMultiple(ComboKitTypes.UpdateComboKitItem),
+  authMiddleware.authenticate,
+  authMiddleware.requireModeratorOrAdmin,
+  comboController.updateComboKitItem,
 );
 
 router.delete(
@@ -77,8 +207,26 @@ router.delete(
   comboController.removeComboKitItem,
 );
 
-router.delete(
-  "/:id",
+router.post(
+  "/:comboKitId/items/reorder",
+  rateLimiter,
+  validateMultiple(ComboKitTypes.ReorderComboKitItems),
+  authMiddleware.authenticate,
+  authMiddleware.requireModeratorOrAdmin,
+  comboController.reorderComboKitItems,
+);
+
+router.post(
+  "/:comboKitId/items/bulk-set",
+  rateLimiter,
+  validateMultiple(ComboKitTypes.BulkSetComboKitItems),
+  authMiddleware.authenticate,
+  authMiddleware.requireModeratorOrAdmin,
+  comboController.bulkSetComboKitItems,
+);
+
+router.patch(
+  "/:id/soft-delete",
   rateLimiter,
   validateMultiple(ComboKitTypes.SoftDeleteComboKit),
   authMiddleware.authenticate,
@@ -95,7 +243,6 @@ router.patch(
   comboController.restoreComboKit,
 );
 
-// Admin-only hard delete
 router.delete(
   "/admin/:id/hard",
   rateLimiter,

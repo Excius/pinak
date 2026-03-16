@@ -1,11 +1,40 @@
+enum ComboKitPricingStrategy {
+  FIXED_PRICE
+  CALCULATED
+  DYNAMIC
+}
+
+enum ComboKitDiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
 model ComboKit {
   id          String  @id @default(cuid())
   name        String
   slug        String  @unique
   description String?
   audience    String?
-  price       Int
-  isActive    Boolean @default(true)
+
+  metaTitle       String?
+  metaDescription String?
+  metaKeywords    String?
+  seoKeyword      String?
+
+  price           Int
+  pricingStrategy ComboKitPricingStrategy @default(FIXED_PRICE)
+  discountType    ComboKitDiscountType?
+  discountValue   Float?
+
+  tags      String[] @default([])
+  sortOrder Int      @default(0)
+
+  imageUrl String?
+
+  viewCount      Int @default(0)
+  purchasedCount Int @default(0)
+
+  isActive Boolean @default(true)
 
   items      ComboKitItem[]
   orderItems OrderItem[]
@@ -15,6 +44,11 @@ model ComboKit {
   updatedAt DateTime @updatedAt
 
   isDeleted Boolean @default(false)
+
+  @@index([slug])
+  @@index([sortOrder])
+  @@index([viewCount])
+  @@index([purchasedCount])
 }
 
 model ComboKitItem {
@@ -22,6 +56,11 @@ model ComboKitItem {
   comboKitId       String
   productVariantId String
   quantity         Int    @default(1)
+  sortOrder        Int    @default(0)
+
+  originalPrice   Int?
+  discountedPrice Int?
+  isRequired      Boolean @default(true)
 
   comboKit       ComboKit       @relation(fields: [comboKitId], references: [id], onDelete: Cascade)
   productVariant ProductVariant @relation(fields: [productVariantId], references: [id])
@@ -29,6 +68,7 @@ model ComboKitItem {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([comboKitId, productVariantId])
   @@index([comboKitId])
   @@index([productVariantId])
 }
