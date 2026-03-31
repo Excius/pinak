@@ -1,7 +1,9 @@
-import rateLimit from "express-rate-limit";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import { Response, Request } from "express";
 import logger from "./logger.js";
 import { ResponseHandler } from "./response.js";
+
+// IPv6-safe key generation using `ipKeyGenerator` from `express-rate-limit`
 
 /**
  * Rate limiting configuration for the API
@@ -12,7 +14,7 @@ export const createRateLimiter = () => {
     max: 600, // Limit each IP/user to 600 requests per windowMs
     keyGenerator: (req: Request) => {
       const userId = (req as Request & { user?: { id?: string } }).user?.id;
-      return userId ? `user:${String(userId)}` : String(req.ip);
+      return userId ? `user:${String(userId)}` : ipKeyGenerator(String(req.ip));
     },
     message: {
       success: false,
@@ -22,7 +24,9 @@ export const createRateLimiter = () => {
     legacyHeaders: false, // Disable the `X-RateLimit-*` headers
     handler: (req: Request, res: Response) => {
       const userId = (req as Request & { user?: { id?: string } }).user?.id;
-      const key = userId ? `user:${String(userId)}` : String(req.ip);
+      const key = userId
+        ? `user:${String(userId)}`
+        : ipKeyGenerator(String(req.ip));
       logger.warn(`Rate limit exceeded for key: ${key}`);
       ResponseHandler.tooManyRequests(
         res,
@@ -41,7 +45,7 @@ export const createAuthRateLimiter = () => {
     max: 5000, // Limit each IP/user to 5000 requests per windowMs
     keyGenerator: (req: Request) => {
       const userId = (req as Request & { user?: { id?: string } }).user?.id;
-      return userId ? `user:${String(userId)}` : String(req.ip);
+      return userId ? `user:${String(userId)}` : ipKeyGenerator(String(req.ip));
     },
     message: {
       success: false,
@@ -51,7 +55,9 @@ export const createAuthRateLimiter = () => {
     legacyHeaders: false,
     handler: (req: Request, res: Response) => {
       const userId = (req as Request & { user?: { id?: string } }).user?.id;
-      const key = userId ? `user:${String(userId)}` : String(req.ip);
+      const key = userId
+        ? `user:${String(userId)}`
+        : ipKeyGenerator(String(req.ip));
       logger.warn(`Auth rate limit exceeded for key: ${key}`);
       ResponseHandler.tooManyRequests(
         res,

@@ -1,0 +1,29 @@
+meta {
+  name: Admin - Get Combo Kit by ID
+  type: http
+  seq: 16
+}
+
+get {
+  url: {{baseUrl}}/api/v1/combo-kits/admin/{{id}}
+  body: none
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  authToken: your-jwt-token-here
+  id: combo-kit-id-here
+}
+
+docs {
+  Get combo kit by ID from admin view (includes deleted). Requires Moderator or Admin.
+}

@@ -41,15 +41,34 @@ export class ProductRepository {
       ...(pagination.isActive !== undefined && {
         isActive: pagination.isActive,
       }),
-      ...(pagination.categoryId && { categoryId: pagination.categoryId }),
-      ...(pagination.brand && { brand: pagination.brand }),
-      // Price filtering through variants
+      ...(pagination.search && {
+        OR: [
+          { name: { contains: pagination.search, mode: "insensitive" } },
+          { description: { contains: pagination.search, mode: "insensitive" } },
+          { tags: { hasSome: [pagination.search] } },
+        ],
+      }),
+      ...(pagination.categoryId && {
+        categories: { some: { categoryId: pagination.categoryId } },
+      }),
+      ...(pagination.brand && {
+        brand: { OR: [{ slug: pagination.brand }, { name: pagination.brand }] },
+      }),
+      // Filter by faceted filter values (AND across multiple values)
+      ...(pagination.filterValueIds &&
+        pagination.filterValueIds.length > 0 && {
+          AND: pagination.filterValueIds.map((fvId) => ({
+            filterValues: { some: { filterValueId: fvId } },
+          })),
+        }),
+      // Price / stock / tags filtering through variants
       ...((pagination.minPrice ||
         pagination.maxPrice ||
         pagination.inStock ||
         pagination.tags) && {
         variants: {
           some: {
+            isDeleted: false,
             ...(pagination.minPrice && { price: { gte: pagination.minPrice } }),
             ...(pagination.maxPrice && { price: { lte: pagination.maxPrice } }),
             ...(pagination.inStock && { stock: { gt: 0 } }),
@@ -71,13 +90,19 @@ export class ProductRepository {
           take,
           orderBy,
           include: {
+            brand: { select: { id: true, name: true, slug: true } },
             variants: {
-              where: pagination.inStock ? { stock: { gt: 0 } } : {},
+              where: pagination.inStock
+                ? { stock: { gt: 0 }, isDeleted: false }
+                : { isDeleted: false },
               take: 1, // Just get one variant for preview
               include: {
                 images: {
-                  where: { isPrimary: true },
+                  where: { isPrimary: true, isDeleted: false },
                   take: 1,
+                },
+                optionValues: {
+                  include: { optionValue: { include: { option: true } } },
                 },
               },
             },
@@ -143,19 +168,29 @@ export class ProductRepository {
 
     // Build where clause with proper typing
     const where: Prisma.ProductWhereInput = {
-      categoryId,
+      categories: { some: { categoryId } },
       isDeleted: false,
       ...(pagination.isActive !== undefined && {
         isActive: pagination.isActive,
       }),
-      ...(pagination.brand && { brand: pagination.brand }),
-      // Price filtering through variants
+      ...(pagination.brand && {
+        brand: { OR: [{ slug: pagination.brand }, { name: pagination.brand }] },
+      }),
+      // Faceted filter values (AND across all selected values)
+      ...(pagination.filterValueIds &&
+        pagination.filterValueIds.length > 0 && {
+          AND: pagination.filterValueIds.map((fvId) => ({
+            filterValues: { some: { filterValueId: fvId } },
+          })),
+        }),
+      // Price / stock / tags filtering through variants
       ...((pagination.minPrice ||
         pagination.maxPrice ||
         pagination.inStock ||
         pagination.tags) && {
         variants: {
           some: {
+            isDeleted: false,
             ...(pagination.minPrice && { price: { gte: pagination.minPrice } }),
             ...(pagination.maxPrice && { price: { lte: pagination.maxPrice } }),
             ...(pagination.inStock && { stock: { gt: 0 } }),
@@ -178,13 +213,19 @@ export class ProductRepository {
           take,
           orderBy,
           include: {
+            brand: { select: { id: true, name: true, slug: true } },
             variants: {
-              where: pagination.inStock ? { stock: { gt: 0 } } : {},
+              where: pagination.inStock
+                ? { stock: { gt: 0 }, isDeleted: false }
+                : { isDeleted: false },
               take: 1, // Just get one variant for preview
               include: {
                 images: {
-                  where: { isPrimary: true },
+                  where: { isPrimary: true, isDeleted: false },
                   take: 1,
+                },
+                optionValues: {
+                  include: { optionValue: { include: { option: true } } },
                 },
               },
             },
@@ -224,7 +265,7 @@ export class ProductRepository {
         include: {
           product: {
             include: {
-              category: true;
+              categories: { include: { category: true } };
               variants: {
                 include: { images: true };
               };
@@ -259,9 +300,10 @@ export class ProductRepository {
           include: {
             product: {
               include: {
-                category: true,
+                categories: { include: { category: true } },
                 variants: {
                   where: { stock: { gt: 0 } },
+                  orderBy: { price: "asc" },
                   take: 1,
                   include: {
                     images: {
@@ -309,7 +351,7 @@ export class ProductRepository {
         include: {
           product: {
             include: {
-              category: true;
+              categories: { include: { category: true } };
               variants: {
                 include: { images: true };
               };
@@ -337,9 +379,10 @@ export class ProductRepository {
           include: {
             product: {
               include: {
-                category: true,
+                categories: { include: { category: true } },
                 variants: {
                   where: { stock: { gt: 0 } },
+                  orderBy: { price: "asc" },
                   take: 1,
                   include: {
                     images: {
@@ -385,7 +428,12 @@ export class ProductRepository {
   getProductVariants(productId: string) {
     return this.prisma.productVariant.findMany({
       where: { productId, isDeleted: false },
-      include: { images: true },
+      include: {
+        images: true,
+        optionValues: {
+          include: { optionValue: { include: { option: true } } },
+        },
+      },
     });
   }
 
@@ -393,11 +441,35 @@ export class ProductRepository {
     return this.prisma.product.findFirst({
       where: { id, isDeleted: false },
       include: {
-        category: true,
-        variants: {
-          where: { stock: { gt: 0 } },
+        brand: true,
+        categories: { include: { category: true } },
+        taxClass: true,
+        lengthClass: true,
+        weightClass: true,
+        filterValues: { include: { filterValue: true } },
+        relatedProducts: {
           include: {
-            images: true,
+            relatedProduct: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                frontImageUrl: true,
+              },
+            },
+          },
+          orderBy: { sortOrder: "asc" },
+        },
+        variants: {
+          where: { isDeleted: false },
+          include: {
+            images: {
+              where: { isDeleted: false },
+              orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }],
+            },
+            optionValues: {
+              include: { optionValue: { include: { option: true } } },
+            },
           },
         },
       },
@@ -420,8 +492,18 @@ export class ProductRepository {
       ...(pagination.isActive !== undefined && {
         isActive: pagination.isActive,
       }),
-      ...(pagination.categoryId && { categoryId: pagination.categoryId }),
-      ...(pagination.brand && { brand: pagination.brand }),
+      ...(pagination.search && {
+        OR: [
+          { name: { contains: pagination.search, mode: "insensitive" } },
+          { description: { contains: pagination.search, mode: "insensitive" } },
+        ],
+      }),
+      ...(pagination.categoryId && {
+        categories: { some: { categoryId: pagination.categoryId } },
+      }),
+      ...(pagination.brand && {
+        brand: { OR: [{ slug: pagination.brand }, { name: pagination.brand }] },
+      }),
       // Price filtering through variants
       ...((pagination.minPrice ||
         pagination.maxPrice ||
@@ -429,6 +511,7 @@ export class ProductRepository {
         pagination.tags) && {
         variants: {
           some: {
+            isDeleted: false,
             ...(pagination.minPrice && { price: { gte: pagination.minPrice } }),
             ...(pagination.maxPrice && { price: { lte: pagination.maxPrice } }),
             ...(pagination.inStock && { stock: { gt: 0 } }),
@@ -450,9 +533,14 @@ export class ProductRepository {
           take,
           orderBy,
           include: {
+            brand: { select: { id: true, name: true, slug: true } },
             variants: {
+              where: { isDeleted: false },
               include: {
-                images: true,
+                images: { where: { isDeleted: false } },
+                optionValues: {
+                  include: { optionValue: { include: { option: true } } },
+                },
               },
             },
           },
@@ -486,8 +574,12 @@ export class ProductRepository {
 
     const where: Prisma.ProductWhereInput = {
       isDeleted: true,
-      ...(pagination.categoryId && { categoryId: pagination.categoryId }),
-      ...(pagination.brand && { brand: pagination.brand }),
+      ...(pagination.categoryId && {
+        categories: { some: { categoryId: pagination.categoryId } },
+      }),
+      ...(pagination.brand && {
+        brand: { OR: [{ slug: pagination.brand }, { name: pagination.brand }] },
+      }),
       // Price filtering through variants
       ...((pagination.minPrice ||
         pagination.maxPrice ||
@@ -548,8 +640,12 @@ export class ProductRepository {
     const where: Prisma.ProductWhereInput = {
       isDeleted: false,
       isActive: status === "ACTIVE",
-      ...(pagination.categoryId && { categoryId: pagination.categoryId }),
-      ...(pagination.brand && { brand: pagination.brand }),
+      ...(pagination.categoryId && {
+        categories: { some: { categoryId: pagination.categoryId } },
+      }),
+      ...(pagination.brand && {
+        brand: { OR: [{ slug: pagination.brand }, { name: pagination.brand }] },
+      }),
       // Price filtering through variants
       ...((pagination.minPrice ||
         pagination.maxPrice ||
@@ -623,6 +719,20 @@ export class ProductRepository {
     });
   }
 
+  incrementProductViewCount(productId: string) {
+    return this.prisma.product.update({
+      where: { id: productId },
+      data: { viewCount: { increment: 1 } },
+    });
+  }
+
+  incrementProductPurchasedCount(productId: string, quantity = 1) {
+    return this.prisma.product.update({
+      where: { id: productId },
+      data: { purchasedCount: { increment: quantity } },
+    });
+  }
+
   createProductVariant(
     productId: string,
     data: Prisma.ProductVariantCreateInput,
@@ -643,11 +753,21 @@ export class ProductRepository {
   }
 
   addProductImage(variantId: string, data: Prisma.ProductImageCreateInput) {
+    // If image is primary, perform both unset + create in a single transaction to avoid races
+    if (data.isPrimary) {
+      return this.prisma.$transaction(async (tx) => {
+        await tx.productImage.updateMany({
+          where: { productVariantId: variantId, isPrimary: true },
+          data: { isPrimary: false },
+        });
+        return tx.productImage.create({
+          data: { ...data, variant: { connect: { id: variantId } } },
+        });
+      });
+    }
+
     return this.prisma.productImage.create({
-      data: {
-        ...data,
-        variant: { connect: { id: variantId } },
-      },
+      data: { ...data, variant: { connect: { id: variantId } } },
     });
   }
 
@@ -808,5 +928,191 @@ export class ProductRepository {
     return this.prisma.productImage.delete({
       where: { id },
     });
+  }
+
+  // ── Service-layer validation helpers ──────────────────────────────────────
+
+  /** Fetch a single variant by PK (no soft-delete filter — for admin validation). */
+  getVariantById(id: string) {
+    return this.prisma.productVariant.findUnique({ where: { id } });
+  }
+
+  /** Check SKU uniqueness across all variants. */
+  findVariantBySku(sku: string) {
+    return this.prisma.productVariant.findUnique({ where: { sku } });
+  }
+
+  /** Fetch a product image row by PK. */
+  getProductImageById(id: string) {
+    return this.prisma.productImage.findUnique({ where: { id } });
+  }
+
+  /** Resolve legacy size/shade strings to the matching OptionValue row. */
+  findOptionValueByNameAndValue(optionName: string, value: string) {
+    return this.prisma.optionValue.findFirst({
+      where: { value, option: { name: optionName } },
+      include: { option: true },
+    });
+  }
+
+  /** Fetch OptionValues with their parent Option (used in SKU generation). */
+  findOptionValuesWithOptions(ids: string[]) {
+    return this.prisma.optionValue.findMany({
+      where: { id: { in: ids } },
+      include: { option: true },
+    });
+  }
+
+  /** Look up a Brand by its PK. */
+  findBrandById(id: string) {
+    return this.prisma.brand.findUnique({ where: { id } });
+  }
+
+  /** Look up a Brand by slug or name (first match). */
+  findBrandBySlugOrName(slugOrName: string) {
+    return this.prisma.brand.findFirst({
+      where: { OR: [{ slug: slugOrName }, { name: slugOrName }] },
+    });
+  }
+
+  /** Create a new Brand row. */
+  createBrand(name: string, slug: string) {
+    return this.prisma.brand.create({ data: { name, slug } });
+  }
+
+  /** Look up a Category by PK (for existence checks inside the product service). */
+  findCategoryById(id: string) {
+    return this.prisma.category.findUnique({ where: { id } });
+  }
+
+  /** Look up a FeaturedSection by PK. */
+  getFeaturedSectionById(id: string) {
+    return this.prisma.featuredSection.findUnique({ where: { id } });
+  }
+
+  /** Check whether a product is already present in a featured section. */
+  isProductInFeaturedSection(sectionId: string, productId: string) {
+    return this.prisma.featuredProduct.findFirst({
+      where: { sectionId, productId },
+    });
+  }
+
+  /**
+   * Count active references that block a **soft**-delete of a variant:
+   * returns [cartCount, orderCount, reservationCount, wishlistCount, comboKitCount].
+   */
+  getVariantSoftDeleteDependencies(id: string) {
+    return Promise.all([
+      this.prisma.cartItem.count({ where: { productVariantId: id } }),
+      this.prisma.orderItem.count({
+        where: {
+          productVariantId: id,
+          order: { isDeleted: false, status: { not: "CANCELLED" } },
+        },
+      }),
+      this.prisma.inventoryReservation.count({
+        where: { productVariantId: id, expiresAt: { gt: new Date() } },
+      }),
+      this.prisma.wishlistItem.count({ where: { productVariantId: id } }),
+      this.prisma.comboKitItem.count({ where: { productVariantId: id } }),
+    ]);
+  }
+
+  /**
+   * Count all references that block a **hard**-delete of a variant:
+   * returns [cartCount, orderCount, wishlistCount, reservationCount, comboKitCount, imageCount].
+   */
+  getVariantHardDeleteDependencies(id: string) {
+    return Promise.all([
+      this.prisma.cartItem.count({ where: { productVariantId: id } }),
+      this.prisma.orderItem.count({
+        where: {
+          productVariantId: id,
+          order: { isDeleted: false, status: { not: "CANCELLED" } },
+        },
+      }),
+      this.prisma.wishlistItem.count({ where: { productVariantId: id } }),
+      this.prisma.inventoryReservation.count({
+        where: { productVariantId: id },
+      }),
+      this.prisma.comboKitItem.count({ where: { productVariantId: id } }),
+      this.prisma.productImage.count({ where: { productVariantId: id } }),
+    ]);
+  }
+
+  /**
+   * Collect all dependency counts needed before hard-deleting a product.
+   * Returns a structured object rather than a positional array for clarity.
+   */
+  async getProductHardDeleteDependencies(id: string) {
+    const variantRows = await this.prisma.productVariant.findMany({
+      where: { productId: id },
+      select: { id: true },
+    });
+    const variantIds = variantRows.map((v) => v.id);
+
+    const [
+      productOrderCount,
+      variantOrderCount,
+      cartCount,
+      wishlistCount,
+      reservationCount,
+      featuredCount,
+      reviewCount,
+      comboKitCount,
+      activeVariantCount,
+    ] = await Promise.all([
+      this.prisma.orderItem.count({
+        where: {
+          productId: id,
+          order: { isDeleted: false, status: { not: "CANCELLED" } },
+        },
+      }),
+      variantIds.length
+        ? this.prisma.orderItem.count({
+            where: {
+              productVariantId: { in: variantIds },
+              order: { isDeleted: false, status: { not: "CANCELLED" } },
+            },
+          })
+        : Promise.resolve(0),
+      variantIds.length
+        ? this.prisma.cartItem.count({
+            where: { productVariantId: { in: variantIds } },
+          })
+        : Promise.resolve(0),
+      variantIds.length
+        ? this.prisma.wishlistItem.count({
+            where: { productVariantId: { in: variantIds } },
+          })
+        : Promise.resolve(0),
+      variantIds.length
+        ? this.prisma.inventoryReservation.count({
+            where: { productVariantId: { in: variantIds } },
+          })
+        : Promise.resolve(0),
+      this.prisma.featuredProduct.count({ where: { productId: id } }),
+      this.prisma.review.count({ where: { productId: id } }),
+      variantIds.length
+        ? this.prisma.comboKitItem.count({
+            where: { productVariantId: { in: variantIds } },
+          })
+        : Promise.resolve(0),
+      this.prisma.productVariant.count({
+        where: { productId: id, isDeleted: false },
+      }),
+    ]);
+
+    return {
+      productOrderCount,
+      variantOrderCount,
+      cartCount,
+      wishlistCount,
+      reservationCount,
+      featuredCount,
+      reviewCount,
+      comboKitCount,
+      activeVariantCount,
+    };
   }
 }

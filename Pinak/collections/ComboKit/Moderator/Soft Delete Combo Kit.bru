@@ -4,10 +4,10 @@ meta {
   seq: 5
 }
 
-delete {
-  url: {{baseUrl}}/api/v1/combo-kits/{{id}}
+patch {
+  url: {{baseUrl}}/api/v1/combo-kits/{{id}}/soft-delete
   body: none
-  auth: bearer
+  auth: inherit
 }
 
 headers {

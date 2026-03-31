@@ -1,0 +1,38 @@
+meta {
+  name: Update Filter Group
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{baseUrl}}/api/v1/filters/groups/{{groupId}}
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:json {
+  {
+    "name": "Color V2",
+    "slug": "color-v2",
+    "sortOrder": 1,
+    "isActive": true
+  }
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  groupId: your-group-id-here
+  authToken: your-jwt-token-here
+}
+
+docs {
+  Update a filter group (Moderator/Admin required).
+}

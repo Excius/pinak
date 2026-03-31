@@ -1,0 +1,24 @@
+meta {
+  name: List Categories for Product
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/products/{{productId}}/categories
+  body: none
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  productId: your-product-id-here
+}
+
+docs {
+  List categories assigned to a product (public).
+}

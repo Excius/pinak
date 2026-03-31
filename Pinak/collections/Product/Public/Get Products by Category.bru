@@ -5,9 +5,17 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/v1/products/category/{{categoryId}}?page=1&limit=10
+  url: {{baseUrl}}/api/v1/products/category/{{categoryId}}?page=1&limit=10&filterValueIds={{filterValueIds}}&brand={{brand}}&inStock={{inStock}}
   body: none
-  auth: none
+  auth: inherit
+}
+
+params:query {
+  page: 1
+  limit: 10
+  filterValueIds: color-filter-id,size-filter-id
+  brand: nike
+  inStock: true
 }
 
 headers {
@@ -17,6 +25,9 @@ headers {
 vars:pre-request {
   baseUrl: http://localhost:3000
   categoryId: your-category-id-here
+  filterValueIds: color-filter-id,size-filter-id
+  brand: nike
+  inStock: true
 }
 
 docs {
@@ -30,4 +41,7 @@ docs {
   - limit: Items per page (default: 10, max: 100)
   - sortBy: Field to sort by
   - sortOrder: Sort order (asc/desc)
+  - brand: Filter by brand
+  - inStock: Filter by stock availability
+  - filterValueIds: Comma-separated list of filter value IDs (AND across values)
 }

@@ -5,10 +5,22 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/v1/combo-kits?page=1&limit=10
+  url: {{baseUrl}}/api/v1/combo-kits?page=1&limit=10&isActive=true&sortBy=createdAt&sortOrder=desc
   body: none
+  auth: inherit
 }
 
+params:query {
+  page: 1
+  limit: 10
+  isActive: true
+  ~search: glow
+  ~tags: makeup,starter
+  ~minPrice: 1000
+  ~maxPrice: 7000
+  sortBy: createdAt
+  sortOrder: desc
+}
 headers {
   Content-Type: application/json
 }
@@ -18,10 +30,15 @@ vars:pre-request {
 }
 
 docs {
-  Fetch paginated combo kits (public).
+  Fetch paginated combo kits (public/authenticated).
 
   Query params:
   - page (default 1)
   - limit (default 10)
   - isActive (optional)
+  - search (optional)
+  - tags (optional comma-separated)
+  - minPrice / maxPrice (optional)
+  - sortBy: createdAt|updatedAt|price|sortOrder|viewCount|purchasedCount
+  - sortOrder: asc|desc
 }

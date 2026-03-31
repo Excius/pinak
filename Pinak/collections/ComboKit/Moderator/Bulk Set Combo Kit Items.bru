@@ -1,0 +1,52 @@
+meta {
+  name: Bulk Set Combo Kit Items
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{baseUrl}}/api/v1/combo-kits/{{comboKitId}}/items/bulk-set
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:json {
+  {
+    "items": [
+      {
+        "productVariantId": "variant-id-1",
+        "quantity": 1,
+        "sortOrder": 0,
+        "originalPrice": 3200,
+        "discountedPrice": 2900,
+        "isRequired": true
+      },
+      {
+        "productVariantId": "variant-id-2",
+        "quantity": 1,
+        "sortOrder": 1,
+        "originalPrice": 2100,
+        "discountedPrice": 1950,
+        "isRequired": false
+      }
+    ]
+  }
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  authToken: your-jwt-token-here
+  comboKitId: combo-kit-id-here
+}
+
+docs {
+  Replace all combo items in one operation. Requires Moderator or Admin.
+}

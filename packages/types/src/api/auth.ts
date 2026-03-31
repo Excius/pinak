@@ -4,19 +4,22 @@ import { UserSchema } from "../user.js";
 export const AuthTypes = {
   RegisterUser: {
     body: z.object({
-      email: z.email("Invalid email format"),
+      email: z
+        .string("Email must be a string")
+        .min(1, { message: "Email is required" })
+        .email({ message: "Invalid email format" }),
       password: z
-        .string()
-        .min(8, "Password must be at least 8 characters long")
-        .max(64, "Password must be at most 64 characters long"),
+        .string("Password must be a string")
+        .min(8, { message: "Password must be at least 8 characters long" })
+        .max(64, { message: "Password must be at most 64 characters long" }),
       username: z
-        .string()
-        .min(3, "Username must be at least 3 characters long")
-        .max(30, "Username must be at most 30 characters long")
-        .regex(
-          /^[a-zA-Z][a-zA-Z0-9_]*$/,
-          "Username must start with a letter and contain only letters, numbers, and underscores",
-        ),
+        .string("Username must be a string")
+        .min(3, { message: "Username must be at least 3 characters long" })
+        .max(30, { message: "Username must be at most 30 characters long" })
+        .regex(/^[a-zA-Z][a-zA-Z0-9_]*$/, {
+          message:
+            "Username must start with a letter and contain only letters, numbers, and underscores",
+        }),
     }),
     params: z.object({
       // no path params for register by default; add here if needed
@@ -24,7 +27,7 @@ export const AuthTypes = {
     query: z.object({
       // age: z.coerce.number().min(13, "Must be at least 13 years old"),
       // optional query example
-      redirect: z.string().optional(),
+      redirect: z.string("redirect must be a string").optional(),
     }),
     response: z.object({
       message: z.string(),
@@ -35,11 +38,14 @@ export const AuthTypes = {
 
   LoginUser: {
     body: z.object({
-      email: z.email("Invalid email format"),
+      email: z
+        .string("Email must be a string")
+        .min(1, { message: "Email is required" })
+        .email({ message: "Invalid email format" }),
       password: z
-        .string()
-        .min(8, "Password must be at least 8 characters long")
-        .max(64, "Password must be at most 64 characters long"),
+        .string("Password must be a string")
+        .min(8, { message: "Password must be at least 8 characters long" })
+        .max(64, { message: "Password must be at most 64 characters long" }),
     }),
     params: z.object({}),
     query: z.object({}),
@@ -48,6 +54,7 @@ export const AuthTypes = {
       success: z.boolean(),
       data: z.object({
         accessToken: z.string(),
+        refreshToken: z.string(),
         user: UserSchema,
       }),
     }),
@@ -58,13 +65,13 @@ export const AuthTypes = {
     params: z.object({}),
     query: z.object({
       username: z
-        .string()
-        .min(3, "Username must be at least 3 characters long")
-        .max(30, "Username must be at most 30 characters long")
-        .regex(
-          /^[a-zA-Z][a-zA-Z0-9_]*$/,
-          "Username must start with a letter and constain only letters, numbers, and underscores",
-        ),
+        .string("Username must be a string")
+        .min(3, { message: "Username must be at least 3 characters long" })
+        .max(30, { message: "Username must be at most 30 characters long" })
+        .regex(/^[a-zA-Z][a-zA-Z0-9_]*$/, {
+          message:
+            "Username must start with a letter and contain only letters, numbers, and underscores",
+        }),
     }),
     response: z.object({
       message: z.string(),
@@ -80,10 +87,11 @@ export const AuthTypes = {
     params: z.object({}),
     query: z.object({}),
     response: z.object({
-      message: z.string(),
-      success: z.boolean(),
+      message: z.string("message must be a string"),
+      success: z.boolean("success must be a boolean"),
       data: z.object({
-        accessToken: z.string(),
+        accessToken: z.string("accessToken must be a string"),
+        refreshToken: z.string(),
       }),
     }),
   },
@@ -104,8 +112,8 @@ export const AuthTypes = {
     params: z.object({}),
     query: z.object({}),
     response: z.object({
-      message: z.string(),
-      success: z.boolean(),
+      message: z.string("message must be a string"),
+      success: z.boolean("success must be a boolean"),
       data: UserSchema,
     }),
   },
@@ -117,10 +125,10 @@ export const AuthTypes = {
     params: z.object({}),
     query: z.object({}),
     response: z.object({
-      success: z.boolean(),
-      message: z.string(),
+      success: z.boolean("success must be a boolean"),
+      message: z.string("message must be a string"),
       data: z.object({
-        accessToken: z.string(),
+        accessToken: z.string("accessToken must be a string"),
       }),
     }),
   },
@@ -159,13 +167,15 @@ export const AuthTypes = {
     body: z.object({}),
     params: z.object({}),
     query: z.object({
-      platform: z.enum(["WEB", "MOBILE"]).optional(),
+      platform: z
+        .enum(["WEB", "MOBILE"], "platform must be either WEB or MOBILE")
+        .optional(),
     }),
     response: z.object({
-      message: z.string(),
-      success: z.boolean(),
+      message: z.string("message must be a string"),
+      success: z.boolean("success must be a boolean"),
       data: z.object({
-        url: z.string(),
+        url: z.string("url must be a string"),
       }),
     }),
   },
@@ -173,7 +183,11 @@ export const AuthTypes = {
   GoogleOauthMobile: {
     body: z.object({}),
     params: z.object({}),
-    query: z.object({ code: z.string().min(1, "Code is required") }),
+    query: z.object({
+      code: z
+        .string("Code must be a string")
+        .min(1, { message: "Code is required" }),
+    }),
     response: z.object({
       message: z.string(),
       success: z.boolean(),
@@ -185,7 +199,9 @@ export const AuthTypes = {
     body: z.object({}),
     params: z.object({}),
     query: z.object({
-      code: z.string().min(1, "Code is required"),
+      code: z
+        .string("Code must be a string")
+        .min(1, { message: "Code is required" }),
     }),
     response: z.object({
       message: z.string(),
@@ -250,8 +266,8 @@ export type VerifyPasswordResponse = ResponseTypes["VerifyPassword"];
 
 /**
  * Example use case:
- * import type { BodyTypes, ResponseTypes } from '@repo/types';
+ * import type { AuthApi } from '@repo/types';
  *
- * type LoginBody = BodyTypes['LoginUser'];
- * type LoginResponse = ResponseTypes['LoginUser'];
+ * type LoginBody = AuthApi.BodyTypes['LoginUser'];
+ * type LoginResponse = AuthApi.ResponseTypes['LoginUser'];
  */

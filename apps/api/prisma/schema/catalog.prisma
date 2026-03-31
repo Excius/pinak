@@ -1,3 +1,53 @@
+// Catalog — redesigned (Products, variants, categories, filters, options)
+
+model Brand {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  slug     String    @unique
+  logoUrl  String?
+  isActive Boolean   @default(true)
+
+  products Product[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+}
+
+model TaxClass {
+  id   String  @id @default(cuid())
+  name String  @unique
+  rate Float
+
+  products Product[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model LengthClass {
+  id   String  @id @default(cuid())
+  name String  @unique
+  unit String
+
+  products Product[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model WeightClass {
+  id   String  @id @default(cuid())
+  name String  @unique
+  unit String
+
+  products Product[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Category {
   id       String     @id @default(cuid())
   name     String
@@ -5,7 +55,8 @@ model Category {
   parentId String?
   parent   Category?  @relation("CategoryToCategory", fields: [parentId], references: [id])
   children Category[] @relation("CategoryToCategory")
-  products Product[]
+
+  products ProductCategory[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -14,39 +65,192 @@ model Category {
   @@index([parentId])
 }
 
-model Product {
-  id          String   @id @default(cuid())
-  name        String
-  slug        String   @unique
-  description String?
-  brand       String?
-  isActive    Boolean  @default(true)
-  categoryId  String
-  category    Category @relation(fields: [categoryId], references: [id])
+model ProductCategory {
+  productId  String
+  categoryId String
+
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([productId, categoryId])
+  @@index([productId])
+  @@index([categoryId])
+}
+
+model FilterGroup {
+  id        String       @id @default(cuid())
+  name      String       @unique
+  slug      String       @unique
+  sortOrder Int          @default(0)
+  isActive  Boolean      @default(true)
+
+  values    FilterValue[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  featuredProducts FeaturedProduct[]
+  @@index([slug])
+}
+
+model FilterValue {
+  id            String             @id @default(cuid())
+  filterGroupId String
+  name          String
+  slug          String
+  sortOrder     Int      @default(0)
+
+  filterGroup   FilterGroup        @relation(fields: [filterGroupId], references: [id], onDelete: Cascade)
+  products      ProductFilterValue[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([filterGroupId, slug])
+  @@index([filterGroupId])
+}
+
+model ProductFilterValue {
+  productId     String
+  filterValueId String
+
+  product     Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  filterValue FilterValue @relation(fields: [filterValueId], references: [id], onDelete: Cascade)
+
+  @@id([productId, filterValueId])
+  @@index([productId])
+  @@index([filterValueId])
+}
+
+model Option {
+  id        String        @id @default(cuid())
+  name      String        @unique
+  sortOrder Int           @default(0)
+
+  values    OptionValue[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OptionValue {
+  id        String @id @default(cuid())
+  optionId  String
+  value     String
+  sortOrder Int    @default(0)
+
+  option         Option               @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  variantOptions VariantOptionValue[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([optionId, value])
+  @@index([optionId])
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+
+  description    String?
+  keyIngredients String?
+
+  metaTitle       String?
+  metaDescription String?
+  metaKeywords    String?
+  seoKeyword      String?
+
+  model String?
+  ean   String?
+
+  frontImageUrl String?
+
+  tags String[] @default([])
+
+  brandId String?
+  brand   Brand? @relation(fields: [brandId], references: [id])
+
+  requiresShipping Boolean         @default(true)
+  outOfStockStatus  OutOfStockStatus @default(BACKORDER)
+
+  dimensionLength Float?
+  dimensionWidth  Float?
+  dimensionHeight Float?
+  lengthClassId   String?
+  lengthClass     LengthClass? @relation(fields: [lengthClassId], references: [id])
+
+  weightGrams   Float?
+  weightClassId String?
+  weightClass   WeightClass? @relation(fields: [weightClassId], references: [id])
+
+  taxClassId String?
+  taxClass   TaxClass? @relation(fields: [taxClassId], references: [id])
+
+  sortOrder      Int     @default(0)
+  viewCount      Int     @default(0)
+  purchasedCount Int     @default(0)
+  isActive       Boolean @default(true)
+  isDeleted      Boolean @default(false)
+
+  categories       ProductCategory[]
   variants         ProductVariant[]
+  relatedProducts  RelatedProduct[]  @relation("ProductToRelated")
+  relatedTo        RelatedProduct[]  @relation("RelatedToProduct")
   reviews          Review[]
   orderItems       OrderItem[]
+  featuredProducts FeaturedProduct[]
+  filterValues     ProductFilterValue[]
 
-  isDeleted Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@index([categoryId])
+  @@index([slug])
+  @@index([brandId])
+  @@index([taxClassId])
+  @@index([lengthClassId])
+  @@index([weightClassId])
+  @@index([viewCount])
+  @@index([purchasedCount])
+}
+
+model RelatedProduct {
+  id               String  @id @default(cuid())
+  productId        String
+  relatedProductId String
+  sortOrder        Int     @default(0)
+
+  product        Product @relation("ProductToRelated", fields: [productId], references: [id], onDelete: Cascade)
+  relatedProduct Product @relation("RelatedToProduct", fields: [relatedProductId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([productId, relatedProductId])
+  @@index([productId])
+  @@index([relatedProductId])
 }
 
 model ProductVariant {
-  id        String   @id @default(cuid())
+  id        String  @id @default(cuid())
   productId String
-  sku       String   @unique
-  tags      String[]
-  shade     String?
-  size      String?
-  price     Int
-  stock     Int      @default(0)
-  product   Product  @relation(fields: [productId], references: [id])
+  sku       String  @unique
+  ean       String?
+
+  tags String[] @default([])
+
+  price        Int
+  comparePrice Int?
+  stock        Int @default(0)
+
+  weightGrams   Float?
+  weightClassId String?
+
+  isActive  Boolean @default(true)
+  isDeleted Boolean @default(false)
+
+  product Product @relation(fields: [productId], references: [id])
+
+  optionValues VariantOptionValue[]
 
   images                ProductImage[]
   orderItems            OrderItem[]
@@ -58,23 +262,41 @@ model ProductVariant {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  isDeleted Boolean @default(false)
-
   @@index([productId])
 }
 
+model VariantOptionValue {
+  variantId     String
+  optionValueId String
+
+  variant     ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  optionValue OptionValue    @relation(fields: [optionValueId], references: [id])
+
+  @@id([variantId, optionValueId])
+  @@index([variantId])
+  @@index([optionValueId])
+}
+
 model ProductImage {
-  id               String         @id @default(cuid())
+  id               String  @id @default(cuid())
   productVariantId String
   url              String
-  isPrimary        Boolean        @default(false)
+  isPrimary        Boolean @default(false)
   altText          String?
-  variant          ProductVariant @relation(fields: [productVariantId], references: [id])
+  sortOrder        Int     @default(0)
+
+  variant ProductVariant @relation(fields: [productVariantId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  isDeleted Boolean @default(false)
+  isDeleted Boolean  @default(false)
 
   @@index([productVariantId])
+}
+
+enum OutOfStockStatus {
+  IN_STOCK
+  OUT_OF_STOCK
+  BACKORDER
+  PREORDER
 }

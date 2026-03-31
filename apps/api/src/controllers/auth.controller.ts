@@ -68,7 +68,7 @@ export class AuthController {
 
     ResponseHandler.success(
       res,
-      { accessToken: data.accessToken, user: data.user },
+      { accessToken: data.accessToken, refreshToken: data.refreshToken, user: data.user },
       "Login successful",
     );
   };
@@ -85,7 +85,7 @@ export class AuthController {
 
     ResponseHandler.success(
       res,
-      { accessToken: tokens.accessToken },
+      { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken },
       "Token refresh successful",
     );
   };

@@ -1,0 +1,6 @@
+{
+  "version": "1",
+  "name": "RelatedProducts",
+  "type": "collection",
+  "ignore": ["node_modules", ".git"]
+}

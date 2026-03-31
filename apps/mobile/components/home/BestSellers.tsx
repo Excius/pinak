@@ -37,8 +37,8 @@ export function BestSellers() {
   return (
     <View className="overflow-hidden rounded-t-[2.5rem] border-t border-gray-100 bg-white shadow-lg">
       {/* Header */}
-      <View className="items-center border-b border-gray-100 px-4 py-6 pt-2">
-        <Text className="text-xs font-bold uppercase tracking-widest text-primary">
+      <View className="items-center border-b border-gray-100 px-4 py-3 pt-2">
+        <Text className="text-xs font-bold uppercase tracking-widest text-primary pt-4">
           Customer Favorites
         </Text>
         <Text className="mt-1 text-2xl font-bold font-display text-gray-900">

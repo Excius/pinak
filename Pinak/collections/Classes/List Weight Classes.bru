@@ -1,0 +1,23 @@
+meta {
+  name: List Weight Classes
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/weight-classes
+  body: none
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+}
+
+docs {
+  List weight classes (public).
+}

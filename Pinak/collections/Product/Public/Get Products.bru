@@ -5,9 +5,17 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/v1/products?page=1&limit=10
+  url: {{baseUrl}}/api/v1/products?page=1&limit=1&inStock=true
   body: none
-  auth: none
+  auth: inherit
+}
+
+params:query {
+  page: 1
+  limit: 1
+  inStock: true
+  ~filterValueIds: color-filter-id,size-filter-id
+  ~brand: nike
 }
 
 headers {
@@ -16,11 +24,14 @@ headers {
 
 vars:pre-request {
   baseUrl: http://localhost:3000
+  filterValueIds: color-filter-id,size-filter-id
+  brand: nike
+  inStock: true
 }
 
 docs {
   Get a paginated list of products with optional filters.
-
+  
   Query Parameters:
   - page: Page number (default: 1)
   - limit: Items per page (default: 10, max: 100)
@@ -33,4 +44,5 @@ docs {
   - maxPrice: Maximum price filter
   - brand: Filter by brand
   - inStock: Filter by stock availability
+  - filterValueIds: Comma-separated list of filter value IDs (AND across values)
 }
