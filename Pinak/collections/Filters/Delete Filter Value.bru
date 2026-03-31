@@ -1,0 +1,29 @@
+meta {
+  name: Delete Filter Value
+  type: http
+  seq: 6
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/filters/values/{{valueId}}
+  body: none
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  valueId: your-filter-value-id-here
+  authToken: your-jwt-token-here
+}
+
+docs {
+  Delete a filter value (Moderator/Admin required).
+}

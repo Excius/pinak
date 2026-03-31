@@ -4,7 +4,7 @@ import JWTService from "../lib/jwt.js";
 import { createRateLimiter } from "../lib/rateLimit.js";
 import { validateMultiple } from "../lib/validation.js";
 import { AuthMiddleware } from "../middlewares/auth.middleware.js";
-import { ComboRepository } from "../repositories/combo.repositoy.js";
+import { ComboRepository } from "../repositories/combo.repository.js";
 import { ComboService } from "../services/combo.service.js";
 import { ComboController } from "../controllers/combo.controller.js";
 import { prisma } from "../lib/prisma.js";

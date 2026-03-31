@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { ResponseHandler } from "../lib/response.js";
 import { ProductService } from "../services/product.service.js";
+import logger from "../lib/logger.js";
 import { ProductPaginationOptions } from "../types/pagination.types.js";
 
 export class ProductController {
@@ -23,7 +24,10 @@ export class ProductController {
         : undefined,
       brand: req.query.brand as string,
       inStock: req.query.inStock ? req.query.inStock === "true" : undefined,
-      tags: req.query.tags ? (req.query.tags as string).split(',') : undefined,
+      tags: req.query.tags ? (req.query.tags as string).split(",") : undefined,
+      filterValueIds: req.query.filterValueIds
+        ? (req.query.filterValueIds as string).split(",")
+        : undefined,
     };
 
     const products = await this.productService.getProducts(pagination);
@@ -49,6 +53,14 @@ export class ProductController {
       return ResponseHandler.notFound(res, "Product not found");
     }
 
+    // Increment view count asynchronously (non-blocking)
+    this.productService.incrementViewCount(product.id).catch((e) => {
+      logger.warn("Failed to increment product viewCount", {
+        productId: product.id,
+        err: e,
+      });
+    });
+
     ResponseHandler.success(res, product, "Product fetched successfully");
   };
 
@@ -59,6 +71,11 @@ export class ProductController {
       limit: parseInt(req.query.limit as string) || 10,
       sortBy: req.query.sortBy as string,
       sortOrder: (req.query.sortOrder as "asc" | "desc") || "desc",
+      brand: req.query.brand as string,
+      inStock: req.query.inStock ? req.query.inStock === "true" : undefined,
+      filterValueIds: req.query.filterValueIds
+        ? (req.query.filterValueIds as string).split(",")
+        : undefined,
     };
 
     const products = await this.productService.getProductsWithCategory(
@@ -159,6 +176,9 @@ export class ProductController {
       limit: parseInt(req.query.limit as string) || 10,
       sortBy: req.query.sortBy as string,
       sortOrder: (req.query.sortOrder as "asc" | "desc") || "desc",
+      search: req.query.search as string,
+      brand: req.query.brand as string,
+      isActive: req.query.isActive ? req.query.isActive === "true" : undefined,
     };
 
     const products = await this.productService.getAllProductsAdmin(pagination);

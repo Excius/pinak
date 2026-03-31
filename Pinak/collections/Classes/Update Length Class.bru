@@ -1,0 +1,36 @@
+meta {
+  name: Update Length Class
+  type: http
+  seq: 9
+}
+
+put {
+  url: {{baseUrl}}/api/v1/length-classes/{{lengthClassId}}
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "Centimeter Updated",
+    "unit": "cm"
+  }
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  lengthClassId: your-length-class-id-here
+  authToken: your-jwt-token-here
+}
+
+docs {
+  Update a length class (Moderator/Admin required).
+}

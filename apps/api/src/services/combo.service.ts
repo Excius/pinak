@@ -1,5 +1,5 @@
 import { Prisma } from "../generated/prisma/client.js";
-import { ComboRepository } from "../repositories/combo.repositoy.js";
+import { ComboRepository } from "../repositories/combo.repository.js";
 import { ValidationError, NotFoundError } from "../lib/error.js";
 import logger from "../lib/logger.js";
 
@@ -14,12 +14,21 @@ type ComboKitCreateDTO = {
   isActive?: boolean;
   items?: ComboKitItemDTO[];
 };
-type ComboKitUpdateDTO = Partial<Pick<ComboKitCreateDTO, "name" | "slug" | "description" | "audience" | "price" | "isActive">>;
+type ComboKitUpdateDTO = Partial<
+  Pick<
+    ComboKitCreateDTO,
+    "name" | "slug" | "description" | "audience" | "price" | "isActive"
+  >
+>;
 
 export class ComboService {
   constructor(private comboRepository: ComboRepository) {}
 
-  async getComboKits(pagination: { page: number; limit: number; isActive?: boolean }) {
+  async getComboKits(pagination: {
+    page: number;
+    limit: number;
+    isActive?: boolean;
+  }) {
     return this.comboRepository.getComboKits(pagination);
   }
 
@@ -52,14 +61,24 @@ export class ComboService {
 
     // validate slug uniqueness
     const existing = await this.comboRepository.getComboKitBySlug(finalSlug);
-    if (existing) throw new ValidationError("ComboKit with this slug already exists");
+    if (existing)
+      throw new ValidationError("ComboKit with this slug already exists");
 
     // validate items (if provided)
     if (items && items.length > 0) {
       for (const it of items) {
-        const pv = await this.comboRepository.prismaClient.productVariant.findUnique({ where: { id: it.productVariantId } });
-        if (!pv) throw new ValidationError(`Product variant ${it.productVariantId} not found`);
-        if (it.quantity <= 0) throw new ValidationError(`Quantity must be >= 1 for variant ${it.productVariantId}`);
+        const pv =
+          await this.comboRepository.prismaClient.productVariant.findUnique({
+            where: { id: it.productVariantId },
+          });
+        if (!pv)
+          throw new ValidationError(
+            `Product variant ${it.productVariantId} not found`,
+          );
+        if (it.quantity <= 0)
+          throw new ValidationError(
+            `Quantity must be >= 1 for variant ${it.productVariantId}`,
+          );
       }
     }
 
@@ -73,7 +92,12 @@ export class ComboService {
       isActive,
       items:
         items && items.length > 0
-          ? { create: items.map((it) => ({ productVariant: { connect: { id: it.productVariantId } }, quantity: it.quantity })) }
+          ? {
+              create: items.map((it) => ({
+                productVariant: { connect: { id: it.productVariantId } },
+                quantity: it.quantity,
+              })),
+            }
           : undefined,
     };
 
@@ -87,15 +111,18 @@ export class ComboService {
     const updateData: Prisma.ComboKitUpdateInput = {};
 
     if (data.name !== undefined) updateData.name = (data.name as string).trim();
-    if (data.description !== undefined) updateData.description = data.description ?? null;
+    if (data.description !== undefined)
+      updateData.description = data.description ?? null;
     if (data.price !== undefined) updateData.price = data.price as number;
     if (data.isActive !== undefined) updateData.isActive = data.isActive;
 
     if (data.slug !== undefined) {
       const newSlug = data.slug ? data.slug.trim().toLowerCase() : undefined;
       if (newSlug && newSlug !== existing.slug) {
-        const slugExists = await this.comboRepository.getComboKitBySlug(newSlug);
-        if (slugExists) throw new ValidationError("ComboKit with this slug already exists");
+        const slugExists =
+          await this.comboRepository.getComboKitBySlug(newSlug);
+        if (slugExists)
+          throw new ValidationError("ComboKit with this slug already exists");
       }
       if (newSlug !== undefined) updateData.slug = newSlug;
     }
@@ -112,12 +139,20 @@ export class ComboService {
     if (!kit) throw new NotFoundError("ComboKit not found");
 
     // validate variant exists
-    const pv = await this.comboRepository.prismaClient.productVariant.findUnique({ where: { id: data.productVariantId } });
+    const pv =
+      await this.comboRepository.prismaClient.productVariant.findUnique({
+        where: { id: data.productVariantId },
+      });
     if (!pv) throw new ValidationError("Product variant not found");
 
     // prevent duplicate
-    const exists = kit.items.find((i) => i.productVariantId === data.productVariantId);
-    if (exists) throw new ValidationError("Product variant already exists in this combo kit");
+    const exists = kit.items.find(
+      (i) => i.productVariantId === data.productVariantId,
+    );
+    if (exists)
+      throw new ValidationError(
+        "Product variant already exists in this combo kit",
+      );
 
     const createInput: Prisma.ComboKitItemCreateInput = {
       productVariant: { connect: { id: data.productVariantId } },
@@ -150,13 +185,16 @@ export class ComboService {
     const kit = await this.comboRepository.getComboKitById(id);
     if (!kit) throw new NotFoundError("ComboKit not found");
 
-    const { cartCount, orderCount } = await this.comboRepository.countComboKitReferences(id);
+    const { cartCount, orderCount } =
+      await this.comboRepository.countComboKitReferences(id);
     const blockers: string[] = [];
     if (cartCount) blockers.push("carts");
     if (orderCount) blockers.push("orders");
 
     if (blockers.length > 0) {
-      logger.warn(`Preventing hard-delete for combo kit ${id} due to dependencies: ${blockers.join(", ")}`);
+      logger.warn(
+        `Preventing hard-delete for combo kit ${id} due to dependencies: ${blockers.join(", ")}`,
+      );
       throw new ValidationError(
         `Cannot hard-delete combo kit: dependent resources exist (${blockers.join(", ")}). Delete or detach those resources first.`,
       );

@@ -1,0 +1,30 @@
+meta {
+  name: Add Filter to Product
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/v1/filters/products/{{productId}}/values/{{filterValueId}}
+  body: none
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  productId: your-product-id-here
+  filterValueId: your-filter-value-id-here
+  authToken: your-jwt-token-here
+}
+
+docs {
+  Attach a filter value to a product (Moderator/Admin required).
+}

@@ -7,8 +7,13 @@ meta {
 get {
   url: {{baseUrl}}/api/v1/combo-kits?page=1&limit=10
   body: none
+  auth: inherit
 }
 
+params:query {
+  page: 1
+  limit: 10
+}
 headers {
   Content-Type: application/json
 }
