@@ -15,6 +15,7 @@ export {
   ProductCategoryTypes,
   RelatedProductTypes,
   CategoryTypes,
+  FeaturedSectionTypes,
 } from "./api/catalog.js";
 
 // Namespaced exports avoid collisions for generic type names

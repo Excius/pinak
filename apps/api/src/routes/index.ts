@@ -10,6 +10,7 @@ import lengthWeightRoutes from "./lengthWeight.route.js";
 import productCategoryRoutes from "./productCategory.route.js";
 import relatedProductRoutes from "./relatedProduct.route.js";
 import categoryRoutes from "./category.route.js";
+import featuredSectionRoutes from "./featuredSection.route.js";
 
 const router = Router();
 
@@ -24,5 +25,6 @@ router.use(lengthWeightRoutes); // exposes /length-classes and /weight-classes a
 router.use("/products", productCategoryRoutes); // /products/:productId/categories
 router.use("/products", relatedProductRoutes); // /products/:productId/related
 router.use("/categories", categoryRoutes);
+router.use("/featured-sections", featuredSectionRoutes);
 
 export default router;

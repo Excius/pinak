@@ -801,24 +801,47 @@ async function main() {
   // -------------------------------------------------------------------------
   // 7. Featured sections & products
   // -------------------------------------------------------------------------
-  const [sectionExpertPicks, sectionHero, sectionDeals] = await Promise.all([
+  const [
+    sectionHero,
+    sectionExpertPicks,
+    sectionDeals,
+    sectionBestsellers,
+    sectionNewArrivals,
+  ] = await Promise.all([
     prisma.featuredSection.create({
-      data: { title: "Expert Picks", type: "EXPERT_PICKS", priority: 10 },
+      data: {
+        title: "Homepage Hero Banner",
+        type: "HOMEPAGE_HERO",
+        priority: 100,
+      },
     }),
     prisma.featuredSection.create({
-      data: { title: "Homepage Hero", type: "HOMEPAGE_HERO", priority: 20 },
+      data: {
+        title: "Beauty Expert Picks",
+        type: "EXPERT_PICKS",
+        priority: 90,
+      },
     }),
     prisma.featuredSection.create({
-      data: { title: "Special Deals", type: "DEALS", priority: 5 },
+      data: { title: "Limited Time Deals", type: "DEALS", priority: 80 },
+    }),
+    prisma.featuredSection.create({
+      data: { title: "Customer Favorites", type: "EXPERT_PICKS", priority: 70 },
+    }),
+    prisma.featuredSection.create({
+      data: { title: "New This Week", type: "DEALS", priority: 60 },
     }),
   ]);
 
   const featuredEntries = [
+    // Homepage Hero - showcase top 2 premium products
     {
       sectionId: sectionHero.id,
       productId: slugToId["radiant-glow-foundation"],
     },
-    { sectionId: sectionHero.id, productId: slugToId["velvet-matte-lipstick"] },
+    { sectionId: sectionHero.id, productId: slugToId["vitamin-c-serum"] },
+
+    // Expert Picks - curated selection of high-quality items
     {
       sectionId: sectionExpertPicks.id,
       productId: slugToId["volume-boost-mascara"],
@@ -833,19 +856,50 @@ async function main() {
     },
     {
       sectionId: sectionExpertPicks.id,
-      productId: slugToId["vitamin-c-serum"],
+      productId: slugToId["velvet-matte-lipstick"],
     },
+
+    // Deals - promotional items at special prices
     {
       sectionId: sectionDeals.id,
       productId: slugToId["liquid-glow-foundation"],
     },
     { sectionId: sectionDeals.id, productId: slugToId["satin-lipstick"] },
     { sectionId: sectionDeals.id, productId: slugToId["waterproof-mascara"] },
+
+    // Bestsellers - most popular products
+    {
+      sectionId: sectionBestsellers.id,
+      productId: slugToId["radiant-glow-foundation"],
+    },
+    {
+      sectionId: sectionBestsellers.id,
+      productId: slugToId["volume-boost-mascara"],
+    },
+    {
+      sectionId: sectionBestsellers.id,
+      productId: slugToId["velvet-matte-lipstick"],
+    },
+    {
+      sectionId: sectionBestsellers.id,
+      productId: slugToId["hydrating-face-moisturizer"],
+    },
+
+    // New Arrivals - latest additions
+    {
+      sectionId: sectionNewArrivals.id,
+      productId: slugToId["matte-eyeshadow-palette"],
+    },
+    {
+      sectionId: sectionNewArrivals.id,
+      productId: slugToId["waterproof-mascara"],
+    },
+    { sectionId: sectionNewArrivals.id, productId: slugToId["vitamin-c-serum"] },
   ].filter((e) => e.productId);
 
   await prisma.featuredProduct.createMany({ data: featuredEntries });
   console.log(
-    `✅ Created 3 featured sections + ${featuredEntries.length} featured products`,
+    `✅ Created 5 featured sections + ${featuredEntries.length} featured products`,
   );
 
   // -------------------------------------------------------------------------
@@ -1585,7 +1639,7 @@ async function main() {
   - 2 parent + 6 leaf categories (2-level hierarchy)
   - ${productDefs.length} products (linked to taxClass, lengthClass, weightClass)
   - ${totalVariants} product variants + ${totalVariants} images
-  - 3 featured sections + ${featuredEntries.length} featured products
+  - 5 featured sections + ${featuredEntries.length} featured products
   - ${usersData.length} users (1 admin, 1 moderator, ${usersData.length - 2} regular)
   - ${comboKits.length} combo kits
   - 1 cart with combo + variant items
