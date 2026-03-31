@@ -23,8 +23,36 @@ body:json {
     "name": "Weekend Essentials Pack — Updated",
     "description": "Updated description",
     "audience": "women",
+    "metaTitle": "Updated Weekend Essentials Pack | Pinak",
+    "metaDescription": "Updated SEO description",
+    "metaKeywords": "updated, combo, weekend",
+    "seoKeyword": "weekend-essentials-pack-updated",
+    "imageUrl": "https://example.com/images/combo-weekend-essentials-pack-updated.jpg",
+    "pricingStrategy": "CALCULATED",
+    "discountType": "FIXED_AMOUNT",
+    "discountValue": 250,
+    "tags": ["weekend", "updated"],
+    "sortOrder": 2,
     "price": 4599,
-    "isActive": true
+    "isActive": true,
+    "items": [
+      {
+        "productVariantId": "variant-id-1",
+        "quantity": 1,
+        "sortOrder": 0,
+        "originalPrice": 2999,
+        "discountedPrice": 2800,
+        "isRequired": true
+      },
+      {
+        "productVariantId": "variant-id-4",
+        "quantity": 1,
+        "sortOrder": 1,
+        "originalPrice": 1999,
+        "discountedPrice": 1800,
+        "isRequired": false
+      }
+    ]
   }
 }
 
@@ -35,5 +63,5 @@ vars:pre-request {
 }
 
 docs {
-  Update combo kit fields. `audience` can be updated as well.
+  Update combo kit fields including pricing, metadata and optional full item replacement.
 }

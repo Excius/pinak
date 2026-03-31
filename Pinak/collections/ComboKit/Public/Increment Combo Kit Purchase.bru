@@ -1,12 +1,12 @@
 meta {
-  name: Soft Delete Combo Kit
+  name: Increment Combo Kit Purchase
   type: http
-  seq: 5
+  seq: 7
 }
 
 patch {
-  url: {{baseUrl}}/api/v1/combo-kits/{{id}}/soft-delete
-  body: none
+  url: {{baseUrl}}/api/v1/combo-kits/{{id}}/increment-purchase
+  body: json
   auth: inherit
 }
 
@@ -18,6 +18,12 @@ auth:bearer {
   token: {{authToken}}
 }
 
+body:json {
+  {
+    "quantity": 1
+  }
+}
+
 vars:pre-request {
   baseUrl: http://localhost:3000
   authToken: your-jwt-token-here
@@ -25,5 +31,5 @@ vars:pre-request {
 }
 
 docs {
-  Soft-delete a combo kit (mark as deleted). Requires Moderator or Admin.
+  Increment combo kit purchased count (authenticated route).
 }

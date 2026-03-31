@@ -2,5 +2,18 @@
   "version": "1",
   "name": "ComboKit",
   "type": "collection",
+  "description": "ComboKit API collection with production dynamic routes.",
+  "qaFlow": [
+    "1) Auth/Login to get authToken",
+    "2) Public: Get Combo Kits, Search Combo Kits, Get Combo Kit by Slug/ID",
+    "3) Moderator: Create Combo Kit",
+    "4) Moderator: Add Combo Kit Item, Update Combo Kit Item",
+    "5) Moderator: Reorder Combo Kit Items or Bulk Set Combo Kit Items",
+    "6) Moderator: Update Combo Kit Pricing, Metadata, Status",
+    "7) Moderator: Admin - Get All/Inactive/Deleted, Get Dependencies, Get Analytics",
+    "8) Public/Authenticated: Increment Combo Kit View/Purchase",
+    "9) Moderator: Soft Delete Combo Kit, Restore Combo Kit",
+    "10) Admin: Hard Delete Combo Kit (only when dependencies are zero)"
+  ],
   "ignore": ["node_modules", ".git"]
 }

@@ -1,13 +1,18 @@
 meta {
-  name: Soft Delete Combo Kit
+  name: Admin - Get Inactive Combo Kits
   type: http
-  seq: 5
+  seq: 15
 }
 
-patch {
-  url: {{baseUrl}}/api/v1/combo-kits/{{id}}/soft-delete
+get {
+  url: {{baseUrl}}/api/v1/combo-kits/admin/inactive?page=1&limit=10
   body: none
   auth: inherit
+}
+
+params:query {
+  page: 1
+  limit: 10
 }
 
 headers {
@@ -21,9 +26,8 @@ auth:bearer {
 vars:pre-request {
   baseUrl: http://localhost:3000
   authToken: your-jwt-token-here
-  id: combo-kit-id-here
 }
 
 docs {
-  Soft-delete a combo kit (mark as deleted). Requires Moderator or Admin.
+  List inactive combo kits. Requires Moderator or Admin.
 }

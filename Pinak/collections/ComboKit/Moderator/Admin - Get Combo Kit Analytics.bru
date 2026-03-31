@@ -1,11 +1,11 @@
 meta {
-  name: Soft Delete Combo Kit
+  name: Admin - Get Combo Kit Analytics
   type: http
-  seq: 5
+  seq: 18
 }
 
-patch {
-  url: {{baseUrl}}/api/v1/combo-kits/{{id}}/soft-delete
+get {
+  url: {{baseUrl}}/api/v1/combo-kits/admin/{{id}}/analytics
   body: none
   auth: inherit
 }
@@ -25,5 +25,5 @@ vars:pre-request {
 }
 
 docs {
-  Soft-delete a combo kit (mark as deleted). Requires Moderator or Admin.
+  Get combo analytics (views, purchases, order/cart aggregates). Requires Moderator or Admin.
 }
