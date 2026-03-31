@@ -1,11 +1,11 @@
 meta {
-  name: List Featured Products
+  name: List Featured Sections
   type: http
   seq: 2
 }
 
 get {
-  url: {{baseUrl}}/api/v1/featured
+  url: {{baseUrl}}/api/v1/featured-sections
   body: none
   auth: inherit
 }
@@ -19,5 +19,5 @@ vars:pre-request {
 }
 
 docs {
-  List featured products/sections (public).
+  List featured sections (public).
 }

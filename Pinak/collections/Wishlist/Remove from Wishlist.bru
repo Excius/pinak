@@ -1,11 +1,11 @@
 meta {
-  name: Remove Product from Featured
+  name: Remove from Wishlist
   type: http
-  seq: 7
+  seq: 3
 }
 
 delete {
-  url: {{baseUrl}}/api/v1/featured/{{featuredProductId}}
+  url: {{baseUrl}}/api/v1/wishlist/items/{{itemId}}
   body: none
   auth: inherit
 }
@@ -20,10 +20,10 @@ auth:bearer {
 
 vars:pre-request {
   baseUrl: http://localhost:3000
-  featuredProductId: your-featured-product-id-here
+  itemId: your-wishlist-item-id-here
   authToken: your-jwt-token-here
 }
 
 docs {
-  Remove a product from a featured section (Moderator/Admin required).
+  Remove an item from authenticated user's wishlist.
 }

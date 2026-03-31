@@ -11,6 +11,7 @@ import productCategoryRoutes from "./productCategory.route.js";
 import relatedProductRoutes from "./relatedProduct.route.js";
 import categoryRoutes from "./category.route.js";
 import featuredSectionRoutes from "./featuredSection.route.js";
+import wishlistRoutes from "./wishlist.route.js";
 
 const router = Router();
 
@@ -26,5 +27,6 @@ router.use("/products", productCategoryRoutes); // /products/:productId/categori
 router.use("/products", relatedProductRoutes); // /products/:productId/related
 router.use("/categories", categoryRoutes);
 router.use("/featured-sections", featuredSectionRoutes);
+router.use("/wishlist", wishlistRoutes);
 
 export default router;

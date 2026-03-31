@@ -1,20 +1,18 @@
 meta {
-  name: Create Featured Section
+  name: Add to Wishlist
   type: http
-  seq: 1
+  seq: 2
 }
 
 post {
-  url: {{baseUrl}}/api/v1/featured-sections
+  url: {{baseUrl}}/api/v1/wishlist/items
   body: json
   auth: inherit
 }
 
 body:json {
   {
-    "title": "Homepage Hero",
-    "type": "HOMEPAGE_HERO",
-    "priority": 10
+    "productVariantId": "your-product-variant-id-here"
   }
 }
 
@@ -32,5 +30,5 @@ vars:pre-request {
 }
 
 docs {
-  Create a featured section (Moderator/Admin required).
+  Add a product variant to authenticated user's wishlist.
 }

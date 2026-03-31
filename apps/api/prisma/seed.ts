@@ -14,6 +14,8 @@ async function cleanup() {
   await prisma.coupon.deleteMany();
   await prisma.cartItem.deleteMany();
   await prisma.cart.deleteMany();
+  await prisma.wishlistItem.deleteMany();
+  await prisma.wishlist.deleteMany();
 
   await prisma.review.deleteMany();
   await prisma.auditLog.deleteMany();
@@ -1201,6 +1203,44 @@ async function main() {
   }
 
   // -------------------------------------------------------------------------
+  // 9.2 Wishlists
+  // -------------------------------------------------------------------------
+  const johnIdForWishlist = createdUsers["johndoe"]?.id;
+  if (johnIdForWishlist) {
+    const wishlistCreateItems: Array<{ productVariantId: string }> = [];
+
+    if (skuToVariant["RGF-001"]?.id) {
+      wishlistCreateItems.push({
+        productVariantId: skuToVariant["RGF-001"].id,
+      });
+    }
+    if (skuToVariant["VCS-001"]?.id) {
+      wishlistCreateItems.push({
+        productVariantId: skuToVariant["VCS-001"].id,
+      });
+    }
+    if (skuToVariant["WM-001"]?.id) {
+      wishlistCreateItems.push({
+        productVariantId: skuToVariant["WM-001"].id,
+      });
+    }
+
+    if (wishlistCreateItems.length > 0) {
+      await prisma.wishlist.create({
+        data: {
+          userId: johnIdForWishlist,
+          items: {
+            create: wishlistCreateItems,
+          },
+        },
+      });
+      console.log(
+        `✅ Created wishlist with ${wishlistCreateItems.length} variant items`,
+      );
+    }
+  }
+
+  // -------------------------------------------------------------------------
   // 10. Coupons
   // -------------------------------------------------------------------------
   const now = new Date();
@@ -1643,6 +1683,7 @@ async function main() {
   - ${usersData.length} users (1 admin, 1 moderator, ${usersData.length - 2} regular)
   - ${comboKits.length} combo kits
   - 1 cart with combo + variant items
+  - 1 wishlist with 3 variant items
   - 3 coupons · 3 orders · 6 reviews · 3 articles · 3 stores
   - 3 quiz questions with options & rules
   `);

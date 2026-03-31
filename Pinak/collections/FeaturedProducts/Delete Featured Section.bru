@@ -1,11 +1,11 @@
 meta {
-  name: Remove Product from Featured
+  name: Delete Featured Section
   type: http
-  seq: 7
+  seq: 5
 }
 
 delete {
-  url: {{baseUrl}}/api/v1/featured/{{featuredProductId}}
+  url: {{baseUrl}}/api/v1/featured-sections/{{sectionId}}
   body: none
   auth: inherit
 }
@@ -20,10 +20,10 @@ auth:bearer {
 
 vars:pre-request {
   baseUrl: http://localhost:3000
-  featuredProductId: your-featured-product-id-here
+  sectionId: your-featured-section-id-here
   authToken: your-jwt-token-here
 }
 
 docs {
-  Remove a product from a featured section (Moderator/Admin required).
+  Delete a featured section (Moderator/Admin required).
 }
