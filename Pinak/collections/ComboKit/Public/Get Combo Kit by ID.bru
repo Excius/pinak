@@ -1,0 +1,24 @@
+meta {
+  name: Get Combo Kit by ID
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/combo-kits/{{id}}
+  body: none
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  id: combo-kit-id-here
+}
+
+docs {
+  Get combo kit details by ID.
+}

@@ -1,12 +1,12 @@
 meta {
-  name: Soft Delete Combo Kit
+  name: Update Combo Kit Status
   type: http
-  seq: 5
+  seq: 7
 }
 
 patch {
-  url: {{baseUrl}}/api/v1/combo-kits/{{id}}/soft-delete
-  body: none
+  url: {{baseUrl}}/api/v1/combo-kits/{{id}}/status
+  body: json
   auth: inherit
 }
 
@@ -18,6 +18,12 @@ auth:bearer {
   token: {{authToken}}
 }
 
+body:json {
+  {
+    "isActive": true
+  }
+}
+
 vars:pre-request {
   baseUrl: http://localhost:3000
   authToken: your-jwt-token-here
@@ -25,5 +31,5 @@ vars:pre-request {
 }
 
 docs {
-  Soft-delete a combo kit (mark as deleted). Requires Moderator or Admin.
+  Update combo kit active status. Requires Moderator or Admin.
 }

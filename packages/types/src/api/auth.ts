@@ -266,8 +266,8 @@ export type VerifyPasswordResponse = ResponseTypes["VerifyPassword"];
 
 /**
  * Example use case:
- * import type { BodyTypes, ResponseTypes } from '@repo/types';
+ * import type { AuthApi } from '@repo/types';
  *
- * type LoginBody = BodyTypes['LoginUser'];
- * type LoginResponse = ResponseTypes['LoginUser'];
+ * type LoginBody = AuthApi.BodyTypes['LoginUser'];
+ * type LoginResponse = AuthApi.ResponseTypes['LoginUser'];
  */

@@ -1,0 +1,30 @@
+meta {
+  name: Search Combo Kits
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/combo-kits/search?q=glow&page=1&limit=10&isActive=true
+  body: none
+  auth: inherit
+}
+
+params:query {
+  q: glow
+  page: 1
+  limit: 10
+  isActive: true
+}
+
+headers {
+  Content-Type: application/json
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+}
+
+docs {
+  Search combo kits using query term `q`.
+}

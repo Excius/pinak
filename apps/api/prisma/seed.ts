@@ -12,6 +12,8 @@ async function cleanup() {
   await prisma.orderItem.deleteMany();
   await prisma.order.deleteMany();
   await prisma.coupon.deleteMany();
+  await prisma.cartItem.deleteMany();
+  await prisma.cart.deleteMany();
 
   await prisma.review.deleteMany();
   await prisma.auditLog.deleteMany();
@@ -917,7 +919,12 @@ async function main() {
   // -------------------------------------------------------------------------
   // 9. Combo kits
   // -------------------------------------------------------------------------
-  const comboKits: Array<{ id: string; items?: Array<{ id: string }> }> = [];
+  const comboKits: Array<{
+    id: string;
+    name: string;
+    price: number;
+    items?: Array<{ id: string }>;
+  }> = [];
 
   for (const def of [
     {
@@ -925,40 +932,177 @@ async function main() {
       slug: "starter-makeup-kit",
       description: "Foundation, lipstick and eyeshadow — curated starter set.",
       audience: "ALL",
-      discount: 0.85,
-      skus: ["RGF-001", "VML-002", "SEP-001"],
+      metaTitle: "Starter Makeup Kit | Pinak",
+      metaDescription:
+        "A beginner-friendly makeup combo with foundation, lipstick and eyeshadow.",
+      metaKeywords: "makeup kit, starter combo, foundation lipstick palette",
+      seoKeyword: "starter-makeup-kit",
+      imageUrl: "https://example.com/images/combo-starter-makeup-kit.jpg",
+      pricingStrategy: "FIXED_PRICE" as const,
+      discountType: "PERCENTAGE" as const,
+      discountValue: 15,
+      tags: ["starter", "makeup", "bestseller"],
+      sortOrder: 1,
+      viewCount: 250,
+      purchasedCount: 14,
+      isActive: true,
+      items: [
+        { sku: "RGF-001", quantity: 1, isRequired: true },
+        { sku: "VML-002", quantity: 1, isRequired: true },
+        { sku: "SEP-001", quantity: 1, isRequired: true },
+      ],
     },
     {
       name: "Hydration & Glow Set",
       slug: "hydration-glow-set",
       description: "Moisturizer + buildable glow foundation.",
       audience: "UNISEX",
-      discount: 0.9,
-      skus: ["HFM-001", "LGF-001"],
+      metaTitle: "Hydration & Glow Set | Pinak",
+      metaDescription:
+        "Hydrating skincare and dewy complexion essentials for daily glow.",
+      metaKeywords: "hydration set, moisturizer combo, glow foundation",
+      seoKeyword: "hydration-glow-set",
+      imageUrl: "https://example.com/images/combo-hydration-glow.jpg",
+      pricingStrategy: "CALCULATED" as const,
+      discountType: "PERCENTAGE" as const,
+      discountValue: 10,
+      tags: ["skincare", "glow", "daily-routine"],
+      sortOrder: 2,
+      viewCount: 190,
+      purchasedCount: 9,
+      isActive: true,
+      items: [
+        { sku: "HFM-001", quantity: 1, isRequired: true },
+        { sku: "LGF-001", quantity: 1, isRequired: true },
+      ],
     },
     {
       name: "Lash & Define Duo",
       slug: "lash-define-duo",
       description: "Volume + waterproof mascara for all-day drama.",
       audience: "WOMEN",
-      discount: 0.88,
-      skus: ["VBM-001", "WM-001"],
+      metaTitle: "Lash & Define Duo | Pinak",
+      metaDescription:
+        "Two high-performance mascaras for volume, definition and all-day hold.",
+      metaKeywords: "mascara duo, lash combo, waterproof mascara",
+      seoKeyword: "lash-define-duo",
+      imageUrl: "https://example.com/images/combo-lash-define-duo.jpg",
+      pricingStrategy: "DYNAMIC" as const,
+      discountType: "FIXED_AMOUNT" as const,
+      discountValue: 300,
+      tags: ["eye-makeup", "mascara", "duo"],
+      sortOrder: 3,
+      viewCount: 160,
+      purchasedCount: 6,
+      isActive: true,
+      items: [
+        { sku: "VBM-001", quantity: 1, isRequired: true },
+        { sku: "WM-001", quantity: 1, isRequired: true },
+      ],
+    },
+    {
+      name: "Weekend Glam Kit",
+      slug: "weekend-glam-kit",
+      description: "A richer mix for festive and weekend makeup looks.",
+      audience: "ALL",
+      metaTitle: "Weekend Glam Kit | Pinak",
+      metaDescription:
+        "Build elevated looks with a premium glam combo curated for nights out.",
+      metaKeywords: "glam kit, festive makeup combo, weekend beauty set",
+      seoKeyword: "weekend-glam-kit",
+      imageUrl: "https://example.com/images/combo-weekend-glam-kit.jpg",
+      pricingStrategy: "FIXED_PRICE" as const,
+      discountType: "PERCENTAGE" as const,
+      discountValue: 12,
+      tags: ["glam", "premium", "makeup"],
+      sortOrder: 4,
+      viewCount: 120,
+      purchasedCount: 2,
+      isActive: false,
+      items: [
+        { sku: "LGF-002", quantity: 1, isRequired: true },
+        { sku: "SL-001", quantity: 1, isRequired: true },
+        { sku: "MEP-001", quantity: 1, isRequired: false },
+      ],
     },
   ]) {
-    const vs = def.skus.map((s) => skuToVariant[s]).filter(Boolean);
-    if (vs.length !== def.skus.length) {
+    const resolvedItems = def.items
+      .map((item) => {
+        const variant = skuToVariant[item.sku];
+        if (!variant) return null;
+        const originalPrice = variant.price;
+        let discountedPrice = originalPrice;
+        if (def.discountType === "PERCENTAGE") {
+          discountedPrice = Math.round(
+            originalPrice * (1 - def.discountValue / 100),
+          );
+        }
+        if (def.discountType === "FIXED_AMOUNT") {
+          discountedPrice = Math.max(
+            0,
+            originalPrice - Math.round(def.discountValue),
+          );
+        }
+
+        return {
+          variant,
+          quantity: item.quantity,
+          isRequired: item.isRequired,
+          originalPrice,
+          discountedPrice,
+        };
+      })
+      .filter(Boolean) as Array<{
+      variant: { id: string; sku: string; price: number };
+      quantity: number;
+      isRequired: boolean;
+      originalPrice: number;
+      discountedPrice: number;
+    }>;
+
+    if (resolvedItems.length !== def.items.length) {
       console.warn(`⚠️  Skipping '${def.name}' - missing variant(s)`);
       continue;
     }
+
+    const calculatedTotal = resolvedItems.reduce(
+      (sum, item) => sum + item.discountedPrice * item.quantity,
+      0,
+    );
+    const finalPrice =
+      def.pricingStrategy === "FIXED_PRICE"
+        ? Math.max(0, Math.round(calculatedTotal * 0.95))
+        : calculatedTotal;
+
     const kit = await prisma.comboKit.create({
       data: {
         name: def.name,
         slug: def.slug,
         description: def.description,
         audience: def.audience,
-        price: Math.round(vs.reduce((s, v) => s + v.price, 0) * def.discount),
+        metaTitle: def.metaTitle,
+        metaDescription: def.metaDescription,
+        metaKeywords: def.metaKeywords,
+        seoKeyword: def.seoKeyword,
+        imageUrl: def.imageUrl,
+        pricingStrategy: def.pricingStrategy,
+        discountType: def.discountType,
+        discountValue: def.discountValue,
+        tags: def.tags,
+        sortOrder: def.sortOrder,
+        viewCount: def.viewCount,
+        purchasedCount: def.purchasedCount,
+        isActive: def.isActive,
+        price: finalPrice,
         items: {
-          create: vs.map((v) => ({ productVariantId: v.id, quantity: 1 })),
+          create: resolvedItems.map((item, index) => ({
+            productVariantId: item.variant.id,
+            quantity: item.quantity,
+            sortOrder: index,
+            originalPrice: item.originalPrice,
+            discountedPrice: item.discountedPrice,
+            isRequired: item.isRequired,
+          })),
         },
       },
       include: { items: true },
@@ -966,6 +1110,41 @@ async function main() {
     comboKits.push(kit);
   }
   console.log(`✅ Created ${comboKits.length} combo kits`);
+
+  // -------------------------------------------------------------------------
+  // 9.1 Carts (include combo usage for dependency checks)
+  // -------------------------------------------------------------------------
+  const mikeIdForCart = createdUsers["mikej"]?.id;
+  if (mikeIdForCart) {
+    const cartCreateItems: Array<{
+      productVariantId?: string;
+      comboKitId?: string;
+      quantity: number;
+    }> = [];
+
+    if (skuToVariant["VCS-001"]?.id) {
+      cartCreateItems.push({
+        productVariantId: skuToVariant["VCS-001"].id,
+        quantity: 1,
+      });
+    }
+
+    if (comboKits[0]?.id) {
+      cartCreateItems.push({ comboKitId: comboKits[0].id, quantity: 1 });
+    }
+
+    if (cartCreateItems.length > 0) {
+      await prisma.cart.create({
+        data: {
+          userId: mikeIdForCart,
+          items: {
+            create: cartCreateItems,
+          },
+        },
+      });
+      console.log("✅ Created cart with product + combo items");
+    }
+  }
 
   // -------------------------------------------------------------------------
   // 10. Coupons
@@ -1070,32 +1249,52 @@ async function main() {
       userId: janeId,
       status: "PROCESSING",
       paymentStatus: "COMPLETED",
-      subtotalAmount: hfm001.price + vcs001.price,
-      taxAmount: Math.round((hfm001.price + vcs001.price) * 0.18),
+      subtotalAmount: hfm001.price + vcs001.price + (comboKits[1]?.price ?? 0),
+      taxAmount: Math.round(
+        (hfm001.price + vcs001.price + (comboKits[1]?.price ?? 0)) * 0.18,
+      ),
       shippingAmount: 0,
-      totalAmount: Math.round((hfm001.price + vcs001.price) * 1.18),
+      totalAmount: Math.round(
+        (hfm001.price + vcs001.price + (comboKits[1]?.price ?? 0)) * 1.18,
+      ),
     },
   });
-  await prisma.orderItem.createMany({
-    data: [
-      {
-        orderId: janeOrder.id,
-        productId: await productIdBySku("HFM-001"),
-        productVariantId: hfm001.id,
-        productName: "Hydrating Face Moisturizer 50ml",
-        price: hfm001.price,
-        quantity: 1,
-      },
-      {
-        orderId: janeOrder.id,
-        productId: await productIdBySku("VCS-001"),
-        productVariantId: vcs001.id,
-        productName: "Vitamin C Serum 30ml",
-        price: vcs001.price,
-        quantity: 1,
-      },
-    ],
-  });
+  const janeOrderItems: Array<{
+    orderId: string;
+    productId?: string | null;
+    productVariantId?: string | null;
+    comboKitId?: string | null;
+    productName: string;
+    price: number;
+    quantity: number;
+  }> = [
+    {
+      orderId: janeOrder.id,
+      productId: await productIdBySku("HFM-001"),
+      productVariantId: hfm001.id,
+      productName: "Hydrating Face Moisturizer 50ml",
+      price: hfm001.price,
+      quantity: 1,
+    },
+    {
+      orderId: janeOrder.id,
+      productId: await productIdBySku("VCS-001"),
+      productVariantId: vcs001.id,
+      productName: "Vitamin C Serum 30ml",
+      price: vcs001.price,
+      quantity: 1,
+    },
+  ];
+  if (comboKits[1]) {
+    janeOrderItems.push({
+      orderId: janeOrder.id,
+      comboKitId: comboKits[1].id,
+      productName: comboKits[1].name,
+      price: comboKits[1].price,
+      quantity: 1,
+    });
+  }
+  await prisma.orderItem.createMany({ data: janeOrderItems });
 
   const sarahOrder = await prisma.order.create({
     data: {
@@ -1354,6 +1553,25 @@ async function main() {
   }
   console.log(`✅ Backfilled purchasedCount for ${metricSums.length} products`);
 
+  const comboMetricSums = await prisma.orderItem.groupBy({
+    by: ["comboKitId"],
+    where: {
+      comboKitId: { not: null },
+      order: { isDeleted: false, status: { not: "CANCELLED" } },
+    },
+    _sum: { quantity: true },
+  });
+  for (const row of comboMetricSums) {
+    if (!row.comboKitId) continue;
+    await prisma.comboKit.update({
+      where: { id: row.comboKitId },
+      data: { purchasedCount: row._sum.quantity ?? 0 },
+    });
+  }
+  console.log(
+    `✅ Backfilled purchasedCount for ${comboMetricSums.length} combo kits`,
+  );
+
   // -------------------------------------------------------------------------
   // Summary
   // -------------------------------------------------------------------------
@@ -1370,6 +1588,7 @@ async function main() {
   - 3 featured sections + ${featuredEntries.length} featured products
   - ${usersData.length} users (1 admin, 1 moderator, ${usersData.length - 2} regular)
   - ${comboKits.length} combo kits
+  - 1 cart with combo + variant items
   - 3 coupons · 3 orders · 6 reviews · 3 articles · 3 stores
   - 3 quiz questions with options & rules
   `);
