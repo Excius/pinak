@@ -1,0 +1,36 @@
+meta {
+  name: Hard Delete Product (Admin Only)
+  type: http
+  seq: 19
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/products/admin/{{id}}/hard
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:json {
+  {}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  authToken: your-admin-jwt-token-here
+  id: your-product-id-here
+}
+
+docs {
+  Schema: ProductTypes.HardDeleteProduct
+  Params: id
+  Query: none
+  Body: {}
+}

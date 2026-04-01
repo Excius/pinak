@@ -1,0 +1,31 @@
+meta {
+  name: Get Low Stock Products
+  type: http
+  seq: 35
+}
+
+get {
+  url: {{baseUrl}}/api/v1/products/admin/stock/low-stock
+  body: none
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  authToken: your-moderator-or-admin-jwt-token-here
+}
+
+docs {
+  Route: /products/admin/stock/low-stock
+  Params: none
+  Query: none
+  Body: none
+}

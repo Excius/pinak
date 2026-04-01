@@ -1,0 +1,41 @@
+meta {
+  name: Admin - Get All Products
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{baseUrl}}/api/v1/products/admin/all
+  body: none
+  auth: inherit
+}
+
+params:query {
+  page: 1
+  limit: 10
+  sortBy: createdAt
+  sortOrder: desc
+  search: serum
+  brand: your-brand
+  isActive: true
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  authToken: your-moderator-or-admin-jwt-token-here
+}
+
+docs {
+  Schema: ProductTypes.GetAllProductsAdmin
+  Params: none
+  Query: page, limit, sortBy, sortOrder, search, brand, isActive
+  Body: none
+}

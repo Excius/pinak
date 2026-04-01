@@ -1,0 +1,31 @@
+meta {
+  name: Get Out of Stock Products
+  type: http
+  seq: 34
+}
+
+get {
+  url: {{baseUrl}}/api/v1/products/admin/stock/out-of-stock
+  body: none
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  authToken: your-moderator-or-admin-jwt-token-here
+}
+
+docs {
+  Route: /products/admin/stock/out-of-stock
+  Params: none
+  Query: none
+  Body: none
+}
