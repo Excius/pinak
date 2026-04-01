@@ -1,0 +1,32 @@
+meta {
+  name: Get Product with Details
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/products/{{id}}/details
+  body: none
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  authToken: your-jwt-token-here
+  id: your-product-id-here
+}
+
+docs {
+  Schema: ProductTypes.GetProductDetails
+  Params: id
+  Query: none
+  Body: none
+}

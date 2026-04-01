@@ -189,6 +189,52 @@ export const ProductTypes = {
         description: z.string().nullable(),
         keyIngredients: z.string().nullable(),
         brandId: z.string().nullable(),
+        isActive: z.boolean(),
+        isDeleted: z.boolean(),
+        frontImageUrl: z.string().nullable(),
+        tags: z.array(z.string()),
+        metaTitle: z.string().nullable(),
+        metaDescription: z.string().nullable(),
+        metaKeywords: z.string().nullable(),
+        seoKeyword: z.string().nullable(),
+        model: z.string().nullable(),
+        ean: z.string().nullable(),
+        requiresShipping: z.boolean(),
+        outOfStockStatus: OutOfStockStatusEnum,
+        dimensionLength: z.number().nullable(),
+        dimensionWidth: z.number().nullable(),
+        dimensionHeight: z.number().nullable(),
+        lengthClassId: z.string().nullable(),
+        weightGrams: z.number().nullable(),
+        weightClassId: z.string().nullable(),
+        taxClassId: z.string().nullable(),
+        sortOrder: z.number(),
+        viewCount: z.number(),
+        purchasedCount: z.number(),
+        createdAt: z.date(),
+        updatedAt: z.date(),
+      }),
+    }),
+  },
+
+  GetProductDetails: {
+    body: z.object({}),
+    params: z.object({
+      id: z
+        .string("Product id must be a string")
+        .min(1, { message: "Product id is required" }),
+    }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({
+        id: z.string(),
+        name: z.string(),
+        slug: z.string(),
+        description: z.string().nullable(),
+        keyIngredients: z.string().nullable(),
+        brandId: z.string().nullable(),
         brand: z
           .object({
             id: z.string(),
@@ -214,8 +260,16 @@ export const ProductTypes = {
         dimensionWidth: z.number().nullable(),
         dimensionHeight: z.number().nullable(),
         lengthClassId: z.string().nullable(),
+        lengthClass: z
+          .object({ id: z.string(), name: z.string(), unit: z.string() })
+          .nullable()
+          .optional(),
         weightGrams: z.number().nullable(),
         weightClassId: z.string().nullable(),
+        weightClass: z
+          .object({ id: z.string(), name: z.string(), unit: z.string() })
+          .nullable()
+          .optional(),
         taxClassId: z.string().nullable(),
         taxClass: z
           .object({ id: z.string(), name: z.string(), rate: z.number() })

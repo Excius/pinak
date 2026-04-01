@@ -15,7 +15,9 @@ export {
   ProductCategoryTypes,
   RelatedProductTypes,
   CategoryTypes,
+  FeaturedSectionTypes,
 } from "./api/catalog.js";
+export { WishlistTypes } from "./api/wishlist.js";
 
 // Namespaced exports avoid collisions for generic type names
 // like BodyTypes / ParamsTypes across different API modules.

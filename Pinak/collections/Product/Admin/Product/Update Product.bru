@@ -1,0 +1,61 @@
+meta {
+  name: Update Product
+  type: http
+  seq: 15
+}
+
+put {
+  url: {{baseUrl}}/api/v1/products/{{id}}
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:json {
+  {
+    "name": "Hydrating Serum Pro",
+    "slug": "hydrating-serum-pro",
+    "description": "Updated description",
+    "keyIngredients": "Hyaluronic Acid",
+    "metaTitle": "Hydrating Serum Pro",
+    "metaDescription": "Updated meta description",
+    "metaKeywords": "serum, hydration",
+    "seoKeyword": "hydrating-serum-pro",
+    "model": "HS-200",
+    "ean": "1234567890123",
+    "frontImageUrl": "https://example.com/images/hydrating-serum-pro.jpg",
+    "tags": ["hydration", "premium"],
+    "brandId": "your-brand-id",
+    "requiresShipping": true,
+    "outOfStockStatus": "PREORDER",
+    "dimensionLength": 12,
+    "dimensionWidth": 4,
+    "dimensionHeight": 4,
+    "lengthClassId": "your-length-class-id",
+    "weightGrams": 130,
+    "weightClassId": "your-weight-class-id",
+    "taxClassId": "your-tax-class-id",
+    "sortOrder": 1,
+    "isActive": true
+  }
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  authToken: your-moderator-or-admin-jwt-token-here
+  id: your-product-id-here
+}
+
+docs {
+  Schema: ProductTypes.UpdateProduct
+  Params: id
+  Query: none
+  Body: optional updatable product fields
+}
