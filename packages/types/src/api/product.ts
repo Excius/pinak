@@ -1145,3 +1145,19 @@ export const ProductTypes = {
     }),
   },
 };
+
+export type BodyTypes = {
+  [K in keyof typeof ProductTypes]: z.infer<(typeof ProductTypes)[K]["body"]>;
+};
+
+export type ParamsTypes = {
+  [K in keyof typeof ProductTypes]: z.infer<(typeof ProductTypes)[K]["params"]>;
+};
+
+export type QueryTypes = {
+  [K in keyof typeof ProductTypes]: z.infer<(typeof ProductTypes)[K]["query"]>;
+};
+
+export type ResponseTypes = {
+  [K in keyof typeof ProductTypes]: z.infer<(typeof ProductTypes)[K]["response"]>;
+};
