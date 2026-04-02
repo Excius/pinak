@@ -512,6 +512,26 @@ export const CategoryTypes = {
   },
 };
 
+const FeaturedSectionTypeSchema = z.enum(
+  ["EXPERT_PICKS", "HOMEPAGE_HERO", "DEALS"],
+  {
+    message: "type must be EXPERT_PICKS, HOMEPAGE_HERO, or DEALS",
+  },
+);
+
+const PublicFeaturedSectionSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  type: FeaturedSectionTypeSchema,
+  priority: z.number().int(),
+});
+
+const AdminFeaturedSectionSchema = PublicFeaturedSectionSchema.extend({
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  productCount: z.number().int(),
+});
+
 export const FeaturedSectionTypes = {
   ListFeaturedSections: {
     body: z.object({}),
@@ -520,16 +540,7 @@ export const FeaturedSectionTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: z.array(
-        z.object({
-          id: z.string(),
-          title: z.string(),
-          type: z.enum(["EXPERT_PICKS", "HOMEPAGE_HERO", "DEALS"]),
-          priority: z.number(),
-          createdAt: z.date(),
-          updatedAt: z.date(),
-        }),
-      ),
+      data: z.array(PublicFeaturedSectionSchema),
     }),
   },
 
@@ -544,14 +555,33 @@ export const FeaturedSectionTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: z.object({
-        id: z.string(),
-        title: z.string(),
-        type: z.enum(["EXPERT_PICKS", "HOMEPAGE_HERO", "DEALS"]),
-        priority: z.number(),
-        createdAt: z.date(),
-        updatedAt: z.date(),
-      }),
+      data: PublicFeaturedSectionSchema,
+    }),
+  },
+
+  AdminListFeaturedSections: {
+    body: z.object({}),
+    params: z.object({}),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.array(AdminFeaturedSectionSchema),
+    }),
+  },
+
+  AdminGetFeaturedSectionById: {
+    body: z.object({}),
+    params: z.object({
+      id: z
+        .string("section id must be a string")
+        .min(1, { message: "section id is required" }),
+    }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: AdminFeaturedSectionSchema,
     }),
   },
 
@@ -561,9 +591,7 @@ export const FeaturedSectionTypes = {
         .string("title must be a string")
         .min(1, { message: "title is required" })
         .max(255, { message: "title must be at most 255 characters" }),
-      type: z.enum(["EXPERT_PICKS", "HOMEPAGE_HERO", "DEALS"], {
-        message: "type must be EXPERT_PICKS, HOMEPAGE_HERO, or DEALS",
-      }),
+      type: FeaturedSectionTypeSchema,
       priority: z.coerce.number().int().min(0).optional(),
     }),
     params: z.object({}),
@@ -571,16 +599,14 @@ export const FeaturedSectionTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: z.object({ id: z.string() }),
+      data: AdminFeaturedSectionSchema,
     }),
   },
 
   UpdateFeaturedSection: {
     body: z.object({
       title: z.string().min(1).max(255).optional(),
-      type: z
-        .enum(["EXPERT_PICKS", "HOMEPAGE_HERO", "DEALS"])
-        .optional(),
+      type: FeaturedSectionTypeSchema.optional(),
       priority: z.coerce.number().int().min(0).optional(),
     }),
     params: z.object({
@@ -590,7 +616,7 @@ export const FeaturedSectionTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: z.object({ id: z.string() }),
+      data: AdminFeaturedSectionSchema,
     }),
   },
 

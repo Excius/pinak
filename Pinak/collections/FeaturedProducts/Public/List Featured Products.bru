@@ -1,21 +1,13 @@
 meta {
-  name: Create Featured Section
+  name: List Featured Sections
   type: http
   seq: 1
 }
 
-post {
+get {
   url: {{baseUrl}}/api/v1/featured-sections
-  body: json
+  body: none
   auth: inherit
-}
-
-body:json {
-  {
-    "title": "Homepage Hero",
-    "type": "HOMEPAGE_HERO",
-    "priority": 10
-  }
 }
 
 headers {
@@ -32,5 +24,7 @@ vars:pre-request {
 }
 
 docs {
-  Create a featured section (Moderator/Admin required).
+  Schema: FeaturedSectionTypes.ListFeaturedSections
+  Route: /featured-sections
+  Access: authenticated user
 }
