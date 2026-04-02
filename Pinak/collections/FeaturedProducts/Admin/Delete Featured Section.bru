@@ -1,11 +1,11 @@
 meta {
   name: Delete Featured Section
   type: http
-  seq: 5
+  seq: 2
 }
 
 delete {
-  url: {{baseUrl}}/api/v1/featured-sections/{{sectionId}}
+  url: {{baseUrl}}/api/v1/featured-sections/admin/{{sectionId}}
   body: none
   auth: inherit
 }
@@ -21,9 +21,11 @@ auth:bearer {
 vars:pre-request {
   baseUrl: http://localhost:3000
   sectionId: your-featured-section-id-here
-  authToken: your-jwt-token-here
+  authToken: your-moderator-or-admin-jwt-token-here
 }
 
 docs {
-  Delete a featured section (Moderator/Admin required).
+  Schema: FeaturedSectionTypes.DeleteFeaturedSection
+  Route: /featured-sections/admin/:id
+  Access: moderator/admin
 }

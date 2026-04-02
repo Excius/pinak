@@ -26,21 +26,41 @@ const authMiddleware = new AuthMiddleware(jwtService);
 // Public routes
 router.get(
   "/",
+  authMiddleware.authenticate,
   rateLimiter,
   validateMultiple(FeaturedSectionTypes.ListFeaturedSections),
-  controller.list,
+  controller.listPublic,
 );
 
 router.get(
   "/:id",
+  authMiddleware.authenticate,
   rateLimiter,
   validateMultiple(FeaturedSectionTypes.GetFeaturedSectionById),
-  controller.getById,
+  controller.getByIdPublic,
 );
 
 // Admin routes
+router.get(
+  "/admin/all",
+  rateLimiter,
+  validateMultiple(FeaturedSectionTypes.AdminListFeaturedSections),
+  authMiddleware.authenticate,
+  authMiddleware.requireModeratorOrAdmin,
+  controller.listAdmin,
+);
+
+router.get(
+  "/admin/:id",
+  rateLimiter,
+  validateMultiple(FeaturedSectionTypes.AdminGetFeaturedSectionById),
+  authMiddleware.authenticate,
+  authMiddleware.requireModeratorOrAdmin,
+  controller.getByIdAdmin,
+);
+
 router.post(
-  "/",
+  "/admin",
   rateLimiter,
   validateMultiple(FeaturedSectionTypes.CreateFeaturedSection),
   authMiddleware.authenticate,
@@ -49,7 +69,7 @@ router.post(
 );
 
 router.put(
-  "/:id",
+  "/admin/:id",
   rateLimiter,
   validateMultiple(FeaturedSectionTypes.UpdateFeaturedSection),
   authMiddleware.authenticate,
@@ -58,7 +78,7 @@ router.put(
 );
 
 router.delete(
-  "/:id",
+  "/admin/:id",
   rateLimiter,
   validateMultiple(FeaturedSectionTypes.DeleteFeaturedSection),
   authMiddleware.authenticate,
