@@ -1,6 +1,6 @@
 
 import { apiRequest } from "./api";
-import type { ProductApi } from '@repo/types';
+import type { ProductApi, CatalogApi } from '@repo/types';
 
 
 // used for building query params
@@ -8,25 +8,47 @@ import { buildQueryParams } from "@/utils/query/buildQueryParams";
 
 
 // Type imports for each service grouped together
+
+// Products
 type GetProductResponse = ProductApi.ResponseTypes['GetProducts'];
 type GetProductsOptions = Omit<
     Partial<ProductApi.QueryTypes['GetProducts']>,
     'page' | 'limit'
 >;
 
-
 type GetProductByIdResponse = ProductApi.ResponseTypes['GetProductById'];
 
+type GetProductsByCategoryResponse = ProductApi.ResponseTypes['GetProductsWithCategory'];
+type GetProductByCategoryOptions = Omit<Partial<ProductApi.QueryTypes['GetProductsWithCategory']>,
+    'page' | 'limit'
+>;
 
+
+type SearchProductsResponse = ProductApi.ResponseTypes['SearchProducts'];
+
+
+// Variants
+type GetProductWithVariantsResponse = ProductApi.ResponseTypes['GetProductVariants'];
+
+
+// Featured Products
+type GetFeaturedProductsResponse = ProductApi.ResponseTypes['GetFeaturedProducts']
+
+
+// categories
+
+
+// reelated products
+// type RelatedProductsResponse = ProductApi.ResponseTypes['GetRelatedProducts']   
 type GetProductBySlugResponse = ProductApi.ResponseTypes['GetProductBySlug']
 
 
-type GetProductsByCategoryResponse = ProductApi.ResponseTypes['GetProductsWithCategory'];
 
 
-type GetFeaturedProductsResponse = ProductApi.ResponseTypes['GetFeaturedProducts']
+
+
 // type GetProductWithDetailsResponse = ProductApi.ResponseTypes['GetProductWithDetails'];
-type GetProductWithVariantsResponse = ProductApi.ResponseTypes['CreateProductVariant'];
+
 
 
 
@@ -36,17 +58,9 @@ type GetProductWithVariantsResponse = ProductApi.ResponseTypes['CreateProductVar
 
 
 
-// let IN_STOCK = false; // Default value, can be updated based on user preference or app state
-
-// export function setInStockPreference(inStock: boolean) {
-//     IN_STOCK = inStock;
-// }
-
-// export function getInStockPreference() {
-//     return IN_STOCK;
-// }
 
 
+// Product Services
 export async function getProducts(
     page: number,
     limit: number,
@@ -78,50 +92,87 @@ export async function getProductById(productId: string) {
 
 
 
-
-
-
-export async function getProductsByCategory(inStock: boolean, categoryId: string, page?: number, limit?: number, filterValueIds?: string[], brand?: string) {
+export async function getProductsByCategory(
+    categoryId: string,
+    page: number,
+    limit: number,
+    options: GetProductByCategoryOptions = {}) {
     // filter value represents colors or size of container depending ont the product
-    const queryParams = new URLSearchParams();
-    if (page) queryParams.append('page', page.toString());
-    if (limit) queryParams.append('limit', limit.toString());
-    if (filterValueIds) queryParams.append('filterValueIds', filterValueIds.join(','));
-    if (brand) queryParams.append('brand', brand);
-    // setInStockPreference(inStock);
-    queryParams.append('inStock', inStock.toString());
+    const queryString = buildQueryParams({
+        page,
+        limit,
+        ...options
+    });
 
     const getProductsByCategoryResponse = await apiRequest<GetProductsByCategoryResponse>(
         'get',
-        `/products/category/${categoryId}?${queryParams.toString()}`
+        `/products/category/${categoryId}?${queryString}`
     );
     return getProductsByCategoryResponse;
 
 }
 
+export async function searchProducts(
+    query: string,
+    page: number,
+    limit: number
+) {
+    const queryString = buildQueryParams({
+        q: query,
+        page,
+        limit
+    });
+
+    const url = queryString ? `/products/search?${queryString}` : '/products/search';
+    const searchProductsResponse = await apiRequest<SearchProductsResponse>(
+        'get',
+        url
+    );
+    return searchProductsResponse;
+}
+
+
+
+// Product Variant services
+export async function getProductWithVariants(productId: string) {
+    const getProductWithVariantResponse = await apiRequest<GetProductWithVariantsResponse>(
+        'get',
+        `/products/${productId}/variants`
+    );
+    return getProductWithVariantResponse;
+}
+
+
+
+
+//  Featured Product services
 export async function getFeaturedProducts(page?: number, limit?: number) {
-    const queryParams = new URLSearchParams();
-    if (page) queryParams.append('page', page.toString());
-    if (limit) queryParams.append('limit', limit.toString());
+    const queryString = buildQueryParams({
+        page,
+        limit
+    });
 
     const getFeaturedProductResponse = await apiRequest<GetFeaturedProductsResponse>(
         'get',
-        `/products/featured?${queryParams.toString()}`
+        `/products/featured?${queryString}`
     );
     return getFeaturedProductResponse;
 }
 
 
-export async function getProductwithDetails(productId: string) {
+export async function getFeaturedProductsBySection(sectionId: string, page?: number, limit?: number) {
+    const queryString = buildQueryParams({
+        page,
+        limit
+    });
 
+    const getFeaturedProductsBySectionResponse = await apiRequest<GetFeaturedProductsResponse>(
+        'get',
+        `/products/featured/section/${sectionId}?${queryString}`
+    );
+    return getFeaturedProductsBySectionResponse;
 }
 
-
-
-
-export async function getFetauredProductsBySection(sectionId: string) {
-
-}
 
 
 // extra services just in case we need them in the future, not currently used in the app but can be used in the future when we have more complex product pages with variants and details
@@ -135,10 +186,4 @@ export async function getProductBySlug(productSlug: string) {
 }
 
 
-export async function getProductWithVariants(productId: string) {
-    const getProductWithVariantResponse = await apiRequest<GetProductWithVariantsResponse>(
-        'get',
-        `/products/${productId}/variants`
-    );
-    return getProductWithVariantResponse;
-}
+
