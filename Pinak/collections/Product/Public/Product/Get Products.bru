@@ -5,7 +5,7 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/v1/products
+  url: {{baseUrl}}/api/v1/products?page=1&limit=10&sortBy=createdAt&sortOrder=desc
   body: none
   auth: inherit
 }
@@ -15,15 +15,15 @@ params:query {
   limit: 10
   sortBy: createdAt
   sortOrder: desc
-  search: serum
-  categoryId: your-category-id
-  isActive: true
-  minPrice: 0
-  maxPrice: 5000
-  brand: your-brand-slug-or-name
-  inStock: true
-  tags: clean,vegan
-  filterValueIds: value-id-1,value-id-2
+  ~search: serum
+  ~categoryId: your-category-id
+  ~isActive: true
+  ~minPrice: 0
+  ~maxPrice: 5000
+  ~brand: your-brand-slug-or-name
+  ~inStock: true
+  ~tags: clean,vegan
+  ~filterValueIds: value-id-1,value-id-2
 }
 
 headers {

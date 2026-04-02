@@ -5,13 +5,13 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/v1/products/search
+  url: {{baseUrl}}/api/v1/products/search?q=Vitamin&page=1&limit=10
   body: none
   auth: inherit
 }
 
 params:query {
-  q: niacinamide
+  q: Vitamin
   page: 1
   limit: 10
 }

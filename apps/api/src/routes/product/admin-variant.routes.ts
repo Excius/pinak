@@ -8,7 +8,7 @@ export const registerProductAdminVariantRoutes = (
   { productController, authMiddleware, rateLimiter }: ProductRouteDeps,
 ) => {
   router.post(
-    "/:productId/variants",
+    "/admin/:productId/variants",
     rateLimiter,
     validateMultiple(ProductTypes.CreateProductVariant),
     authMiddleware.authenticate,
@@ -17,7 +17,7 @@ export const registerProductAdminVariantRoutes = (
   );
 
   router.put(
-    "/variants/:id",
+    "/admin/variants/:id",
     rateLimiter,
     validateMultiple(ProductTypes.UpdateProductVariant),
     authMiddleware.authenticate,
@@ -26,7 +26,7 @@ export const registerProductAdminVariantRoutes = (
   );
 
   router.delete(
-    "/variants/:id",
+    "/admin/variants/:id",
     rateLimiter,
     validateMultiple(ProductTypes.SoftDeleteProductVariant),
     authMiddleware.authenticate,
@@ -35,7 +35,7 @@ export const registerProductAdminVariantRoutes = (
   );
 
   router.patch(
-    "/variants/:id/restore",
+    "/admin/variants/:id/restore",
     rateLimiter,
     validateMultiple(ProductTypes.RestoreProductVariant),
     authMiddleware.authenticate,
@@ -44,7 +44,7 @@ export const registerProductAdminVariantRoutes = (
   );
 
   router.patch(
-    "/variants/:variantId/stock",
+    "/admin/variants/:variantId/stock",
     rateLimiter,
     validateMultiple(ProductTypes.UpdateVariantStock),
     authMiddleware.authenticate,
@@ -53,7 +53,7 @@ export const registerProductAdminVariantRoutes = (
   );
 
   router.patch(
-    "/variants/stock/bulk",
+    "/admin/variants/stock/bulk",
     rateLimiter,
     validateMultiple(ProductTypes.BulkUpdateVariantStock),
     authMiddleware.authenticate,

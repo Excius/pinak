@@ -21,7 +21,7 @@ export const registerProductAdminRelatedRoutes = (
   { authMiddleware, rateLimiter, relatedProductController }: ProductRouteDeps,
 ) => {
   router.post(
-    "/:productId/related",
+    "/admin/:productId/related",
     rateLimiter,
     validateMultiple(RelatedProductTypes.AddRelatedProduct),
     authMiddleware.authenticate,
@@ -30,7 +30,7 @@ export const registerProductAdminRelatedRoutes = (
   );
 
   router.delete(
-    "/:productId/related/:relatedProductId",
+    "/admin/:productId/related/:relatedProductId",
     rateLimiter,
     validateMultiple(RelatedProductTypes.RemoveRelatedProduct),
     authMiddleware.authenticate,

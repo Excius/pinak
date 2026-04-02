@@ -8,7 +8,7 @@ export const registerProductAdminImageRoutes = (
   { productController, authMiddleware, rateLimiter }: ProductRouteDeps,
 ) => {
   router.post(
-    "/variants/:variantId/images",
+    "/admin/variants/:variantId/images",
     rateLimiter,
     validateMultiple(ProductTypes.AddProductImage),
     authMiddleware.authenticate,
@@ -17,7 +17,7 @@ export const registerProductAdminImageRoutes = (
   );
 
   router.patch(
-    "/images/:imageId/primary",
+    "/admin/images/:imageId/primary",
     rateLimiter,
     validateMultiple(ProductTypes.SetPrimaryImage),
     authMiddleware.authenticate,
@@ -26,7 +26,7 @@ export const registerProductAdminImageRoutes = (
   );
 
   router.delete(
-    "/images/:id",
+    "/admin/images/:id",
     rateLimiter,
     validateMultiple(ProductTypes.SoftDeleteProduct),
     authMiddleware.authenticate,
@@ -35,7 +35,7 @@ export const registerProductAdminImageRoutes = (
   );
 
   router.patch(
-    "/images/:id/restore",
+    "/admin/images/:id/restore",
     rateLimiter,
     validateMultiple(ProductTypes.RestoreProduct),
     authMiddleware.authenticate,
