@@ -143,6 +143,39 @@ export class ProductRepository {
         slug,
         isDeleted: false,
       },
+      include: {
+        brand: true,
+        taxClass: true,
+        lengthClass: true,
+        weightClass: true,
+        categories: { include: { category: true } },
+        filterValues: { include: { filterValue: true } },
+        relatedProducts: {
+          include: {
+            relatedProduct: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                frontImageUrl: true,
+              },
+            },
+          },
+          orderBy: { sortOrder: "asc" },
+        },
+        variants: {
+          where: { isDeleted: false },
+          include: {
+            images: {
+              where: { isDeleted: false },
+              orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }],
+            },
+            optionValues: {
+              include: { optionValue: { include: { option: true } } },
+            },
+          },
+        },
+      },
     });
   }
 

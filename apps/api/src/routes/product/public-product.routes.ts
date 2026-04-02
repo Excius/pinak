@@ -40,18 +40,10 @@ export const registerProductPublicProductRoutes = (
   );
 
   router.get(
-    "/:id/details",
-    authMiddleware.authenticate,
-    rateLimiter,
-    validateMultiple(ProductTypes.GetProductDetails),
-    productController.getProductWithDetails,
-  );
-
-  router.get(
     "/:id",
     authMiddleware.authenticate,
     rateLimiter,
     validateMultiple(ProductTypes.GetProductById),
-    productController.getProductById,
+    productController.getProductWithDetails,
   );
 };

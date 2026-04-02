@@ -5,7 +5,7 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/v1/products/featured/section/{{sectionId}}
+  url: {{baseUrl}}/api/v1/products/featured/section/{{sectionId}}?page=1&limit=10
   body: none
   auth: inherit
 }
@@ -26,7 +26,7 @@ auth:bearer {
 vars:pre-request {
   baseUrl: http://localhost:3000
   authToken: your-jwt-token-here
-  sectionId: your-featured-section-id
+  sectionId: cmnesso8d004a9ymzsokpjj07
 }
 
 docs {

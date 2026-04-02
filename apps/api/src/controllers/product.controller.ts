@@ -3,6 +3,13 @@ import { ResponseHandler } from "../lib/response.js";
 import { ProductService } from "../services/product.service.js";
 import logger from "../lib/logger.js";
 import { ProductPaginationOptions } from "../types/pagination.types.js";
+import {
+  toPublicProduct,
+  toPublicProductList,
+  toAdminProduct,
+  toAdminProductList,
+  toPublicVariant,
+} from "../lib/mappers/product.mapper.js";
 
 export class ProductController {
   constructor(private productService: ProductService) {}
@@ -31,7 +38,8 @@ export class ProductController {
     };
 
     const products = await this.productService.getProducts(pagination);
-    ResponseHandler.success(res, products, "Products fetched successfully");
+    const publicData = toPublicProductList(products);
+    ResponseHandler.success(res, publicData, "Products fetched successfully");
   };
 
   getProductById = async (req: Request, res: Response) => {
@@ -42,7 +50,8 @@ export class ProductController {
       return ResponseHandler.notFound(res, "Product not found");
     }
 
-    ResponseHandler.success(res, product, "Product fetched successfully");
+    const publicData = toPublicProduct(product);
+    ResponseHandler.success(res, publicData, "Product fetched successfully");
   };
 
   getProductBySlug = async (req: Request, res: Response) => {
@@ -61,7 +70,8 @@ export class ProductController {
       });
     });
 
-    ResponseHandler.success(res, product, "Product fetched successfully");
+    const publicData = toPublicProduct(product);
+    ResponseHandler.success(res, publicData, "Product fetched successfully");
   };
 
   getProductsWithCategory = async (req: Request, res: Response) => {
@@ -82,7 +92,8 @@ export class ProductController {
       categoryId as string,
       pagination,
     );
-    ResponseHandler.success(res, products, "Products fetched successfully");
+    const publicData = toPublicProductList(products);
+    ResponseHandler.success(res, publicData, "Products fetched successfully");
   };
 
   getFeaturedProducts = async (req: Request, res: Response) => {
@@ -96,9 +107,10 @@ export class ProductController {
       pagination,
       sectionId,
     );
+    const publicData = toPublicProductList(products);
     ResponseHandler.success(
       res,
-      products,
+      publicData,
       "Featured products fetched successfully",
     );
   };
@@ -114,9 +126,10 @@ export class ProductController {
       sectionId as string,
       pagination,
     );
+    const publicData = toPublicProductList(products);
     ResponseHandler.success(
       res,
-      products,
+      publicData,
       "Featured products fetched successfully",
     );
   };
@@ -126,7 +139,8 @@ export class ProductController {
     const filters = {};
 
     const products = await this.productService.searchProducts(query, filters);
-    ResponseHandler.success(res, products, "Products searched successfully");
+    const publicData = products.map(toPublicProduct);
+    ResponseHandler.success(res, publicData, "Products searched successfully");
   };
 
   getProductVariants = async (req: Request, res: Response) => {
@@ -134,9 +148,10 @@ export class ProductController {
     const variants = await this.productService.getProductVariants(
       productId as string,
     );
+    const publicData = variants.map(toPublicVariant);
     ResponseHandler.success(
       res,
-      variants,
+      publicData,
       "Product variants fetched successfully",
     );
   };
@@ -151,9 +166,10 @@ export class ProductController {
       return ResponseHandler.notFound(res, "Product not found");
     }
 
+    const publicData = toPublicProduct(product);
     ResponseHandler.success(
       res,
-      product,
+      publicData,
       "Product details fetched successfully",
     );
   };
@@ -167,7 +183,8 @@ export class ProductController {
       return ResponseHandler.notFound(res, "Product not found");
     }
 
-    ResponseHandler.success(res, product, "Product fetched successfully");
+    const adminData = toAdminProduct(product);
+    ResponseHandler.success(res, adminData, "Product fetched successfully");
   };
 
   getAllProductsAdmin = async (req: Request, res: Response) => {
@@ -182,7 +199,8 @@ export class ProductController {
     };
 
     const products = await this.productService.getAllProductsAdmin(pagination);
-    ResponseHandler.success(res, products, "Products fetched successfully");
+    const adminData = toAdminProductList(products);
+    ResponseHandler.success(res, adminData, "Products fetched successfully");
   };
 
   getDeletedProductsAdmin = async (req: Request, res: Response) => {
@@ -195,9 +213,10 @@ export class ProductController {
 
     const products =
       await this.productService.getDeletedProductsAdmin(pagination);
+    const adminData = toAdminProductList(products);
     ResponseHandler.success(
       res,
-      products,
+      adminData,
       "Deleted products fetched successfully",
     );
   };
@@ -215,20 +234,23 @@ export class ProductController {
       status,
       pagination,
     );
-    ResponseHandler.success(res, products, "Products fetched successfully");
+    const adminData = toAdminProductList(products);
+    ResponseHandler.success(res, adminData, "Products fetched successfully");
   };
 
   createProduct = async (req: Request, res: Response) => {
     const data = req.body;
     const product = await this.productService.createProduct(data);
-    ResponseHandler.success(res, product, "Product created successfully");
+    const adminData = toAdminProduct(product);
+    ResponseHandler.success(res, adminData, "Product created successfully");
   };
 
   updateProduct = async (req: Request, res: Response) => {
     const { id } = req.params;
     const data = req.body;
     const product = await this.productService.updateProduct(id as string, data);
-    ResponseHandler.success(res, product, "Product updated successfully");
+    const adminData = toAdminProduct(product);
+    ResponseHandler.success(res, adminData, "Product updated successfully");
   };
 
   updateProductStatus = async (req: Request, res: Response) => {

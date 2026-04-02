@@ -44,7 +44,7 @@ export const registerProductAdminProductRoutes = (
   );
 
   router.post(
-    "/",
+    "/admin",
     rateLimiter,
     validateMultiple(ProductTypes.CreateProduct),
     authMiddleware.authenticate,
@@ -53,7 +53,7 @@ export const registerProductAdminProductRoutes = (
   );
 
   router.put(
-    "/:id",
+    "/admin/:id",
     rateLimiter,
     validateMultiple(ProductTypes.UpdateProduct),
     authMiddleware.authenticate,
@@ -62,7 +62,7 @@ export const registerProductAdminProductRoutes = (
   );
 
   router.patch(
-    "/:id/status",
+    "/admin/:id/status",
     rateLimiter,
     validateMultiple(ProductTypes.UpdateProductStatus),
     authMiddleware.authenticate,
@@ -71,7 +71,7 @@ export const registerProductAdminProductRoutes = (
   );
 
   router.delete(
-    "/:id",
+    "/admin/:id",
     rateLimiter,
     validateMultiple(ProductTypes.SoftDeleteProduct),
     authMiddleware.authenticate,
@@ -80,7 +80,7 @@ export const registerProductAdminProductRoutes = (
   );
 
   router.patch(
-    "/:id/restore",
+    "/admin/:id/restore",
     rateLimiter,
     validateMultiple(ProductTypes.RestoreProduct),
     authMiddleware.authenticate,

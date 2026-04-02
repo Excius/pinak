@@ -8,110 +8,93 @@ const OutOfStockStatusEnum = z.enum([
   "PREORDER",
 ]);
 
-// Public product route response schemas (aligned with product.mapper.ts)
-const PublicProductImageSchema = z.object({
-  id: z.string(),
-  url: z.string(),
-  altText: z.string().nullable().optional(),
-  isPrimary: z.boolean(),
-  sortOrder: z.number(),
-});
-
-const PublicVariantRouteImageSchema = z.object({
-  id: z.string(),
-  url: z.string(),
-  altText: z.string().nullable().optional(),
-  isPrimary: z.boolean(),
-  sortOrder: z.number(),
-});
-
-const PublicProductVariantSchema = z.object({
+// Reusable variant shape for list responses (lightweight)
+const VariantListItemSchema = z.object({
   id: z.string(),
   sku: z.string(),
   price: z.number(),
-  compareAtPrice: z.number().nullable().optional(),
+  comparePrice: z.number().nullable(),
+  ean: z.string().nullable(),
+  weightGrams: z.number().nullable(),
   stock: z.number(),
-  lowStockThreshold: z.number().nullable().optional(),
-  isActive: z.boolean(),
-  image: PublicProductImageSchema.nullable(),
-  optionValues: z.array(
-    z.object({
-      optionName: z.string(),
-      valueName: z.string(),
-    }),
-  ),
-});
-
-const PublicProductSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  slug: z.string(),
-  description: z.string().nullable(),
-  keyIngredients: z.string().nullable(),
-  frontImageUrl: z.string().nullable(),
   tags: z.array(z.string()),
   isActive: z.boolean(),
-  brand: z
-    .object({
-      name: z.string(),
-      slug: z.string(),
-      logoUrl: z.string().nullable(),
-    })
-    .nullable(),
-  taxClass: z
-    .object({
-      name: z.string(),
-      rate: z.number(),
-    })
-    .nullable(),
-  categories: z.array(
-    z.object({
-      id: z.string(),
-      name: z.string(),
-      slug: z.string(),
-    }),
-  ),
-  variants: z.array(PublicProductVariantSchema),
-  filterValues: z.array(
-    z.object({
-      filterGroup: z.string(),
-      value: z.string(),
-      slug: z.string().optional(),
-    }),
-  ),
-  viewCount: z.number(),
-  purchasedCount: z.number(),
+  optionValues: z
+    .array(
+      z.object({
+        id: z.string(),
+        value: z.string(),
+        option: z.object({ id: z.string(), name: z.string() }).optional(),
+      }),
+    )
+    .optional(),
+  images: z
+    .array(
+      z.object({
+        id: z.string(),
+        url: z.string(),
+        isPrimary: z.boolean(),
+        altText: z.string().nullable(),
+        sortOrder: z.number(),
+      }),
+    )
+    .optional(),
 });
 
-const PublicProductListSchema = z.object({
-  data: z.array(PublicProductSchema),
-  pagination: z.object({
-    page: z.number(),
-    limit: z.number(),
-    total: z.number(),
-    totalPages: z.number(),
-    hasNext: z.boolean(),
-    hasPrev: z.boolean(),
-  }),
-});
-
-const PublicVariantRouteSchema = z.object({
+// Reusable variant shape for detail page (includes all images)
+const VariantDetailSchema = z.object({
   id: z.string(),
+  productId: z.string(),
   sku: z.string(),
+  ean: z.string().nullable(),
+  tags: z.array(z.string()),
   price: z.number(),
-  compareAtPrice: z.number().nullable().optional(),
+  comparePrice: z.number().nullable(),
   stock: z.number(),
-  lowStockThreshold: z.number().nullable().optional(),
+  weightGrams: z.number().nullable(),
+  weightClassId: z.string().nullable(),
   isActive: z.boolean(),
-  images: z.array(PublicVariantRouteImageSchema),
-  optionValues: z.array(
-    z.object({
-      optionName: z.string().optional(),
-      optionSlug: z.string().optional(),
-      valueName: z.string().optional(),
-      valueSlug: z.string().optional(),
-    }),
-  ),
+  isDeleted: z.boolean(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  images: z
+    .array(
+      z.object({
+        id: z.string(),
+        productVariantId: z.string(),
+        url: z.string(),
+        isPrimary: z.boolean(),
+        altText: z.string().nullable(),
+        sortOrder: z.number(),
+        createdAt: z.string(),
+        updatedAt: z.string(),
+        isDeleted: z.boolean(),
+      }),
+    )
+    .optional(),
+  optionValues: z
+    .array(
+      z.object({
+        variantId: z.string(),
+        optionValueId: z.string(),
+        optionValue: z.object({
+          id: z.string(),
+          optionId: z.string(),
+          value: z.string(),
+          sortOrder: z.number(),
+          createdAt: z.string(),
+          updatedAt: z.string(),
+          option: z.object({
+            id: z.string(),
+            name: z.string(),
+            sortOrder: z.number(),
+            createdAt: z.string(),
+            updatedAt: z.string(),
+          }),
+        }),
+      }),
+    )
+    .optional(),
 });
 
 export const ProductTypes = {
@@ -162,7 +145,82 @@ export const ProductTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: PublicProductListSchema,
+      data: z.object({
+        data: z.array(
+          z.object({
+            id: z.string(),
+            name: z.string(),
+            slug: z.string(),
+            description: z.string().nullable(),
+            brandId: z.string().nullable(),
+            brand: z
+              .object({
+                id: z.string(),
+                name: z.string(),
+                slug: z.string(),
+                logoUrl: z.string().nullable(),
+              })
+              .nullable()
+              .optional(),
+            taxClassId: z.string().nullable(),
+            taxClass: z
+              .object({ id: z.string(), name: z.string(), rate: z.number() })
+              .nullable()
+              .optional(),
+            lengthClassId: z.string().nullable(),
+            lengthClass: z
+              .object({ id: z.string(), name: z.string(), unit: z.string() })
+              .nullable()
+              .optional(),
+            weightClassId: z.string().nullable(),
+            weightClass: z
+              .object({ id: z.string(), name: z.string(), unit: z.string() })
+              .nullable()
+              .optional(),
+            categories: z
+              .array(
+                z.object({
+                  category: z.object({
+                    id: z.string(),
+                    name: z.string(),
+                    slug: z.string(),
+                    parentId: z.string().nullable(),
+                  }),
+                }),
+              )
+              .optional(),
+            filterValues: z
+              .array(
+                z.object({
+                  filterValue: z.object({
+                    id: z.string(),
+                    name: z.string(),
+                    slug: z.string(),
+                    filterGroupId: z.string(),
+                  }),
+                }),
+              )
+              .optional(),
+            isActive: z.boolean(),
+            frontImageUrl: z.string().nullable(),
+            sortOrder: z.number(),
+            viewCount: z.number(),
+            purchasedCount: z.number(),
+            outOfStockStatus: OutOfStockStatusEnum,
+            createdAt: z.date(),
+            updatedAt: z.date(),
+            variants: z.array(VariantListItemSchema),
+          }),
+        ),
+        pagination: z.object({
+          page: z.number(),
+          limit: z.number(),
+          total: z.number(),
+          totalPages: z.number(),
+          hasNext: z.boolean(),
+          hasPrev: z.boolean(),
+        }),
+      }),
     }),
   },
 
@@ -177,7 +235,143 @@ export const ProductTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: PublicProductSchema,
+      data: z.object({
+        id: z.string(),
+        name: z.string(),
+        slug: z.string(),
+        description: z.string().nullable(),
+        keyIngredients: z.string().nullable(),
+        brandId: z.string().nullable(),
+        isActive: z.boolean(),
+        isDeleted: z.boolean(),
+        frontImageUrl: z.string().nullable(),
+        tags: z.array(z.string()),
+        metaTitle: z.string().nullable(),
+        metaDescription: z.string().nullable(),
+        metaKeywords: z.string().nullable(),
+        seoKeyword: z.string().nullable(),
+        model: z.string().nullable(),
+        ean: z.string().nullable(),
+        requiresShipping: z.boolean(),
+        outOfStockStatus: OutOfStockStatusEnum,
+        dimensionLength: z.number().nullable(),
+        dimensionWidth: z.number().nullable(),
+        dimensionHeight: z.number().nullable(),
+        lengthClassId: z.string().nullable(),
+        weightGrams: z.number().nullable(),
+        weightClassId: z.string().nullable(),
+        taxClassId: z.string().nullable(),
+        sortOrder: z.number(),
+        viewCount: z.number(),
+        purchasedCount: z.number(),
+        createdAt: z.date(),
+        updatedAt: z.date(),
+      }),
+    }),
+  },
+
+  GetProductDetails: {
+    body: z.object({}),
+    params: z.object({
+      id: z
+        .string("Product id must be a string")
+        .min(1, { message: "Product id is required" }),
+    }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({
+        id: z.string(),
+        name: z.string(),
+        slug: z.string(),
+        description: z.string().nullable(),
+        keyIngredients: z.string().nullable(),
+        brandId: z.string().nullable(),
+        brand: z
+          .object({
+            id: z.string(),
+            name: z.string(),
+            slug: z.string(),
+            logoUrl: z.string().nullable(),
+          })
+          .nullable()
+          .optional(),
+        isActive: z.boolean(),
+        isDeleted: z.boolean(),
+        frontImageUrl: z.string().nullable(),
+        tags: z.array(z.string()),
+        metaTitle: z.string().nullable(),
+        metaDescription: z.string().nullable(),
+        metaKeywords: z.string().nullable(),
+        seoKeyword: z.string().nullable(),
+        model: z.string().nullable(),
+        ean: z.string().nullable(),
+        requiresShipping: z.boolean(),
+        outOfStockStatus: OutOfStockStatusEnum,
+        dimensionLength: z.number().nullable(),
+        dimensionWidth: z.number().nullable(),
+        dimensionHeight: z.number().nullable(),
+        lengthClassId: z.string().nullable(),
+        lengthClass: z
+          .object({ id: z.string(), name: z.string(), unit: z.string() })
+          .nullable()
+          .optional(),
+        weightGrams: z.number().nullable(),
+        weightClassId: z.string().nullable(),
+        weightClass: z
+          .object({ id: z.string(), name: z.string(), unit: z.string() })
+          .nullable()
+          .optional(),
+        taxClassId: z.string().nullable(),
+        taxClass: z
+          .object({ id: z.string(), name: z.string(), rate: z.number() })
+          .nullable()
+          .optional(),
+        sortOrder: z.number(),
+        viewCount: z.number(),
+        purchasedCount: z.number(),
+        categories: z
+          .array(
+            z.object({
+              category: z.object({
+                id: z.string(),
+                name: z.string(),
+                slug: z.string(),
+                parentId: z.string().nullable(),
+              }),
+            }),
+          )
+          .optional(),
+        filterValues: z
+          .array(
+            z.object({
+              filterValue: z.object({
+                id: z.string(),
+                name: z.string(),
+                slug: z.string(),
+                filterGroupId: z.string(),
+              }),
+            }),
+          )
+          .optional(),
+        relatedProducts: z
+          .array(
+            z.object({
+              relatedProduct: z.object({
+                id: z.string(),
+                name: z.string(),
+                slug: z.string(),
+                frontImageUrl: z.string().nullable(),
+              }),
+              sortOrder: z.number(),
+            }),
+          )
+          .optional(),
+        variants: z.array(VariantDetailSchema).optional(),
+        createdAt: z.date(),
+        updatedAt: z.date(),
+      }),
     }),
   },
 
@@ -192,7 +386,106 @@ export const ProductTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: PublicProductSchema,
+      data: z.object({
+        id: z.string(),
+        name: z.string(),
+        slug: z.string(),
+        description: z.string().nullable(),
+        keyIngredients: z.string().nullable(),
+        metaTitle: z.string().nullable(),
+        metaDescription: z.string().nullable(),
+        metaKeywords: z.string().nullable(),
+        seoKeyword: z.string().nullable(),
+        model: z.string().nullable(),
+        ean: z.string().nullable(),
+        frontImageUrl: z.string().nullable(),
+        tags: z.array(z.string()),
+        brandId: z.string().nullable(),
+        requiresShipping: z.boolean(),
+        outOfStockStatus: OutOfStockStatusEnum,
+        dimensionLength: z.number().nullable(),
+        dimensionWidth: z.number().nullable(),
+        dimensionHeight: z.number().nullable(),
+        lengthClass: z
+          .object({ id: z.string(), name: z.string(), unit: z.string(), createdAt: z.string(), updatedAt: z.string() })
+          .nullable()
+          .optional(),
+        weightGrams: z.number().nullable(),
+        weightClass: z
+          .object({ id: z.string(), name: z.string(), unit: z.string(), createdAt: z.string(), updatedAt: z.string() })
+          .nullable()
+          .optional(),
+        taxClass: z
+          .object({ id: z.string(), name: z.string(), rate: z.number(), createdAt: z.string(), updatedAt: z.string() })
+          .nullable()
+          .optional(),
+        sortOrder: z.number(),
+        viewCount: z.number(),
+        purchasedCount: z.number(),
+        isActive: z.boolean(),
+        isDeleted: z.boolean(),
+        brand: z
+          .object({
+            id: z.string(),
+            name: z.string(),
+            slug: z.string(),
+            logoUrl: z.string().nullable(),
+            isActive: z.boolean(),
+            createdAt: z.string(),
+            updatedAt: z.string(),
+          })
+          .nullable()
+          .optional(),
+        categories: z
+          .array(
+            z.object({
+              productId: z.string(),
+              categoryId: z.string(),
+              category: z.object({
+                id: z.string(),
+                name: z.string(),
+                slug: z.string(),
+                parentId: z.string().nullable(),
+                createdAt: z.string(),
+                updatedAt: z.string(),
+              }),
+            }),
+          )
+          .optional(),
+        filterValues: z
+          .array(
+            z.object({
+              productId: z.string(),
+              filterValueId: z.string(),
+              filterValue: z.object({
+                id: z.string(),
+                filterGroupId: z.string(),
+                name: z.string(),
+                slug: z.string(),
+                sortOrder: z.number(),
+                createdAt: z.string(),
+                updatedAt: z.string(),
+              }),
+            }),
+          )
+          .optional(),
+        relatedProducts: z
+          .array(
+            z.object({
+              relatedProduct: z.object({
+                id: z.string(),
+                name: z.string(),
+                slug: z.string(),
+                frontImageUrl: z.string().nullable(),
+              }),
+              sortOrder: z.number(),
+            }),
+          )
+          .optional(),
+        variants: z.array(VariantDetailSchema).optional(),
+        createdAt: z.string(),
+        updatedAt: z.string(),
+      }),
     }),
   },
 
@@ -232,7 +525,80 @@ export const ProductTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: PublicProductListSchema,
+      data: z.object({
+        data: z.array(
+          z.object({
+            id: z.string(),
+            name: z.string(),
+            slug: z.string(),
+            description: z.string().nullable(),
+            brandId: z.string().nullable(),
+            brand: z
+              .object({
+                id: z.string(),
+                name: z.string(),
+                slug: z.string(),
+                logoUrl: z.string().nullable(),
+              })
+              .nullable()
+              .optional(),
+            taxClassId: z.string().nullable(),
+            taxClass: z
+              .object({ id: z.string(), name: z.string(), rate: z.number() })
+              .nullable()
+              .optional(),
+            lengthClassId: z.string().nullable(),
+            lengthClass: z
+              .object({ id: z.string(), name: z.string(), unit: z.string() })
+              .nullable()
+              .optional(),
+            weightClassId: z.string().nullable(),
+            weightClass: z
+              .object({ id: z.string(), name: z.string(), unit: z.string() })
+              .nullable()
+              .optional(),
+            categories: z
+              .array(
+                z.object({
+                  category: z.object({
+                    id: z.string(),
+                    name: z.string(),
+                    slug: z.string(),
+                    parentId: z.string().nullable(),
+                  }),
+                }),
+              )
+              .optional(),
+            filterValues: z
+              .array(
+                z.object({
+                  filterValue: z.object({
+                    id: z.string(),
+                    name: z.string(),
+                    slug: z.string(),
+                    filterGroupId: z.string(),
+                  }),
+                }),
+              )
+              .optional(),
+            isActive: z.boolean(),
+            frontImageUrl: z.string().nullable(),
+            sortOrder: z.number(),
+            outOfStockStatus: OutOfStockStatusEnum,
+            createdAt: z.date(),
+            updatedAt: z.date(),
+            variants: z.array(VariantListItemSchema),
+          }),
+        ),
+        pagination: z.object({
+          page: z.number(),
+          limit: z.number(),
+          total: z.number(),
+          totalPages: z.number(),
+          hasNext: z.boolean(),
+          hasPrev: z.boolean(),
+        }),
+      }),
     }),
   },
 
@@ -247,25 +613,80 @@ export const ProductTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: PublicProductListSchema,
-    }),
-  },
-
-  GetFeaturedProductsBySection: {
-    body: z.object({}),
-    params: z.object({
-      sectionId: z
-        .string("sectionId must be a string")
-        .min(1, { message: "sectionId is required" }),
-    }),
-    query: z.object({
-      page: z.coerce.number().min(1).default(1),
-      limit: z.coerce.number().min(1).max(100).default(10),
-    }),
-    response: z.object({
-      message: z.string(),
-      success: z.boolean(),
-      data: PublicProductListSchema,
+      data: z.object({
+        data: z.array(
+          z.object({
+            id: z.string(),
+            name: z.string(),
+            slug: z.string(),
+            description: z.string().nullable(),
+            brandId: z.string().nullable(),
+            brand: z
+              .object({
+                id: z.string(),
+                name: z.string(),
+                slug: z.string(),
+                logoUrl: z.string().nullable(),
+              })
+              .nullable()
+              .optional(),
+            taxClassId: z.string().nullable(),
+            taxClass: z
+              .object({ id: z.string(), name: z.string(), rate: z.number() })
+              .nullable()
+              .optional(),
+            lengthClassId: z.string().nullable(),
+            lengthClass: z
+              .object({ id: z.string(), name: z.string(), unit: z.string() })
+              .nullable()
+              .optional(),
+            weightClassId: z.string().nullable(),
+            weightClass: z
+              .object({ id: z.string(), name: z.string(), unit: z.string() })
+              .nullable()
+              .optional(),
+            categories: z
+              .array(
+                z.object({
+                  category: z.object({
+                    id: z.string(),
+                    name: z.string(),
+                    slug: z.string(),
+                    parentId: z.string().nullable(),
+                  }),
+                }),
+              )
+              .optional(),
+            filterValues: z
+              .array(
+                z.object({
+                  filterValue: z.object({
+                    id: z.string(),
+                    name: z.string(),
+                    slug: z.string(),
+                    filterGroupId: z.string(),
+                  }),
+                }),
+              )
+              .optional(),
+            isActive: z.boolean(),
+            frontImageUrl: z.string().nullable(),
+            sortOrder: z.number(),
+            outOfStockStatus: OutOfStockStatusEnum,
+            createdAt: z.date(),
+            updatedAt: z.date(),
+            variants: z.array(VariantListItemSchema),
+          }),
+        ),
+        pagination: z.object({
+          page: z.number(),
+          limit: z.number(),
+          total: z.number(),
+          totalPages: z.number(),
+          hasNext: z.boolean(),
+          hasPrev: z.boolean(),
+        }),
+      }),
     }),
   },
 
@@ -280,7 +701,30 @@ export const ProductTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: z.array(PublicProductSchema),
+      data: z.object({
+        data: z.array(
+          z.object({
+            id: z.string(),
+            name: z.string(),
+            slug: z.string(),
+            description: z.string().nullable(),
+            brandId: z.string().nullable(),
+            isActive: z.boolean(),
+            frontImageUrl: z.string().nullable(),
+            sortOrder: z.number(),
+            createdAt: z.date(),
+            updatedAt: z.date(),
+          }),
+        ),
+        pagination: z.object({
+          page: z.number(),
+          limit: z.number(),
+          total: z.number(),
+          totalPages: z.number(),
+          hasNext: z.boolean(),
+          hasPrev: z.boolean(),
+        }),
+      }),
     }),
   },
 
@@ -295,7 +739,7 @@ export const ProductTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: z.array(PublicVariantRouteSchema),
+      data: z.array(VariantDetailSchema),
     }),
   },
 

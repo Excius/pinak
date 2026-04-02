@@ -28,7 +28,17 @@ export class RelatedProductRepository {
   listRelated(productId: string) {
     return this.prisma.relatedProduct.findMany({
       where: { productId },
-      include: { relatedProduct: true },
+      include: {
+        relatedProduct: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            frontImageUrl: true,
+            isActive: true,
+          },
+        },
+      },
       orderBy: { sortOrder: "asc" },
     });
   }

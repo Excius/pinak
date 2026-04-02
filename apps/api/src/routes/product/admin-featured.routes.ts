@@ -8,7 +8,7 @@ export const registerProductAdminFeaturedRoutes = (
   { productController, authMiddleware, rateLimiter }: ProductRouteDeps,
 ) => {
   router.post(
-    "/featured/:sectionId",
+    "/admin/featured/:sectionId",
     rateLimiter,
     validateMultiple(ProductTypes.AddProductToFeatured),
     authMiddleware.authenticate,
@@ -17,7 +17,7 @@ export const registerProductAdminFeaturedRoutes = (
   );
 
   router.delete(
-    "/featured/:featuredProductId",
+    "/admin/featured/:featuredProductId",
     rateLimiter,
     validateMultiple(ProductTypes.RemoveProductFromFeatured),
     authMiddleware.authenticate,

@@ -382,6 +382,24 @@ export const ProductCategoryTypes = {
     body: z.object({}),
     params: z.object({ productId: z.string() }),
     query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.array(
+        z.object({
+          productId: z.string(),
+          categoryId: z.string(),
+          category: z.object({
+            id: z.string(),
+            name: z.string(),
+            slug: z.string(),
+            parentId: z.string().nullable(),
+            createdAt: z.date(),
+            updatedAt: z.date(),
+          }),
+        }),
+      ),
+    }),
   },
 };
 
@@ -412,7 +430,28 @@ export const RelatedProductTypes = {
     body: z.object({}),
     params: z.object({ productId: z.string() }),
     query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.array(
+        z.object({
+          id: z.string(),
+          productId: z.string(),
+          relatedProductId: z.string(),
+          sortOrder: z.number(),
+          createdAt: z.date(),
+          relatedProduct: z.object({
+            id: z.string(),
+            name: z.string(),
+            slug: z.string(),
+            frontImageUrl: z.string().nullable(),
+            isActive: z.boolean(),
+          }),
+        }),
+      ),
+    }),
   },
+
 };
 
 export const CategoryTypes = {
