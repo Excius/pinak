@@ -21,7 +21,7 @@ export const registerProductAdminCategoryRoutes = (
   { authMiddleware, rateLimiter, productCategoryController }: ProductRouteDeps,
 ) => {
   router.post(
-    "/:productId/categories",
+    "/admin/:productId/categories",
     rateLimiter,
     validateMultiple(ProductCategoryTypes.AddProductToCategory),
     authMiddleware.authenticate,
@@ -30,7 +30,7 @@ export const registerProductAdminCategoryRoutes = (
   );
 
   router.delete(
-    "/:productId/categories/:categoryId",
+    "/admin/:productId/categories/:categoryId",
     rateLimiter,
     validateMultiple(ProductCategoryTypes.RemoveProductFromCategory),
     authMiddleware.authenticate,
@@ -39,7 +39,7 @@ export const registerProductAdminCategoryRoutes = (
   );
 
   router.put(
-    "/:productId/categories",
+    "/admin/:productId/categories",
     rateLimiter,
     validateMultiple(ProductCategoryTypes.SetCategoriesForProduct),
     authMiddleware.authenticate,

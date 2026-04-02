@@ -19,7 +19,7 @@ export const registerProductPublicFeaturedRoutes = (
     "/featured/section/:sectionId",
     authMiddleware.authenticate,
     rateLimiter,
-    validateMultiple(ProductTypes.GetFeaturedProducts),
+    validateMultiple(ProductTypes.GetFeaturedProductsBySection),
     productController.getFeaturedProductsBySection,
   );
 };
