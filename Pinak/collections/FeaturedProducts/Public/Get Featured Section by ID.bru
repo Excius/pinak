@@ -1,7 +1,7 @@
 meta {
   name: Get Featured Section by ID
   type: http
-  seq: 3
+  seq: 2
 }
 
 get {
@@ -14,11 +14,18 @@ headers {
   Content-Type: application/json
 }
 
+auth:bearer {
+  token: {{authToken}}
+}
+
 vars:pre-request {
   baseUrl: http://localhost:3000
   sectionId: cmnesso8d004a9ymzsokpjj07
+  authToken: your-jwt-token-here
 }
 
 docs {
-  Fetch a featured section by ID (public).
+  Schema: FeaturedSectionTypes.GetFeaturedSectionById
+  Route: /featured-sections/:id
+  Access: authenticated user
 }

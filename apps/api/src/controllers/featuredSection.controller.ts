@@ -1,25 +1,51 @@
 import { Request, Response } from "express";
 import { ResponseHandler } from "../lib/response.js";
 import { FeaturedSectionService } from "../services/featuredSection.service.js";
+import {
+  toAdminFeaturedSection,
+  toAdminFeaturedSectionList,
+  toPublicFeaturedSection,
+  toPublicFeaturedSectionList,
+} from "../lib/mappers/featuredSection.mapper.js";
+import type { FeaturedType } from "../generated/prisma/enums.js";
 
 export class FeaturedSectionController {
   constructor(private service: FeaturedSectionService) {}
 
-  list = async (_req: Request, res: Response) => {
+  listPublic = async (_req: Request, res: Response) => {
     const sections = await this.service.listFeaturedSections();
     ResponseHandler.success(
       res,
-      sections,
+      toPublicFeaturedSectionList(sections),
       "Featured sections fetched successfully",
     );
   };
 
-  getById = async (req: Request, res: Response) => {
+  getByIdPublic = async (req: Request, res: Response) => {
     const { id } = req.params;
     const section = await this.service.getFeaturedSectionById(id as string);
     ResponseHandler.success(
       res,
-      section,
+      toPublicFeaturedSection(section),
+      "Featured section fetched successfully",
+    );
+  };
+
+  listAdmin = async (_req: Request, res: Response) => {
+    const sections = await this.service.listFeaturedSections();
+    ResponseHandler.success(
+      res,
+      toAdminFeaturedSectionList(sections),
+      "Featured sections fetched successfully",
+    );
+  };
+
+  getByIdAdmin = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const section = await this.service.getFeaturedSectionById(id as string);
+    ResponseHandler.success(
+      res,
+      toAdminFeaturedSection(section),
       "Featured section fetched successfully",
     );
   };
@@ -27,7 +53,7 @@ export class FeaturedSectionController {
   create = async (req: Request, res: Response) => {
     const { title, type, priority } = req.body as {
       title: string;
-      type: "EXPERT_PICKS" | "HOMEPAGE_HERO" | "DEALS";
+      type: FeaturedType;
       priority?: number;
     };
     const section = await this.service.createFeaturedSection({
@@ -37,7 +63,7 @@ export class FeaturedSectionController {
     });
     ResponseHandler.created(
       res,
-      section,
+      toAdminFeaturedSection(section),
       "Featured section created successfully",
     );
   };
@@ -46,7 +72,7 @@ export class FeaturedSectionController {
     const { id } = req.params;
     const { title, type, priority } = req.body as {
       title?: string;
-      type?: "EXPERT_PICKS" | "HOMEPAGE_HERO" | "DEALS";
+      type?: FeaturedType;
       priority?: number;
     };
     const section = await this.service.updateFeaturedSection(id as string, {
@@ -56,7 +82,7 @@ export class FeaturedSectionController {
     });
     ResponseHandler.success(
       res,
-      section,
+      toAdminFeaturedSection(section),
       "Featured section updated successfully",
     );
   };
