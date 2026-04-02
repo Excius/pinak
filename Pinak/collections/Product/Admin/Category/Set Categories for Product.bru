@@ -1,0 +1,38 @@
+meta {
+  name: Set Categories for Product
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{baseUrl}}/api/v1/products/{{productId}}/categories
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:json {
+  {
+    "categoryIds": ["your-category-id-here"]
+  }
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  authToken: your-moderator-or-admin-jwt-token-here
+  productId: your-product-id-here
+}
+
+docs {
+  Schema: ProductCategoryTypes.SetCategoriesForProduct
+  Params: productId
+  Query: none
+  Body: categoryIds[] (min 1)
+}

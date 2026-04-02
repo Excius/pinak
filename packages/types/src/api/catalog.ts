@@ -473,6 +473,102 @@ export const CategoryTypes = {
   },
 };
 
+export const FeaturedSectionTypes = {
+  ListFeaturedSections: {
+    body: z.object({}),
+    params: z.object({}),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.array(
+        z.object({
+          id: z.string(),
+          title: z.string(),
+          type: z.enum(["EXPERT_PICKS", "HOMEPAGE_HERO", "DEALS"]),
+          priority: z.number(),
+          createdAt: z.date(),
+          updatedAt: z.date(),
+        }),
+      ),
+    }),
+  },
+
+  GetFeaturedSectionById: {
+    body: z.object({}),
+    params: z.object({
+      id: z
+        .string("section id must be a string")
+        .min(1, { message: "section id is required" }),
+    }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({
+        id: z.string(),
+        title: z.string(),
+        type: z.enum(["EXPERT_PICKS", "HOMEPAGE_HERO", "DEALS"]),
+        priority: z.number(),
+        createdAt: z.date(),
+        updatedAt: z.date(),
+      }),
+    }),
+  },
+
+  CreateFeaturedSection: {
+    body: z.object({
+      title: z
+        .string("title must be a string")
+        .min(1, { message: "title is required" })
+        .max(255, { message: "title must be at most 255 characters" }),
+      type: z.enum(["EXPERT_PICKS", "HOMEPAGE_HERO", "DEALS"], {
+        message: "type must be EXPERT_PICKS, HOMEPAGE_HERO, or DEALS",
+      }),
+      priority: z.coerce.number().int().min(0).optional(),
+    }),
+    params: z.object({}),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({ id: z.string() }),
+    }),
+  },
+
+  UpdateFeaturedSection: {
+    body: z.object({
+      title: z.string().min(1).max(255).optional(),
+      type: z
+        .enum(["EXPERT_PICKS", "HOMEPAGE_HERO", "DEALS"])
+        .optional(),
+      priority: z.coerce.number().int().min(0).optional(),
+    }),
+    params: z.object({
+      id: z.string().min(1, { message: "section id is required" }),
+    }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({ id: z.string() }),
+    }),
+  },
+
+  DeleteFeaturedSection: {
+    body: z.object({}),
+    params: z.object({
+      id: z.string().min(1, { message: "section id is required" }),
+    }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({}),
+    }),
+  },
+};
+
 export type BrandTypes = typeof BrandTypes;
 export type OptionTypes = typeof OptionTypes;
 export type FilterTypes = typeof FilterTypes;
@@ -481,3 +577,4 @@ export type LengthWeightTypes = typeof LengthWeightTypes;
 export type ProductCategoryTypes = typeof ProductCategoryTypes;
 export type RelatedProductTypes = typeof RelatedProductTypes;
 export type CategoryTypes = typeof CategoryTypes;
+export type FeaturedSectionTypes = typeof FeaturedSectionTypes;

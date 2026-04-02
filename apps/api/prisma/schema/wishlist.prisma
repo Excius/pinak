@@ -20,6 +20,7 @@ model WishlistItem {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([wishlistId, productVariantId])
   @@index([wishlistId])
   @@index([productVariantId])
 }
