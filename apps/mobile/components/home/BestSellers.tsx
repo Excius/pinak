@@ -35,13 +35,13 @@ const PRODUCTS: Product[] = [
 
 export function BestSellers() {
   return (
-    <View className="overflow-hidden rounded-t-[2.5rem] border-t border-gray-100 bg-white shadow-lg">
+    <View className="overflow-hidden rounded-t-[2.5rem] border-t border-surface-border bg-surface">
       {/* Header */}
-      <View className="items-center border-b border-gray-100 px-4 py-3 pt-2">
+      <View className="items-center border-b border-surface-border px-4 py-3 pt-2">
         <Text className="text-xs font-bold uppercase tracking-widest text-primary pt-4">
           Customer Favorites
         </Text>
-        <Text className="mt-1 text-2xl font-bold font-display text-gray-900">
+        <Text className="mt-1 text-2xl font-bold font-display text-text-primary">
           Best Sellers
         </Text>
       </View>
@@ -57,7 +57,7 @@ export function BestSellers() {
             {row.map((product) => (
               <View key={product.id} className="flex-1">
                 {/* Product Image */}
-                <View className="relative mb-3 aspect-square overflow-hidden rounded-xl bg-gray-50">
+                <View className="relative mb-3 aspect-square overflow-hidden rounded-xl bg-surface-light border border-surface-border">
                   <Image
                     source={{ uri: product.image }}
                     className="h-full w-full"
@@ -67,15 +67,15 @@ export function BestSellers() {
                   <View
                     className={`absolute left-2 top-2 rounded-full px-2 py-1 z-10 ${
                       product.badgeStyle === "bestseller"
-                        ? "bg-white"
-                        : "bg-red-500"
+                        ? "bg-primary"
+                        : "bg-error"
                     }`}
                   >
                     <Text
                       className={`text-[0.6rem] font-bold uppercase ${
                         product.badgeStyle === "bestseller"
-                          ? "text-primary"
-                          : "text-white"
+                          ? "text-background"
+                          : "text-text-primary"
                       }`}
                     >
                       {product.badge}
@@ -86,24 +86,26 @@ export function BestSellers() {
                     <MaterialCommunityIcons
                       name="plus"
                       size={14}
-                      color="white"
+                      color="#0A0A0A"
                     />
                   </TouchableOpacity>
                 </View>
 
                 {/* Product Info */}
-                <Text className="leading-tight text-base font-semibold text-gray-900 font-display">
+                <Text className="leading-tight text-base font-semibold text-text-primary font-display">
                   {product.name}
                 </Text>
                 <View className="mt-1 flex-row items-center gap-2">
                   {product.originalPrice && (
-                    <Text className="text-xs text-gray-500 line-through">
+                    <Text className="text-xs text-text-muted line-through">
                       ₹ {product.originalPrice}
                     </Text>
                   )}
                   <Text
                     className={`text-xs font-bold ${
-                      product.originalPrice ? "text-red-500" : "text-gray-500"
+                      product.originalPrice
+                        ? "text-error"
+                        : "text-text-secondary"
                     }`}
                   >
                     ₹ {product.price}

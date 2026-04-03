@@ -38,15 +38,15 @@ const TESTIMONIALS: Testimonial[] = [
 
 export function Testimonials() {
   return (
-    <View className="overflow-hidden bg-background-light py-12">
+    <View className="overflow-hidden bg-background py-12">
       {/* Header */}
       <View className="mb-8 items-center px-4">
-        <Text className="text-xs font-bold uppercase tracking-widest text-primary">
-          Real Results
+        <Text className="text-lg font-bold uppercase tracking-widest text-primary">
+          Testimonials
         </Text>
-        <Text className="mt-1 italic text-2xl font-bold font-display text-gray-900">
+        {/* <Text className="mt-1 italic text-2xl font-bold font-display text-text-primary">
           Real Testimonialss
-        </Text>
+        </Text> */}
       </View>
 
       {/* Testimonials Carousel */}
@@ -59,10 +59,10 @@ export function Testimonials() {
         {TESTIMONIALS.map((testimonial) => (
           <View
             key={testimonial.id}
-            className="mr-6 w-80 rounded-2xl border border-primary/10 bg-primary/5 p-6 shadow-sm"
+            className="mr-6 w-80 rounded-2xl border border-primary/30 bg-surface p-6"
           >
             {/* Avatar */}
-            <View className="self-center mb-4 h-16 w-16 overflow-hidden rounded-full border-2 border-primary/20">
+            <View className="self-center mb-4 h-16 w-16 overflow-hidden rounded-full border-2 border-primary/40">
               <Image
                 source={{ uri: testimonial.image }}
                 className="h-full w-full"
@@ -77,13 +77,13 @@ export function Testimonials() {
                   key={i}
                   name="star"
                   size={14}
-                  color="#b08d55"
+                  color="#C9A962"
                 />
               ))}
             </View>
 
             {/* Quote */}
-            <Text className="mb-4 text-center text-lg leading-relaxed italic text-gray-800 font-display">
+            <Text className="mb-4 text-center text-lg leading-relaxed italic text-text-primary font-display">
               {testimonial.text}
             </Text>
 

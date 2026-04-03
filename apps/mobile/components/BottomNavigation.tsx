@@ -32,7 +32,7 @@ export function BottomNavigation() {
   return (
     <View
       style={{ paddingBottom: insets.bottom }}
-      className="absolute bottom-0 left-0 right-0 flex-row items-center border-t border-gray-100 bg-white"
+      className="absolute bottom-0 left-0 right-0 flex-row items-center border-t border-surface-border bg-background"
     >
       {NAV_ITEMS.map((item, index) => (
         <TouchableOpacity
@@ -49,11 +49,11 @@ export function BottomNavigation() {
           }}
         >
           {item.id === "camera" ? (
-            <View className="mb-1 h-12 w-12 items-center justify-center rounded-full bg-primary shadow-lg">
+            <View className="mb-1 h-12 w-12 items-center justify-center rounded-full bg-primary shadow-gold">
               <MaterialCommunityIcons
                 name={item.icon}
                 size={20}
-                color="white"
+                color="#0A0A0A"
               />
             </View>
           ) : (
@@ -61,11 +61,11 @@ export function BottomNavigation() {
               <MaterialCommunityIcons
                 name={item.icon}
                 size={20}
-                color={isActive(item.id) ? "#b08d55" : "#a0aec0"}
+                color={isActive(item.id) ? "#C9A962" : "#6B6B6B"}
               />
               <Text
                 className={`mt-1 text-[0.55rem] font-medium ${
-                  isActive(item.id) ? "text-primary" : "text-gray-400"
+                  isActive(item.id) ? "text-primary" : "text-text-muted"
                 }`}
               >
                 {item.label}

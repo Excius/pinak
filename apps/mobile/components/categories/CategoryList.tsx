@@ -1,5 +1,6 @@
 import React from "react";
 import { View } from "react-native";
+import { useRouter } from "expo-router";
 import { CategoryCard } from "./CategoryCard";
 import { useCategoryStore } from "@/store/category/store";
 
@@ -35,12 +36,12 @@ const CATEGORIES = [
 ];
 
 export function CategoryList() {
+  const router = useRouter();
   const selectCategory = useCategoryStore((state) => state.selectCategory);
 
   const handleCategoryPress = (categoryId: string) => {
     selectCategory(categoryId);
-    // TODO: Call API endpoint here based on categoryId
-    // fetchCategoryProducts(categoryId);
+    router.push(`/categories/${categoryId}`);
   };
 
   return (

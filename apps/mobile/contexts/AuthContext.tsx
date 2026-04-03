@@ -10,6 +10,7 @@ import {
   getAccessToken,
   setAccessToken,
   deleteAccessToken,
+  deleteRefreshToken,
 } from "@/utils/token";
 import {
   loginService as apiLogin,
@@ -62,6 +63,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     checkAuth();
   }, []);
+
   const checkAuth = async () => {
     try {
       const token = await getAccessToken();
@@ -70,39 +72,57 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         setUser(userData.data);
       }
     } catch (err) {
-      console.error("Auth check failed" + err);
+      // Silent fail on auth check - just clear tokens and continue
+      // This is expected when tokens are expired or invalid
+      console.log("Auth check failed, clearing session:", err);
       await deleteAccessToken();
+      await deleteRefreshToken();
+      setUser(null);
     } finally {
       setIsLoading(false);
+      // Clear any stale errors from previous sessions
+      setError(null);
     }
   };
 
   const login = async (email: string, password: string) => {
+    // Clear any previous errors immediately
+    setError(null);
+
     try {
-      setError(null);
       const loginResponse: LoginUserResponse = await apiLogin(email, password);
       if (loginResponse.data?.accessToken && loginResponse.data?.user) {
-        await setAccessToken(loginResponse.data.accessToken);
+        // Token storage is handled by loginService, just update user state
         setUser(loginResponse.data.user);
       } else {
-        throw new Error("Invalid login response");
+        throw new Error("Invalid login response from server");
       }
     } catch (err: any) {
-      const errorMessage = err?.message || "Login failed";
+      // Extract meaningful error message
+      const errorMessage =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Login failed. Please try again.";
       setError(errorMessage);
-      throw err;
+      throw new Error(errorMessage);
     }
   };
 
   const signup = async (email: string, username: string, password: string) => {
+    // Clear any previous errors immediately
+    setError(null);
+
     try {
-      setError(null);
       await apiSignup(email, username, password);
       // Signup successful - user will need to verify email or login
     } catch (err: any) {
-      const errorMessage = err?.message || "Signup failed";
+      // Extract meaningful error message
+      const errorMessage =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Signup failed. Please try again.";
       setError(errorMessage);
-      throw err;
+      throw new Error(errorMessage);
     }
   };
 
