@@ -3,27 +3,12 @@ import { ProductGrid } from "./ProductGrid";
 
 interface ProductPageProps {
   categoryId?: string | null;
+  categoryName?: string;
 }
 
-// Category titles mapping
-const CATEGORY_TITLES: Record<string, string> = {
-  lips: "The Lip Collection",
-  eyes: "The Eye Collection",
-  face: "The Face Collection",
-  skincare: "The Skincare Collection",
-};
-
-const CATEGORY_COUNTS: Record<string, number> = {
-  lips: 24,
-  eyes: 18,
-  face: 28,
-  skincare: 32,
-};
-
-export function ProductPage({ categoryId }: ProductPageProps) {
-  const categoryKey = (categoryId || "lips") as keyof typeof CATEGORY_TITLES;
-  const title = CATEGORY_TITLES[categoryKey] || "Products";
-  const count = CATEGORY_COUNTS[categoryKey] || 0;
+export function ProductPage({ categoryId, categoryName }: ProductPageProps) {
+  const resolvedCategoryId = categoryId || "";
+  const title = categoryName ? `${categoryName} Collection` : "Products";
 
   return (
     <View className="flex-1 bg-background">
@@ -33,7 +18,7 @@ export function ProductPage({ categoryId }: ProductPageProps) {
           {title}
         </Text>
         <Text className="text-text-secondary text-sm mt-1 font-medium tracking-widest uppercase">
-          {count} EXQUISITE PRODUCTS
+          Curated essentials for your beauty ritual
         </Text>
       </View>
 
@@ -57,7 +42,7 @@ export function ProductPage({ categoryId }: ProductPageProps) {
       </View>
 
       {/* Product Grid */}
-      <ProductGrid categoryId={categoryKey} />
+      <ProductGrid categoryId={resolvedCategoryId} />
     </View>
   );
 }
