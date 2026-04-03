@@ -507,4 +507,24 @@ export const ComboKitTypes = {
   },
 };
 
-export type ComboKitTypes = typeof ComboKitTypes;
+export type BodyTypes = {
+  [K in keyof typeof ComboKitTypes]: z.infer<(typeof ComboKitTypes)[K]["body"]>;
+};
+
+export type ParamsTypes = {
+  [K in keyof typeof ComboKitTypes]: z.infer<
+    (typeof ComboKitTypes)[K]["params"]
+  >;
+};
+
+export type QueryTypes = {
+  [K in keyof typeof ComboKitTypes]: z.infer<
+    (typeof ComboKitTypes)[K]["query"]
+  >;
+};
+
+export type ResponseTypes = {
+  [K in keyof typeof ComboKitTypes]: z.infer<
+    (typeof ComboKitTypes)[K]["response"]
+  >;
+};
