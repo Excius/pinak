@@ -1,7 +1,7 @@
 import type { Router } from "express";
 import { ProductCategoryTypes } from "@repo/types";
 import { validateMultiple } from "../../lib/validation.js";
-import type { ProductRouteDeps } from "./route-deps.js";
+import type { ProductRouteDeps } from "./index.js";
 
 export const registerProductPublicCategoryRoutes = (
   router: Router,

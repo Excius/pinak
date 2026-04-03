@@ -1,5 +1,5 @@
 import type { Router } from "express";
-import type { ProductRouteDeps } from "./route-deps.js";
+import type { ProductRouteDeps } from "./index.js";
 
 export const registerProductAdminStockRoutes = (
   router: Router,

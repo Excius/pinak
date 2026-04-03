@@ -1,11 +1,11 @@
 meta {
-  name: Get Product by ID
+  name: Soft Delete Category Image
   type: http
-  seq: 3
+  seq: 2
 }
 
-get {
-  url: {{baseUrl}}/api/v1/products/{{id}}
+delete {
+  url: {{baseUrl}}/api/v1/categories/admin/images/{{id}}
   body: none
   auth: inherit
 }
@@ -20,13 +20,10 @@ auth:bearer {
 
 vars:pre-request {
   baseUrl: http://localhost:3000
+  id: your-image-id-here
   authToken: your-jwt-token-here
-  id: cmnessn05003v9ymzq4scgw0w
 }
 
 docs {
-  Schema: ProductTypes.GetProductById
-  Params: id
-  Query: none
-  Body: none
+  Soft-delete a category image (admin only).
 }

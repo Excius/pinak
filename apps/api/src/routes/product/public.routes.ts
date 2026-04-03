@@ -1,5 +1,5 @@
 import type { Router } from "express";
-import type { ProductRouteDeps } from "./route-deps.js";
+import type { ProductRouteDeps } from "./index.js";
 import { registerProductPublicCategoryRoutes } from "./category.routes.js";
 import { registerProductPublicFeaturedRoutes } from "./public-featured.routes.js";
 import { registerProductPublicProductRoutes } from "./public-product.routes.js";

@@ -14,6 +14,7 @@ export { LengthWeightTypes } from "./api/lengthWeight.js";
 export { ProductCategoryTypes } from "./api/productCategory.js";
 export { RelatedProductTypes } from "./api/relatedProduct.js";
 export { CategoryTypes } from "./api/category.js";
+export { CategoryAdminTypes } from "./api/category.js";
 export { FeaturedSectionTypes } from "./api/featuredSection.js";
 export { WishlistTypes } from "./api/wishlist.js";
 
@@ -30,5 +31,6 @@ export * as LengthWeightApi from "./api/lengthWeight.js";
 export * as ProductCategoryApi from "./api/productCategory.js";
 export * as RelatedProductApi from "./api/relatedProduct.js";
 export * as CategoryApi from "./api/category.js";
+export * as CategoryAdminApi from "./api/category.js";
 export * as FeaturedSectionApi from "./api/featuredSection.js";
 export * as WishlistApi from "./api/wishlist.js";

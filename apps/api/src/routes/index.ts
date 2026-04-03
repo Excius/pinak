@@ -7,7 +7,7 @@ import optionRoutes from "./option.route.js";
 import filterRoutes from "./filter.route.js";
 import taxClassRoutes from "./taxClass.route.js";
 import lengthWeightRoutes from "./lengthWeight.route.js";
-import categoryRoutes from "./category.route.js";
+import categoryRoutes from "./category/category.route.js";
 import featuredSectionRoutes from "./featuredSection.route.js";
 import wishlistRoutes from "./wishlist.route.js";
 

@@ -1,0 +1,32 @@
+meta {
+  name: Get Category by Slug (Admin)
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/categories/admin/slug/{{slug}}
+  body: none
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  slug: sample-category
+  authToken: your-jwt-token-here
+}
+
+docs {
+  Fetch a category by its SEO slug (admin — full content).
+  
+  Path Parameters:
+  - slug: category slug (required)
+}
