@@ -839,5 +839,7 @@ export type QueryTypes = {
 };
 
 export type ResponseTypes = {
-  [K in keyof typeof ProductTypes]: z.infer<(typeof ProductTypes)[K]["response"]>;
+  [K in keyof typeof ProductTypes]: z.infer<
+    (typeof ProductTypes)[K]["response"]
+  >;
 };
