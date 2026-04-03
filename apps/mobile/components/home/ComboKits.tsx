@@ -50,16 +50,16 @@ const KITS: Kit[] = [
 
 export function ComboKits() {
   return (
-    <View className="border-t border-primary/10 bg-[#FAF3EF] py-8">
+    <View className="border-t border-surface-border bg-surface-dark py-8">
       {/* Header */}
       <View className="mb-6 items-center px-4">
         <Text className="text-xs font-bold uppercase tracking-widest text-primary">
           Better Together
         </Text>
-        <Text className="mt-1 text-2xl font-bold font-display text-gray-900">
+        <Text className="mt-1 text-2xl font-bold font-display text-text-primary">
           Combos & Kits
         </Text>
-        <Text className="mt-1 italic text-sm text-gray-500">
+        <Text className="mt-1 italic text-sm text-text-secondary">
           Save more with our curated sets
         </Text>
       </View>
@@ -74,7 +74,7 @@ export function ComboKits() {
         {KITS.map((kit) => (
           <View
             key={kit.id}
-            className="mr-4 w-64 overflow-hidden rounded-2xl border border-primary/5 bg-white shadow-sm"
+            className="mr-4 w-64 overflow-hidden rounded-2xl border border-surface-border bg-surface"
           >
             {/* Kit Image */}
             <View className="relative aspect-square">
@@ -83,8 +83,8 @@ export function ComboKits() {
                 className="h-full w-full"
                 resizeMode="cover"
               />
-              <View className="absolute right-3 top-3 rounded-lg bg-white/90 px-2 py-1 backdrop-blur-sm">
-                <Text className="text-[0.6rem] font-bold uppercase text-primary">
+              <View className="absolute right-3 top-3 rounded-lg bg-primary px-2 py-1">
+                <Text className="text-[0.6rem] font-bold uppercase text-background">
                   {kit.badge}
                 </Text>
               </View>
@@ -92,10 +92,12 @@ export function ComboKits() {
 
             {/* Kit Info */}
             <View className="items-center p-4 text-center">
-              <Text className="mb-1 text-lg font-bold text-gray-900 font-display">
+              <Text className="mb-1 text-lg font-bold text-text-primary font-display">
                 {kit.title}
               </Text>
-              <Text className="mb-3 text-xs text-gray-500">{kit.subtitle}</Text>
+              <Text className="mb-3 text-xs text-text-secondary">
+                {kit.subtitle}
+              </Text>
               <Text className="mb-4 text-base font-bold text-primary">
                 ₹ {kit.price.toLocaleString()}
               </Text>

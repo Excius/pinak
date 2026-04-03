@@ -1,0 +1,30 @@
+meta {
+  name: List Featured Sections
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/featured-sections
+  body: none
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  authToken: your-jwt-token-here
+}
+
+docs {
+  Schema: FeaturedSectionTypes.ListFeaturedSections
+  Route: /featured-sections
+  Access: authenticated user
+}

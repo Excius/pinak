@@ -62,12 +62,12 @@ const NEEDS: NeedItem[] = [
 
 export function ShopByNeed() {
   return (
-    <View className="mx-2 mb-4 rounded-3xl bg-primary/5 px-4 py-4">
+    <View className="mx-2 mb-4 rounded-3xl bg-surface px-4 py-4 border border-surface-border">
       <View className="mb-4 items-center">
-        <Text className="text-xl font-bold font-display text-gray-900">
+        <Text className="text-xl font-bold font-display text-text-primary">
           Shop by Need
         </Text>
-        <Text className="mt-1 text-xs text-gray-500">
+        <Text className="mt-1 text-xs text-text-secondary">
           Curated collections for every occasion
         </Text>
       </View>
@@ -82,19 +82,16 @@ export function ShopByNeed() {
             {row.map((item) => (
               <TouchableOpacity
                 key={item.id}
-                className="flex-1 flex-col items-center rounded-xl border border-primary/10 bg-white p-4 shadow-sm"
+                className="flex-1 flex-col items-center rounded-xl border border-surface-border bg-surface-light p-4"
               >
-                <View
-                  className="mb-2 rounded-full p-3"
-                  style={{ backgroundColor: "#f9f5f1" }}
-                >
+                <View className="mb-2 rounded-full p-3 bg-primary/20">
                   <MaterialCommunityIcons
                     name={item.icon}
                     size={24}
-                    color="#b08d55"
+                    color="#C9A962"
                   />
                 </View>
-                <Text className="text-center text-sm font-semibold text-gray-800 font-display">
+                <Text className="text-center text-sm font-semibold text-text-primary font-display">
                   {item.title}
                 </Text>
               </TouchableOpacity>

@@ -14,6 +14,8 @@ async function cleanup() {
   await prisma.coupon.deleteMany();
   await prisma.cartItem.deleteMany();
   await prisma.cart.deleteMany();
+  await prisma.wishlistItem.deleteMany();
+  await prisma.wishlist.deleteMany();
 
   await prisma.review.deleteMany();
   await prisma.auditLog.deleteMany();
@@ -179,6 +181,14 @@ async function main() {
   const catFoundation = await prisma.category.create({
     data: { name: "Foundation", slug: "foundation", parentId: catMakeup.id },
   });
+  // Add a grandchild for testing: Makeup -> Foundation -> Liquid Foundation
+  const catLiquidFoundation = await prisma.category.create({
+    data: {
+      name: "Liquid Foundation",
+      slug: "liquid-foundation",
+      parentId: catFoundation.id,
+    },
+  });
   const catLipstick = await prisma.category.create({
     data: { name: "Lipstick", slug: "lipstick", parentId: catMakeup.id },
   });
@@ -202,6 +212,59 @@ async function main() {
   console.log(
     "✅ Created categories (2-level hierarchy: Makeup → Foundation/Lipstick/Mascara/Eyeshadow, Skincare → Moisturizers/Serums)",
   );
+
+  // -------------------------------------------------------------------------
+  // Category images (primary + secondary) — helpful for testing image APIs
+  // -------------------------------------------------------------------------
+  try {
+    await prisma.categoryImage.create({
+      data: {
+        categoryId: catMakeup.id,
+        url: "https://example.com/images/categories/makeup-primary.jpg",
+        altText: "Makeup — primary image",
+        isPrimary: true,
+        sortOrder: 0,
+      },
+    });
+
+    await prisma.categoryImage.create({
+      data: {
+        categoryId: catMakeup.id,
+        url: "https://example.com/images/categories/makeup-secondary.jpg",
+        altText: "Makeup — secondary image",
+        isPrimary: false,
+        sortOrder: 1,
+      },
+    });
+
+    await prisma.categoryImage.create({
+      data: {
+        categoryId: catSkincareParent.id,
+        url: "https://example.com/images/categories/skincare-primary.jpg",
+        altText: "Skincare — primary image",
+        isPrimary: true,
+        sortOrder: 0,
+      },
+    });
+
+    await prisma.categoryImage.create({
+      data: {
+        categoryId: catSkincareParent.id,
+        url: "https://example.com/images/categories/skincare-secondary.jpg",
+        altText: "Skincare — secondary image",
+        isPrimary: false,
+        sortOrder: 1,
+      },
+    });
+
+    console.log("✅ Created category images (primary + secondary)");
+  } catch (err: any) {
+    // If the CategoryImage table/migration isn't present, skip without failing the whole seed.
+    console.warn(
+      "⚠️  Skipping seeding category images (CategoryImage table may be missing):",
+      err?.message ?? err,
+    );
+  }
 
   // Seed filter groups and values used for faceted search (Color, Finish, Skin Type)
   const filterGroupsData = [
@@ -801,24 +864,47 @@ async function main() {
   // -------------------------------------------------------------------------
   // 7. Featured sections & products
   // -------------------------------------------------------------------------
-  const [sectionExpertPicks, sectionHero, sectionDeals] = await Promise.all([
+  const [
+    sectionHero,
+    sectionExpertPicks,
+    sectionDeals,
+    sectionBestsellers,
+    sectionNewArrivals,
+  ] = await Promise.all([
     prisma.featuredSection.create({
-      data: { title: "Expert Picks", type: "EXPERT_PICKS", priority: 10 },
+      data: {
+        title: "Homepage Hero Banner",
+        type: "HOMEPAGE_HERO",
+        priority: 100,
+      },
     }),
     prisma.featuredSection.create({
-      data: { title: "Homepage Hero", type: "HOMEPAGE_HERO", priority: 20 },
+      data: {
+        title: "Beauty Expert Picks",
+        type: "EXPERT_PICKS",
+        priority: 90,
+      },
     }),
     prisma.featuredSection.create({
-      data: { title: "Special Deals", type: "DEALS", priority: 5 },
+      data: { title: "Limited Time Deals", type: "DEALS", priority: 80 },
+    }),
+    prisma.featuredSection.create({
+      data: { title: "Customer Favorites", type: "EXPERT_PICKS", priority: 70 },
+    }),
+    prisma.featuredSection.create({
+      data: { title: "New This Week", type: "DEALS", priority: 60 },
     }),
   ]);
 
   const featuredEntries = [
+    // Homepage Hero - showcase top 2 premium products
     {
       sectionId: sectionHero.id,
       productId: slugToId["radiant-glow-foundation"],
     },
-    { sectionId: sectionHero.id, productId: slugToId["velvet-matte-lipstick"] },
+    { sectionId: sectionHero.id, productId: slugToId["vitamin-c-serum"] },
+
+    // Expert Picks - curated selection of high-quality items
     {
       sectionId: sectionExpertPicks.id,
       productId: slugToId["volume-boost-mascara"],
@@ -833,19 +919,53 @@ async function main() {
     },
     {
       sectionId: sectionExpertPicks.id,
-      productId: slugToId["vitamin-c-serum"],
+      productId: slugToId["velvet-matte-lipstick"],
     },
+
+    // Deals - promotional items at special prices
     {
       sectionId: sectionDeals.id,
       productId: slugToId["liquid-glow-foundation"],
     },
     { sectionId: sectionDeals.id, productId: slugToId["satin-lipstick"] },
     { sectionId: sectionDeals.id, productId: slugToId["waterproof-mascara"] },
+
+    // Bestsellers - most popular products
+    {
+      sectionId: sectionBestsellers.id,
+      productId: slugToId["radiant-glow-foundation"],
+    },
+    {
+      sectionId: sectionBestsellers.id,
+      productId: slugToId["volume-boost-mascara"],
+    },
+    {
+      sectionId: sectionBestsellers.id,
+      productId: slugToId["velvet-matte-lipstick"],
+    },
+    {
+      sectionId: sectionBestsellers.id,
+      productId: slugToId["hydrating-face-moisturizer"],
+    },
+
+    // New Arrivals - latest additions
+    {
+      sectionId: sectionNewArrivals.id,
+      productId: slugToId["matte-eyeshadow-palette"],
+    },
+    {
+      sectionId: sectionNewArrivals.id,
+      productId: slugToId["waterproof-mascara"],
+    },
+    {
+      sectionId: sectionNewArrivals.id,
+      productId: slugToId["vitamin-c-serum"],
+    },
   ].filter((e) => e.productId);
 
   await prisma.featuredProduct.createMany({ data: featuredEntries });
   console.log(
-    `✅ Created 3 featured sections + ${featuredEntries.length} featured products`,
+    `✅ Created 5 featured sections + ${featuredEntries.length} featured products`,
   );
 
   // -------------------------------------------------------------------------
@@ -1143,6 +1263,44 @@ async function main() {
         },
       });
       console.log("✅ Created cart with product + combo items");
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // 9.2 Wishlists
+  // -------------------------------------------------------------------------
+  const johnIdForWishlist = createdUsers["johndoe"]?.id;
+  if (johnIdForWishlist) {
+    const wishlistCreateItems: Array<{ productVariantId: string }> = [];
+
+    if (skuToVariant["RGF-001"]?.id) {
+      wishlistCreateItems.push({
+        productVariantId: skuToVariant["RGF-001"].id,
+      });
+    }
+    if (skuToVariant["VCS-001"]?.id) {
+      wishlistCreateItems.push({
+        productVariantId: skuToVariant["VCS-001"].id,
+      });
+    }
+    if (skuToVariant["WM-001"]?.id) {
+      wishlistCreateItems.push({
+        productVariantId: skuToVariant["WM-001"].id,
+      });
+    }
+
+    if (wishlistCreateItems.length > 0) {
+      await prisma.wishlist.create({
+        data: {
+          userId: johnIdForWishlist,
+          items: {
+            create: wishlistCreateItems,
+          },
+        },
+      });
+      console.log(
+        `✅ Created wishlist with ${wishlistCreateItems.length} variant items`,
+      );
     }
   }
 
@@ -1585,10 +1743,11 @@ async function main() {
   - 2 parent + 6 leaf categories (2-level hierarchy)
   - ${productDefs.length} products (linked to taxClass, lengthClass, weightClass)
   - ${totalVariants} product variants + ${totalVariants} images
-  - 3 featured sections + ${featuredEntries.length} featured products
+  - 5 featured sections + ${featuredEntries.length} featured products
   - ${usersData.length} users (1 admin, 1 moderator, ${usersData.length - 2} regular)
   - ${comboKits.length} combo kits
   - 1 cart with combo + variant items
+  - 1 wishlist with 3 variant items
   - 3 coupons · 3 orders · 6 reviews · 3 articles · 3 stores
   - 3 quiz questions with options & rules
   `);

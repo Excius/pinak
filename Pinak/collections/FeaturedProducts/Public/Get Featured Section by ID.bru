@@ -1,0 +1,31 @@
+meta {
+  name: Get Featured Section by ID
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/featured-sections/{{sectionId}}
+  body: none
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  sectionId: cmnesso8d004a9ymzsokpjj07
+  authToken: your-jwt-token-here
+}
+
+docs {
+  Schema: FeaturedSectionTypes.GetFeaturedSectionById
+  Route: /featured-sections/:id
+  Access: authenticated user
+}

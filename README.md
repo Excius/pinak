@@ -17,6 +17,12 @@ A modern monorepo project built with Turborepo, featuring a Node.js API, Expo Re
 ### Apps
 
 - **`apps/api`**: Node.js REST API with Express, Prisma ORM, PostgreSQL database, rate limiting, logging, and input validation.
+  - **API Coverage**: 
+    - **Authentication**: Login, register, email verification, password reset, refresh tokens, Google OAuth
+    - **Products**: Full CRUD with variants, images, related products, and category management
+    - **ComboKits**: Full CRUD with item management
+    - **Catalog**: Brands, categories, options, filters, tax classes, length/weight classes, featured sections
+    - **Not yet implemented**: Reviews (tables exist but no endpoints yet)
 - **`apps/mobile`**: Expo React Native app with navigation, haptic feedback, and shared UI components.
 - **`apps/web`**: Vite-based React web app with shared UI components.
 
@@ -24,7 +30,9 @@ A modern monorepo project built with Turborepo, featuring a Node.js API, Expo Re
 
 - **`packages/ui`**: Shared React component library (buttons, cards, etc.).
 - **`packages/eslint-config`**: Shared ESLint configurations for consistent code quality.
-- **`packages/types`**: Shared TypeScript type definitions.
+- **`packages/types`**: Shared TypeScript type definitions and Zod validation schemas for API contracts.
+  - Exports namespaced types (`AuthApi`, `ProductApi`, `ComboKitApi`, `CatalogApi`) to prevent collisions
+  - Root-level convenience aliases (`AuthBodyTypes`, `AuthParamsTypes`, etc.)
 - **`packages/typescript-config`**: Shared TypeScript configurations for apps and packages.
 
 ## Prerequisites
@@ -96,6 +104,11 @@ npm run dev
   ```bash
   npm run dev:api  # or cd apps/api && npm run dev
   ```
+  API runs on `http://localhost:3000` (or configured PORT)
+  - Base route: `/api/v1`
+  - Health check: `GET /api/v1/health`
+  - Swagger docs (if enabled): `/api/v1/docs`
+  
 - **Web**:
   ```bash
   npm run dev:web  # or cd apps/web && npm run dev
@@ -133,17 +146,36 @@ npm run build
 pinak/
 ├── apps/
 │   ├── api/          # Node.js Express API with Prisma
+│   │   ├── src/
+│   │   │   ├── controllers/    # HTTP request handlers
+│   │   │   ├── services/       # Business logic layer
+│   │   │   ├── repositories/   # Database access layer
+│   │   │   ├── routes/         # API route definitions
+│   │   │   ├── middlewares/    # Auth, validation, error handling
+│   │   │   ├── lib/            # Utilities (config, logger, jwt, etc.)
+│   │   │   ├── types/          # API-specific types
+│   │   │   └── index.ts        # App bootstrap
+│   │   └── prisma/             # Schema, migrations, seed
 │   ├── mobile/       # Expo React Native app
 │   └── web/          # Vite React app
 ├── packages/
 │   ├── ui/           # Shared React components
 │   ├── eslint-config/# Shared ESLint configs
-│   ├── types/        # Shared TypeScript types
+│   ├── types/        # Shared TypeScript types & Zod schemas
 │   └── typescript-config/  # Shared TS configs
 ├── package.json
 ├── turbo.json
 └── README.md
 ```
+
+### API Architecture
+
+The backend follows a layered architecture:
+- **Controller** → **Service** → **Repository** → **Prisma Client**
+- Controllers: Thin HTTP layer, parse requests, return standardized JSON responses
+- Services: Business logic, validation, orchestration
+- Repositories: Database access abstraction
+- All errors extend `BaseError` and are handled by centralized error middleware
 
 ## Contributing
 

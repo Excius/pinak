@@ -1,0 +1,44 @@
+meta {
+  name: Bulk Update Variant Stock
+  type: http
+  seq: 25
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/products/admin/variants/stock/bulk
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:json {
+  [
+    {
+      "variantId": "variant-id-1",
+      "newStock": 50
+    },
+    {
+      "variantId": "variant-id-2",
+      "newStock": 20
+    }
+  ]
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  authToken: your-moderator-or-admin-jwt-token-here
+}
+
+docs {
+  Schema: ProductTypes.BulkUpdateVariantStock
+  Params: none
+  Query: none
+  Body: array<{ variantId, newStock }>
+}

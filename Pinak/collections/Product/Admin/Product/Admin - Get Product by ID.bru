@@ -1,0 +1,32 @@
+meta {
+  name: Admin - Get Product by ID
+  type: http
+  seq: 13
+}
+
+get {
+  url: {{baseUrl}}/api/v1/products/admin/{{id}}
+  body: none
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  authToken: your-moderator-or-admin-jwt-token-here
+  id: your-product-id-here
+}
+
+docs {
+  Schema: ProductTypes.GetProductById
+  Params: id
+  Query: none
+  Body: none
+}

@@ -1,0 +1,39 @@
+meta {
+  name: Add Product Image
+  type: http
+  seq: 27
+}
+
+post {
+  url: {{baseUrl}}/api/v1/products/admin/variants/{{variantId}}/images
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:json {
+  {
+    "url": "https://example.com/images/variant-image.jpg",
+    "altText": "Front image"
+  }
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  authToken: your-moderator-or-admin-jwt-token-here
+  variantId: your-variant-id-here
+}
+
+docs {
+  Schema: ProductTypes.AddProductImage
+  Params: variantId
+  Query: none
+  Body: url(required), altText
+}

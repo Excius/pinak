@@ -8,19 +8,21 @@ interface ExpertBundlesProps {
 
 export function ExpertBundles({ onPress }: ExpertBundlesProps) {
   return (
-    <View className="mt-10 mb-6 rounded-xl border border-primary/20 bg-primary/10 p-6">
+    <View className="mt-10 mb-6 rounded-xl border border-primary/30 bg-surface p-6">
       {/* Icon */}
       <View className="items-center">
-        <MaterialCommunityIcons name="star-box" size={32} color="#b08d55" />
+        <View className="rounded-full bg-primary/20 p-3">
+          <MaterialCommunityIcons name="star-box" size={32} color="#C9A962" />
+        </View>
       </View>
 
       {/* Title */}
-      <Text className="font-display mt-2 text-center text-lg font-bold">
+      <Text className="font-display mt-4 text-center text-xl font-bold text-text-primary">
         Expert Curated Bundles
       </Text>
 
       {/* Description */}
-      <Text className="mt-1 text-center text-sm text-[#5e4b48] dark:text-grey-300">
+      <Text className="mt-2 text-center text-sm text-text-secondary">
         Discover collections hand-picked by our beauty artisans.
       </Text>
 
@@ -28,9 +30,9 @@ export function ExpertBundles({ onPress }: ExpertBundlesProps) {
       <TouchableOpacity
         onPress={onPress}
         activeOpacity={0.7}
-        className="mt-4 items-center rounded-full bg-primary px-6 py-2 active:scale-95"
+        className="mt-5 items-center rounded-full bg-primary px-6 py-3 active:scale-95"
       >
-        <Text className="text-sm font-medium text-white">
+        <Text className="text-sm font-bold text-background">
           Explore Collections
         </Text>
       </TouchableOpacity>

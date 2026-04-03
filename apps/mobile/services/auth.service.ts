@@ -1,11 +1,11 @@
-import api, { apiRequest, BASE_URL } from "./api";
+import { apiRequest, BASE_URL } from "./api";
 import { setAccessToken, deleteAccessToken, setRefreshToken, deleteRefreshToken, getRefreshToken } from "@/utils/token";
 import axios from 'axios';
-import {
+import type { AuthApi } from '@repo/types';
 
-    LoginUserResponse,
-    RegisterUserResponse,
-} from "@repo/types";
+
+type LoginUserResponse = AuthApi.ResponseTypes['LoginUser'];
+type RegisterUserResponse = AuthApi.ResponseTypes['RegisterUser'];
 
 export async function loginService(email: string, password: string) {
     const loginResponse = await apiRequest<LoginUserResponse>(

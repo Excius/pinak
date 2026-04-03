@@ -1,11 +1,11 @@
 // Catalog — redesigned (Products, variants, categories, filters, options)
 
 model Brand {
-  id       String    @id @default(cuid())
-  name     String    @unique
-  slug     String    @unique
+  id       String  @id @default(cuid())
+  name     String  @unique
+  slug     String  @unique
   logoUrl  String?
-  isActive Boolean   @default(true)
+  isActive Boolean @default(true)
 
   products Product[]
 
@@ -16,8 +16,8 @@ model Brand {
 }
 
 model TaxClass {
-  id   String  @id @default(cuid())
-  name String  @unique
+  id   String @id @default(cuid())
+  name String @unique
   rate Float
 
   products Product[]
@@ -27,8 +27,8 @@ model TaxClass {
 }
 
 model LengthClass {
-  id   String  @id @default(cuid())
-  name String  @unique
+  id   String @id @default(cuid())
+  name String @unique
   unit String
 
   products Product[]
@@ -38,8 +38,8 @@ model LengthClass {
 }
 
 model WeightClass {
-  id   String  @id @default(cuid())
-  name String  @unique
+  id   String @id @default(cuid())
+  name String @unique
   unit String
 
   products Product[]
@@ -56,7 +56,8 @@ model Category {
   parent   Category?  @relation("CategoryToCategory", fields: [parentId], references: [id])
   children Category[] @relation("CategoryToCategory")
 
-  products ProductCategory[]
+  products       ProductCategory[]
+  categoryImages CategoryImage[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -78,13 +79,13 @@ model ProductCategory {
 }
 
 model FilterGroup {
-  id        String       @id @default(cuid())
-  name      String       @unique
-  slug      String       @unique
-  sortOrder Int          @default(0)
-  isActive  Boolean      @default(true)
+  id        String  @id @default(cuid())
+  name      String  @unique
+  slug      String  @unique
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
 
-  values    FilterValue[]
+  values FilterValue[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -93,14 +94,14 @@ model FilterGroup {
 }
 
 model FilterValue {
-  id            String             @id @default(cuid())
+  id            String @id @default(cuid())
   filterGroupId String
   name          String
   slug          String
-  sortOrder     Int      @default(0)
+  sortOrder     Int    @default(0)
 
-  filterGroup   FilterGroup        @relation(fields: [filterGroupId], references: [id], onDelete: Cascade)
-  products      ProductFilterValue[]
+  filterGroup FilterGroup          @relation(fields: [filterGroupId], references: [id], onDelete: Cascade)
+  products    ProductFilterValue[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -122,11 +123,11 @@ model ProductFilterValue {
 }
 
 model Option {
-  id        String        @id @default(cuid())
-  name      String        @unique
-  sortOrder Int           @default(0)
+  id        String @id @default(cuid())
+  name      String @unique
+  sortOrder Int    @default(0)
 
-  values    OptionValue[]
+  values OptionValue[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -149,9 +150,9 @@ model OptionValue {
 }
 
 model Product {
-  id          String   @id @default(cuid())
-  name        String
-  slug        String   @unique
+  id   String @id @default(cuid())
+  name String
+  slug String @unique
 
   description    String?
   keyIngredients String?
@@ -169,10 +170,10 @@ model Product {
   tags String[] @default([])
 
   brandId String?
-  brand   Brand? @relation(fields: [brandId], references: [id])
+  brand   Brand?  @relation(fields: [brandId], references: [id])
 
-  requiresShipping Boolean         @default(true)
-  outOfStockStatus  OutOfStockStatus @default(BACKORDER)
+  requiresShipping Boolean          @default(true)
+  outOfStockStatus OutOfStockStatus @default(BACKORDER)
 
   dimensionLength Float?
   dimensionWidth  Float?
@@ -195,8 +196,8 @@ model Product {
 
   categories       ProductCategory[]
   variants         ProductVariant[]
-  relatedProducts  RelatedProduct[]  @relation("ProductToRelated")
-  relatedTo        RelatedProduct[]  @relation("RelatedToProduct")
+  relatedProducts  RelatedProduct[]     @relation("ProductToRelated")
+  relatedTo        RelatedProduct[]     @relation("RelatedToProduct")
   reviews          Review[]
   orderItems       OrderItem[]
   featuredProducts FeaturedProduct[]
@@ -215,10 +216,10 @@ model Product {
 }
 
 model RelatedProduct {
-  id               String  @id @default(cuid())
+  id               String @id @default(cuid())
   productId        String
   relatedProductId String
-  sortOrder        Int     @default(0)
+  sortOrder        Int    @default(0)
 
   product        Product @relation("ProductToRelated", fields: [productId], references: [id], onDelete: Cascade)
   relatedProduct Product @relation("RelatedToProduct", fields: [relatedProductId], references: [id], onDelete: Cascade)
@@ -240,7 +241,7 @@ model ProductVariant {
 
   price        Int
   comparePrice Int?
-  stock        Int @default(0)
+  stock        Int  @default(0)
 
   weightGrams   Float?
   weightClassId String?
@@ -292,6 +293,23 @@ model ProductImage {
   isDeleted Boolean  @default(false)
 
   @@index([productVariantId])
+}
+
+model CategoryImage {
+  id         String  @id @default(cuid())
+  categoryId String
+  url        String
+  altText    String?
+  isPrimary  Boolean @default(false)
+  sortOrder  Int     @default(0)
+
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isDeleted Boolean  @default(false)
+
+  @@index([categoryId])
 }
 
 enum OutOfStockStatus {

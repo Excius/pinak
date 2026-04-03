@@ -95,33 +95,35 @@ export function HeroCarousel() {
             style={{ width: screenWidth }}
             className="flex-1 px-4"
           >
-            <View className="relative h-80 overflow-hidden rounded-3xl shadow-lg">
+            <View className="relative h-80 overflow-hidden rounded-3xl shadow-gold border border-primary/20">
               <Image
                 source={{ uri: item.image }}
                 className="absolute inset-0 h-full w-full"
                 resizeMode="cover"
               />
-              <View className="absolute inset-0 bg-black/50" />
+              <View className="absolute inset-0 bg-black/60" />
               <View className="absolute bottom-0 left-0 right-0 p-6">
                 <Text className="mb-2 text-center text-xs font-bold uppercase tracking-widest text-primary">
                   {item.badge}
                 </Text>
-                <Text className="mb-2 text-center text-4xl font-bold text-white font-display">
+                <Text className="mb-2 text-center text-4xl font-bold text-text-primary font-display">
                   {item.title}
                 </Text>
-                <Text className="mb-6 text-center text-sm font-light text-gray-200">
+                <Text className="mb-6 text-center text-sm font-light text-text-secondary">
                   {item.description}
                 </Text>
                 <TouchableOpacity
                   className={`w-full rounded-full py-3 ${
-                    item.buttonStyle === "primary" ? "bg-primary" : "bg-white"
+                    item.buttonStyle === "primary"
+                      ? "bg-primary"
+                      : "bg-surface border border-primary"
                   }`}
                 >
                   <Text
                     className={`text-center font-bold ${
                       item.buttonStyle === "primary"
-                        ? "text-white"
-                        : "text-gray-900"
+                        ? "text-background"
+                        : "text-primary"
                     }`}
                   >
                     {item.buttonText}
@@ -139,9 +141,7 @@ export function HeroCarousel() {
           <View
             key={index}
             className={`h-2 w-2 rounded-full transition-colors ${
-              index === activeIndex
-                ? "bg-primary"
-                : "bg-gray-300 dark:bg-gray-700"
+              index === activeIndex ? "bg-primary" : "bg-surface-border"
             }`}
           />
         ))}

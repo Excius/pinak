@@ -1,0 +1,47 @@
+meta {
+  name: Update Product Variant
+  type: http
+  seq: 21
+}
+
+put {
+  url: {{baseUrl}}/api/v1/products/admin/variants/{{id}}
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:json {
+  {
+    "sku": "SERUM-30ML-V2",
+    "ean": "1234567890124",
+    "price": 849,
+    "comparePrice": 999,
+    "stock": 30,
+    "weightGrams": 125,
+    "weightClassId": "your-weight-class-id",
+    "tags": ["30ml", "updated"],
+    "optionValueIds": ["option-value-id-1"],
+    "isActive": true
+  }
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  authToken: your-moderator-or-admin-jwt-token-here
+  id: your-variant-id-here
+}
+
+docs {
+  Schema: ProductTypes.UpdateProductVariant
+  Params: id
+  Query: none
+  Body: optional variant fields
+}

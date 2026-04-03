@@ -1,4 +1,5 @@
 import { View, Text, TouchableOpacity, ScrollView, Image } from "react-native";
+import { useRouter } from "expo-router";
 
 interface Category {
   id: string;
@@ -28,7 +29,7 @@ const CATEGORIES: Category[] = [
       "https://lh3.googleusercontent.com/aida-public/AB6AXuDqoshkVYjHr4VmbU-Ap9-EvjeIUt8rSi5544INEEP4YLWhzfix4IDDVzbJ0wvS2uA899j6NdY8teQWhApAKP9o9Bq5fqdDvu79iVRpBne_Tq4QitnbqeNiBVVwFjDhwDscu5YwNI3Ii8FZOAPmRK9eLiP17FvfjJ0ywbVWe8ISZf5kkXlgXSh9At6CcraSr5wy-2alEruwi-FPu4wffuahWw31bTkHeqYfgTLV8_teV8IMI7Tyd975_Wg21ry5eJmNk-Cemb1XdIs",
   },
   {
-    id: "skin",
+    id: "skincare",
     name: "Skin",
     image:
       "https://lh3.googleusercontent.com/aida-public/AB6AXuBJxE2dGD3oW_hM50y1Q6caaBYNXL4LsPlod-2TPiXlZ8P95rl9OJQBc27IkaCgqt35uys5MZSHqZBu4rIYh_WLGZYEgXOMGixdPqZPxeiQE0JMD8-K97cfwzwXiQGOU4B3lNGvBcr4P53MADga1vFA0jSlfekEiO61MQpJrrP1UMzJSi-87HsQO2lgDehRYYaWu3tBwrBcRJ1Vlt9wIQKv8Sp7kleZujlLfptB3LtjDX6KXuUCkzgfJk6DCkfmnds3_M4SKLm2Apw",
@@ -36,13 +37,19 @@ const CATEGORIES: Category[] = [
 ];
 
 export function ShopByCategory() {
+  const router = useRouter();
+
+  const handleCategoryPress = (categoryId: string) => {
+    router.push(`/categories/${categoryId}`);
+  };
+
   return (
     <View className="py-6">
       <View className="mb-4 flex-row items-end justify-between px-4">
-        <Text className="text-xl font-bold font-display text-gray-900">
+        <Text className="text-xl font-bold font-display text-text-primary">
           Shop by Category
         </Text>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push("/categories")}>
           <Text className="text-xs font-bold uppercase tracking-wider text-primary">
             See All
           </Text>
@@ -58,16 +65,15 @@ export function ShopByCategory() {
         {CATEGORIES.map((category) => (
           <TouchableOpacity
             key={category.id}
+            onPress={() => handleCategoryPress(category.id)}
             className="mr-6 items-center gap-3"
           >
             <View
-              className={`h-28 w-28 rounded-full border-2 border-white p-1 ${
-                category.hasGradient
-                  ? "bg-gradient-to-tr from-primary to-transparent"
-                  : "bg-gray-200"
+              className={`h-28 w-28 rounded-full border-2 border-primary/30 p-1 ${
+                category.hasGradient ? "bg-primary/20" : "bg-surface"
               }`}
             >
-              <View className="h-full w-full overflow-hidden rounded-full border-2 border-white">
+              <View className="h-full w-full overflow-hidden rounded-full border-2 border-surface-border">
                 <Image
                   source={{ uri: category.image }}
                   className="h-full w-full"
@@ -75,7 +81,7 @@ export function ShopByCategory() {
                 />
               </View>
             </View>
-            <Text className="text-sm font-semibold text-gray-800">
+            <Text className="text-sm font-semibold text-text-primary">
               {category.name}
             </Text>
           </TouchableOpacity>

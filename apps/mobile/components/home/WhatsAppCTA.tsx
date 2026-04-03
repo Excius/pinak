@@ -40,10 +40,10 @@ export function WhatsAppAndStoreCTA() {
   };
 
   return (
-    <View className="bg-white px-4 py-8 md:px-6 md:py-12">
+    <View className="bg-surface px-4 py-8 md:px-6 md:py-12 border-t border-surface-border">
       <View className="mx-auto w-full max-w-md items-center gap-6 md:gap-8">
         {/* Heading */}
-        <Text className="text-center text-xl md:text-2xl font-bold text-gray-900 font-display px-2">
+        <Text className="text-center text-xl md:text-2xl font-bold text-text-primary font-display px-2">
           Need expert help or prefer store pickup?
         </Text>
 
@@ -66,7 +66,7 @@ export function WhatsAppAndStoreCTA() {
             onPress={handleWhatsAppPress}
           >
             <MaterialCommunityIcons name="whatsapp" size={24} color="white" />
-            <Text className="font-bold text-white text-base md:text-base">
+            <Text className="font-bold text-text-primary text-base md:text-base">
               Chat on WhatsApp
             </Text>
           </TouchableOpacity>
