@@ -1,11 +1,11 @@
 meta {
-  name: Get Product by ID
+  name: Get Category by ID
   type: http
-  seq: 3
+  seq: 2
 }
 
 get {
-  url: {{baseUrl}}/api/v1/products/{{id}}
+  url: {{baseUrl}}/api/v1/categories/{{categoryId}}
   body: none
   auth: inherit
 }
@@ -20,13 +20,13 @@ auth:bearer {
 
 vars:pre-request {
   baseUrl: http://localhost:3000
+  categoryId: cmnj36dak001f2amzsu5z2a4b
   authToken: your-jwt-token-here
-  id: cmnessn05003v9ymzq4scgw0w
 }
 
 docs {
-  Schema: ProductTypes.GetProductById
-  Params: id
-  Query: none
-  Body: none
+  Fetch a category by its ID.
+  
+  Path Parameters:
+  - categoryId: Category ID (required)
 }

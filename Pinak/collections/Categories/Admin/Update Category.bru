@@ -1,22 +1,13 @@
 meta {
   name: Update Category
   type: http
-  seq: 5
+  seq: 2
 }
 
 put {
-  url: {{baseUrl}}/api/v1/categories/{{categoryId}}
+  url: {{baseUrl}}/api/v1/categories/admin/{{categoryId}}
   body: json
   auth: inherit
-}
-
-body:json {
-  {
-    "name": "Sample Category Updated",
-    "slug": "sample-category-updated",
-    "parentId": null,
-    "description": "Updated description"
-  }
 }
 
 headers {
@@ -25,6 +16,14 @@ headers {
 
 auth:bearer {
   token: {{authToken}}
+}
+
+body:json {
+  {
+    "name": "Sample Category Updated",
+    "slug": "sample-category-updated",
+    "parentId": null
+  }
 }
 
 vars:pre-request {

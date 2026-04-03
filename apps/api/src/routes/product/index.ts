@@ -15,7 +15,14 @@ import { ProductService } from "../../services/product.service.js";
 import { RelatedProductService } from "../../services/relatedProduct.service.js";
 import { registerProductAdminRoutes } from "./admin.routes.js";
 import { registerProductPublicRoutes } from "./public.routes.js";
-import type { ProductRouteDeps } from "./route-deps.js";
+
+export type ProductRouteDeps = {
+  productController: ProductController;
+  productCategoryController: ProductCategoryController;
+  relatedProductController: RelatedProductController;
+  authMiddleware: AuthMiddleware;
+  rateLimiter: ReturnType<typeof createRateLimiter>;
+};
 
 const router = Router();
 
@@ -31,14 +38,22 @@ const productService = new ProductService(productRepository);
 const productController = new ProductController(productService);
 
 const productCategoryRepository = new ProductCategoryRepository(prisma);
-const productCategoryService = new ProductCategoryService(productCategoryRepository);
-const productCategoryController = new ProductCategoryController(productCategoryService);
+const productCategoryService = new ProductCategoryService(
+  productCategoryRepository,
+);
+const productCategoryController = new ProductCategoryController(
+  productCategoryService,
+);
 
 const relatedProductRepository = new RelatedProductRepository(prisma);
-const relatedProductService = new RelatedProductService(relatedProductRepository);
-const relatedProductController = new RelatedProductController(relatedProductService);
+const relatedProductService = new RelatedProductService(
+  relatedProductRepository,
+);
+const relatedProductController = new RelatedProductController(
+  relatedProductService,
+);
 
-const deps: ProductRouteDeps = {
+export const deps: ProductRouteDeps = {
   productController,
   productCategoryController,
   relatedProductController,

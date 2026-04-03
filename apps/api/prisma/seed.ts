@@ -181,6 +181,14 @@ async function main() {
   const catFoundation = await prisma.category.create({
     data: { name: "Foundation", slug: "foundation", parentId: catMakeup.id },
   });
+  // Add a grandchild for testing: Makeup -> Foundation -> Liquid Foundation
+  const catLiquidFoundation = await prisma.category.create({
+    data: {
+      name: "Liquid Foundation",
+      slug: "liquid-foundation",
+      parentId: catFoundation.id,
+    },
+  });
   const catLipstick = await prisma.category.create({
     data: { name: "Lipstick", slug: "lipstick", parentId: catMakeup.id },
   });
@@ -204,6 +212,59 @@ async function main() {
   console.log(
     "✅ Created categories (2-level hierarchy: Makeup → Foundation/Lipstick/Mascara/Eyeshadow, Skincare → Moisturizers/Serums)",
   );
+
+  // -------------------------------------------------------------------------
+  // Category images (primary + secondary) — helpful for testing image APIs
+  // -------------------------------------------------------------------------
+  try {
+    await prisma.categoryImage.create({
+      data: {
+        categoryId: catMakeup.id,
+        url: "https://example.com/images/categories/makeup-primary.jpg",
+        altText: "Makeup — primary image",
+        isPrimary: true,
+        sortOrder: 0,
+      },
+    });
+
+    await prisma.categoryImage.create({
+      data: {
+        categoryId: catMakeup.id,
+        url: "https://example.com/images/categories/makeup-secondary.jpg",
+        altText: "Makeup — secondary image",
+        isPrimary: false,
+        sortOrder: 1,
+      },
+    });
+
+    await prisma.categoryImage.create({
+      data: {
+        categoryId: catSkincareParent.id,
+        url: "https://example.com/images/categories/skincare-primary.jpg",
+        altText: "Skincare — primary image",
+        isPrimary: true,
+        sortOrder: 0,
+      },
+    });
+
+    await prisma.categoryImage.create({
+      data: {
+        categoryId: catSkincareParent.id,
+        url: "https://example.com/images/categories/skincare-secondary.jpg",
+        altText: "Skincare — secondary image",
+        isPrimary: false,
+        sortOrder: 1,
+      },
+    });
+
+    console.log("✅ Created category images (primary + secondary)");
+  } catch (err: any) {
+    // If the CategoryImage table/migration isn't present, skip without failing the whole seed.
+    console.warn(
+      "⚠️  Skipping seeding category images (CategoryImage table may be missing):",
+      err?.message ?? err,
+    );
+  }
 
   // Seed filter groups and values used for faceted search (Color, Finish, Skin Type)
   const filterGroupsData = [
@@ -896,7 +957,10 @@ async function main() {
       sectionId: sectionNewArrivals.id,
       productId: slugToId["waterproof-mascara"],
     },
-    { sectionId: sectionNewArrivals.id, productId: slugToId["vitamin-c-serum"] },
+    {
+      sectionId: sectionNewArrivals.id,
+      productId: slugToId["vitamin-c-serum"],
+    },
   ].filter((e) => e.productId);
 
   await prisma.featuredProduct.createMany({ data: featuredEntries });

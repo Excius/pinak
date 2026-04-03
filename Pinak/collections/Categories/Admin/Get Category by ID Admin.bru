@@ -1,11 +1,11 @@
 meta {
-  name: Get Category by ID
+  name: Get Category by ID (Admin)
   type: http
-  seq: 3
+  seq: 2
 }
 
 get {
-  url: {{baseUrl}}/api/v1/categories/{{categoryId}}
+  url: {{baseUrl}}/api/v1/categories/admin/{{categoryId}}
   body: none
   auth: inherit
 }
@@ -14,14 +14,19 @@ headers {
   Content-Type: application/json
 }
 
+auth:bearer {
+  token: {{authToken}}
+}
+
 vars:pre-request {
   baseUrl: http://localhost:3000
   categoryId: your-category-id-here
+  authToken: your-jwt-token-here
 }
 
 docs {
-  Fetch a category by its ID.
-
+  Fetch a category by its ID (admin — full content).
+  
   Path Parameters:
   - categoryId: Category ID (required)
 }

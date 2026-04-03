@@ -1,11 +1,11 @@
 meta {
-  name: Get Product by ID
+  name: Set Primary Category Image
   type: http
-  seq: 3
+  seq: 2
 }
 
-get {
-  url: {{baseUrl}}/api/v1/products/{{id}}
+patch {
+  url: {{baseUrl}}/api/v1/categories/admin/images/{{imageId}}/primary
   body: none
   auth: inherit
 }
@@ -20,13 +20,10 @@ auth:bearer {
 
 vars:pre-request {
   baseUrl: http://localhost:3000
+  imageId: your-image-id-here
   authToken: your-jwt-token-here
-  id: cmnessn05003v9ymzq4scgw0w
 }
 
 docs {
-  Schema: ProductTypes.GetProductById
-  Params: id
-  Query: none
-  Body: none
+  Set an image as primary for its category (admin only).
 }

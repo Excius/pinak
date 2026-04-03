@@ -1,13 +1,18 @@
 meta {
-  name: Get Product by ID
+  name: List Categories
   type: http
-  seq: 3
+  seq: 1
 }
 
 get {
-  url: {{baseUrl}}/api/v1/products/{{id}}
+  url: {{baseUrl}}/api/v1/categories
   body: none
   auth: inherit
+}
+
+params:query {
+  ~parentId: cmnj36d64001d2amzgp45f801
+  ~withChildren: false
 }
 
 headers {
@@ -21,12 +26,8 @@ auth:bearer {
 vars:pre-request {
   baseUrl: http://localhost:3000
   authToken: your-jwt-token-here
-  id: cmnessn05003v9ymzq4scgw0w
 }
 
 docs {
-  Schema: ProductTypes.GetProductById
-  Params: id
-  Query: none
-  Body: none
+  List categories (public).
 }

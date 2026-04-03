@@ -9,10 +9,52 @@ const CategoryBase = z.object({
   updatedAt: z.date(),
 });
 
-const CategoryNode = CategoryBase.extend({
-  children: z.array(CategoryBase).optional(),
-  parent: CategoryBase.nullable().optional(),
+const CategoryPublicBase = z.object({
+  id: z.string(),
+  name: z.string(),
+  slug: z.string(),
+  parentId: z.string().nullable(),
 });
+
+const PublicCategoryImageSchema = z.object({
+  id: z.string(),
+  categoryId: z.string().optional(),
+  url: z.string(),
+  altText: z.string().nullable().optional(),
+  isPrimary: z.boolean(),
+  sortOrder: z.number(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  isDeleted: z.boolean().optional(),
+});
+
+// Lightweight image schema used by the public tree endpoint (omits id/timestamps)
+const PublicCategoryImageSummarySchema = z.object({
+  url: z.string(),
+  altText: z.string().nullable().optional(),
+  isPrimary: z.boolean(),
+  sortOrder: z.number(),
+});
+
+const CategoryNode: z.ZodTypeAny = z.lazy(() =>
+  CategoryBase.extend({
+    children: z.array(CategoryNode).optional(),
+    parent: CategoryBase.nullable().optional(),
+    categoryImages: z.array(PublicCategoryImageSchema).optional(),
+  }),
+);
+
+// Tree node for the public `GET /categories/tree` endpoint — uses the
+// lightweight image shape returned by the repository (omitted fields).
+const CategoryPublicNode: z.ZodTypeAny = z.lazy(() =>
+  CategoryPublicBase.extend({
+    children: z.array(CategoryPublicNode).optional(),
+    parent: CategoryPublicBase.nullable().optional(),
+    categoryImages: z.array(PublicCategoryImageSummarySchema).optional(),
+  }),
+);
+
+const AdminCategoryNode = CategoryNode;
 
 export const CategoryTypes = {
   ListCategories: {
@@ -25,7 +67,17 @@ export const CategoryTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: z.array(CategoryNode),
+      data: z.array(CategoryPublicNode),
+    }),
+  },
+  ListTopCategories: {
+    body: z.object({}),
+    params: z.object({}),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.array(CategoryPublicNode),
     }),
   },
   GetCategoryById: {
@@ -37,7 +89,7 @@ export const CategoryTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: CategoryNode,
+      data: CategoryPublicNode,
     }),
   },
   GetCategoryBySlug: {
@@ -47,7 +99,7 @@ export const CategoryTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: CategoryNode,
+      data: CategoryPublicNode,
     }),
   },
   GetCategoryTree: {
@@ -57,7 +109,7 @@ export const CategoryTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: z.array(CategoryNode),
+      data: z.array(CategoryPublicNode),
     }),
   },
   CreateCategory: {
@@ -107,6 +159,113 @@ export const CategoryTypes = {
   },
 };
 
+export const CategoryAdminTypes = {
+  ListCategories: {
+    body: z.object({}),
+    params: z.object({}),
+    query: z.object({ parentId: z.string().optional() }),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.array(AdminCategoryNode),
+    }),
+  },
+
+  GetCategoryById: {
+    body: z.object({}),
+    params: z.object({
+      id: z.string().min(1, { message: "category id is required" }),
+    }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: AdminCategoryNode,
+    }),
+  },
+
+  GetCategoryBySlug: {
+    body: z.object({}),
+    params: z.object({ slug: z.string().min(1) }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: AdminCategoryNode,
+    }),
+  },
+
+  GetCategoryTree: {
+    body: z.object({}),
+    params: z.object({}),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.array(AdminCategoryNode),
+    }),
+  },
+
+  AddCategoryImage: {
+    body: z.object({
+      url: z.string().min(1).url(),
+      altText: z.string().optional(),
+      isPrimary: z.coerce.boolean().optional(),
+    }),
+    params: z.object({ categoryId: z.string().min(1) }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: PublicCategoryImageSchema,
+    }),
+  },
+
+  SetPrimaryCategoryImage: {
+    body: z.object({}),
+    params: z.object({ imageId: z.string().min(1) }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({ id: z.string(), isPrimary: z.boolean() }),
+    }),
+  },
+
+  SoftDeleteCategoryImage: {
+    body: z.object({}),
+    params: z.object({ id: z.string() }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({}),
+    }),
+  },
+
+  RestoreCategoryImage: {
+    body: z.object({}),
+    params: z.object({ id: z.string() }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({}),
+    }),
+  },
+
+  HardDeleteCategoryImage: {
+    body: z.object({}),
+    params: z.object({ id: z.string() }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({}),
+    }),
+  },
+};
+
 export type BodyTypes = {
   [K in keyof typeof CategoryTypes]: z.infer<(typeof CategoryTypes)[K]["body"]>;
 };
@@ -126,5 +285,29 @@ export type QueryTypes = {
 export type ResponseTypes = {
   [K in keyof typeof CategoryTypes]: z.infer<
     (typeof CategoryTypes)[K]["response"]
+  >;
+};
+
+export type AdminBodyTypes = {
+  [K in keyof typeof CategoryAdminTypes]: z.infer<
+    (typeof CategoryAdminTypes)[K]["body"]
+  >;
+};
+
+export type AdminParamsTypes = {
+  [K in keyof typeof CategoryAdminTypes]: z.infer<
+    (typeof CategoryAdminTypes)[K]["params"]
+  >;
+};
+
+export type AdminQueryTypes = {
+  [K in keyof typeof CategoryAdminTypes]: z.infer<
+    (typeof CategoryAdminTypes)[K]["query"]
+  >;
+};
+
+export type AdminResponseTypes = {
+  [K in keyof typeof CategoryAdminTypes]: z.infer<
+    (typeof CategoryAdminTypes)[K]["response"]
   >;
 };

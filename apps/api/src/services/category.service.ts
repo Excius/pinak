@@ -1,6 +1,7 @@
 import { CategoryRepository } from "../repositories/category.repository.js";
 import { ValidationError, NotFoundError } from "../lib/error.js";
 import { isPrismaP2002 } from "../lib/prisma-errors.js";
+import { Prisma } from "../generated/prisma/client.js";
 
 function generateSlug(name: string): string {
   return name
@@ -26,12 +27,28 @@ type CategoryUpdateInput = {
 export class CategoryService {
   constructor(private categoryRepository: CategoryRepository) {}
 
-  async listCategories(parentId?: string | null) {
-    return this.categoryRepository.list(parentId);
+  async listCategories(parentId?: string | null, includeChildren = true) {
+    return this.categoryRepository.list(parentId, includeChildren);
+  }
+
+  async listTopCategories() {
+    return this.categoryRepository.listTopCategories();
   }
 
   async getCategoryTree() {
     return this.categoryRepository.getTree();
+  }
+
+  async listCategoriesAdmin(parentId?: string | null) {
+    return this.categoryRepository.listAdmin(parentId);
+  }
+
+  async listTopCategoriesAdmin() {
+    return this.categoryRepository.listTopAdmin();
+  }
+
+  async getCategoryTreeAdmin() {
+    return this.categoryRepository.getTreeAdmin();
   }
 
   async getCategoryById(id: string) {
@@ -44,6 +61,22 @@ export class CategoryService {
 
   async getCategoryBySlug(slug: string) {
     const category = await this.categoryRepository.getBySlug(slug);
+    if (!category) {
+      throw new NotFoundError("Category not found");
+    }
+    return category;
+  }
+
+  async getCategoryByIdAdmin(id: string) {
+    const category = await this.categoryRepository.getByIdAdmin(id);
+    if (!category) {
+      throw new NotFoundError("Category not found");
+    }
+    return category;
+  }
+
+  async getCategoryBySlugAdmin(slug: string) {
+    const category = await this.categoryRepository.getBySlugAdmin(slug);
     if (!category) {
       throw new NotFoundError("Category not found");
     }
@@ -179,5 +212,63 @@ export class CategoryService {
     }
 
     return this.categoryRepository.delete(id);
+  }
+
+  // Image management for categories
+  async addCategoryImage(
+    categoryId: string,
+    data: Prisma.CategoryImageCreateInput,
+  ) {
+    const category = await this.categoryRepository.getById(categoryId);
+    if (!category) {
+      throw new ValidationError("Category not found");
+    }
+
+    const sanitizedData = { ...data } as Prisma.CategoryImageCreateInput;
+
+    if (sanitizedData.url) {
+      try {
+        new URL(sanitizedData.url as string);
+      } catch {
+        throw new ValidationError("Invalid image URL format");
+      }
+    }
+
+    if (sanitizedData.altText) {
+      sanitizedData.altText = (sanitizedData.altText as string).trim();
+    }
+
+    // Ensure the category relation is set for nested create
+    sanitizedData.category = { connect: { id: categoryId } };
+
+    return this.categoryRepository.addCategoryImage(
+      categoryId,
+      sanitizedData as Prisma.CategoryImageCreateInput,
+    );
+  }
+
+  async setPrimaryImage(imageId: string) {
+    const image = await this.categoryRepository.getCategoryImageById(imageId);
+    if (!image) {
+      throw new ValidationError("Image not found");
+    }
+
+    if (image.isDeleted) {
+      throw new ValidationError("Cannot set deleted image as primary");
+    }
+
+    return this.categoryRepository.setPrimaryImage(imageId);
+  }
+
+  async softDeleteImage(id: string) {
+    return this.categoryRepository.softDeleteImage(id);
+  }
+
+  async restoreImage(id: string) {
+    return this.categoryRepository.restoreImage(id);
+  }
+
+  async hardDeleteImage(id: string) {
+    return this.categoryRepository.hardDeleteImage(id);
   }
 }
