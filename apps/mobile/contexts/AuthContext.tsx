@@ -17,12 +17,13 @@ import {
   logoutService as apiLogout,
   signupService as apiSignup,
 } from "@/services/auth.service";
-import api, { apiRequest } from "@/services/api";
-import {
-  MeResponse,
-  LoginUserResponse,
-  RegisterUserResponse,
-} from "@repo/types";
+import { apiRequest } from "@/services/api";
+
+import type { AuthApi } from "@repo/types";
+type LoginUserResponse = AuthApi.ResponseTypes["LoginUser"];
+type RegisterUserResponse = AuthApi.ResponseTypes["RegisterUser"];
+type MeResponse = AuthApi.ResponseTypes["Me"];
+
 import { UserSchema } from "@repo/types";
 
 type User = z.infer<typeof UserSchema>;
