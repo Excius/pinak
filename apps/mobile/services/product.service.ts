@@ -1,6 +1,5 @@
-
 import { apiRequest } from "./api";
-import type { ProductApi, CatalogApi } from '@repo/types';
+import type { ProductApi, RelatedProductApi, ProductCategoryApi } from '@repo/types';
 
 
 // used for building query params
@@ -23,7 +22,6 @@ type GetProductByCategoryOptions = Omit<Partial<ProductApi.QueryTypes['GetProduc
     'page' | 'limit'
 >;
 
-
 type SearchProductsResponse = ProductApi.ResponseTypes['SearchProducts'];
 
 
@@ -36,25 +34,21 @@ type GetFeaturedProductsResponse = ProductApi.ResponseTypes['GetFeaturedProducts
 
 
 // categories
+type GetProductCategoriesResponse = ProductCategoryApi.ResponseTypes['ListCategoriesForProduct']
 
 
 // reelated products
-// type RelatedProductsResponse = ProductApi.ResponseTypes['GetRelatedProducts']   
+type RelatedProductsResponse = RelatedProductApi.ResponseTypes['ListRelated']
+
+
+// Extra services not being used currenlty but for future
 type GetProductBySlugResponse = ProductApi.ResponseTypes['GetProductBySlug']
 
 
-
-
-
-
-// type GetProductWithDetailsResponse = ProductApi.ResponseTypes['GetProductWithDetails'];
-
-
-
-
-//  api module should be stateless and should not hold any state related to user preferences or app state. Instead, the inStock preference should be passed as a parameter to the service functions that require it. This way, the service remains reusable and can be used in different contexts without being tied to a specific state.
-
-// The inStock shoudl be managed and defaulted at the component/interface level and managed therein itself
+/*
+api module should be stateless and should not hold any state related to user preferences or app state. Instead, the inStock preference should be passed as a parameter to the service functions that require it. This way, the service remains reusable and can be used in different contexts without being tied to a specific state.
+The inStock shoudl be managed and defaulted at the component/interface level and managed therein itself
+*/
 
 
 
@@ -92,6 +86,8 @@ export async function getProductById(productId: string) {
 
 
 
+
+// gives all the porducts in the category an dits subcategories
 export async function getProductsByCategory(
     categoryId: string,
     page: number,
@@ -130,6 +126,7 @@ export async function searchProducts(
     );
     return searchProductsResponse;
 }
+
 
 
 
@@ -172,6 +169,35 @@ export async function getFeaturedProductsBySection(sectionId: string, page?: num
     );
     return getFeaturedProductsBySectionResponse;
 }
+
+
+
+
+// Related Product Services
+export async function getRelatedProducts(productId: string) {
+    const getRelatedProductsResponse = await apiRequest<RelatedProductsResponse>(
+        'get',
+        `/products/${productId}/related`
+    );
+    return getRelatedProductsResponse;
+}
+
+
+
+
+/*
+ Category Services
+This service is for fetching teh category/categories of a porduct, not to be confused with fetching products of a category which is the getProductsByCategory service above
+also the details fetched in this service are alos availabkle with the details api service so its kind of redundant
+*/
+export async function getProductCategories(productId: string) {
+    const getProductCategoriesResponse = await apiRequest<GetProductCategoriesResponse>(
+        'get',
+        `/products/${productId}/categories`
+    );
+    return getProductCategoriesResponse;
+}
+
 
 
 
