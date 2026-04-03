@@ -10,6 +10,10 @@ collections:
     path: "collections/Mis"
   - name: "Product"
     path: "collections/Product"
+  - name: "FeaturedProducts"
+    path: "collections/FeaturedProducts"
+  - name: "Categories"
+    path: "collections/Categories"
   - name: "ComboKit"
     path: "collections/ComboKit"
   - name: "Brands"
@@ -18,25 +22,21 @@ collections:
     path: "collections/Filters"
   - name: "Options"
     path: "collections/Options"
-  - name: "Categories"
-    path: "collections/Categories"
-  - name: "ProductCategories"
-    path: "collections/ProductCategories"
   - name: "ProductVariants"
     path: "collections/ProductVariants"
   - name: "ProductImages"
     path: "collections/ProductImages"
-  - name: "RelatedProducts"
-    path: "collections/RelatedProducts"
-  - name: "FeaturedProducts"
-    path: "collections/FeaturedProducts"
   - name: "TaxClasses"
     path: "collections/TaxClasses"
   - name: "Classes"
     path: "collections/Classes"
+  - name: "ProductCategories"
+    path: "collections/ProductCategories"
+  - name: "RelatedProducts"
+    path: "collections/RelatedProducts"
 
 specs:
 
-docs: ""
+docs: ''
 
 activeEnvironmentUid: eygp3o000000000000000
