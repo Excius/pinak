@@ -1,4 +1,5 @@
 import type { Router } from "express";
+import multer from "multer";
 import { ProductTypes } from "@repo/types";
 import { validateMultiple } from "../../lib/validation.js";
 import type { ProductRouteDeps } from "./index.js";
@@ -6,12 +7,18 @@ export const registerProductAdminImageRoutes = (
   router: Router,
   { productController, authMiddleware, rateLimiter }: ProductRouteDeps,
 ) => {
+  const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 10 * 1024 * 1024 },
+  }); // 10MB
+
   router.post(
     "/admin/variants/:variantId/images",
     rateLimiter,
-    validateMultiple(ProductTypes.AddProductImage),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    upload.single("image"),
+    validateMultiple(ProductTypes.AddProductImage),
     productController.addProductImage,
   );
 
@@ -22,6 +29,16 @@ export const registerProductAdminImageRoutes = (
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
     productController.setPrimaryImage,
+  );
+
+  router.put(
+    "/admin/images/:id",
+    rateLimiter,
+    authMiddleware.authenticate,
+    authMiddleware.requireModeratorOrAdmin,
+    upload.single("image"),
+    validateMultiple(ProductTypes.UpdateProductImage),
+    productController.updateProductImage,
   );
 
   router.delete(

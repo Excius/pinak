@@ -299,6 +299,121 @@ export const ProductTypes = {
     }),
   },
 
+  // Fetch a single variant by its ID (public)
+  GetVariant: {
+    body: z.object({}),
+    params: z.object({
+      variantId: z
+        .string("variantId must be a string")
+        .min(1, { message: "variantId is required" }),
+    }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: PublicVariantRouteSchema,
+    }),
+  },
+
+  // Admin: fetch a single variant by ID with full details
+  GetVariantAdmin: {
+    body: z.object({}),
+    params: z.object({
+      id: z
+        .string("variant id must be a string")
+        .min(1, { message: "variant id is required" }),
+    }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({
+        id: z.string(),
+        productId: z.string(),
+        sku: z.string(),
+        ean: z.string().nullable(),
+        tags: z.array(z.string()).default([]),
+        price: z.number(),
+        comparePrice: z.number().nullable().optional(),
+        stock: z.number(),
+        weightGrams: z.number().nullable().optional(),
+        weightClassId: z.string().nullable().optional(),
+        isActive: z.boolean(),
+        isDeleted: z.boolean(),
+        createdAt: z.date(),
+        updatedAt: z.date(),
+        images: z.array(
+          z.object({
+            id: z.string(),
+            productVariantId: z.string(),
+            url: z.string(),
+            isPrimary: z.boolean(),
+            altText: z.string().nullable().optional(),
+            sortOrder: z.number(),
+            createdAt: z.date(),
+            updatedAt: z.date(),
+            isDeleted: z.boolean().optional().default(false),
+          }),
+        ).default([]),
+        optionValues: z.array(
+          z.object({
+            variantId: z.string(),
+            optionValueId: z.string(),
+            optionValue: z.object({
+              id: z.string(),
+              optionId: z.string(),
+              value: z.string(),
+              sortOrder: z.number(),
+              createdAt: z.date(),
+              updatedAt: z.date(),
+              option: z.object({
+                id: z.string(),
+                name: z.string(),
+                sortOrder: z.number(),
+                createdAt: z.date(),
+                updatedAt: z.date(),
+              }),
+            }),
+          }),
+        ).default([]),
+        product: z.object({
+          id: z.string(),
+          name: z.string(),
+          slug: z.string(),
+          description: z.string().nullable(),
+          keyIngredients: z.string().nullable(),
+          metaTitle: z.string().nullable(),
+          metaDescription: z.string().nullable(),
+          metaKeywords: z.string().nullable(),
+          seoKeyword: z.string().nullable(),
+          model: z.string().nullable(),
+          ean: z.string().nullable(),
+          frontImageUrl: z.string().nullable(),
+          tags: z.array(z.string()).default([]),
+          brandId: z.string().nullable(),
+          requiresShipping: z.coerce.boolean().optional(),
+          outOfStockStatus: OutOfStockStatusEnum.optional(),
+          dimensionLength: z.number().nullable().optional(),
+          dimensionWidth: z.number().nullable().optional(),
+          dimensionHeight: z.number().nullable().optional(),
+          lengthClassId: z.string().nullable().optional(),
+          weightGrams: z.number().nullable().optional(),
+          weightClassId: z.string().nullable().optional(),
+          taxClassId: z.string().nullable().optional(),
+          sortOrder: z.number().optional(),
+          viewCount: z.number().optional(),
+          purchasedCount: z.number().optional(),
+          isActive: z.boolean().optional(),
+          isDeleted: z.boolean().optional(),
+          createdAt: z.date().optional(),
+          updatedAt: z.date().optional(),
+        }).optional(),
+      }),
+    }),
+  },
+
+
+
   // Admin types
   GetAllProductsAdmin: {
     body: z.object({}),
@@ -624,16 +739,54 @@ export const ProductTypes = {
 
   AddProductImage: {
     body: z.object({
-      url: z
-        .string("Image URL must be a string")
-        .min(1, { message: "Image URL is required" })
-        .url({ message: "Invalid URL" }),
+      // Image file is uploaded as multipart/form-data under field name 'image'.
+      // The request body may include optional altText and isPrimary flag.
       altText: z.string("altText must be a string").optional(),
+      isPrimary: z.preprocess((val) => {
+        if (typeof val === "string") {
+          const v = val.toLowerCase();
+          if (v === "true") return true;
+          if (v === "false") return false;
+        }
+        return val;
+      }, z.boolean()).optional(),
     }),
     params: z.object({
       variantId: z
         .string("variantId must be a string")
         .min(1, { message: "variantId is required" }),
+    }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({
+        id: z.string(),
+        url: z.string(),
+        isPrimary: z.boolean(),
+        altText: z.string().nullable(),
+        createdAt: z.date(),
+        updatedAt: z.date(),
+      }),
+    }),
+  },
+
+  UpdateProductImage: {
+    body: z.object({
+      altText: z.string("altText must be a string").optional(),
+      isPrimary: z.preprocess((val) => {
+        if (typeof val === "string") {
+          const v = val.toLowerCase();
+          if (v === "true") return true;
+          if (v === "false") return false;
+        }
+        return val;
+      }, z.boolean()).optional(),
+    }),
+    params: z.object({
+      id: z
+        .string("Image id must be a string")
+        .min(1, { message: "image id is required" }),
     }),
     query: z.object({}),
     response: z.object({

@@ -234,7 +234,7 @@ export const toPublicVariant = (variant: any) => {
     // Images - public URLs only
     images: variant.images?.filter((img: any) => !img.isDeleted).map((img: any) => ({
       id: img.id,
-      url: img.imageUrl,
+      url: img.url,
       altText: img.altText,
       isPrimary: img.isPrimary,
       sortOrder: img.sortOrder,

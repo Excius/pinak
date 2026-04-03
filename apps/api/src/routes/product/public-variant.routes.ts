@@ -8,6 +8,14 @@ export const registerProductPublicVariantRoutes = (
   { productController, authMiddleware, rateLimiter }: ProductRouteDeps,
 ) => {
   router.get(
+    "/variant/:variantId",
+    authMiddleware.authenticate,
+    rateLimiter,
+    validateMultiple(ProductTypes.GetVariant),
+    productController.getVariantById,
+  );
+
+  router.get(
     "/:productId/variants",
     authMiddleware.authenticate,
     rateLimiter,

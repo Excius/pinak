@@ -1,12 +1,12 @@
 meta {
-  name: Restore Image
+  name: Admin - Get Product Variant by ID
   type: http
-  seq: 6
+  seq: 9
 }
 
-patch {
-  url: {{baseUrl}}/api/v1/products/admin/images/{{id}}/restore
-  body: json
+get {
+  url: {{baseUrl}}/api/v1/products/admin/variants/{{id}}
+  body: none
   auth: inherit
 }
 
@@ -18,19 +18,15 @@ auth:bearer {
   token: {{authToken}}
 }
 
-body:json {
-  {}
-}
-
 vars:pre-request {
   baseUrl: http://localhost:3000
   authToken: your-moderator-or-admin-jwt-token-here
-  id: cmnjdin8y0002ccmzubzz03sn
+  id: cmnj36trl00412amzrokgnkoy
 }
 
 docs {
-  Route uses ProductTypes.RestoreProduct schema
+  Schema: ProductTypes.GetVariantAdmin
   Params: id
   Query: none
-  Body: {}
+  Body: none
 }

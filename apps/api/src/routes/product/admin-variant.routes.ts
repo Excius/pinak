@@ -16,6 +16,15 @@ export const registerProductAdminVariantRoutes = (
     productController.createProductVariant,
   );
 
+  router.get(
+    "/admin/variants/:id",
+    rateLimiter,
+    authMiddleware.authenticate,
+    authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ProductTypes.GetVariantAdmin),
+    productController.getVariantByIdAdmin,
+  );
+
   router.put(
     "/admin/variants/:id",
     rateLimiter,
