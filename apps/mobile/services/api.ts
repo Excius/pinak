@@ -46,11 +46,20 @@ api.interceptors.response.use(
     (response) => response,
     async (error: AxiosError<any>) => {
         const originalRequest: any = error.config;
+        const requestUrl = String(originalRequest?.url || '');
+        const skipRefreshForAuthEndpoints =
+            requestUrl.includes('/auth/login') ||
+            requestUrl.includes('/auth/register') ||
+            requestUrl.includes('/auth/google') ||
+            requestUrl.includes('/auth/verify-email') ||
+            requestUrl.includes('/auth/verify-password') ||
+            requestUrl.includes('/auth/forgot-password');
 
         if (
             error.response?.status === 401 &&
             !originalRequest._retry &&
-            !originalRequest.url.includes('/auth/refresh')
+            !requestUrl.includes('/auth/refresh') &&
+            !skipRefreshForAuthEndpoints
         ) {
             originalRequest._retry = true;
 
