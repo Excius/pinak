@@ -11,12 +11,13 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
-import { getProductById } from "@/services/product.service";
-import type { ProductApi } from "@repo/types";
+import { getProductById, getRelatedProducts } from "@/services/product.service";
+import type { ProductApi, RelatedProductApi } from "@repo/types";
 import { mapProductDetailImage } from "@/utils/mappers/product.mapper";
 
 type ProductDetail = ProductApi.ResponseTypes["GetProductById"]["data"];
 type ProductVariant = ProductDetail["variants"][number];
+type RelatedProduct = RelatedProductApi.ResponseTypes["ListRelated"]["data"][number];
 
 export default function ProductDetailScreen() {
   const { productId } = useLocalSearchParams<{ productId?: string }>();
@@ -28,6 +29,8 @@ export default function ProductDetailScreen() {
   );
   const [isFavorite, setIsFavorite] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [relatedProducts, setRelatedProducts] = useState<RelatedProduct[]>([]);
+  const [isLoadingRelated, setIsLoadingRelated] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -51,6 +54,19 @@ export default function ProductDetailScreen() {
           null;
 
         setSelectedVariantId(activeVariant ? activeVariant.id : null);
+
+        // Fetch related products
+        try {
+          setIsLoadingRelated(true);
+          const relatedResponse = await getRelatedProducts(String(productId));
+          setRelatedProducts(relatedResponse.data);
+        } catch (relatedErr) {
+          // Related products not critical, fail silently
+          console.error("Failed to fetch related products:", relatedErr);
+          setRelatedProducts([]);
+        } finally {
+          setIsLoadingRelated(false);
+        }
       } catch (err) {
         setError(
           err instanceof Error
@@ -297,10 +313,66 @@ export default function ProductDetailScreen() {
           ) : null}
 
           <View className="py-6">
-            <Text className="text-base font-bold uppercase tracking-widest text-text-primary mb-2">
+            <Text className="text-base font-bold uppercase tracking-widest text-text-primary mb-4">
               Pairs well with
             </Text>
-            <Text className="text-sm text-text-secondary">Coming soon.</Text>
+
+            {isLoadingRelated ? (
+              <View className="flex-row items-center gap-2 mb-2">
+                <ActivityIndicator size="small" color="#C9A962" />
+                <Text className="text-xs text-text-secondary">Loading...</Text>
+              </View>
+            ) : relatedProducts.length === 0 ? (
+              <Text className="text-sm text-text-secondary">No related products available.</Text>
+            ) : (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+              >
+                <View className="flex-row gap-3">
+                  {relatedProducts.map((relatedItem) => (
+                    <TouchableOpacity
+                      key={relatedItem.relatedProductId}
+                      onPress={() => {
+                        router.push({
+                          pathname: "/product/[productId]",
+                          params: { productId: relatedItem.relatedProductId },
+                        });
+                      }}
+                      className="w-40 rounded-lg overflow-hidden bg-surface border border-surface-border"
+                    >
+                      <View className="relative aspect-[4/5] bg-background">
+                        <Image
+                          source={{
+                            uri: relatedItem.relatedProduct.frontImageUrl || undefined,
+                          }}
+                          className="w-full h-full"
+                          resizeMode="cover"
+                        />
+                      </View>
+                      <View className="p-3">
+                        <Text
+                          className="text-xs font-semibold text-text-primary leading-tight mb-2"
+                          numberOfLines={2}
+                        >
+                          {relatedItem.relatedProduct.name}
+                        </Text>
+                        <View className="flex-row items-center gap-2">
+                          <MaterialCommunityIcons
+                            name="arrow-right"
+                            size={14}
+                            color="#C9A962"
+                          />
+                          <Text className="text-xs text-primary font-bold">
+                            View
+                          </Text>
+                        </View>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </ScrollView>
+            )}
           </View>
         </View>
       </ScrollView>
