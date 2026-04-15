@@ -196,18 +196,19 @@ export const AuthTypes = {
   },
 
   GoogleOauthCallback: {
-    body: z.object({}),
-    params: z.object({}),
-    query: z.object({
+    body: z.object({
       code: z
         .string("Code must be a string")
         .min(1, { message: "Code is required" }),
     }),
+    params: z.object({}),
+    query: z.object({}),
     response: z.object({
       message: z.string(),
       success: z.boolean(),
       data: z.object({
         accessToken: z.string(),
+        refreshToken: z.string(),
         user: UserSchema,
       }),
     }),

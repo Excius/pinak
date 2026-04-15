@@ -91,8 +91,14 @@ api.interceptors.response.use(
                 return api(originalRequest);
             } catch (err) {
                 processQueue(err, null);
-                await deleteAccessToken();
-                await deleteRefreshToken();
+
+                // Only clear persisted tokens when refresh is explicitly rejected.
+                // For transient failures (network/server), keep tokens and retry later.
+                const refreshStatus = (err as any)?.response?.status;
+                if (refreshStatus === 401 || refreshStatus === 403) {
+                    await deleteAccessToken();
+                    await deleteRefreshToken();
+                }
                 return Promise.reject(err);
             } finally {
                 isRefreshing = false;
