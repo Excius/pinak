@@ -172,12 +172,12 @@ class Config {
   /**
    * Use path-style addressing for S3 URLs (useful for MinIO).
    */
-  public readonly S3_FORCE_PATH_STYLE: boolean;
+  public readonly S3_FORCE_PATH_STYLE?: boolean;
 
   /**
    * Presigned URL expiry in seconds.
    */
-  public readonly S3_SIGNED_URL_EXPIRES: number;
+  public readonly S3_SIGNED_URL_EXPIRES?: number;
 
   constructor() {
     this.NODE_ENV = process.env.NODE_ENV || "development";
@@ -279,7 +279,6 @@ class Config {
       process.env.S3_SIGNED_URL_EXPIRES || "900",
       10,
     );
-    
 
     if (this.S3_ENABLED && !this.S3_BUCKET) {
       throw new Error(
