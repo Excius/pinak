@@ -200,6 +200,9 @@ export const AuthTypes = {
       code: z
         .string("Code must be a string")
         .min(1, { message: "Code is required" }),
+      platform: z
+        .enum(["WEB", "MOBILE"], "platform must be either WEB or MOBILE")
+        .optional(),
     }),
     params: z.object({}),
     query: z.object({}),
