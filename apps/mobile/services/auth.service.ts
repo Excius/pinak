@@ -79,6 +79,7 @@ export async function getGoogleOauthUrlService(platform: 'WEB' | 'MOBILE' = 'MOB
 export async function googleOauthCallbackService(code: string) {
     const oauthResponse = await apiRequest<GoogleOauthCallbackResponse>('post', '/auth/google/callback', {
         code,
+        platform: 'MOBILE',
     });
 
     await setAccessToken(oauthResponse.data.accessToken);

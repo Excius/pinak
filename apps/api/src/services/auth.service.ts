@@ -29,7 +29,7 @@ export class AuthService {
     private user: UserRespository,
     private magicLink: MagicLinkService,
     private authProvider: AuthProviderRepository,
-  ) {}
+  ) { }
 
   async generateTokens(
     userId: string,
@@ -371,7 +371,7 @@ export class AuthService {
     return;
   }
 
-  async googleOauthCallback(code: string): Promise<{
+  async googleOauthCallback(code: string, platform: string = "WEB"): Promise<{
     accessToken: string;
     refreshToken: string;
     user: {
@@ -389,6 +389,11 @@ export class AuthService {
     }
 
     let res;
+    const normalizedPlatform = platform.toUpperCase();
+    const redirectUri =
+      normalizedPlatform === "MOBILE"
+        ? appConfig.REDIRECT_URI_BACKEND
+        : appConfig.REDIRECT_URI_WEB;
 
     try {
       res = await axios.post(
@@ -397,7 +402,7 @@ export class AuthService {
           client_id: appConfig.CLIENT_ID_WEB,
           client_secret: appConfig.CLIENT_SECRET,
           code: decodeURIComponent(code),
-          redirect_uri: appConfig.REDIRECT_URI_WEB,
+          redirect_uri: redirectUri,
           grant_type: "authorization_code",
         }),
         {
