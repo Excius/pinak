@@ -1,0 +1,32 @@
+meta {
+  name: Delete Brand
+  type: http
+  seq: 6
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/brands/admin/{{brandId}}
+  body: none
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  authToken: your-moderator-or-admin-jwt-token-here
+  brandId: your-brand-id-here
+}
+
+docs {
+  Schema: BrandTypes.DeleteBrand
+  Params: brandId
+  Query: none
+  Body: none
+}

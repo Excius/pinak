@@ -1,0 +1,32 @@
+meta {
+  name: Get Brand by Slug
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/brands/slug/{{slug}}
+  body: none
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  authToken: your-jwt-token-here
+  slug: eyeglow
+}
+
+docs {
+  Schema: BrandTypes.GetBrandBySlug
+  Params: slug
+  Query: none
+  Body: none
+}

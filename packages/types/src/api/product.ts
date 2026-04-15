@@ -28,6 +28,7 @@ const PublicVariantRouteImageSchema = z.object({
 const PublicProductVariantSchema = z.object({
   id: z.string(),
   sku: z.string(),
+  tags: z.array(z.string()),
   price: z.number(),
   compareAtPrice: z.number().nullable().optional(),
   stock: z.number(),
@@ -47,6 +48,10 @@ const PublicProductSchema = z.object({
   name: z.string(),
   slug: z.string(),
   description: z.string().nullable(),
+  metaTitle: z.string().nullable(),
+  metaDescription: z.string().nullable(),
+  metaKeywords: z.string().nullable(),
+  seoKeyword: z.string().nullable(),
   keyIngredients: z.string().nullable(),
   frontImageUrl: z.string().nullable(),
   tags: z.array(z.string()),
@@ -84,7 +89,7 @@ const PublicProductSchema = z.object({
 });
 
 const PublicProductListSchema = z.object({
-  data: z.array(PublicProductSchema),
+  items: z.array(PublicProductSchema),
   pagination: z.object({
     page: z.number(),
     limit: z.number(),
@@ -98,6 +103,7 @@ const PublicProductListSchema = z.object({
 const PublicVariantRouteSchema = z.object({
   id: z.string(),
   sku: z.string(),
+  tags: z.array(z.string()),
   price: z.number(),
   compareAtPrice: z.number().nullable().optional(),
   stock: z.number(),
@@ -106,10 +112,8 @@ const PublicVariantRouteSchema = z.object({
   images: z.array(PublicVariantRouteImageSchema),
   optionValues: z.array(
     z.object({
-      optionName: z.string().optional(),
-      optionSlug: z.string().optional(),
-      valueName: z.string().optional(),
-      valueSlug: z.string().optional(),
+      optionName: z.string(),
+      valueName: z.string(),
     }),
   ),
 });
@@ -438,7 +442,7 @@ export const ProductTypes = {
       message: z.string(),
       success: z.boolean(),
       data: z.object({
-        data: z.array(
+        items: z.array(
           z.object({
             id: z.string(),
             name: z.string(),
@@ -818,6 +822,45 @@ export const ProductTypes = {
         id: z.string(),
         isPrimary: z.boolean(),
       }),
+    }),
+  },
+
+  SoftDeleteImage: {
+    body: z.object({}),
+    params: z.object({
+      id: z.string(),
+    }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({}),
+    }),
+  },
+
+  RestoreImage: {
+    body: z.object({}),
+    params: z.object({
+      id: z.string(),
+    }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({}),
+    }),
+  },
+
+  HardDeleteImage: {
+    body: z.object({}),
+    params: z.object({
+      id: z.string(),
+    }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({}),
     }),
   },
 

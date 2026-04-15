@@ -30,6 +30,10 @@ export const toPublicProduct = (product: ProductWithRelations) => {
     name: product.name,
     slug: product.slug,
     description: product.description,
+    metaTitle: product.metaTitle,
+    metaDescription: product.metaDescription,
+    metaKeywords: product.metaKeywords,
+    seoKeyword: product.seoKeyword,
     keyIngredients: product.keyIngredients,
     frontImageUrl: product.frontImageUrl,
     tags: product.tags,
@@ -59,6 +63,7 @@ export const toPublicProduct = (product: ProductWithRelations) => {
     variants: product.variants?.map((v: any) => ({
       id: v.id,
       sku: v.sku,
+      tags: Array.isArray(v.tags) ? v.tags : [],
       price: v.price,
       compareAtPrice: v.compareAtPrice,
       stock: v.stock,
@@ -71,7 +76,7 @@ export const toPublicProduct = (product: ProductWithRelations) => {
       // Option values
       optionValues: v.optionValues?.map((ov: any) => ({
         optionName: ov.optionValue?.option?.name,
-        valueName: ov.optionValue?.name,
+        valueName: ov.optionValue?.value,
       })).filter((ov: any) => ov.optionName && ov.valueName) || [],
     })) || [],
 
@@ -95,7 +100,7 @@ export const toPublicProductList = (result: { data: any[], pagination: any }) =>
   return {
     // Featured queries return wrapper rows { product, section, ... }.
     // Normalize both plain product rows and wrapper rows here.
-    data: result.data
+    items: result.data
       .map((item: any) => toPublicProduct(item?.product ?? item))
       .filter(Boolean),
     pagination: result.pagination,
@@ -127,7 +132,7 @@ export const toAdminProduct = (product: ProductWithRelations) => {
     viewCount: product.viewCount,
     purchasedCount: product.purchasedCount,
 
-    // SEO fields (admin only)
+    // SEO fields
     metaTitle: product.metaTitle,
     metaDescription: product.metaDescription,
     metaKeywords: product.metaKeywords,
@@ -211,7 +216,7 @@ export const toAdminProduct = (product: ProductWithRelations) => {
  */
 export const toAdminProductList = (result: { data: any[], pagination: any }) => {
   return {
-    data: result.data.map(toAdminProduct),
+    items: result.data.map(toAdminProduct),
     pagination: result.pagination,
   };
 };
@@ -225,6 +230,7 @@ export const toPublicVariant = (variant: any) => {
   return {
     id: variant.id,
     sku: variant.sku,
+    tags: Array.isArray(variant.tags) ? variant.tags : [],
     price: variant.price,
     compareAtPrice: variant.compareAtPrice,
     stock: variant.stock,
@@ -243,10 +249,8 @@ export const toPublicVariant = (variant: any) => {
     // Option values
     optionValues: variant.optionValues?.map((ov: any) => ({
       optionName: ov.optionValue?.option?.name,
-      optionSlug: ov.optionValue?.option?.slug,
-      valueName: ov.optionValue?.name,
-      valueSlug: ov.optionValue?.slug,
-    })) || [],
+      valueName: ov.optionValue?.value,
+    })).filter((ov: any) => ov.optionName && ov.valueName) || [],
   };
 };
 

@@ -55,23 +55,18 @@ export class WishlistService {
   }
 
   async removeFromWishlist(userId: string, itemId: string) {
-    const item = await this.repo.getItemById(itemId);
+    const item = await this.repo.getItemByIdForUser(itemId, userId);
     if (!item) {
       throw new NotFoundError("Wishlist item not found");
     }
 
-    if (item.wishlist.userId !== userId) {
-      throw new ValidationError("This item does not belong to your wishlist");
-    }
-
-    await this.repo.removeItem(itemId);
+    await this.repo.removeItemForUser(itemId, userId);
 
     return { message: "Item removed from wishlist" };
   }
 
   async clearWishlist(userId: string) {
-    const wishlist = await this.repo.findOrCreateWishlist(userId);
-    const deletedCount = await this.repo.clearWishlist(wishlist.id);
+    const deletedCount = await this.repo.clearWishlistByUser(userId);
 
     return {
       message: "Wishlist cleared",

@@ -34,9 +34,11 @@ collections:
     path: "collections/ProductCategories"
   - name: "RelatedProducts"
     path: "collections/RelatedProducts"
+  - name: "Wishlist"
+    path: "collections/Wishlist"
 
 specs:
 
-docs: ''
+docs: ""
 
 activeEnvironmentUid: eygp3o000000000000000

@@ -1,0 +1,28 @@
+meta {
+  name: Admin - List Filter Groups
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/filters/admin/groups
+  body: none
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  authToken: your-jwt-token-here
+}
+
+docs {
+  List filter groups with full admin payloads. Requires Moderator or Admin.
+}

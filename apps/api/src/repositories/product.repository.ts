@@ -531,8 +531,55 @@ export class ProductRepository {
 
   // Admin-specific methods
   getProductByIdAdmin(id: string) {
-    return this.prisma.product.findFirst({
+    return this.prisma.product.findUnique({
       where: { id },
+      include: {
+        brand: true,
+        taxClass: true,
+        lengthClass: true,
+        weightClass: true,
+        categories: { include: { category: true } },
+        filterValues: {
+          include: { filterValue: { include: { filterGroup: true } } },
+        },
+        variants: {
+          include: {
+            images: true,
+            optionValues: {
+              include: { optionValue: { include: { option: true } } },
+            },
+          },
+        },
+        relatedProducts: {
+          include: {
+            relatedProduct: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                frontImageUrl: true,
+              },
+            },
+          },
+          orderBy: { sortOrder: "asc" },
+        },
+        relatedTo: {
+          include: {
+            product: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                frontImageUrl: true,
+              },
+            },
+          },
+          orderBy: { sortOrder: "asc" },
+        },
+        featuredProducts: {
+          include: { section: true },
+        },
+      },
     });
   }
 
