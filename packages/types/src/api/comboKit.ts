@@ -14,6 +14,178 @@ const sortOrderSchema = z.enum(["asc", "desc"]);
 const pricingStrategySchema = z.enum(["FIXED_PRICE", "CALCULATED", "DYNAMIC"]);
 const discountTypeSchema = z.enum(["PERCENTAGE", "FIXED_AMOUNT"]);
 
+const comboPaginationSchema = z.object({
+  page: z.number(),
+  limit: z.number(),
+  total: z.number(),
+  totalPages: z.number(),
+  hasNext: z.boolean(),
+  hasPrev: z.boolean(),
+});
+
+const publicComboKitVariantOptionSchema = z.object({
+  optionName: z.string(),
+  value: z.string(),
+});
+
+const publicComboKitVariantSchema = z.object({
+  id: z.string(),
+  sku: z.string(),
+  price: z.number(),
+  stock: z.number(),
+  imageUrl: z.string().nullable(),
+  optionValues: z.array(publicComboKitVariantOptionSchema),
+});
+
+const publicComboKitItemSchema = z.object({
+  id: z.string(),
+  productVariantId: z.string(),
+  quantity: z.number(),
+  sortOrder: z.number(),
+  originalPrice: z.number().nullable().optional(),
+  discountedPrice: z.number().nullable().optional(),
+  isRequired: z.boolean(),
+  productVariant: publicComboKitVariantSchema.nullable().optional(),
+});
+
+const publicComboKitSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  slug: z.string(),
+  description: z.string().nullable(),
+  audience: z.string().nullable(),
+  metaTitle: z.string().nullable(),
+  metaDescription: z.string().nullable(),
+  metaKeywords: z.string().nullable(),
+  seoKeyword: z.string().nullable(),
+  price: z.number(),
+  pricingStrategy: pricingStrategySchema,
+  discountType: discountTypeSchema.nullable(),
+  discountValue: z.number().nullable(),
+  tags: z.array(z.string()),
+  imageUrl: z.string().nullable(),
+  viewCount: z.number(),
+  purchasedCount: z.number(),
+  isActive: z.boolean(),
+  items: z.array(publicComboKitItemSchema),
+});
+
+const publicComboKitListSchema = z.object({
+  items: z.array(publicComboKitSchema),
+  pagination: comboPaginationSchema,
+});
+
+const adminOptionSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  sortOrder: z.number().optional(),
+  createdAt: z.date().optional(),
+  updatedAt: z.date().optional(),
+});
+
+const adminOptionValueSchema = z.object({
+  id: z.string(),
+  optionId: z.string(),
+  value: z.string(),
+  sortOrder: z.number(),
+  createdAt: z.date().optional(),
+  updatedAt: z.date().optional(),
+  option: adminOptionSchema.optional(),
+});
+
+const adminVariantOptionValueSchema = z.object({
+  variantId: z.string().optional(),
+  optionValueId: z.string().optional(),
+  optionValue: adminOptionValueSchema.optional(),
+});
+
+const adminProductImageSchema = z.object({
+  id: z.string(),
+  url: z.string(),
+  isPrimary: z.boolean(),
+  altText: z.string().nullable().optional(),
+  sortOrder: z.number(),
+  createdAt: z.date().optional(),
+  updatedAt: z.date().optional(),
+  isDeleted: z.boolean().optional(),
+});
+
+const adminComboKitVariantSchema = z.object({
+  id: z.string(),
+  productId: z.string().optional(),
+  sku: z.string(),
+  ean: z.string().nullable().optional(),
+  tags: z.array(z.string()),
+  price: z.number(),
+  comparePrice: z.number().nullable().optional(),
+  stock: z.number(),
+  weightGrams: z.number().nullable().optional(),
+  weightClassId: z.string().nullable().optional(),
+  isActive: z.boolean().optional(),
+  isDeleted: z.boolean().optional(),
+  createdAt: z.date().optional(),
+  updatedAt: z.date().optional(),
+  images: z.array(adminProductImageSchema),
+  optionValues: z.array(adminVariantOptionValueSchema),
+});
+
+const adminComboKitItemSchema = z.object({
+  id: z.string(),
+  comboKitId: z.string().optional(),
+  productVariantId: z.string(),
+  quantity: z.number(),
+  sortOrder: z.number(),
+  originalPrice: z.number().nullable().optional(),
+  discountedPrice: z.number().nullable().optional(),
+  isRequired: z.boolean(),
+  createdAt: z.date().optional(),
+  updatedAt: z.date().optional(),
+  productVariant: adminComboKitVariantSchema.nullable().optional(),
+});
+
+const adminComboKitSchema = publicComboKitSchema.extend({
+  metaTitle: z.string().nullable(),
+  metaDescription: z.string().nullable(),
+  metaKeywords: z.string().nullable(),
+  seoKeyword: z.string().nullable(),
+  sortOrder: z.number(),
+  isDeleted: z.boolean(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  items: z.array(adminComboKitItemSchema),
+});
+
+const adminComboKitListSchema = z.object({
+  items: z.array(adminComboKitSchema),
+  pagination: comboPaginationSchema,
+});
+
+const comboKitDependenciesSchema = z.object({
+  cartCount: z.number(),
+  orderCount: z.number(),
+});
+
+const comboKitAnalyticsSchema = z.object({
+  comboKit: z.object({
+    id: z.string(),
+    name: z.string(),
+    slug: z.string(),
+    viewCount: z.number(),
+    purchasedCount: z.number(),
+    createdAt: z.date(),
+    updatedAt: z.date(),
+    _count: z.object({
+      items: z.number(),
+    }),
+  }),
+  orders: z.object({
+    orderItemCount: z.number(),
+    totalUnitsSold: z.number(),
+    grossSalesAmount: z.number(),
+  }),
+  cartCount: z.number(),
+});
+
 const comboKitItemInputSchema = z.object({
   productVariantId: z
     .string("productVariantId must be a string")
@@ -61,57 +233,7 @@ export const ComboKitTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: z.object({
-        data: z.array(
-          z.object({
-            id: z.string(),
-            name: z.string(),
-            slug: z.string(),
-            description: z.string().nullable(),
-            audience: z.string().nullable(),
-            price: z.number(),
-            pricingStrategy: pricingStrategySchema,
-            discountType: discountTypeSchema.nullable().optional(),
-            discountValue: z.number().nullable().optional(),
-            tags: z.array(z.string()).optional(),
-            imageUrl: z.string().nullable().optional(),
-            sortOrder: z.number().optional(),
-            viewCount: z.number().optional(),
-            purchasedCount: z.number().optional(),
-            isActive: z.boolean(),
-            isDeleted: z.boolean().optional(),
-            createdAt: z.date(),
-            updatedAt: z.date(),
-            items: z.array(
-              z.object({
-                id: z.string(),
-                productVariantId: z.string(),
-                quantity: z.number(),
-                sortOrder: z.number().optional(),
-                originalPrice: z.number().nullable().optional(),
-                discountedPrice: z.number().nullable().optional(),
-                isRequired: z.boolean().optional(),
-                productVariant: z
-                  .object({
-                    id: z.string(),
-                    sku: z.string(),
-                    price: z.number(),
-                    stock: z.number(),
-                  })
-                  .optional(),
-              }),
-            ),
-          }),
-        ),
-        pagination: z.object({
-          page: z.number(),
-          limit: z.number(),
-          total: z.number(),
-          totalPages: z.number(),
-          hasNext: z.boolean(),
-          hasPrev: z.boolean(),
-        }),
-      }),
+      data: publicComboKitListSchema,
     }),
   },
 
@@ -122,7 +244,7 @@ export const ComboKitTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: z.object({ id: z.string() }),
+      data: publicComboKitSchema,
     }),
   },
 
@@ -137,44 +259,7 @@ export const ComboKitTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: z.object({
-        id: z.string(),
-        name: z.string(),
-        slug: z.string(),
-        description: z.string().nullable(),
-        audience: z.string().nullable(),
-        price: z.number(),
-        pricingStrategy: pricingStrategySchema,
-        discountType: discountTypeSchema.nullable().optional(),
-        discountValue: z.number().nullable().optional(),
-        tags: z.array(z.string()).optional(),
-        imageUrl: z.string().nullable().optional(),
-        sortOrder: z.number().optional(),
-        viewCount: z.number().optional(),
-        purchasedCount: z.number().optional(),
-        isActive: z.boolean(),
-        createdAt: z.date(),
-        updatedAt: z.date(),
-        items: z.array(
-          z.object({
-            id: z.string(),
-            productVariantId: z.string(),
-            quantity: z.number(),
-            sortOrder: z.number().optional(),
-            originalPrice: z.number().nullable().optional(),
-            discountedPrice: z.number().nullable().optional(),
-            isRequired: z.boolean().optional(),
-            productVariant: z
-              .object({
-                id: z.string(),
-                sku: z.string(),
-                price: z.number(),
-                stock: z.number(),
-              })
-              .optional(),
-          }),
-        ),
-      }),
+      data: publicComboKitSchema,
     }),
   },
 
@@ -190,7 +275,7 @@ export const ComboKitTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: z.object({ data: z.array(z.object({ id: z.string() })) }),
+      data: publicComboKitListSchema,
     }),
   },
 
@@ -203,7 +288,7 @@ export const ComboKitTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: z.array(z.object({ id: z.string() })),
+      data: z.array(publicComboKitItemSchema),
     }),
   },
 
@@ -220,7 +305,7 @@ export const ComboKitTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: z.object({ data: z.array(z.object({ id: z.string() })) }),
+      data: adminComboKitListSchema,
     }),
   },
 
@@ -231,7 +316,7 @@ export const ComboKitTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: z.object({ id: z.string() }),
+      data: adminComboKitSchema,
     }),
   },
 
@@ -242,11 +327,7 @@ export const ComboKitTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: z.object({
-        id: z.string(),
-        viewCount: z.number(),
-        purchasedCount: z.number(),
-      }),
+      data: comboKitAnalyticsSchema,
     }),
   },
 
@@ -257,14 +338,10 @@ export const ComboKitTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: z.object({
-        cartCount: z.number(),
-        orderCount: z.number(),
-      }),
+      data: comboKitDependenciesSchema,
     }),
   },
 
-  // Admin / manager types
   CreateComboKit: {
     body: z.object({
       name: z
@@ -297,7 +374,7 @@ export const ComboKitTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: z.object({ id: z.string() }),
+      data: adminComboKitSchema,
     }),
   },
 
@@ -319,13 +396,14 @@ export const ComboKitTypes = {
       sortOrder: z.coerce.number().int().min(0).optional(),
       price: z.coerce.number().int().min(0).optional(),
       isActive: z.coerce.boolean().optional(),
+      items: z.array(comboKitItemInputSchema).optional(),
     }),
     params: z.object({ id: z.string() }),
     query: z.object({}),
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: z.object({}),
+      data: adminComboKitSchema,
     }),
   },
 
@@ -340,7 +418,7 @@ export const ComboKitTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: z.object({}),
+      data: adminComboKitItemSchema,
     }),
   },
 
@@ -357,7 +435,7 @@ export const ComboKitTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: z.object({}),
+      data: adminComboKitItemSchema,
     }),
   },
 
@@ -377,7 +455,7 @@ export const ComboKitTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: z.array(z.object({ id: z.string() })),
+      data: z.array(adminComboKitItemSchema),
     }),
   },
 
@@ -390,7 +468,7 @@ export const ComboKitTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: z.array(z.object({ id: z.string() })),
+      data: z.array(adminComboKitItemSchema),
     }),
   },
 
@@ -401,7 +479,7 @@ export const ComboKitTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: z.object({}),
+      data: adminComboKitSchema,
     }),
   },
 
@@ -417,7 +495,7 @@ export const ComboKitTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: z.object({}),
+      data: adminComboKitSchema,
     }),
   },
 
@@ -436,7 +514,7 @@ export const ComboKitTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: z.object({}),
+      data: adminComboKitSchema,
     }),
   },
 
@@ -469,7 +547,7 @@ export const ComboKitTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: z.object({}),
+      data: adminComboKitSchema,
     }),
   },
 

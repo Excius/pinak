@@ -1,24 +1,31 @@
 import { z } from "zod";
 
-const FilterValueSchema = z.object({
+const PublicFilterValueSchema = z.object({
   id: z.string(),
-  filterGroupId: z.string(),
   name: z.string(),
   slug: z.string(),
   sortOrder: z.number().int(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
 });
 
-const FilterGroupSchema = z.object({
+const PublicFilterGroupSchema = z.object({
   id: z.string(),
   name: z.string(),
   slug: z.string(),
   sortOrder: z.number().int(),
   isActive: z.boolean(),
-  values: z.array(FilterValueSchema),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  values: z.array(PublicFilterValueSchema),
+});
+
+const AdminFilterValueSchema = PublicFilterValueSchema.extend({
+  filterGroupId: z.string().optional(),
+  createdAt: z.date().optional(),
+  updatedAt: z.date().optional(),
+});
+
+const AdminFilterGroupSchema = PublicFilterGroupSchema.extend({
+  values: z.array(AdminFilterValueSchema),
+  createdAt: z.date().optional(),
+  updatedAt: z.date().optional(),
 });
 
 const ProductFilterValueSchema = z.object({
@@ -34,7 +41,7 @@ export const FilterTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: z.array(FilterGroupSchema),
+      data: z.array(PublicFilterGroupSchema),
     }),
   },
 
@@ -45,7 +52,7 @@ export const FilterTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: FilterGroupSchema,
+      data: PublicFilterGroupSchema,
     }),
   },
 
@@ -56,13 +63,14 @@ export const FilterTypes = {
         .min(1, { message: "Filter group name is required" }),
       slug: z.string("slug must be a string").optional(),
       sortOrder: z.coerce.number().optional(),
+      isActive: z.coerce.boolean().optional(),
     }),
     params: z.object({}),
     query: z.object({}),
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: FilterGroupSchema,
+      data: AdminFilterGroupSchema,
     }),
   },
 
@@ -71,13 +79,14 @@ export const FilterTypes = {
       name: z.string().optional(),
       slug: z.string().optional(),
       sortOrder: z.coerce.number().optional(),
+      isActive: z.coerce.boolean().optional(),
     }),
     params: z.object({ id: z.string() }),
     query: z.object({}),
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: FilterGroupSchema,
+      data: AdminFilterGroupSchema,
     }),
   },
 
@@ -109,7 +118,7 @@ export const FilterTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: FilterValueSchema,
+      data: AdminFilterValueSchema,
     }),
   },
 
@@ -124,7 +133,7 @@ export const FilterTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: FilterValueSchema,
+      data: AdminFilterValueSchema,
     }),
   },
 
@@ -162,6 +171,30 @@ export const FilterTypes = {
   },
 };
 
+export const FilterAdminTypes = {
+  ListGroups: {
+    body: z.object({}),
+    params: z.object({}),
+    query: z.object({ activeOnly: z.coerce.boolean().optional() }),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.array(AdminFilterGroupSchema),
+    }),
+  },
+
+  GetGroupById: {
+    body: z.object({}),
+    params: z.object({ id: z.string() }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: AdminFilterGroupSchema,
+    }),
+  },
+};
+
 export type BodyTypes = {
   [K in keyof typeof FilterTypes]: z.infer<(typeof FilterTypes)[K]["body"]>;
 };
@@ -176,4 +209,28 @@ export type QueryTypes = {
 
 export type ResponseTypes = {
   [K in keyof typeof FilterTypes]: z.infer<(typeof FilterTypes)[K]["response"]>;
+};
+
+export type AdminBodyTypes = {
+  [K in keyof typeof FilterAdminTypes]: z.infer<
+    (typeof FilterAdminTypes)[K]["body"]
+  >;
+};
+
+export type AdminParamsTypes = {
+  [K in keyof typeof FilterAdminTypes]: z.infer<
+    (typeof FilterAdminTypes)[K]["params"]
+  >;
+};
+
+export type AdminQueryTypes = {
+  [K in keyof typeof FilterAdminTypes]: z.infer<
+    (typeof FilterAdminTypes)[K]["query"]
+  >;
+};
+
+export type AdminResponseTypes = {
+  [K in keyof typeof FilterAdminTypes]: z.infer<
+    (typeof FilterAdminTypes)[K]["response"]
+  >;
 };

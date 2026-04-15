@@ -1,9 +1,12 @@
 import { z } from "zod";
 
-const TaxClassSchema = z.object({
+const PublicTaxClassSchema = z.object({
   id: z.string(),
   name: z.string(),
   rate: z.number(),
+});
+
+const AdminTaxClassSchema = PublicTaxClassSchema.extend({
   createdAt: z.date(),
   updatedAt: z.date(),
 });
@@ -16,7 +19,7 @@ export const TaxClassTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: z.array(TaxClassSchema),
+      data: z.array(PublicTaxClassSchema),
     }),
   },
   GetById: {
@@ -30,7 +33,7 @@ export const TaxClassTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: TaxClassSchema,
+      data: PublicTaxClassSchema,
     }),
   },
   Create: {
@@ -45,7 +48,7 @@ export const TaxClassTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: TaxClassSchema,
+      data: AdminTaxClassSchema,
     }),
   },
   Update: {
@@ -65,7 +68,7 @@ export const TaxClassTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: TaxClassSchema,
+      data: AdminTaxClassSchema,
     }),
   },
   Delete: {
@@ -80,6 +83,33 @@ export const TaxClassTypes = {
       message: z.string(),
       success: z.boolean(),
       data: z.object({}),
+    }),
+  },
+};
+
+export const TaxClassAdminTypes = {
+  List: {
+    body: z.object({}),
+    params: z.object({}),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.array(AdminTaxClassSchema),
+    }),
+  },
+  GetById: {
+    body: z.object({}),
+    params: z.object({
+      id: z
+        .string("taxClass id must be a string")
+        .min(1, { message: "taxClass id is required" }),
+    }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: AdminTaxClassSchema,
     }),
   },
 };
@@ -103,5 +133,29 @@ export type QueryTypes = {
 export type ResponseTypes = {
   [K in keyof typeof TaxClassTypes]: z.infer<
     (typeof TaxClassTypes)[K]["response"]
+  >;
+};
+
+export type AdminBodyTypes = {
+  [K in keyof typeof TaxClassAdminTypes]: z.infer<
+    (typeof TaxClassAdminTypes)[K]["body"]
+  >;
+};
+
+export type AdminParamsTypes = {
+  [K in keyof typeof TaxClassAdminTypes]: z.infer<
+    (typeof TaxClassAdminTypes)[K]["params"]
+  >;
+};
+
+export type AdminQueryTypes = {
+  [K in keyof typeof TaxClassAdminTypes]: z.infer<
+    (typeof TaxClassAdminTypes)[K]["query"]
+  >;
+};
+
+export type AdminResponseTypes = {
+  [K in keyof typeof TaxClassAdminTypes]: z.infer<
+    (typeof TaxClassAdminTypes)[K]["response"]
   >;
 };

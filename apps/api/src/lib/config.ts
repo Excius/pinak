@@ -139,6 +139,46 @@ class Config {
    */
   public readonly REDIRECT_URI_BACKEND: string;
 
+  /**
+   * Whether S3 is enabled for storing images.
+   */
+  public readonly S3_ENABLED: boolean;
+
+  /**
+   * The S3 bucket name to store images.
+   */
+  public readonly S3_BUCKET?: string;
+
+  /**
+   * The AWS region for the S3 bucket.
+   */
+  public readonly S3_REGION?: string;
+
+  /**
+   * Optional AWS access key id for S3 (if not using IAM role).
+   */
+  public readonly S3_ACCESS_KEY_ID?: string;
+
+  /**
+   * Optional AWS secret access key for S3 (if not using IAM role).
+   */
+  public readonly S3_SECRET_ACCESS_KEY?: string;
+
+  /**
+   * Optional S3 endpoint for S3-compatible storage (e.g., MinIO).
+   */
+  public readonly S3_ENDPOINT?: string;
+
+  /**
+   * Use path-style addressing for S3 URLs (useful for MinIO).
+   */
+  public readonly S3_FORCE_PATH_STYLE: boolean;
+
+  /**
+   * Presigned URL expiry in seconds.
+   */
+  public readonly S3_SIGNED_URL_EXPIRES: number;
+
   constructor() {
     this.NODE_ENV = process.env.NODE_ENV || "development";
     this.PORT = parseInt(process.env.PORT || "3000", 10);
@@ -227,6 +267,25 @@ class Config {
       throw new Error("REDIRECT_URI_BACKEND environment variable is required");
     }
     this.REDIRECT_URI_BACKEND = process.env.REDIRECT_URI_BACKEND;
+    // S3 configuration (images storage). Enable with S3_ENABLED=true
+    this.S3_ENABLED = process.env.S3_ENABLED === "true";
+    this.S3_BUCKET = process.env.S3_BUCKET;
+    this.S3_REGION = process.env.S3_REGION || "us-east-1";
+    this.S3_ACCESS_KEY_ID = process.env.S3_ACCESS_KEY_ID;
+    this.S3_SECRET_ACCESS_KEY = process.env.S3_SECRET_ACCESS_KEY;
+    this.S3_ENDPOINT = process.env.S3_ENDPOINT;
+    this.S3_FORCE_PATH_STYLE = process.env.S3_FORCE_PATH_STYLE === "true";
+    this.S3_SIGNED_URL_EXPIRES = parseInt(
+      process.env.S3_SIGNED_URL_EXPIRES || "900",
+      10,
+    );
+    
+
+    if (this.S3_ENABLED && !this.S3_BUCKET) {
+      throw new Error(
+        "S3_BUCKET environment variable is required when S3_ENABLED=true",
+      );
+    }
   }
 }
 

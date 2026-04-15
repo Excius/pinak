@@ -1,4 +1,6 @@
 import { ProductRepository } from "../repositories/product.repository.js";
+import s3 from "../lib/s3.js";
+import appConfig from "../lib/config.js";
 import { ProductPaginationOptions } from "../types/pagination.types.js";
 import { Prisma } from "../generated/prisma/client.js";
 import { ValidationError } from "../lib/error.js";
@@ -101,6 +103,34 @@ export class ProductService {
 
   async getProductVariants(productId: string) {
     return this.productRepository.getProductVariants(productId);
+  }
+
+  async getVariantById(variantId: string) {
+    return this.productRepository.prismaClient.productVariant.findFirst({
+      where: { id: variantId, isDeleted: false },
+      include: {
+        images: {
+          where: { isDeleted: false },
+          orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }],
+        },
+        optionValues: {
+          include: { optionValue: { include: { option: true } } },
+        },
+      },
+    });
+  }
+
+  async getVariantByIdAdmin(variantId: string) {
+    return this.productRepository.prismaClient.productVariant.findUnique({
+      where: { id: variantId },
+      include: {
+        images: true,
+        optionValues: {
+          include: { optionValue: { include: { option: true } } },
+        },
+        product: true,
+      },
+    });
   }
 
   async getProductWithDetails(id: string) {
@@ -482,6 +512,8 @@ export class ProductService {
   async addProductImage(
     variantId: string,
     data: Prisma.ProductImageCreateInput,
+    fileBuffer?: Buffer,
+    contentType?: string,
   ) {
     // Business logic validation and data transformation
 
@@ -493,19 +525,53 @@ export class ProductService {
 
     const sanitizedData = { ...data };
 
-    // Validate URL format
-    if (sanitizedData.url) {
-      try {
-        new URL(sanitizedData.url as string);
-      } catch {
-        throw new ValidationError("Invalid image URL format");
-      }
-    }
-
     // Sanitize alt text
     if (sanitizedData.altText) {
       sanitizedData.altText = (sanitizedData.altText as string).trim();
     }
+
+    // Sanitize isPrimary (default to false)
+    if (sanitizedData.isPrimary === undefined) {
+      sanitizedData.isPrimary = false;
+    } else {
+      sanitizedData.isPrimary = Boolean(sanitizedData.isPrimary);
+    }
+
+    // Require an uploaded file (server-side upload only)
+    if (!fileBuffer) {
+      throw new ValidationError("Image file is required");
+    }
+
+    if (!appConfig.S3_ENABLED) {
+      throw new ValidationError("S3 is not enabled on the server");
+    }
+
+    // Determine extension from contentType
+    let ext = "bin";
+    if (contentType) {
+      if (contentType.includes("jpeg") || contentType.includes("jpg"))
+        ext = "jpg";
+      else if (contentType.includes("png")) ext = "png";
+      else if (contentType.includes("webp")) ext = "webp";
+      else if (contentType.includes("gif")) ext = "gif";
+      else if (contentType.includes("svg")) ext = "svg";
+    }
+
+    // Get variant to know productId
+    const variantRow = await this.productRepository.getVariantById(variantId);
+    const productId = variantRow?.productId || "unknown";
+
+    const rand = Math.random().toString(36).slice(2, 8);
+    const timestamp = Date.now();
+    const key = `products/${productId}/${variantId}/${timestamp}-${rand}.${ext}`;
+
+    const publicUrl = await s3.uploadBuffer(
+      fileBuffer,
+      key,
+      contentType,
+      true, // make product images public
+    );
+    sanitizedData.url = publicUrl;
 
     // Set variant ID and defaults
     sanitizedData.variant = {
@@ -514,6 +580,80 @@ export class ProductService {
 
     // repository.addProductImage handles primary-image transactionally now
     return this.productRepository.addProductImage(variantId, sanitizedData);
+  }
+
+  async updateProductImage(
+    id: string,
+    data: Prisma.ProductImageUpdateInput,
+    fileBuffer?: Buffer,
+    contentType?: string,
+  ) {
+    // Validate image exists
+    const image = await this.productRepository.getProductImageById(id);
+    if (!image) {
+      throw new ValidationError("Image not found");
+    }
+
+    const sanitizedData: Prisma.ProductImageUpdateInput = { ...data };
+
+    if (sanitizedData.altText) {
+      sanitizedData.altText = (sanitizedData.altText as string).trim();
+    }
+
+    // If a new file is provided, upload it and remove the old S3 object if possible
+    if (fileBuffer) {
+      if (!appConfig.S3_ENABLED) {
+        throw new ValidationError("S3 is not enabled on the server");
+      }
+
+      let ext = "bin";
+      if (contentType) {
+        if (contentType.includes("jpeg") || contentType.includes("jpg"))
+          ext = "jpg";
+        else if (contentType.includes("png")) ext = "png";
+        else if (contentType.includes("webp")) ext = "webp";
+        else if (contentType.includes("gif")) ext = "gif";
+        else if (contentType.includes("svg")) ext = "svg";
+      }
+
+      const variantId = image.productVariantId;
+      const variantRow = await this.productRepository.getVariantById(variantId);
+      const productId = variantRow?.productId || "unknown";
+
+      const rand = Math.random().toString(36).slice(2, 8);
+      const timestamp = Date.now();
+      const key = `products/${productId}/${variantId}/${timestamp}-${rand}.${ext}`;
+
+      const publicUrl = await s3.uploadBuffer(
+        fileBuffer,
+        key,
+        contentType,
+        true, // make product images public
+      );
+      sanitizedData.url = publicUrl;
+
+      // Try to delete old S3 object if the URL maps to our bucket
+      try {
+        const oldKey = this.extractS3KeyFromUrl(image.url);
+        if (oldKey) {
+          await s3.deleteObject(oldKey);
+        }
+      } catch (err) {
+        logger.warn("Failed to delete old S3 object for image update", {
+          id,
+          err,
+        });
+      }
+    }
+
+    // Update DB record
+    const updated =
+      await this.productRepository.prismaClient.productImage.update({
+        where: { id },
+        data: sanitizedData,
+      });
+
+    return updated;
   }
 
   async setPrimaryImage(imageId: string) {
@@ -786,6 +926,24 @@ export class ProductService {
   }
 
   async hardDeleteImage(id: string) {
+    // Attempt to delete object from S3 if it belongs to our bucket
+    const image = await this.productRepository.getProductImageById(id);
+    if (!image) {
+      throw new ValidationError("Image not found");
+    }
+
+    if (appConfig.S3_ENABLED && image.url) {
+      try {
+        const key = this.extractS3KeyFromUrl(image.url);
+        if (key) {
+          await s3.deleteObject(key);
+        }
+      } catch (err) {
+        // Log and continue to remove DB record anyway
+        logger.warn("Failed to delete S3 object for image", { id, err });
+      }
+    }
+
     return this.productRepository.hardDeleteImage(id);
   }
 
@@ -806,6 +964,62 @@ export class ProductService {
       .replace(/[^\w-]/g, "") // Remove special characters except hyphens
       .replace(/-+/g, "-") // Replace multiple hyphens with single
       .replace(/^-+|-+$/g, ""); // Remove leading/trailing hyphens
+  }
+
+  /**
+   * Try to extract the S3 object key from a public S3 URL that our helper produces.
+   * Returns null when it cannot determine a key for deletion.
+   */
+  private extractS3KeyFromUrl(urlStr: string): string | null {
+    try {
+      const u = new URL(urlStr);
+
+      // If custom endpoint is configured
+      if (appConfig.S3_ENDPOINT) {
+        const endpoint = appConfig.S3_ENDPOINT.replace(/\/$/, "");
+        // Path-style: endpoint/{bucket}/{key}
+        if (appConfig.S3_FORCE_PATH_STYLE) {
+          const prefix = `${endpoint}/${appConfig.S3_BUCKET}/`;
+          if (u.href.startsWith(prefix)) {
+            return decodeURIComponent(u.href.slice(prefix.length));
+          }
+        } else {
+          // endpoint/{key} (endpoint may already include bucket)
+          const prefix = `${endpoint}/`;
+          if (u.href.startsWith(prefix)) {
+            return decodeURIComponent(u.href.slice(prefix.length));
+          }
+        }
+        return null;
+      }
+
+      // No custom endpoint — handle AWS standard public URLs
+      // 1) virtual-hosted-style: https://{bucket}.s3.amazonaws.com/{key} or https://{bucket}.s3.{region}.amazonaws.com/{key}
+      const host = u.hostname;
+      const path = u.pathname.replace(/^\//, "");
+
+      if (host === `${appConfig.S3_BUCKET}.s3.amazonaws.com`) {
+        return decodeURIComponent(path);
+      }
+      if (host.endsWith(`.s3.amazonaws.com`)) {
+        // may be {bucket}.s3.amazonaws.com
+        const parts = host.split(".");
+        const bucketPart = parts[0];
+        if (bucketPart === appConfig.S3_BUCKET) return decodeURIComponent(path);
+      }
+
+      // 2) path-style: https://s3.{region}.amazonaws.com/{bucket}/{key}
+      const bucket = appConfig.S3_BUCKET;
+      if (!bucket) return null;
+
+      if (host.startsWith("s3.") && path.startsWith(`${bucket}/`)) {
+        return decodeURIComponent(path.slice(bucket.length + 1));
+      }
+
+      return null;
+    } catch {
+      return null;
+    }
   }
 
   private async validateCategoryExists(categoryId: string): Promise<boolean> {

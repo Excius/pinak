@@ -1,17 +1,23 @@
 import { z } from "zod";
 
-const LengthClassSchema = z.object({
+const PublicLengthClassSchema = z.object({
   id: z.string(),
   name: z.string(),
   unit: z.string(),
+});
+
+const AdminLengthClassSchema = PublicLengthClassSchema.extend({
   createdAt: z.date(),
   updatedAt: z.date(),
 });
 
-const WeightClassSchema = z.object({
+const PublicWeightClassSchema = z.object({
   id: z.string(),
   name: z.string(),
   unit: z.string(),
+});
+
+const AdminWeightClassSchema = PublicWeightClassSchema.extend({
   createdAt: z.date(),
   updatedAt: z.date(),
 });
@@ -24,7 +30,7 @@ export const LengthWeightTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: z.array(LengthClassSchema),
+      data: z.array(PublicLengthClassSchema),
     }),
   },
   GetLengthById: {
@@ -34,7 +40,7 @@ export const LengthWeightTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: LengthClassSchema,
+      data: PublicLengthClassSchema,
     }),
   },
   CreateLength: {
@@ -52,7 +58,7 @@ export const LengthWeightTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: LengthClassSchema,
+      data: AdminLengthClassSchema,
     }),
   },
   UpdateLength: {
@@ -73,7 +79,7 @@ export const LengthWeightTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: LengthClassSchema,
+      data: AdminLengthClassSchema,
     }),
   },
   DeleteLength: {
@@ -94,7 +100,7 @@ export const LengthWeightTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: z.array(WeightClassSchema),
+      data: z.array(PublicWeightClassSchema),
     }),
   },
   GetWeightById: {
@@ -104,7 +110,7 @@ export const LengthWeightTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: WeightClassSchema,
+      data: PublicWeightClassSchema,
     }),
   },
   CreateWeight: {
@@ -117,7 +123,7 @@ export const LengthWeightTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: WeightClassSchema,
+      data: AdminWeightClassSchema,
     }),
   },
   UpdateWeight: {
@@ -130,7 +136,7 @@ export const LengthWeightTypes = {
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: WeightClassSchema,
+      data: AdminWeightClassSchema,
     }),
   },
   DeleteWeight: {
@@ -141,6 +147,49 @@ export const LengthWeightTypes = {
       message: z.string(),
       success: z.boolean(),
       data: z.object({}),
+    }),
+  },
+};
+
+export const LengthWeightAdminTypes = {
+  ListLength: {
+    body: z.object({}),
+    params: z.object({}),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.array(AdminLengthClassSchema),
+    }),
+  },
+  GetLengthById: {
+    body: z.object({}),
+    params: z.object({ id: z.string() }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: AdminLengthClassSchema,
+    }),
+  },
+  ListWeight: {
+    body: z.object({}),
+    params: z.object({}),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.array(AdminWeightClassSchema),
+    }),
+  },
+  GetWeightById: {
+    body: z.object({}),
+    params: z.object({ id: z.string() }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: AdminWeightClassSchema,
     }),
   },
 };
@@ -166,5 +215,29 @@ export type QueryTypes = {
 export type ResponseTypes = {
   [K in keyof typeof LengthWeightTypes]: z.infer<
     (typeof LengthWeightTypes)[K]["response"]
+  >;
+};
+
+export type AdminBodyTypes = {
+  [K in keyof typeof LengthWeightAdminTypes]: z.infer<
+    (typeof LengthWeightAdminTypes)[K]["body"]
+  >;
+};
+
+export type AdminParamsTypes = {
+  [K in keyof typeof LengthWeightAdminTypes]: z.infer<
+    (typeof LengthWeightAdminTypes)[K]["params"]
+  >;
+};
+
+export type AdminQueryTypes = {
+  [K in keyof typeof LengthWeightAdminTypes]: z.infer<
+    (typeof LengthWeightAdminTypes)[K]["query"]
+  >;
+};
+
+export type AdminResponseTypes = {
+  [K in keyof typeof LengthWeightAdminTypes]: z.infer<
+    (typeof LengthWeightAdminTypes)[K]["response"]
   >;
 };

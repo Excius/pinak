@@ -9,6 +9,7 @@ import {
   toAdminProduct,
   toAdminProductList,
   toPublicVariant,
+  toAdminVariant,
 } from "../lib/mappers/product.mapper.js";
 
 export class ProductController {
@@ -156,6 +157,32 @@ export class ProductController {
     );
   };
 
+  getVariantById = async (req: Request, res: Response) => {
+    const { variantId } = req.params;
+    const variant = await this.productService.getVariantById(
+      variantId as string,
+    );
+
+    if (!variant) {
+      return ResponseHandler.notFound(res, "Variant not found");
+    }
+
+    const publicData = toPublicVariant(variant);
+    ResponseHandler.success(res, publicData, "Variant fetched successfully");
+  };
+
+  getVariantByIdAdmin = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const variant = await this.productService.getVariantByIdAdmin(id as string);
+
+    if (!variant) {
+      return ResponseHandler.notFound(res, "Variant not found");
+    }
+
+    const adminData = toAdminVariant(variant);
+    ResponseHandler.success(res, adminData, "Variant fetched successfully");
+  };
+
   getProductWithDetails = async (req: Request, res: Response) => {
     const { id } = req.params;
     const product = await this.productService.getProductWithDetails(
@@ -298,18 +325,39 @@ export class ProductController {
   addProductImage = async (req: Request, res: Response) => {
     const { variantId } = req.params;
     const data = req.body;
-
-    // TODO: Implement proper image upload with S3 integration
-    // Currently expects image URL to be provided directly
-    // Future: Handle multipart/form-data uploads and store in S3
+    // If S3 is enabled, remote URLs will be fetched and uploaded to S3
+    // The service will store the resulting public S3 URL in the DB
+    const file = req.file;
+    if (!file) {
+      return ResponseHandler.badRequest(res, "Image file is required");
+    }
 
     const image = await this.productService.addProductImage(
       variantId as string,
       data,
+      file.buffer,
+      file.mimetype,
     );
     ResponseHandler.success(res, image, "Product image added successfully");
   };
 
+  updateProductImage = async (
+    req: Request & { file?: Express.Multer.File },
+    res: Response,
+  ) => {
+    const { id } = req.params;
+    const data = req.body;
+    const file = req.file;
+
+    const image = await this.productService.updateProductImage(
+      id as string,
+      data,
+      file?.buffer,
+      file?.mimetype,
+    );
+
+    ResponseHandler.success(res, image, "Product image updated successfully");
+  };
   setPrimaryImage = async (req: Request, res: Response) => {
     const { imageId } = req.params;
     const image = await this.productService.setPrimaryImage(imageId as string);
