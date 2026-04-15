@@ -169,8 +169,9 @@ export class AuthController {
 
   googleOauthCallback = async (req: Request, res: Response) => {
     const code = (req.body?.code as string) || (req.query.code as string);
+    const platform = ((req.body?.platform as string) || (req.query.platform as string) || "WEB").toUpperCase();
 
-    const data = await this.auth.googleOauthCallback(code);
+    const data = await this.auth.googleOauthCallback(code, platform);
 
     this.setAuthCookies(res, data.accessToken, data.refreshToken);
 

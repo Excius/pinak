@@ -140,7 +140,10 @@ export async function apiRequest<T>(
     data?: any,
     config?: any
 ): Promise<T> {
-    const response: AxiosResponse<T> = await api[method](url, data, config);
+    const response: AxiosResponse<T> =
+        method === 'get' || method === 'delete'
+            ? await api[method](url, config)
+            : await api[method](url, data, config);
     return response.data;
 }
 
