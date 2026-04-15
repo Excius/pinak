@@ -1,36 +1,82 @@
 import { Request, Response } from "express";
 import { ResponseHandler } from "../lib/response.js";
 import { FilterService } from "../services/filter.service.js";
+import {
+  toAdminFilterGroup,
+  toAdminFilterGroupList,
+  toAdminFilterValue,
+  toPublicFilterGroup,
+  toPublicFilterGroupList,
+} from "../lib/mappers/filter.mapper.js";
 
 export class FilterController {
   constructor(private filterService: FilterService) {}
 
-  listGroups = async (req: Request, res: Response) => {
+  listGroupsPublic = async (req: Request, res: Response) => {
     const activeOnly = req.query.activeOnly
       ? req.query.activeOnly === "true"
       : false;
     const groups = await this.filterService.listGroups(activeOnly);
-    ResponseHandler.success(res, groups, "Filter groups fetched successfully");
+    ResponseHandler.success(
+      res,
+      toPublicFilterGroupList(groups),
+      "Filter groups fetched successfully",
+    );
   };
 
-  getGroup = async (req: Request, res: Response) => {
+  getGroupPublic = async (req: Request, res: Response) => {
     const { id } = req.params;
     const group = await this.filterService.getGroupById(id as string);
     if (!group) return ResponseHandler.notFound(res, "Filter group not found");
-    ResponseHandler.success(res, group, "Filter group fetched successfully");
+    ResponseHandler.success(
+      res,
+      toPublicFilterGroup(group),
+      "Filter group fetched successfully",
+    );
+  };
+
+  listGroupsAdmin = async (req: Request, res: Response) => {
+    const activeOnly = req.query.activeOnly
+      ? req.query.activeOnly === "true"
+      : false;
+    const groups = await this.filterService.listGroups(activeOnly);
+    ResponseHandler.success(
+      res,
+      toAdminFilterGroupList(groups),
+      "Filter groups fetched successfully",
+    );
+  };
+
+  getGroupAdmin = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const group = await this.filterService.getGroupById(id as string);
+    if (!group) return ResponseHandler.notFound(res, "Filter group not found");
+    ResponseHandler.success(
+      res,
+      toAdminFilterGroup(group),
+      "Filter group fetched successfully",
+    );
   };
 
   createGroup = async (req: Request, res: Response) => {
     const data = req.body;
     const g = await this.filterService.createGroup(data);
-    ResponseHandler.success(res, g, "Filter group created successfully");
+    ResponseHandler.success(
+      res,
+      toAdminFilterGroup(g),
+      "Filter group created successfully",
+    );
   };
 
   updateGroup = async (req: Request, res: Response) => {
     const { id } = req.params;
     const data = req.body;
     const g = await this.filterService.updateGroup(id as string, data);
-    ResponseHandler.success(res, g, "Filter group updated successfully");
+    ResponseHandler.success(
+      res,
+      toAdminFilterGroup(g),
+      "Filter group updated successfully",
+    );
   };
 
   deleteGroup = async (req: Request, res: Response) => {
@@ -43,14 +89,22 @@ export class FilterController {
     const { groupId } = req.params;
     const data = req.body;
     const v = await this.filterService.createValue(groupId as string, data);
-    ResponseHandler.success(res, v, "Filter value created successfully");
+    ResponseHandler.success(
+      res,
+      toAdminFilterValue(v),
+      "Filter value created successfully",
+    );
   };
 
   updateValue = async (req: Request, res: Response) => {
     const { id } = req.params;
     const data = req.body;
     const v = await this.filterService.updateValue(id as string, data);
-    ResponseHandler.success(res, v, "Filter value updated successfully");
+    ResponseHandler.success(
+      res,
+      toAdminFilterValue(v),
+      "Filter value updated successfully",
+    );
   };
 
   deleteValue = async (req: Request, res: Response) => {

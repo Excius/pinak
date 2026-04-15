@@ -1,0 +1,29 @@
+meta {
+  name: Admin - Get Option by ID
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/options/admin/{{optionId}}
+  body: none
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  optionId: your-option-id-here
+  authToken: your-jwt-token-here
+}
+
+docs {
+  Get an option by ID with full admin payloads. Requires Moderator or Admin.
+}

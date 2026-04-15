@@ -1,0 +1,36 @@
+meta {
+  name: List Brands
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/brands?activeOnly=true
+  body: none
+  auth: inherit
+}
+
+params:query {
+  activeOnly: true
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  authToken: your-jwt-token-here
+  activeOnly: true
+}
+
+docs {
+  Schema: BrandTypes.ListBrands
+  Params: none
+  Query: activeOnly
+  Body: none
+}

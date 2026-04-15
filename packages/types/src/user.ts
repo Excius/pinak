@@ -25,8 +25,6 @@ export const UserSchema = z.object({
     ["ADMIN", "MODERATOR", "USER"],
     "role must be one of ADMIN, MODERATOR, USER",
   ),
-  createdAt: z.date("createdAt must be a valid Date"),
-  updatedAt: z.date("updatedAt must be a valid Date"),
 });
 
 export interface CreateUserRequest {
