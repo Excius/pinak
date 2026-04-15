@@ -1,6 +1,15 @@
 import { Request, Response } from "express";
 import { ResponseHandler } from "../lib/response.js";
 import { ComboService } from "../services/combo.service.js";
+import {
+  toAdminComboKit,
+  toAdminComboKitItem,
+  toAdminComboKitItems,
+  toAdminComboKitList,
+  toPublicComboKit,
+  toPublicComboKitItems,
+  toPublicComboKitList,
+} from "../lib/mappers/comboKit.mapper.js";
 
 export class ComboController {
   constructor(private comboService: ComboService) {}
@@ -36,7 +45,11 @@ export class ComboController {
         : undefined,
     });
 
-    ResponseHandler.success(res, result, "Combo kits fetched successfully");
+    ResponseHandler.success(
+      res,
+      toPublicComboKitList(result),
+      "Combo kits fetched successfully",
+    );
   };
 
   getComboKitById = async (req: Request, res: Response) => {
@@ -47,7 +60,11 @@ export class ComboController {
       return ResponseHandler.notFound(res, "Combo kit not found");
     }
 
-    ResponseHandler.success(res, comboKit, "Combo kit fetched successfully");
+    ResponseHandler.success(
+      res,
+      toPublicComboKit(comboKit),
+      "Combo kit fetched successfully",
+    );
   };
 
   getComboKitBySlug = async (req: Request, res: Response) => {
@@ -58,7 +75,11 @@ export class ComboController {
       return ResponseHandler.notFound(res, "Combo kit not found");
     }
 
-    ResponseHandler.success(res, comboKit, "Combo kit fetched successfully");
+    ResponseHandler.success(
+      res,
+      toPublicComboKit(comboKit),
+      "Combo kit fetched successfully",
+    );
   };
 
   searchComboKits = async (req: Request, res: Response) => {
@@ -71,13 +92,21 @@ export class ComboController {
         : undefined,
     );
 
-    ResponseHandler.success(res, result, "Combo kits fetched successfully");
+    ResponseHandler.success(
+      res,
+      toPublicComboKitList(result),
+      "Combo kits fetched successfully",
+    );
   };
 
   getComboKitItems = async (req: Request, res: Response) => {
     const { id } = req.params;
     const items = await this.comboService.getComboKitItems(id as string);
-    ResponseHandler.success(res, items, "Combo kit items fetched successfully");
+    ResponseHandler.success(
+      res,
+      toPublicComboKitItems(items),
+      "Combo kit items fetched successfully",
+    );
   };
 
   getAllComboKitsAdmin = async (req: Request, res: Response) => {
@@ -99,7 +128,11 @@ export class ComboController {
         : undefined,
     });
 
-    ResponseHandler.success(res, result, "All combo kits fetched successfully");
+    ResponseHandler.success(
+      res,
+      toAdminComboKitList(result),
+      "All combo kits fetched successfully",
+    );
   };
 
   getDeletedComboKitsAdmin = async (req: Request, res: Response) => {
@@ -123,7 +156,7 @@ export class ComboController {
 
     ResponseHandler.success(
       res,
-      result,
+      toAdminComboKitList(result),
       "Deleted combo kits fetched successfully",
     );
   };
@@ -149,7 +182,7 @@ export class ComboController {
 
     ResponseHandler.success(
       res,
-      result,
+      toAdminComboKitList(result),
       "Inactive combo kits fetched successfully",
     );
   };
@@ -157,12 +190,20 @@ export class ComboController {
   getComboKitByIdAdmin = async (req: Request, res: Response) => {
     const { id } = req.params;
     const comboKit = await this.comboService.getComboKitByIdAdmin(id as string);
-    ResponseHandler.success(res, comboKit, "Combo kit fetched successfully");
+    ResponseHandler.success(
+      res,
+      toAdminComboKit(comboKit),
+      "Combo kit fetched successfully",
+    );
   };
 
   createComboKit = async (req: Request, res: Response) => {
     const comboKit = await this.comboService.createComboKit(req.body);
-    ResponseHandler.success(res, comboKit, "Combo kit created successfully");
+    ResponseHandler.success(
+      res,
+      toAdminComboKit(comboKit),
+      "Combo kit created successfully",
+    );
   };
 
   updateComboKit = async (req: Request, res: Response) => {
@@ -171,7 +212,11 @@ export class ComboController {
       id as string,
       req.body,
     );
-    ResponseHandler.success(res, comboKit, "Combo kit updated successfully");
+    ResponseHandler.success(
+      res,
+      toAdminComboKit(comboKit),
+      "Combo kit updated successfully",
+    );
   };
 
   updateComboKitStatus = async (req: Request, res: Response) => {
@@ -182,7 +227,7 @@ export class ComboController {
     );
     ResponseHandler.success(
       res,
-      comboKit,
+      toAdminComboKit(comboKit),
       "Combo kit status updated successfully",
     );
   };
@@ -195,7 +240,7 @@ export class ComboController {
     );
     ResponseHandler.success(
       res,
-      comboKit,
+      toAdminComboKit(comboKit),
       "Combo kit pricing updated successfully",
     );
   };
@@ -208,7 +253,7 @@ export class ComboController {
     );
     ResponseHandler.success(
       res,
-      comboKit,
+      toAdminComboKit(comboKit),
       "Combo kit metadata updated successfully",
     );
   };
@@ -219,7 +264,11 @@ export class ComboController {
       comboKitId as string,
       req.body,
     );
-    ResponseHandler.success(res, item, "Combo kit item added successfully");
+    ResponseHandler.success(
+      res,
+      toAdminComboKitItem(item),
+      "Combo kit item added successfully",
+    );
   };
 
   updateComboKitItem = async (req: Request, res: Response) => {
@@ -229,7 +278,11 @@ export class ComboController {
       itemId as string,
       req.body,
     );
-    ResponseHandler.success(res, item, "Combo kit item updated successfully");
+    ResponseHandler.success(
+      res,
+      toAdminComboKitItem(item),
+      "Combo kit item updated successfully",
+    );
   };
 
   removeComboKitItem = async (req: Request, res: Response) => {
@@ -249,7 +302,7 @@ export class ComboController {
     );
     ResponseHandler.success(
       res,
-      items,
+      toAdminComboKitItems(items),
       "Combo kit items reordered successfully",
     );
   };
@@ -262,7 +315,7 @@ export class ComboController {
     );
     ResponseHandler.success(
       res,
-      items,
+      toAdminComboKitItems(items),
       "Combo kit items replaced successfully",
     );
   };
@@ -276,7 +329,11 @@ export class ComboController {
   restoreComboKit = async (req: Request, res: Response) => {
     const { id } = req.params;
     const comboKit = await this.comboService.restoreComboKit(id as string);
-    ResponseHandler.success(res, comboKit, "Combo kit restored successfully");
+    ResponseHandler.success(
+      res,
+      toAdminComboKit(comboKit),
+      "Combo kit restored successfully",
+    );
   };
 
   hardDeleteComboKit = async (req: Request, res: Response) => {

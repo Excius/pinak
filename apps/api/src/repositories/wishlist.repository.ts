@@ -29,22 +29,39 @@ const wishlistItemInclude = {
 export class WishlistRepository {
   constructor(private prisma: PrismaClient) {}
 
+  private wishlistInclude = {
+    items: {
+      include: wishlistItemInclude,
+      orderBy: { createdAt: "desc" as const },
+    },
+  } satisfies Prisma.WishlistInclude;
+
   async findOrCreateWishlist(userId: string) {
     return this.prisma.wishlist.upsert({
       where: { userId },
       create: { userId },
       update: {},
-      include: {
-        items: {
-          include: wishlistItemInclude,
-          orderBy: { createdAt: "desc" },
-        },
-      },
+      include: this.wishlistInclude,
     });
   }
 
   async getWishlistWithItems(userId: string) {
-    return this.findOrCreateWishlist(userId);
+    const wishlist = await this.prisma.wishlist.upsert({
+      where: { userId },
+      create: { userId },
+      update: {},
+    });
+
+    const items = await this.prisma.wishlistItem.findMany({
+      where: { wishlist: { userId } },
+      include: wishlistItemInclude,
+      orderBy: { createdAt: "desc" },
+    });
+
+    return {
+      ...wishlist,
+      items,
+    };
   }
 
   async addItem(wishlistId: string, productVariantId: string) {
@@ -72,15 +89,65 @@ export class WishlistRepository {
     });
   }
 
+  async removeItemForUser(itemId: string, userId: string) {
+    return this.prisma.wishlistItem.deleteMany({
+      where: {
+        id: itemId,
+        wishlist: { userId },
+      },
+    });
+  }
+
   async clearWishlist(wishlistId: string) {
     return this.prisma.wishlistItem.deleteMany({
       where: { wishlistId },
     });
   }
 
+  async clearWishlistByUser(userId: string) {
+    return this.prisma.wishlistItem.deleteMany({
+      where: { wishlist: { userId } },
+    });
+  }
+
   async getItemById(itemId: string) {
     return this.prisma.wishlistItem.findUnique({
       where: { id: itemId },
+      include: {
+        wishlist: true,
+        productVariant: {
+          include: {
+            product: {
+              include: {
+                brand: true,
+              },
+            },
+            images: {
+              where: { isDeleted: false },
+              orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }],
+              take: 1,
+            },
+            optionValues: {
+              include: {
+                optionValue: {
+                  include: {
+                    option: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  async getItemByIdForUser(itemId: string, userId: string) {
+    return this.prisma.wishlistItem.findFirst({
+      where: {
+        id: itemId,
+        wishlist: { userId },
+      },
       include: {
         wishlist: true,
         productVariant: {

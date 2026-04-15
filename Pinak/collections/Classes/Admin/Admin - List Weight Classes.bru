@@ -1,0 +1,28 @@
+meta {
+  name: Admin - List Weight Classes
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/weight-classes
+  body: none
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  authToken: your-jwt-token-here
+}
+
+docs {
+  List weight classes with full admin payloads. Requires Moderator or Admin.
+}

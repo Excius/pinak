@@ -43,13 +43,16 @@ export class OptionService {
   }
 
   // OptionValue helpers
-  async createOptionValue(optionId: string, value: string) {
+  async createOptionValue(
+    optionId: string,
+    data: { value: string; sortOrder?: number },
+  ) {
     const option = await this.repo.getOptionById(optionId);
     if (!option) throw new NotFoundError("Option not found");
-    const exists = await this.repo.findOptionValue(optionId, value);
+    const exists = await this.repo.findOptionValue(optionId, data.value);
     if (exists) throw new ValidationError("Option value already exists");
     try {
-      return await this.repo.createOptionValue(optionId, value);
+      return await this.repo.createOptionValue(optionId, data);
     } catch (err) {
       if (isPrismaP2002(err))
         throw new ValidationError("Option value already exists");

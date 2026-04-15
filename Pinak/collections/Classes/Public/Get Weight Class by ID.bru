@@ -1,0 +1,29 @@
+meta {
+  name: Get Weight Class by ID
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/api/v1/weight-classes/{{weightClassId}}
+  body: none
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  weightClassId: cmnj36ao5000d2amzcbzu0tro
+  authToken: your-jwt-token-here
+}
+
+docs {
+  Get a weight class by ID (public, requires authentication).
+}

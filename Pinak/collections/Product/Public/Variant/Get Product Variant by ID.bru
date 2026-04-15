@@ -1,0 +1,32 @@
+meta {
+  name: Get Product Variant by ID
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/products/variant/{{variantId}}
+  body: none
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  authToken: your-jwt-token-here
+  variantId: cmnj36trl00412amzrokgnkoy
+}
+
+docs {
+  Schema: ProductTypes.GetVariant
+  Params: variantId
+  Query: none
+  Body: none
+}

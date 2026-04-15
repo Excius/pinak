@@ -111,12 +111,14 @@ export function ProductCard({
       </Text>
 
       {/* Rating */}
-      <View className="flex-row items-center mb-2">
-        <View className="flex-row">{renderStars(product.rating)}</View>
-        <Text className="text-[10px] text-text-secondary ml-1 font-medium">
-          ({product.reviews})
-        </Text>
-      </View>
+      {product.rating > 0 && product.reviews > 0 ? (
+        <View className="flex-row items-center mb-2">
+          <View className="flex-row">{renderStars(product.rating)}</View>
+          <Text className="text-[10px] text-text-secondary ml-1 font-medium">
+            ({product.reviews})
+          </Text>
+        </View>
+      ) : null}
 
       {/* Price */}
       <View className="flex-row gap-2">

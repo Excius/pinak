@@ -149,8 +149,13 @@ export class AuthController {
   };
 
   googleOauth = async (req: Request, res: Response) => {
-    const platform = (req.query.platform as string) || "web";
-    const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${appConfig.CLIENT_ID_WEB}&redirect_uri=${platform === "WEB" ? appConfig.REDIRECT_URI_WEB : appConfig.REDIRECT_URI_BACKEND}&response_type=code&scope=profile%20email`;
+    const platform = ((req.query.platform as string) || "WEB").toUpperCase();
+    const redirectUri =
+      platform === "WEB"
+        ? appConfig.REDIRECT_URI_WEB
+        : appConfig.REDIRECT_URI_BACKEND;
+
+    const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${appConfig.CLIENT_ID_WEB}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=profile%20email`;
 
     ResponseHandler.success(res, { url }, "Google OAuth URL fetched");
   };
@@ -163,15 +168,19 @@ export class AuthController {
   };
 
   googleOauthCallback = async (req: Request, res: Response) => {
-    const { code } = req.query;
+    const code = (req.body?.code as string) || (req.query.code as string);
 
-    const data = await this.auth.googleOauthCallback(code as string);
+    const data = await this.auth.googleOauthCallback(code);
 
     this.setAuthCookies(res, data.accessToken, data.refreshToken);
 
     ResponseHandler.success(
       res,
-      { accessToken: data.accessToken, user: data.user },
+      {
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
+        user: data.user,
+      },
       "Google OAuth callback handled",
     );
   };

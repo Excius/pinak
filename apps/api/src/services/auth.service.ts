@@ -134,8 +134,6 @@ export class AuthService {
       username: string;
       name: string | null;
       role: UserRoles;
-      createdAt: Date;
-      updatedAt: Date;
     };
   }> {
     const userEmail = normalizeEmail(user.email);
@@ -180,8 +178,6 @@ export class AuthService {
         username: dbUser.username,
         name: dbUser.name,
         role: dbUser.role,
-        createdAt: dbUser.createdAt,
-        updatedAt: dbUser.updatedAt,
       },
     };
   }

@@ -39,8 +39,14 @@ export class OptionRepository {
   }
 
   // OptionValue helpers
-  createOptionValue(optionId: string, value: string) {
-    return this.prisma.optionValue.create({ data: { optionId, value } });
+  createOptionValue(optionId: string, data: { value: string; sortOrder?: number }) {
+    return this.prisma.optionValue.create({
+      data: {
+        optionId,
+        value: data.value,
+        sortOrder: data.sortOrder ?? 0,
+      },
+    });
   }
 
   findOptionValue(optionId: string, value: string) {

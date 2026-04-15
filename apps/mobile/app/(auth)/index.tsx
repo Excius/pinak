@@ -3,17 +3,61 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { Svg, Path } from "react-native-svg";
 import { useState } from "react";
 import { useRouter } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
+import * as Linking from "expo-linking";
+import { getGoogleOauthUrlService } from "@/services/auth.service";
+import { toastError } from "@/libs/toast";
+
+WebBrowser.maybeCompleteAuthSession();
 
 import SignInForm from "@/components/auth/SigninForm";
 import SignUpForm from "@/components/auth/SignUpForm";
 
 export default function AuthScreen() {
   const [isLogin, setIsLogin] = useState(true);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const router = useRouter();
 
   const handleSkip = () => {
     // Allow users to browse without logging in
     router.replace("/(tabs)");
+  };
+
+  const handleGoogleSignIn = async () => {
+    setIsGoogleLoading(true);
+
+    try {
+      const oauthUrlResponse = await getGoogleOauthUrlService("MOBILE");
+      const redirectUri = Linking.createURL("/oauth/callback");
+      const result = await WebBrowser.openAuthSessionAsync(
+        oauthUrlResponse.data.url,
+        redirectUri,
+      );
+
+      if (result.type === "success") {
+        const parsed = Linking.parse(result.url);
+        const code =
+          typeof parsed.queryParams?.code === "string"
+            ? parsed.queryParams.code
+            : undefined;
+        const oauthError =
+          typeof parsed.queryParams?.error === "string"
+            ? parsed.queryParams.error
+            : undefined;
+
+        router.replace({
+          pathname: "/oauth/callback",
+          params: {
+            ...(code ? { code } : {}),
+            ...(oauthError ? { error: oauthError } : {}),
+          },
+        });
+      }
+    } catch (err: any) {
+      toastError(err?.message || "Unable to start Google sign-in.");
+    } finally {
+      setIsGoogleLoading(false);
+    }
   };
 
   return (
@@ -105,7 +149,11 @@ export default function AuthScreen() {
 
         {/* Google Sign In */}
         <View className="pb-10">
-          <Pressable className="h-14 w-full flex-row items-center justify-center rounded-xl border border-surface-border bg-surface gap-3 active:opacity-80">
+          <Pressable
+            onPress={handleGoogleSignIn}
+            disabled={isGoogleLoading}
+            className="h-14 w-full flex-row items-center justify-center rounded-xl border border-surface-border bg-surface gap-3 active:opacity-80"
+          >
             <Svg width={20} height={20} viewBox="0 0 24 24">
               <Path
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -125,7 +173,7 @@ export default function AuthScreen() {
               />
             </Svg>
             <Text className="text-text-primary font-medium text-base">
-              Continue with Google
+              {isGoogleLoading ? "Opening Google..." : "Continue with Google"}
             </Text>
           </Pressable>
         </View>

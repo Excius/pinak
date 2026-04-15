@@ -37,7 +37,10 @@ export class AuthMiddleware {
       }
 
       if (!allowedRoles.includes(req.user.role as UserRoles)) {
-        return ResponseHandler.forbidden(res, `Access requires one of: ${allowedRoles.join(", ")}`);
+        return ResponseHandler.forbidden(
+          res,
+          `Access requires one of: ${allowedRoles.join(", ")}`,
+        );
       }
 
       next();
@@ -56,13 +59,20 @@ export class AuthMiddleware {
     next();
   };
 
-  requireModeratorOrAdmin = (req: Request, res: Response, next: NextFunction) => {
+  requireModeratorOrAdmin = (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) => {
     if (!req.user) {
       return ResponseHandler.unauthorized(res, "Authentication required");
     }
 
     if (!["ADMIN", "MODERATOR"].includes(req.user.role)) {
-      return ResponseHandler.forbidden(res, "Moderator or Admin access required");
+      return ResponseHandler.forbidden(
+        res,
+        "Moderator or Admin access required",
+      );
     }
 
     next();

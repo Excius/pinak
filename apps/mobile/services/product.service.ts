@@ -99,10 +99,13 @@ export async function getProductsByCategory(
         limit,
         ...options
     });
+    const url = queryString
+        ? `/products/category/${categoryId}?${queryString}`
+        : `/products/category/${categoryId}`;
 
     const getProductsByCategoryResponse = await apiRequest<GetProductsByCategoryResponse>(
         'get',
-        `/products/category/${categoryId}?${queryString}`
+        url
     );
     return getProductsByCategoryResponse;
 

@@ -255,6 +255,18 @@ export const errorHandler = (
   res: Response,
   next: any,
 ): void => {
+  // Multer file size limit handling
+  const anyErr = error as unknown as { code?: string; name?: string };
+  if (
+    anyErr &&
+    (anyErr.code === "LIMIT_FILE_SIZE" || anyErr.name === "MulterError")
+  ) {
+    ResponseHandler.badRequest(
+      res,
+      "Uploaded file is too large. Maximum allowed size is 10MB.",
+    );
+    return;
+  }
   let statusCode: number = 500;
   let message: string = API_MESSAGES.INTERNAL_SERVER_ERROR;
   let errors: any = undefined;
