@@ -1,10 +1,9 @@
 import React from "react";
 import { ImageBackground, View, Text, TouchableOpacity } from "react-native";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
 interface CategoryCardProps {
   title: string;
-  subtitle: string;
+  subtitle?: string;
   imageUrl: string;
   onPress: () => void;
 }
@@ -45,9 +44,11 @@ export function CategoryCard({
           <Text className="font-display text-xl text-white mb-0.5">
             {title}
           </Text>
-          <Text className="text-white/80 text-xs font-medium tracking-wider uppercase">
-            {subtitle}
-          </Text>
+          {subtitle ? (
+            <Text className="text-white/80 text-xs font-medium tracking-wider uppercase">
+              {subtitle}
+            </Text>
+          ) : null}
         </View>
       </ImageBackground>
     </TouchableOpacity>
