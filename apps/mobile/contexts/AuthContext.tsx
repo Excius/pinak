@@ -8,7 +8,6 @@ import React, {
 import { z } from "zod";
 import {
   getAccessToken,
-  setAccessToken,
   deleteAccessToken,
   deleteRefreshToken,
 } from "@/utils/token";
@@ -16,6 +15,7 @@ import {
   loginService as apiLogin,
   logoutService as apiLogout,
   signupService as apiSignup,
+  googleOauthCallbackService as apiGoogleOauthCallback,
 } from "@/services/auth.service";
 import { apiRequest } from "@/services/api";
 
@@ -36,6 +36,7 @@ interface AuthContextType {
   // isSigningUp: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: (code: string) => Promise<void>;
   signup: (email: string, username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   clearError: () => void;
@@ -65,6 +66,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     checkAuth();
   }, []);
 
+  const isAuthFailure = (err: any) => {
+    const status = err?.status ?? err?.response?.status;
+    if (status === 401 || status === 403) return true;
+
+    const message = String(err?.message || "").toLowerCase();
+    return message.includes("no refresh token available");
+  };
+
   const checkAuth = async () => {
     try {
       const token = await getAccessToken();
@@ -72,12 +81,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         const userData = await apiRequest<MeResponse>("get", "/auth/me");
         setUser(userData.data);
       }
-    } catch (err) {
-      // Silent fail on auth check - just clear tokens and continue
-      // This is expected when tokens are expired or invalid
-      console.log("Auth check failed, clearing session:", err);
-      await deleteAccessToken();
-      await deleteRefreshToken();
+    } catch (err: any) {
+      // Clear persisted credentials only for explicit auth failures.
+      // Keep tokens when failures are transient (e.g. API down during rebuild).
+      if (isAuthFailure(err)) {
+        console.log("Auth check failed, clearing invalid session:", err);
+        await deleteAccessToken();
+        await deleteRefreshToken();
+      } else {
+        console.log(
+          "Auth check failed due to transient error, keeping session:",
+          err,
+        );
+      }
+
       setUser(null);
     } finally {
       setIsLoading(false);
@@ -127,6 +144,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  const loginWithGoogle = async (code: string) => {
+    setError(null);
+
+    try {
+      const oauthResponse = await apiGoogleOauthCallback(code);
+      if (oauthResponse.data?.accessToken && oauthResponse.data?.user) {
+        setUser(oauthResponse.data.user);
+      } else {
+        throw new Error("Invalid Google OAuth response from server");
+      }
+    } catch (err: any) {
+      const errorMessage =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Google login failed. Please try again.";
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    }
+  };
+
   const logout = async () => {
     try {
       await apiLogout();
@@ -135,6 +172,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     } finally {
       setUser(null);
       await deleteAccessToken();
+      await deleteRefreshToken();
     }
   };
 
@@ -147,6 +185,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       isAuthenticated: !!user,
       error,
       login,
+      loginWithGoogle,
       signup,
       logout,
       clearError,

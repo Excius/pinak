@@ -6,6 +6,8 @@ import type { AuthApi } from '@repo/types';
 
 type LoginUserResponse = AuthApi.ResponseTypes['LoginUser'];
 type RegisterUserResponse = AuthApi.ResponseTypes['RegisterUser'];
+type GoogleOauthUrlResponse = AuthApi.ResponseTypes['GoogleOauth'];
+type GoogleOauthCallbackResponse = AuthApi.ResponseTypes['GoogleOauthCallback'];
 
 export async function loginService(email: string, password: string) {
     const loginResponse = await apiRequest<LoginUserResponse>(
@@ -66,4 +68,24 @@ export async function logoutService() {
         await deleteAccessToken();
         await deleteRefreshToken();
     }
+}
+
+export async function getGoogleOauthUrlService(platform: 'WEB' | 'MOBILE' = 'MOBILE') {
+    return apiRequest<GoogleOauthUrlResponse>('get', '/auth/google', undefined, {
+        params: { platform },
+    });
+}
+
+export async function googleOauthCallbackService(code: string) {
+    const oauthResponse = await apiRequest<GoogleOauthCallbackResponse>('post', '/auth/google/callback', {
+        code,
+    });
+
+    await setAccessToken(oauthResponse.data.accessToken);
+    const refreshToken = (oauthResponse.data as { refreshToken?: string }).refreshToken;
+    if (refreshToken) {
+        await setRefreshToken(refreshToken);
+    }
+
+    return oauthResponse;
 }
