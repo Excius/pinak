@@ -32,7 +32,7 @@ export function ProductGrid({ categoryId }: ProductGridProps) {
       const response = await getProductsByCategory(categoryId, 1, 20, {
         inStock: true,
       });
-      setProducts(mapProductsToCardItems(response.data.data));
+      setProducts(mapProductsToCardItems(response.data.items));
     } catch (err) {
       setError(
         err instanceof Error
