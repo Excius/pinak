@@ -5,13 +5,28 @@
   },
   "build": {
     "development": {
+      "env": {
+        "EXPO_PUBLIC_API_URL": "http://localhost:3001/api/v1",
+        "NODE_ENV": "development",
+        "EXPO_PUBLIC_APP_NAME": "Pinak Mobile (Dev)"
+      },
       "developmentClient": true,
       "distribution": "internal"
     },
     "preview": {
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://pinak.onrender.com/api/v1",
+        "NODE_ENV": "development",
+        "EXPO_PUBLIC_APP_NAME": "Pinak Mobile"
+      },
       "distribution": "internal"
     },
     "production": {
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://pinak.onrender.com/api/v1",
+        "NODE_ENV": "production",
+        "EXPO_PUBLIC_APP_NAME": "Pinak Mobile"
+      },
       "autoIncrement": true,
       "android": {
         "buildType": "apk"

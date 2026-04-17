@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { View, Text, Image, TouchableOpacity } from "react-native";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
@@ -16,13 +17,25 @@ interface ProductCardProps {
   product: Product;
   onPress?: () => void;
   onAddToCart?: () => void;
+  onWishlistToggle?: (isFavorite: boolean) => void;
+  isWishlistLoading?: boolean;
 }
 
 export function ProductCard({
   product,
   onPress,
   onAddToCart,
+  onWishlistToggle,
+  isWishlistLoading,
 }: ProductCardProps) {
+  const [isFavorite, setIsFavorite] = useState(false);
+
+  const handleWishlistToggle = async () => {
+    const newFavoriteState = !isFavorite;
+    setIsFavorite(newFavoriteState);
+    onWishlistToggle?.(newFavoriteState);
+  };
+
   const renderStars = (rating: number) => {
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 !== 0;
@@ -95,6 +108,20 @@ export function ProductCard({
             </Text>
           </View>
         )}
+
+        {/* Wishlist Button */}
+        <TouchableOpacity
+          onPress={handleWishlistToggle}
+          disabled={isWishlistLoading}
+          className="absolute top-3 right-3 w-9 h-9 bg-background/90 backdrop-blur-sm rounded-full justify-center items-center border border-surface-border active:scale-90"
+          style={{ opacity: isWishlistLoading ? 0.5 : 1 }}
+        >
+          <MaterialCommunityIcons
+            name={isFavorite ? "heart" : "heart-outline"}
+            size={18}
+            color="#C9A962"
+          />
+        </TouchableOpacity>
 
         {/* Add Button */}
         <TouchableOpacity

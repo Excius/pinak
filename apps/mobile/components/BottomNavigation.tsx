@@ -44,7 +44,7 @@ export function BottomNavigation() {
             if (item.id === "home") router.push("/");
             if (item.id === "categories") router.push("/(tabs)/categories");
             if (item.id === "camera") router.push("/(tabs)/camera");
-            // if (item.id === "wishlist") router.push("/wishlist");
+            if (item.id === "wishlist") router.push("/(tabs)/wishlist");
             if (item.id === "profile") router.push("/(tabs)/profile");
           }}
         >

@@ -1,7 +1,7 @@
 import type { ProductApi } from "@repo/types";
 
 type ProductListItem =
-    ProductApi.ResponseTypes["GetProductsWithCategory"]["data"]["data"][number];
+    ProductApi.ResponseTypes["GetProductsWithCategory"]["data"]["items"][number];
 
 type ProductDetail = ProductApi.ResponseTypes["GetProductById"]["data"];
 type ProductVariant = ProductDetail["variants"][number];
@@ -15,6 +15,7 @@ export interface ProductCardItem {
     price: number;
     originalPrice?: number;
     badge?: "Bestseller";
+    variantId?: string;
 }
 
 const PRODUCT_IMAGE_PLACEHOLDER =
@@ -68,6 +69,9 @@ export function mapProductsToCardItems(products: ProductListItem[]): ProductCard
         const { price, originalPrice } = getDisplayPrice(product.variants);
         const reviews = product.purchasedCount || 0;
 
+        // Get the first variant ID for wishlist operations
+        const variantId = product.variants?.[0]?.id;
+
         return {
             id: product.id,
             title: product.name,
@@ -77,6 +81,7 @@ export function mapProductsToCardItems(products: ProductListItem[]): ProductCard
             price,
             originalPrice,
             badge: reviews >= 20 ? "Bestseller" : undefined,
+            variantId,
         };
     });
 }

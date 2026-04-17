@@ -18,7 +18,7 @@ export function CategoryCard({
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.95}
-      className="relative overflow-hidden rounded-lg shadow-md active:scale-[0.97]"
+      className="relative overflow-hidden rounded-3xl shadow-md active:scale-[0.97]"
       style={{ height: 180 }}
     >
       <ImageBackground
