@@ -4,7 +4,7 @@
     "slug": "mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/PinakLogoNoName.png",
+    "icon": "./assets/images/Pinak_SafeLogo_NOBG.png",
     "scheme": "pinak",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -15,7 +15,7 @@
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#000000",
-        "foregroundImage": "./assets/images/PinakLogoNoName.png"
+        "foregroundImage": "./assets/images/Pinak_SafeLogo_NOBG.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
