@@ -7,6 +7,7 @@ import {
   mapProductsToCardItems,
   type ProductCardItem,
 } from "@/utils/mappers/product.mapper";
+import { addToWishlist, removeFromWishlist } from "@/services/wishlist.service";
 
 interface ProductGridProps {
   categoryId: string;
@@ -17,6 +18,7 @@ export function ProductGrid({ categoryId }: ProductGridProps) {
   const [products, setProducts] = useState<ProductCardItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [wishlistLoading, setWishlistLoading] = useState<string | null>(null);
 
   const loadProducts = useCallback(async () => {
     if (!categoryId) {
@@ -50,6 +52,32 @@ export function ProductGrid({ categoryId }: ProductGridProps) {
 
   const handleProductPress = (productId: string) => {
     router.push(`/(tabs)/product/${productId}`);
+  };
+
+  // Handle wishlist toggle
+  const handleWishlistToggle = async (productId: string, variantId: string | undefined, isFavorite: boolean) => {
+    if (!variantId) {
+      console.warn("No variant ID available for product:", productId);
+      return;
+    }
+
+    try {
+      setWishlistLoading(productId);
+      
+      if (isFavorite) {
+        // Add to wishlist
+        await addToWishlist(variantId);
+      } else {
+        // For remove, we would need the wishlist item ID
+        // This requires fetching the wishlist first or tracking it separately
+        console.log("Remove from wishlist:", variantId);
+      }
+    } catch (err) {
+      console.error("Wishlist action failed:", err);
+      // Optionally show toast error here
+    } finally {
+      setWishlistLoading(null);
+    }
   };
 
   if (isLoading) {
@@ -86,6 +114,10 @@ export function ProductGrid({ categoryId }: ProductGridProps) {
           <ProductCard
             product={item}
             onPress={() => handleProductPress(item.id)}
+            onWishlistToggle={(isFavorite) =>
+              handleWishlistToggle(item.id, item.variantId, isFavorite)
+            }
+            isWishlistLoading={wishlistLoading === item.id}
           />
         </View>
       )}
