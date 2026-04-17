@@ -16,11 +16,11 @@ type GetOptionByIdResponse = OptionApi.ResponseTypes["GetOptionById"];
  * @returns Array of all options with their possible values
  */
 export async function getOptions() {
-  const response = await apiRequest<ListOptionsResponse>(
-    "get",
-    "/options"
-  );
-  return response;
+    const response = await apiRequest<ListOptionsResponse>(
+        "get",
+        "/options"
+    );
+    return response;
 }
 
 /**
@@ -29,9 +29,9 @@ export async function getOptions() {
  * @returns Option details including all possible values
  */
 export async function getOptionById(optionId: string) {
-  const response = await apiRequest<GetOptionByIdResponse>(
-    "get",
-    `/options/${optionId}`
-  );
-  return response;
+    const response = await apiRequest<GetOptionByIdResponse>(
+        "get",
+        `/options/${optionId}`
+    );
+    return response;
 }

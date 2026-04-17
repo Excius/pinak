@@ -37,13 +37,20 @@ function ComboKitItemCard({ item }: { item: ComboKitItem }) {
           />
         ) : (
           <View className="w-16 h-16 rounded-lg bg-surface-light items-center justify-center">
-            <MaterialCommunityIcons name="image-off" size={24} color="#C9A962" />
+            <MaterialCommunityIcons
+              name="image-off"
+              size={24}
+              color="#C9A962"
+            />
           </View>
         )}
 
         {/* Item Info */}
         <View className="flex-1">
-          <Text className="text-sm font-bold text-text-primary" numberOfLines={2}>
+          <Text
+            className="text-sm font-bold text-text-primary"
+            numberOfLines={2}
+          >
             {item.productVariant?.sku || "Product"}
           </Text>
 
@@ -127,7 +134,7 @@ export default function ComboKitDetailScreen() {
         });
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Failed to load combo kit"
+          err instanceof Error ? err.message : "Failed to load combo kit",
         );
       } finally {
         setIsLoading(false);
@@ -145,7 +152,10 @@ export default function ComboKitDetailScreen() {
       const discountPercent = kit.discountValue;
       const fullPrice = kit.price / (1 - discountPercent / 100);
       const savingsAmount = fullPrice - kit.price;
-      return { discountPercent: Math.round(discountPercent), savingsAmount: Math.round(savingsAmount) };
+      return {
+        discountPercent: Math.round(discountPercent),
+        savingsAmount: Math.round(savingsAmount),
+      };
     }
 
     if (kit.discountType === "FIXED_AMOUNT" && kit.discountValue) {
@@ -240,7 +250,10 @@ export default function ComboKitDetailScreen() {
           {kit.tags && kit.tags.length > 0 && (
             <View className="flex-row flex-wrap gap-2 mb-4">
               {kit.tags.map((tag, idx) => (
-                <View key={idx} className="bg-primary/10 px-3 py-1.5 rounded-full">
+                <View
+                  key={idx}
+                  className="bg-primary/10 px-3 py-1.5 rounded-full"
+                >
                   <Text className="text-xs font-semibold text-primary">
                     {tag}
                   </Text>
@@ -272,7 +285,8 @@ export default function ComboKitDetailScreen() {
             {pricingMetrics.savingsAmount > 0 && (
               <View className="mt-3 pt-3 border-t border-surface-border">
                 <Text className="text-xs text-text-secondary">
-                  You save ₹{pricingMetrics.savingsAmount.toLocaleString()} with this bundle
+                  You save ₹{pricingMetrics.savingsAmount.toLocaleString()} with
+                  this bundle
                 </Text>
               </View>
             )}
@@ -291,11 +305,7 @@ export default function ComboKitDetailScreen() {
               </Text>
             </View>
             <View className="flex-1 bg-surface-light rounded-xl p-3 items-center">
-              <MaterialCommunityIcons
-                name="eye"
-                size={24}
-                color="#C9A962"
-              />
+              <MaterialCommunityIcons name="eye" size={24} color="#C9A962" />
               <Text className="text-xs text-text-secondary mt-1 font-semibold">
                 {kit.viewCount.toLocaleString()} Views
               </Text>

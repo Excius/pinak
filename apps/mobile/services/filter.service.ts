@@ -17,11 +17,11 @@ type GetGroupByIdResponse = FilterApi.ResponseTypes["GetGroupById"];
  * @returns Array of filter groups with their values
  */
 export async function getFilterGroups(activeOnly: boolean = false) {
-  const response = await apiRequest<ListGroupsResponse>(
-    "get",
-    `/filters/groups?activeOnly=${activeOnly}`
-  );
-  return response;
+    const response = await apiRequest<ListGroupsResponse>(
+        "get",
+        `/filters/groups?activeOnly=${activeOnly}`
+    );
+    return response;
 }
 
 /**
@@ -30,9 +30,9 @@ export async function getFilterGroups(activeOnly: boolean = false) {
  * @returns Filter group with all available filter values
  */
 export async function getFilterGroupById(groupId: string) {
-  const response = await apiRequest<GetGroupByIdResponse>(
-    "get",
-    `/filters/groups/${groupId}`
-  );
-  return response;
+    const response = await apiRequest<GetGroupByIdResponse>(
+        "get",
+        `/filters/groups/${groupId}`
+    );
+    return response;
 }

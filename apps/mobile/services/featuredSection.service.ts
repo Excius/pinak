@@ -3,9 +3,9 @@ import type { FeaturedSectionApi } from "@repo/types";
 
 // Type imports for featured section service
 type ListFeaturedSectionsResponse =
-  FeaturedSectionApi.ResponseTypes["ListFeaturedSections"];
+    FeaturedSectionApi.ResponseTypes["ListFeaturedSections"];
 type GetFeaturedSectionByIdResponse =
-  FeaturedSectionApi.ResponseTypes["GetFeaturedSectionById"];
+    FeaturedSectionApi.ResponseTypes["GetFeaturedSectionById"];
 
 /**
  * Featured Section Service
@@ -18,11 +18,11 @@ type GetFeaturedSectionByIdResponse =
  * @returns Array of all featured sections sorted by priority
  */
 export async function getFeaturedSections() {
-  const response = await apiRequest<ListFeaturedSectionsResponse>(
-    "get",
-    "/featured-sections"
-  );
-  return response;
+    const response = await apiRequest<ListFeaturedSectionsResponse>(
+        "get",
+        "/featured-sections"
+    );
+    return response;
 }
 
 /**
@@ -31,9 +31,9 @@ export async function getFeaturedSections() {
  * @returns Section details
  */
 export async function getFeaturedSectionById(sectionId: string) {
-  const response = await apiRequest<GetFeaturedSectionByIdResponse>(
-    "get",
-    `/featured-sections/${sectionId}`
-  );
-  return response;
+    const response = await apiRequest<GetFeaturedSectionByIdResponse>(
+        "get",
+        `/featured-sections/${sectionId}`
+    );
+    return response;
 }

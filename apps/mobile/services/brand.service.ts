@@ -17,11 +17,11 @@ type GetBrandBySlugResponse = BrandApi.ResponseTypes["GetBrandBySlug"];
  * @returns Array of all brands
  */
 export async function getBrands(activeOnly: boolean = false) {
-  const response = await apiRequest<ListBrandsResponse>(
-    "get",
-    `/brands?activeOnly=${activeOnly}`
-  );
-  return response;
+    const response = await apiRequest<ListBrandsResponse>(
+        "get",
+        `/brands?activeOnly=${activeOnly}`
+    );
+    return response;
 }
 
 /**
@@ -30,11 +30,11 @@ export async function getBrands(activeOnly: boolean = false) {
  * @returns Brand details including logo and metadata
  */
 export async function getBrandById(brandId: string) {
-  const response = await apiRequest<GetBrandByIdResponse>(
-    "get",
-    `/brands/${brandId}`
-  );
-  return response;
+    const response = await apiRequest<GetBrandByIdResponse>(
+        "get",
+        `/brands/${brandId}`
+    );
+    return response;
 }
 
 /**
@@ -43,9 +43,9 @@ export async function getBrandById(brandId: string) {
  * @returns Brand details
  */
 export async function getBrandBySlug(slug: string) {
-  const response = await apiRequest<GetBrandBySlugResponse>(
-    "get",
-    `/brands/slug/${slug}`
-  );
-  return response;
+    const response = await apiRequest<GetBrandBySlugResponse>(
+        "get",
+        `/brands/slug/${slug}`
+    );
+    return response;
 }

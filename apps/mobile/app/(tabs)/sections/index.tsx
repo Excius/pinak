@@ -12,10 +12,14 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { getFeaturedSections } from "@/services/featuredSection.service";
 import type { FeaturedSectionApi } from "@repo/types";
 
-type Section = FeaturedSectionApi.ResponseTypes["ListFeaturedSections"]["data"][number];
+type Section =
+  FeaturedSectionApi.ResponseTypes["ListFeaturedSections"]["data"][number];
 
 // Mapping of section types to icons and colors
-const SECTION_CONFIG: Record<string, { icon: string; color: string; description: string }> = {
+const SECTION_CONFIG: Record<
+  string,
+  { icon: string; color: string; description: string }
+> = {
   EXPERT_PICKS: {
     icon: "star-outline",
     color: "#C9A962",
@@ -37,7 +41,13 @@ const SECTION_CONFIG: Record<string, { icon: string; color: string; description:
  * Featured Section Card Component
  * Displays individual featured section
  */
-function SectionCard({ section, onPress }: { section: Section; onPress: (id: string) => void }) {
+function SectionCard({
+  section,
+  onPress,
+}: {
+  section: Section;
+  onPress: (id: string) => void;
+}) {
   const config = SECTION_CONFIG[section.type] || SECTION_CONFIG.EXPERT_PICKS;
 
   return (
@@ -49,7 +59,11 @@ function SectionCard({ section, onPress }: { section: Section; onPress: (id: str
         {/* Section Info */}
         <View className="flex-1">
           <View className="flex-row items-center gap-2 mb-2">
-            <MaterialCommunityIcons name={config.icon} size={20} color={config.color} />
+            <MaterialCommunityIcons
+              name={config.icon}
+              size={20}
+              color={config.color}
+            />
             <Text className="text-xs font-bold uppercase tracking-widest text-primary">
               {section.type.replace(/_/g, " ")}
             </Text>
@@ -96,12 +110,12 @@ export default function FeaturedSectionsScreen() {
         const response = await getFeaturedSections();
         // Sort by priority
         const sorted = (response.data || []).sort(
-          (a, b) => a.priority - b.priority
+          (a, b) => a.priority - b.priority,
         );
         setSections(sorted);
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Failed to load sections"
+          err instanceof Error ? err.message : "Failed to load sections",
         );
         setSections([]);
       } finally {
@@ -177,10 +191,7 @@ export default function FeaturedSectionsScreen() {
       <FlatList
         data={sections}
         renderItem={({ item }) => (
-          <SectionCard
-            section={item}
-            onPress={handleSectionPress}
-          />
+          <SectionCard section={item} onPress={handleSectionPress} />
         )}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingVertical: 8, paddingBottom: 40 }}

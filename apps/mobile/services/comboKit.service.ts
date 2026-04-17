@@ -9,14 +9,14 @@ type GetComboKitBySlugResponse = ComboKitApi.ResponseTypes["GetComboKitBySlug"];
 type SearchComboKitsResponse = ComboKitApi.ResponseTypes["SearchComboKits"];
 type GetComboKitItemsResponse = ComboKitApi.ResponseTypes["GetComboKitItems"];
 type IncrementComboKitViewResponse =
-  ComboKitApi.ResponseTypes["IncrementComboKitView"];
+    ComboKitApi.ResponseTypes["IncrementComboKitView"];
 type IncrementComboKitPurchaseResponse =
-  ComboKitApi.ResponseTypes["IncrementComboKitPurchase"];
+    ComboKitApi.ResponseTypes["IncrementComboKitPurchase"];
 
 // Type imports for query options
 type GetComboKitsOptions = Omit<
-  Partial<ComboKitApi.QueryTypes["GetComboKits"]>,
-  "page" | "limit"
+    Partial<ComboKitApi.QueryTypes["GetComboKits"]>,
+    "page" | "limit"
 >;
 
 /**
@@ -33,21 +33,21 @@ type GetComboKitsOptions = Omit<
  * @returns Paginated list of combo kits
  */
 export async function getComboKits(
-  page: number = 1,
-  limit: number = 10,
-  options: GetComboKitsOptions = {}
+    page: number = 1,
+    limit: number = 10,
+    options: GetComboKitsOptions = {}
 ) {
-  const queryString = buildQueryParams({
-    page,
-    limit,
-    ...options,
-  });
-  const url = queryString
-    ? `/combo-kits?${queryString}`
-    : "/combo-kits";
+    const queryString = buildQueryParams({
+        page,
+        limit,
+        ...options,
+    });
+    const url = queryString
+        ? `/combo-kits?${queryString}`
+        : "/combo-kits";
 
-  const response = await apiRequest<GetComboKitsResponse>("get", url);
-  return response;
+    const response = await apiRequest<GetComboKitsResponse>("get", url);
+    return response;
 }
 
 /**
@@ -56,11 +56,11 @@ export async function getComboKits(
  * @returns Complete combo kit details including all items
  */
 export async function getComboKitById(comboKitId: string) {
-  const response = await apiRequest<GetComboKitByIdResponse>(
-    "get",
-    `/combo-kits/${comboKitId}`
-  );
-  return response;
+    const response = await apiRequest<GetComboKitByIdResponse>(
+        "get",
+        `/combo-kits/${comboKitId}`
+    );
+    return response;
 }
 
 /**
@@ -69,11 +69,11 @@ export async function getComboKitById(comboKitId: string) {
  * @returns Combo kit details
  */
 export async function getComboKitBySlug(slug: string) {
-  const response = await apiRequest<GetComboKitBySlugResponse>(
-    "get",
-    `/combo-kits/slug/${slug}`
-  );
-  return response;
+    const response = await apiRequest<GetComboKitBySlugResponse>(
+        "get",
+        `/combo-kits/slug/${slug}`
+    );
+    return response;
 }
 
 /**
@@ -84,22 +84,22 @@ export async function getComboKitBySlug(slug: string) {
  * @returns Paginated search results
  */
 export async function searchComboKits(
-  query: string,
-  page: number = 1,
-  limit: number = 10
+    query: string,
+    page: number = 1,
+    limit: number = 10
 ) {
-  const queryString = buildQueryParams({
-    q: query,
-    page,
-    limit,
-  });
+    const queryString = buildQueryParams({
+        q: query,
+        page,
+        limit,
+    });
 
-  const url = queryString
-    ? `/combo-kits/search?${queryString}`
-    : "/combo-kits/search";
+    const url = queryString
+        ? `/combo-kits/search?${queryString}`
+        : "/combo-kits/search";
 
-  const response = await apiRequest<SearchComboKitsResponse>("get", url);
-  return response;
+    const response = await apiRequest<SearchComboKitsResponse>("get", url);
+    return response;
 }
 
 /**
@@ -108,11 +108,11 @@ export async function searchComboKits(
  * @returns Array of items in the combo kit
  */
 export async function getComboKitItems(comboKitId: string) {
-  const response = await apiRequest<GetComboKitItemsResponse>(
-    "get",
-    `/combo-kits/${comboKitId}/items`
-  );
-  return response;
+    const response = await apiRequest<GetComboKitItemsResponse>(
+        "get",
+        `/combo-kits/${comboKitId}/items`
+    );
+    return response;
 }
 
 /**
@@ -121,11 +121,11 @@ export async function getComboKitItems(comboKitId: string) {
  * @returns Updated view count
  */
 export async function incrementComboKitView(comboKitId: string) {
-  const response = await apiRequest<IncrementComboKitViewResponse>(
-    "patch",
-    `/combo-kits/${comboKitId}/increment-view`
-  );
-  return response;
+    const response = await apiRequest<IncrementComboKitViewResponse>(
+        "patch",
+        `/combo-kits/${comboKitId}/increment-view`
+    );
+    return response;
 }
 
 /**
@@ -134,9 +134,9 @@ export async function incrementComboKitView(comboKitId: string) {
  * @returns Updated purchase count
  */
 export async function incrementComboKitPurchase(comboKitId: string) {
-  const response = await apiRequest<IncrementComboKitPurchaseResponse>(
-    "patch",
-    `/combo-kits/${comboKitId}/increment-purchase`
-  );
-  return response;
+    const response = await apiRequest<IncrementComboKitPurchaseResponse>(
+        "patch",
+        `/combo-kits/${comboKitId}/increment-purchase`
+    );
+    return response;
 }

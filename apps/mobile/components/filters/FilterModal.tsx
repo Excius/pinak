@@ -34,7 +34,7 @@ export function FilterModal({
   const [groups, setGroups] = useState<FilterGroup[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedFilters, setSelectedFilters] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
 
   // Load filter groups

@@ -1,10 +1,18 @@
 import { useCallback, useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, ScrollView, Image, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  Image,
+  ActivityIndicator,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { getComboKits } from "@/services/comboKit.service";
 import type { ComboKitApi } from "@repo/types";
 
-type ComboKit = ComboKitApi.ResponseTypes["GetComboKits"]["data"]["items"][number];
+type ComboKit =
+  ComboKitApi.ResponseTypes["GetComboKits"]["data"]["items"][number];
 
 /**
  * ComboKits Homepage Component
@@ -25,7 +33,9 @@ export function ComboKits() {
       const response = await getComboKits(1, 8, { isActive: true });
       setKits(response.data.items || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load combo kits");
+      setError(
+        err instanceof Error ? err.message : "Failed to load combo kits",
+      );
       setKits([]);
     } finally {
       setIsLoading(false);
@@ -112,7 +122,10 @@ export function ComboKits() {
               >
                 {kit.name}
               </Text>
-              <Text className="mb-3 text-xs text-text-secondary" numberOfLines={1}>
+              <Text
+                className="mb-3 text-xs text-text-secondary"
+                numberOfLines={1}
+              >
                 {kit.description || "Curated collection"}
               </Text>
               <Text className="mb-4 text-base font-bold text-primary">

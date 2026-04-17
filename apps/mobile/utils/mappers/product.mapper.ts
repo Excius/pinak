@@ -68,7 +68,7 @@ export function mapProductsToCardItems(products: ProductListItem[]): ProductCard
 
         const { price, originalPrice } = getDisplayPrice(product.variants);
         const reviews = product.purchasedCount || 0;
-        
+
         // Get the first variant ID for wishlist operations
         const variantId = product.variants?.[0]?.id;
 

@@ -17,7 +17,8 @@ import {
 } from "@/services/wishlist.service";
 import type { WishlistApi } from "@repo/types";
 
-type WishlistItem = WishlistApi.ResponseTypes["GetWishlist"]["data"]["items"][number];
+type WishlistItem =
+  WishlistApi.ResponseTypes["GetWishlist"]["data"]["items"][number];
 
 /**
  * Wishlist Item Card Component
@@ -63,10 +64,7 @@ function WishlistItemCard({
         {variant.optionValues && variant.optionValues.length > 0 && (
           <View className="flex-row flex-wrap gap-1 mb-2">
             {variant.optionValues.slice(0, 2).map((opt, idx) => (
-              <View
-                key={idx}
-                className="bg-primary/10 px-2 py-1 rounded-full"
-              >
+              <View key={idx} className="bg-primary/10 px-2 py-1 rounded-full">
                 <Text className="text-[0.6rem] text-primary font-semibold">
                   {opt.optionValue?.value}
                 </Text>
@@ -126,9 +124,7 @@ export default function WishlistScreen() {
       const response = await getWishlist();
       setItems(response.data.items || []);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to load wishlist"
-      );
+      setError(err instanceof Error ? err.message : "Failed to load wishlist");
       setItems([]);
     } finally {
       setIsLoading(false);
@@ -139,7 +135,7 @@ export default function WishlistScreen() {
   useFocusEffect(
     useCallback(() => {
       void loadWishlist();
-    }, [loadWishlist])
+    }, [loadWishlist]),
   );
 
   // Remove item from wishlist
@@ -249,10 +245,7 @@ export default function WishlistScreen() {
       <FlatList
         data={items}
         renderItem={({ item }) => (
-          <WishlistItemCard
-            item={item}
-            onRemove={handleRemoveItem}
-          />
+          <WishlistItemCard item={item} onRemove={handleRemoveItem} />
         )}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{

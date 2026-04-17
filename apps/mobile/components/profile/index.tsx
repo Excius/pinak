@@ -133,7 +133,7 @@ export default function ProfileLayout() {
               </View>
               <MaterialIcons name="chevron-right" size={22} color="#6B6B6B" />
             </Pressable>
-            <Pressable 
+            <Pressable
               onPress={() => router.push("/(tabs)/wishlist")}
               className="flex-row items-center justify-between p-4 border-b border-surface-border active:opacity-70"
             >

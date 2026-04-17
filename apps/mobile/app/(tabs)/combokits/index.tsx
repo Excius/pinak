@@ -13,7 +13,8 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { getComboKits } from "@/services/comboKit.service";
 import type { ComboKitApi } from "@repo/types";
 
-type ComboKit = ComboKitApi.ResponseTypes["GetComboKits"]["data"]["items"][number];
+type ComboKit =
+  ComboKitApi.ResponseTypes["GetComboKits"]["data"]["items"][number];
 
 interface ComboKitCardProps {
   kit: ComboKit;
@@ -27,9 +28,7 @@ interface ComboKitCardProps {
 function ComboKitCard({ kit, onPress }: ComboKitCardProps) {
   const discountPercent = kit.discountValue
     ? Math.round(
-        ((kit.discountValue) /
-          (kit.price + (kit.discountValue || 0))) *
-          100
+        (kit.discountValue / (kit.price + (kit.discountValue || 0))) * 100,
       )
     : 0;
 
@@ -81,10 +80,7 @@ function ComboKitCard({ kit, onPress }: ComboKitCardProps) {
         >
           {kit.name}
         </Text>
-        <Text
-          className="text-xs text-text-secondary mb-2"
-          numberOfLines={1}
-        >
+        <Text className="text-xs text-text-secondary mb-2" numberOfLines={1}>
           {kit.items?.length || 0} items included
         </Text>
 
@@ -95,7 +91,10 @@ function ComboKitCard({ kit, onPress }: ComboKitCardProps) {
           </Text>
           {discountPercent > 0 && (
             <Text className="text-xs text-text-muted line-through">
-              ₹{Math.round(kit.price / (1 - (kit.discountValue || 0) / 100)).toLocaleString()}
+              ₹
+              {Math.round(
+                kit.price / (1 - (kit.discountValue || 0) / 100),
+              ).toLocaleString()}
             </Text>
           )}
         </View>
@@ -104,10 +103,7 @@ function ComboKitCard({ kit, onPress }: ComboKitCardProps) {
         {kit.tags && kit.tags.length > 0 && (
           <View className="flex-row flex-wrap gap-1 mb-3">
             {kit.tags.slice(0, 2).map((tag, idx) => (
-              <View
-                key={idx}
-                className="bg-primary/10 px-2 py-1 rounded-full"
-              >
+              <View key={idx} className="bg-primary/10 px-2 py-1 rounded-full">
                 <Text className="text-[0.65rem] text-primary font-semibold">
                   {tag}
                 </Text>
@@ -155,14 +151,14 @@ export default function ComboKitsScreen() {
         setHasMore(response.data.pagination.hasNext);
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Failed to load combo kits"
+          err instanceof Error ? err.message : "Failed to load combo kits",
         );
       } finally {
         setIsLoading(false);
         setIsLoadingMore(false);
       }
     },
-    []
+    [],
   );
 
   useEffect(() => {

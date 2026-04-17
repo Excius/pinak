@@ -19,7 +19,13 @@ type Brand = BrandApi.ResponseTypes["ListBrands"]["data"][number];
  * Brand Card Component
  * Displays individual brand with logo and name
  */
-function BrandCard({ brand, onPress }: { brand: Brand; onPress: (slug: string) => void }) {
+function BrandCard({
+  brand,
+  onPress,
+}: {
+  brand: Brand;
+  onPress: (slug: string) => void;
+}) {
   return (
     <TouchableOpacity
       onPress={() => onPress(brand.slug)}
@@ -52,7 +58,11 @@ function BrandCard({ brand, onPress }: { brand: Brand; onPress: (slug: string) =
         </Text>
         <View className="mt-3 flex-row items-center gap-2">
           <Text className="text-xs text-primary font-semibold">Shop</Text>
-          <MaterialCommunityIcons name="arrow-right" size={14} color="#C9A962" />
+          <MaterialCommunityIcons
+            name="arrow-right"
+            size={14}
+            color="#C9A962"
+          />
         </View>
       </View>
     </TouchableOpacity>

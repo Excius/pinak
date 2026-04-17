@@ -55,7 +55,11 @@ export function ProductGrid({ categoryId }: ProductGridProps) {
   };
 
   // Handle wishlist toggle
-  const handleWishlistToggle = async (productId: string, variantId: string | undefined, isFavorite: boolean) => {
+  const handleWishlistToggle = async (
+    productId: string,
+    variantId: string | undefined,
+    isFavorite: boolean,
+  ) => {
     if (!variantId) {
       console.warn("No variant ID available for product:", productId);
       return;
@@ -63,7 +67,7 @@ export function ProductGrid({ categoryId }: ProductGridProps) {
 
     try {
       setWishlistLoading(productId);
-      
+
       if (isFavorite) {
         // Add to wishlist
         await addToWishlist(variantId);
