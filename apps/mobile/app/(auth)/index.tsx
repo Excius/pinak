@@ -73,15 +73,18 @@ export default function AuthScreen() {
       </View>
 
       {/* Header / Branding */}
-      <View className="items-center gap-2 px-6 py-8 mt-12">
-        <View className="h-20 w-20 items-center justify-center rounded-full bg-primary/20 border-2 border-primary mb-1">
+      <View className="items-center gap-1 px-6 py-12 mt-8">
+        <View className="h-28 w-28 items-center justify-center rounded-full bg-primary/10 border-2 border-primary mb-2">
           <Image
-            source={require("../../assets/images/Pinak_Logo_NoBg.png")}
-            style={{ width: 64, height: 64 }}
+            source={require("../../assets/images/Pinak_NoBg_Logo.png")}
+            style={{ width: 100, height: 100 }}
           />
         </View>
-        <Text className="font-display text-2xl font-bold tracking-widest text-primary uppercase mt-2">
+        <Text className="font-display text-3xl font-bold tracking-widest text-primary uppercase">
           Pinak
+        </Text>
+        <Text className="text-text-secondary text-xs tracking-widest uppercase mt-1">
+          The Cosmetic World
         </Text>
       </View>
 
@@ -121,12 +124,23 @@ export default function AuthScreen() {
 
         {/* Intro Text */}
         {isLogin && (
-          <View className="mb-8">
+          <View className="mb-8 items-center">
             <Text className="font-display text-2xl font-bold text-text-primary mb-2">
-              Welcome back
+              Welcome Back
             </Text>
-            <Text className="text-text-secondary text-sm">
-              Experience the ritual of expert-led beauty.
+            <Text className="text-text-secondary text-sm text-center">
+              Continue your beauty journey with us.
+            </Text>
+          </View>
+        )}
+
+        {!isLogin && (
+          <View className="mb-8 items-center">
+            <Text className="font-display text-2xl font-bold text-text-primary mb-2">
+              Join Pinak
+            </Text>
+            <Text className="text-text-secondary text-sm text-center">
+              Experience expert-led beauty and wellness.
             </Text>
           </View>
         )}
