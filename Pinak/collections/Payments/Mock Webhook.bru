@@ -1,0 +1,23 @@
+meta {
+  name: Mock Webhook
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/payments/payment
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "orderId": "order_id_here",
+    "paymentId": "pay_12345",
+    "status": "COMPLETED"
+  }
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+}
