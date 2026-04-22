@@ -1,0 +1,24 @@
+meta {
+  name: Get Coupon by Code
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/coupons/{{code}}
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  code: WELCOME10
+}
+
+docs {
+  Schema: CouponTypes.GetCoupon
+}

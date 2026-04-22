@@ -10,12 +10,15 @@ import { createRateLimiter } from "./lib/rateLimit.js";
 import { prisma } from "./lib/prisma.js";
 import apiRoutes from "./routes/index.js";
 import cookieParser from "cookie-parser";
+import { startCleanupReservationsJob } from "./jobs/cleanupReservations.js";
 
 class Server {
   private app: express.Application;
   private server: HttpServer | null = null;
   private port: number;
   private isShuttingDown: boolean = false;
+  private cleanupReservationsInterval: ReturnType<typeof setInterval> | null =
+    null;
 
   constructor() {
     this.app = express();
@@ -28,6 +31,7 @@ class Server {
 
     this.initializeMiddleware();
     this.initializeRoutes();
+    this.startBackgroundJobs();
     this.setupGracefulShutdown();
   }
 
@@ -136,6 +140,10 @@ class Server {
     this.app.use(errorHandler);
   }
 
+  private startBackgroundJobs(): void {
+    this.cleanupReservationsInterval = startCleanupReservationsJob();
+  }
+
   private setupGracefulShutdown(): void {
     // Handle termination signals
     process.on("SIGTERM", () => this.gracefulShutdown("SIGTERM"));
@@ -202,6 +210,12 @@ class Server {
     // Close database connections, Redis clients, etc.
 
     try {
+      if (this.cleanupReservationsInterval) {
+        clearInterval(this.cleanupReservationsInterval);
+        this.cleanupReservationsInterval = null;
+        logger.info("Reservation cleanup job stopped");
+      }
+
       // Close Prisma database connection
       await prisma.$disconnect();
       logger.info("Database connection closed");

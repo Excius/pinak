@@ -1,0 +1,50 @@
+meta {
+  name: Create Order
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/orders
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:json {
+  {
+    "couponCode": "WELCOME10",
+    "shippingAddress": {
+      "fullName": "John Doe",
+      "addressLine1": "123 Main Street",
+      "city": "Mumbai",
+      "state": "Maharashtra",
+      "pincode": "400001",
+      "phone": "+919876543210"
+    },
+    "billingAddress": {
+      "fullName": "John Doe",
+      "addressLine1": "123 Main Street",
+      "city": "Mumbai",
+      "state": "Maharashtra",
+      "pincode": "400001",
+      "phone": "+919876543210"
+    }
+  }
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  authToken: your-jwt-token-here
+}
+
+docs {
+  Schema: OrderTypes.CreateOrder
+}

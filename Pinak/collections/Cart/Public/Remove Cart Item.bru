@@ -1,0 +1,29 @@
+meta {
+  name: Remove Cart Item
+  type: http
+  seq: 4
+}
+
+delete {
+  url: cmoachy4z0000bmmz5iw0a6o8{{baseUrl}}/api/v1/cart/items/{{itemId}}
+  body: none
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  authToken: your-jwt-token-here
+  itemId: cmoadeytg0001bmmz9li2nou2
+}
+
+docs {
+  Schema: CartTypes.RemoveCartItem
+}
