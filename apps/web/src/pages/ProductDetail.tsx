@@ -1,0 +1,372 @@
+import React, { useEffect, useState } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import Layout from '../components/Layout'
+import ProductCard from '../components/ProductCard'
+import { ProductDetailSkeleton } from '../components/Skeleton'
+import { getProductBySlug, getProductVariants } from '../api/products.api'
+import { useCart } from '../context/CartContext'
+import { addToWishlist } from '../api/wishlist.api'
+import type { Product, VariantDetail } from '../api/products.api'
+
+const ProductDetail: React.FC = () => {
+  const { slug } = useParams<{ slug: string }>()
+  const navigate = useNavigate()
+  const { addItem } = useCart()
+
+  const [product, setProduct] = useState<Product | null>(null)
+  const [variants, setVariants] = useState<VariantDetail[]>([])
+  const [selectedVariant, setSelectedVariant] = useState<VariantDetail | null>(null)
+  const [selectedImage, setSelectedImage] = useState<string>('')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [activeTab, setActiveTab] = useState<'description' | 'ingredients'>('description')
+  const [wishlistLoading, setWishlistLoading] = useState(false)
+  const [wishlistAdded, setWishlistAdded] = useState(false)
+  const [quantity, setQuantity] = useState(1)
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      if (!slug) return
+      setLoading(true)
+      setError('')
+      try {
+        const prod = await getProductBySlug(slug)
+        setProduct(prod)
+
+        // Fetch variants
+        if (prod?.id) {
+          const varList = await getProductVariants(prod.id)
+          setVariants(varList)
+          const firstActive = varList.find((v) => v.isActive) || varList[0]
+          if (firstActive) {
+            setSelectedVariant(firstActive)
+            const primary = firstActive.images?.find((img) => img.isPrimary)
+            setSelectedImage(primary?.url || firstActive.images?.[0]?.url || prod.frontImageUrl || '')
+          } else {
+            setSelectedImage(prod.frontImageUrl || '')
+          }
+        }
+      } catch (err: any) {
+        setError(err?.response?.data?.message || err?.message || 'Failed to load product')
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchProduct()
+  }, [slug])
+
+  const handleVariantChange = (variant: VariantDetail) => {
+    setSelectedVariant(variant)
+    const primary = variant.images?.find((img) => img.isPrimary)
+    setSelectedImage(primary?.url || variant.images?.[0]?.url || product?.frontImageUrl || '')
+    setQuantity(1)
+  }
+
+  const handleAddToCart = () => {
+    if (!selectedVariant || !product) return
+    const label = selectedVariant.optionValues?.map((ov) => ov.valueName).join(' / ') || ''
+    addItem(
+      {
+        id: selectedVariant.id,
+        type: 'variant',
+        productName: product.name,
+        variantLabel: label,
+        imageUrl: selectedImage,
+        price: selectedVariant.price,
+        comparePrice: selectedVariant.compareAtPrice ?? undefined,
+        slug: product.slug,
+        productSlug: product.slug,
+      },
+      quantity
+    )
+  }
+
+  const handleAddToWishlist = async () => {
+    if (!selectedVariant) return
+    setWishlistLoading(true)
+    try {
+      await addToWishlist(selectedVariant.id)
+      setWishlistAdded(true)
+      setTimeout(() => setWishlistAdded(false), 3000)
+    } catch {
+      // silently fail
+    } finally {
+      setWishlistLoading(false)
+    }
+  }
+
+  const formatPrice = (p: number) => `₹${p.toLocaleString('en-IN')}`
+
+  const discount =
+    selectedVariant?.compareAtPrice &&
+      selectedVariant.compareAtPrice > selectedVariant.price
+      ? Math.round(
+        ((selectedVariant.compareAtPrice - selectedVariant.price) / selectedVariant.compareAtPrice) * 100
+      )
+      : null
+
+  const allImages: string[] = []
+  if (product?.frontImageUrl) allImages.push(product.frontImageUrl)
+  if (selectedVariant?.images) {
+    selectedVariant.images
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+      .forEach((img) => {
+        if (!allImages.includes(img.url)) allImages.push(img.url)
+      })
+  }
+
+  if (loading) {
+    return (
+      <Layout>
+        <ProductDetailSkeleton />
+      </Layout>
+    )
+  }
+
+  if (error || !product) {
+    return (
+      <Layout>
+        <div className="max-w-7xl mx-auto px-6 py-24 text-center space-y-6">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-900/30 border border-red-800/50">
+            <span className="material-icons-outlined text-3xl text-red-400">error</span>
+          </div>
+          <h2 className="font-display text-2xl font-bold">{error || 'Product not found'}</h2>
+          <button
+            className="bg-primary hover:bg-primary-hover text-black px-6 py-2.5 rounded-full text-sm font-bold transition-all cursor-pointer"
+            onClick={() => navigate('/shop')}
+          >
+            Back to Shop
+          </button>
+        </div>
+      </Layout>
+    )
+  }
+
+  return (
+    <Layout>
+      <div className="max-w-7xl mx-auto px-6 py-12">
+        {/* Breadcrumb */}
+        <div className="flex items-center gap-2 text-sm text-text-muted mb-8">
+          <a className="hover:text-primary cursor-pointer" onClick={() => navigate('/')}>Home</a>
+          <span className="material-icons-outlined text-xs">chevron_right</span>
+          <a className="hover:text-primary cursor-pointer" onClick={() => navigate('/shop')}>Shop</a>
+          <span className="material-icons-outlined text-xs">chevron_right</span>
+          <span className="text-text-main-light truncate">{product.name}</span>
+        </div>
+
+        <div className="flex flex-col lg:flex-row gap-12">
+          {/* Image Gallery */}
+          <div className="w-full lg:w-1/2 space-y-4">
+            <div className="aspect-square rounded-2xl overflow-hidden bg-surface-dark border border-primary/10">
+              {selectedImage ? (
+                <img src={selectedImage} alt={product.name} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <span className="material-icons-outlined text-8xl text-text-muted/30">image</span>
+                </div>
+              )}
+            </div>
+            {allImages.length > 1 && (
+              <div className="flex gap-3 overflow-x-auto pb-2">
+                {allImages.map((url, i) => (
+                  <button
+                    key={i}
+                    className={`w-20 h-20 rounded-xl overflow-hidden shrink-0 border-2 transition-all cursor-pointer ${selectedImage === url
+                        ? 'border-primary shadow-lg shadow-primary/20'
+                        : 'border-primary/10 hover:border-primary/30'
+                      }`}
+                    onClick={() => setSelectedImage(url)}
+                  >
+                    <img src={url} alt="" className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Product Info */}
+          <div className="w-full lg:w-1/2 space-y-6">
+            {product.brand && (
+              <span className="text-primary text-sm uppercase tracking-widest font-bold">
+                {product.brand.name}
+              </span>
+            )}
+
+            <h1 className="font-display text-3xl lg:text-4xl font-bold leading-tight">{product.name}</h1>
+
+            {product.categories && product.categories.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {product.categories.map((cat) => (
+                  <span
+                    key={cat.id}
+                    className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium border border-primary/20 cursor-pointer hover:bg-primary/20 transition-colors"
+                    onClick={() => navigate(`/categories/${cat.slug}`)}
+                  >
+                    {cat.name}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {selectedVariant && (
+              <div className="flex items-center gap-4">
+                <span className="text-3xl font-bold text-primary">
+                  {formatPrice(selectedVariant.price)}
+                </span>
+                {selectedVariant.compareAtPrice && selectedVariant.compareAtPrice > selectedVariant.price && (
+                  <span className="text-lg text-text-muted line-through">
+                    {formatPrice(selectedVariant.compareAtPrice)}
+                  </span>
+                )}
+                {discount && (
+                  <span className="px-3 py-1 rounded-full bg-red-500/20 text-red-400 text-sm font-bold">
+                    {discount}% OFF
+                  </span>
+                )}
+              </div>
+            )}
+
+            {selectedVariant && (
+              <div className="flex items-center gap-2">
+                {selectedVariant.stock > 0 ? (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-green-400"></span>
+                    <span className="text-sm text-green-400 font-medium">
+                      In Stock ({selectedVariant.stock} available)
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-red-400"></span>
+                    <span className="text-sm text-red-400 font-medium">Out of Stock</span>
+                  </>
+                )}
+              </div>
+            )}
+
+            <div className="h-px bg-primary/10"></div>
+
+            {variants.length > 1 && (
+              <div className="space-y-3">
+                <label className="text-xs font-bold tracking-widest text-primary/70 uppercase">Select Variant</label>
+                <div className="flex flex-wrap gap-3">
+                  {variants
+                    .filter((v) => v.isActive)
+                    .map((variant) => {
+                      const label = variant.optionValues?.map((ov) => ov.valueName).join(' / ') || variant.sku
+                      return (
+                        <button
+                          key={variant.id}
+                          className={`px-4 py-2.5 rounded-xl text-sm font-medium border transition-all cursor-pointer ${selectedVariant?.id === variant.id
+                              ? 'border-primary bg-primary/10 text-primary'
+                              : 'border-primary/20 text-text-muted hover:border-primary/40 hover:text-primary'
+                            }`}
+                          onClick={() => handleVariantChange(variant)}
+                        >
+                          {label}
+                        </button>
+                      )
+                    })}
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-3">
+              <label className="text-xs font-bold tracking-widest text-primary/70 uppercase">Quantity</label>
+              <div className="flex items-center gap-3">
+                <button
+                  className="w-10 h-10 rounded-xl border border-primary/20 flex items-center justify-center text-text-muted hover:text-primary hover:border-primary transition-colors cursor-pointer"
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                >
+                  <span className="material-icons-outlined">remove</span>
+                </button>
+                <span className="text-lg font-semibold w-8 text-center">{quantity}</span>
+                <button
+                  className="w-10 h-10 rounded-xl border border-primary/20 flex items-center justify-center text-text-muted hover:text-primary hover:border-primary transition-colors cursor-pointer"
+                  onClick={() => setQuantity(quantity + 1)}
+                >
+                  <span className="material-icons-outlined">add</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <button
+                className="flex-1 bg-primary hover:bg-primary-hover text-black py-3.5 rounded-xl font-bold text-sm uppercase tracking-wider transition-all glow-gold cursor-pointer active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handleAddToCart}
+                disabled={!selectedVariant || selectedVariant.stock === 0}
+              >
+                {selectedVariant && selectedVariant.stock > 0 ? 'Add to Bag' : 'Out of Stock'}
+              </button>
+              <button
+                className={`w-14 h-14 rounded-xl border flex items-center justify-center transition-all cursor-pointer active:scale-95 ${wishlistAdded
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-primary/20 text-text-muted hover:text-primary hover:border-primary'
+                  }`}
+                onClick={handleAddToWishlist}
+                disabled={wishlistLoading}
+              >
+                <span className="material-icons-outlined">
+                  {wishlistAdded ? 'favorite' : 'favorite_border'}
+                </span>
+              </button>
+            </div>
+
+            <div className="h-px bg-primary/10"></div>
+
+            <div>
+              <div className="flex gap-6 border-b border-primary/10">
+                <button
+                  className={`pb-3 text-sm font-bold uppercase tracking-wider transition-colors cursor-pointer ${activeTab === 'description'
+                      ? 'text-primary border-b-2 border-primary'
+                      : 'text-text-muted hover:text-primary'
+                    }`}
+                  onClick={() => setActiveTab('description')}
+                >
+                  Description
+                </button>
+                {product.keyIngredients && (
+                  <button
+                    className={`pb-3 text-sm font-bold uppercase tracking-wider transition-colors cursor-pointer ${activeTab === 'ingredients'
+                        ? 'text-primary border-b-2 border-primary'
+                        : 'text-text-muted hover:text-primary'
+                      }`}
+                    onClick={() => setActiveTab('ingredients')}
+                  >
+                    Key Ingredients
+                  </button>
+                )}
+              </div>
+              <div className="pt-6">
+                {activeTab === 'description' ? (
+                  <p className="text-text-muted leading-relaxed whitespace-pre-line">
+                    {product.description || 'No description available.'}
+                  </p>
+                ) : (
+                  <p className="text-text-muted leading-relaxed whitespace-pre-line">
+                    {product.keyIngredients}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {product.tags && product.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2 pt-4">
+                {product.tags.map((tag, i) => (
+                  <span
+                    key={i}
+                    className="px-3 py-1 rounded-full bg-surface-elevated text-text-muted text-xs border border-primary/5"
+                  >
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </Layout>
+  )
+}
+
+export default ProductDetail

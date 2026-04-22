@@ -8,6 +8,7 @@
     "dev": "turbo run dev",
     "dev:mobile": "turbo run dev --filter=mobile",
     "dev:api": "turbo run dev --filter=api",
+    "dev:web": "turbo run dev --filter=web",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
