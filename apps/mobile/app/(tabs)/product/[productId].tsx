@@ -12,16 +12,19 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
 import { getProductById, getRelatedProducts } from "@/services/product.service";
+import { useCart } from "@/hooks/use-cart";
 import type { ProductApi, RelatedProductApi } from "@repo/types";
 import { mapProductDetailImage } from "@/utils/mappers/product.mapper";
 
 type ProductDetail = ProductApi.ResponseTypes["GetProductById"]["data"];
 type ProductVariant = ProductDetail["variants"][number];
-type RelatedProduct = RelatedProductApi.ResponseTypes["ListRelated"]["data"][number];
+type RelatedProduct =
+  RelatedProductApi.ResponseTypes["ListRelated"]["data"][number];
 
 export default function ProductDetailScreen() {
   const { productId } = useLocalSearchParams<{ productId?: string }>();
   const router = useRouter();
+  const { addToCart } = useCart();
 
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(
@@ -49,6 +52,9 @@ export default function ProductDetailScreen() {
         setProduct(response.data);
 
         const activeVariant =
+          response.data.variants.find(
+            (variant) => variant.isActive && variant.stock > 0,
+          ) ||
           response.data.variants.find((variant) => variant.isActive) ||
           response.data.variants[0] ||
           null;
@@ -100,6 +106,9 @@ export default function ProductDetailScreen() {
   }, [product, selectedVariant]);
 
   const variantPrice = selectedVariant?.price || 0;
+  const canAddToCart = Boolean(
+    selectedVariant && selectedVariant.isActive && selectedVariant.stock > 0,
+  );
   const compareAtPrice =
     selectedVariant?.compareAtPrice &&
     selectedVariant.compareAtPrice > variantPrice
@@ -112,6 +121,21 @@ export default function ProductDetailScreen() {
 
   const categoryLabel = product?.categories[0]?.name || "Product";
   const brandLabel = product?.brand?.name || "Pinak";
+
+  const handleAddToCart = () => {
+    if (canAddToCart && selectedVariant?.id) {
+      void addToCart(selectedVariant.id, undefined, 1);
+    }
+  };
+
+  const handleBuyNow = async () => {
+    if (!canAddToCart || !selectedVariant?.id) {
+      return;
+    }
+
+    await addToCart(selectedVariant.id, undefined, 1);
+    router.push("/checkout");
+  };
 
   if (isLoading) {
     return (
@@ -163,7 +187,11 @@ export default function ProductDetailScreen() {
             onPress={() => router.back()}
             className="absolute top-4 left-4 w-10 h-10 rounded-full bg-background/75 items-center justify-center"
           >
-            <MaterialCommunityIcons name="arrow-left" size={22} color="#C9A962" />
+            <MaterialCommunityIcons
+              name="arrow-left"
+              size={22}
+              color="#C9A962"
+            />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -323,12 +351,11 @@ export default function ProductDetailScreen() {
                 <Text className="text-xs text-text-secondary">Loading...</Text>
               </View>
             ) : relatedProducts.length === 0 ? (
-              <Text className="text-sm text-text-secondary">No related products available.</Text>
+              <Text className="text-sm text-text-secondary">
+                No related products available.
+              </Text>
             ) : (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-              >
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 <View className="flex-row gap-3">
                   {relatedProducts.map((relatedItem) => (
                     <TouchableOpacity
@@ -344,7 +371,9 @@ export default function ProductDetailScreen() {
                       <View className="relative aspect-[4/5] bg-background">
                         <Image
                           source={{
-                            uri: relatedItem.relatedProduct.frontImageUrl || undefined,
+                            uri:
+                              relatedItem.relatedProduct.frontImageUrl ||
+                              undefined,
                           }}
                           className="w-full h-full"
                           resizeMode="cover"
@@ -379,7 +408,7 @@ export default function ProductDetailScreen() {
 
       <View className="absolute bottom-0 left-0 right-0 bg-background/95 border-t border-primary/20 px-6 py-4">
         <SafeAreaView edges={["bottom"]}>
-          <View className="flex-row gap-4 items-center">
+          <View className="flex-row gap-3 items-center">
             <TouchableOpacity
               onPress={() => setIsFavorite(!isFavorite)}
               className="w-14 h-14 border-2 border-primary/30 rounded-xl items-center justify-center"
@@ -391,18 +420,39 @@ export default function ProductDetailScreen() {
               />
             </TouchableOpacity>
 
-            <TouchableOpacity className="flex-1 h-14 bg-primary rounded-xl flex-row items-center justify-center gap-3 shadow-lg">
+            <TouchableOpacity
+              onPress={() => {
+                void handleBuyNow();
+              }}
+              disabled={!canAddToCart}
+              className="h-14 px-4 bg-surface rounded-xl flex-row items-center justify-center border border-primary/40"
+              style={{
+                opacity: !canAddToCart ? 0.5 : 1,
+              }}
+            >
               <MaterialCommunityIcons
-                name="shopping-outline"
+                name="lightning-bolt-outline"
+                size={18}
+                color="#C9A962"
+              />
+              <Text className="font-bold text-primary text-sm">Buy Now</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={handleAddToCart}
+              disabled={!canAddToCart}
+              className="flex-1 h-14 bg-primary rounded-xl flex-row items-center justify-center gap-3 shadow-lg"
+              style={{
+                opacity: !canAddToCart ? 0.5 : 1,
+              }}
+            >
+              <MaterialCommunityIcons
+                name="cart-plus"
                 size={20}
                 color="#0A0A0A"
               />
               <Text className="font-bold text-background text-base">
-                Add to Bag
-              </Text>
-              <View className="w-px h-6 bg-background/20" />
-              <Text className="font-bold text-background">
-                Rs. {variantPrice.toLocaleString()}
+                {canAddToCart ? "Add to Cart" : "Out of Stock"}
               </Text>
             </TouchableOpacity>
           </View>
