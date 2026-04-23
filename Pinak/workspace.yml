@@ -36,9 +36,15 @@ collections:
     path: "collections/RelatedProducts"
   - name: "Wishlist"
     path: "collections/Wishlist"
+  - name: "Orders"
+    path: "collections/Orders"
+  - name: "Payments"
+    path: "collections/Payments"
+  - name: "Coupons"
+    path: "collections/Coupons"
+  - name: "Cart"
+    path: "collections/Cart"
 
 specs:
 
-docs: ""
-
-activeEnvironmentUid: eygp3o000000000000000
+docs: ''

@@ -10,6 +10,10 @@ import classRoutes from "./classes/index.js";
 import categoryRoutes from "./category/category.route.js";
 import featuredSectionRoutes from "./featuredSection/index.js";
 import wishlistRoutes from "./wishlist/index.js";
+import cartRoutes from "./cart/index.js";
+import couponRoutes from "./coupon/index.js";
+import orderRoutes from "./order/index.js";
+import paymentRoutes from "./payment/index.js";
 
 const router = Router();
 
@@ -24,5 +28,9 @@ router.use(classRoutes); // exposes /length-classes and /weight-classes at root
 router.use("/categories", categoryRoutes);
 router.use("/featured-sections", featuredSectionRoutes);
 router.use("/wishlist", wishlistRoutes);
+router.use("/cart", cartRoutes);
+router.use("/coupons", couponRoutes);
+router.use("/orders", orderRoutes);
+router.use("/webhooks", paymentRoutes);
 
 export default router;

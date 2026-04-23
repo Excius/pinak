@@ -1,0 +1,29 @@
+meta {
+  name: Cancel Order
+  type: http
+  seq: 4
+}
+
+put {
+  url: use-order-id-from-create-order-response{{baseUrl}}/api/v1/orders/{{orderId}}/cancel
+  body: none
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  authToken: your-jwt-token-here
+  orderId: cmoadvikb00014wmzgkrjxalv
+}
+
+docs {
+  Schema: OrderTypes.CancelOrder
+}
