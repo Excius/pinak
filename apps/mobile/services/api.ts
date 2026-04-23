@@ -77,7 +77,9 @@ api.interceptors.response.use(
             try {
                 const refreshToken = await getRefreshToken();
                 if (!refreshToken) {
-                    throw new Error('No refresh token available');
+                    const authError = new Error('Please login to continue.');
+                    (authError as any).status = 401;
+                    throw authError;
                 }
                 const refreshResponse = await axios.post<{ message: string; success: boolean; data: { accessToken: string; refreshToken: string } }>(
                     `${BASE_URL}/auth/refresh`,

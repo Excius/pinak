@@ -5,7 +5,7 @@ import { CategoryList } from "./CategoryList";
 
 export default function CategoriesLayout() {
   return (
-    <SafeAreaView className="flex-1 bg-background-light">
+    <SafeAreaView className="flex-1 bg-surface-light">
       <ScrollView
         className="flex-1 px-4 py-6"
         contentContainerStyle={{ paddingBottom: 180 }}
