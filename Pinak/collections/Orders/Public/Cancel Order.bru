@@ -5,7 +5,7 @@ meta {
 }
 
 put {
-  url: use-order-id-from-create-order-response{{baseUrl}}/api/v1/orders/{{orderId}}/cancel
+  url: {{baseUrl}}/api/v1/orders/{{orderId}}/cancel
   body: none
   auth: inherit
 }
@@ -21,7 +21,7 @@ auth:bearer {
 vars:pre-request {
   baseUrl: http://localhost:3000
   authToken: your-jwt-token-here
-  orderId: cmoadvikb00014wmzgkrjxalv
+  orderId: cmobe8xwb0004fsmz8vlrahqw
 }
 
 docs {

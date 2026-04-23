@@ -1,0 +1,20 @@
+meta {
+  name: Admin - Hard Delete Order
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/orders/admin/:id/hard
+  body: none
+  auth: inherit
+}
+
+params:path {
+  id: cmnj36zfb005k2amzvhzkvae8
+}
+
+docs {
+  Permanently deletes an order from the database.
+  Only accessible by ADMIN users.
+}

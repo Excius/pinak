@@ -34,7 +34,7 @@ model CouponUsage {
 
   coupon Coupon @relation(fields: [couponId], references: [id])
   user   User   @relation(fields: [userId], references: [id])
-  order  Order  @relation(fields: [oderId], references: [id])
+  order  Order  @relation(fields: [oderId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
