@@ -14,6 +14,7 @@ import {
   getComboKitById,
   incrementComboKitView,
 } from "@/services/comboKit.service";
+import { useCart } from "@/hooks/use-cart";
 import type { ComboKitApi } from "@repo/types";
 
 type ComboKit = ComboKitApi.ResponseTypes["GetComboKitById"]["data"];
@@ -108,6 +109,7 @@ function ComboKitItemCard({ item }: { item: ComboKitItem }) {
 export default function ComboKitDetailScreen() {
   const { kitId } = useLocalSearchParams<{ kitId?: string }>();
   const router = useRouter();
+  const { addToCart } = useCart();
 
   const [kit, setKit] = useState<ComboKit | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -339,7 +341,14 @@ export default function ComboKitDetailScreen() {
           </View>
 
           {/* Add to Cart Button */}
-          <TouchableOpacity className="bg-primary rounded-full py-4 items-center justify-center mb-4">
+          <TouchableOpacity
+            onPress={() => {
+              if (kit?.id) {
+                void addToCart(undefined, kit.id, 1);
+              }
+            }}
+            className="bg-primary rounded-full py-4 items-center justify-center mb-4"
+          >
             <View className="flex-row items-center gap-2">
               <MaterialCommunityIcons
                 name="shopping-outline"

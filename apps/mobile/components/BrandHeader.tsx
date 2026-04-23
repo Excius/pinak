@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity } from "react-native";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { CartIconButton } from "./CartIconButton";
 
 export function BrandHeader() {
   return (
@@ -31,10 +32,7 @@ export function BrandHeader() {
           <TouchableOpacity className="p-1">
             <MaterialCommunityIcons name="magnify" size={24} color="#C9A962" />
           </TouchableOpacity>
-          <TouchableOpacity className="relative p-1">
-            <MaterialCommunityIcons name="shopping" size={24} color="#C9A962" />
-            <View className="absolute right-0 top-0 h-2 w-2 rounded-full bg-primary" />
-          </TouchableOpacity>
+          <CartIconButton size={24} iconColor="#C9A962" variant="icon-only" />
         </View>
       </View>
     </View>
