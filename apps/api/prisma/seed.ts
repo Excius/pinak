@@ -1,5 +1,11 @@
 import { prisma } from "../src/lib/prisma.js";
 import { normalizeEmail } from "../src/lib/email.js";
+import fs from "fs/promises";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // ---------------------------------------------------------------------------
 // Cleanup — strict reverse-dependency order so FK constraints are satisfied
@@ -60,6 +66,12 @@ async function main() {
 
   // Clean up existing data first
   await cleanup();
+
+  // Load product image URLs from file
+  const imagesPath = path.join(__dirname, "../../../productimage.txt");
+  const imagesContent = await fs.readFile(imagesPath, "utf-8");
+  const productImages = imagesContent.split("\n").map(line => line.trim()).filter(Boolean);
+  let imageCounter = 0;
 
   // -------------------------------------------------------------------------
   // 1. Lookup tables (cleanup already ran, so use create not upsert)
@@ -254,6 +266,28 @@ async function main() {
         altText: "Skincare — secondary image",
         isPrimary: false,
         sortOrder: 1,
+      },
+    });
+
+    // Images for Foundation category
+    await prisma.categoryImage.create({
+      data: {
+        categoryId: catFoundation.id,
+        url: "https://lh3.googleusercontent.com/aida-public/AB6AXuAgdhlMGc4OQ2oy4ze8gfCY4wYUcajDX1_LT-a1KXKF0Gt5RPFV21noNxkXgydtab-3uMflTDWNsnULfJhICLNSfVxv_S64okiaJKmyvoH3eAM6S_msRDL7tnC1P87gHWt7Gfyfh9E2tS3XqQ1_89cOqGi0uzIeBSPFIQKhHsl-YAC_aCdeoYdQzor-g3kE01wZ6q9a1dvMUNRi-vTPA5tsyPkoC7lgtiKYmlh6V0DDO2y4wZ14FevFS1cqgzYHX7CPOVSys3fnT_g",
+        altText: "Foundation — primary image",
+        isPrimary: true,
+        sortOrder: 0,
+      },
+    });
+
+    // Images for Lipstick category
+    await prisma.categoryImage.create({
+      data: {
+        categoryId: catLipstick.id,
+        url: "https://lh3.googleusercontent.com/aida-public/AB6AXuB_j8yD9DHW29mHnnddf_ulUuyvgRSlVpd7WOvHqGzyrI2P0WjITqrHksEYsluf9wuc50_DDVGm7Y92OFIc_nh4ul5cddIS7BVPwYwTlDoEjb9WG7JxzXuJiSyB7mOVXnxDVVfoMBthI3A00RrHKxUemB6OauNwcgYlIAcAbA_S4XCU2rs4LPGxRvSHTBzpVo-Cahzif-q28vx9eRzuvD446uP7ykBD_wH5LNioMbgOtU8zIqhyfiYn2KoW_LrhR19GjAnr1vXal40",
+        altText: "Lipstick — primary image",
+        isPrimary: true,
+        sortOrder: 0,
       },
     });
 
@@ -775,10 +809,13 @@ async function main() {
         else console.warn(`⚠️  Missing OptionValue Shade='${variant.shade}'`);
       }
 
+      const imageUrl = productImages[imageCounter] || `https://example.com/images/${productData.slug}-${variant.sku.toLowerCase()}.jpg`;
+      imageCounter++;
+
       await prisma.productImage.create({
         data: {
           productVariantId: createdVariant.id,
-          url: `https://example.com/images/${productData.slug}-${variant.sku.toLowerCase()}.jpg`,
+          url: imageUrl,
           altText: `${productData.name} — ${variant.shade ?? variant.size}`,
           isPrimary: true,
         },
