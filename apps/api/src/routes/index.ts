@@ -14,6 +14,7 @@ import cartRoutes from "./cart/index.js";
 import couponRoutes from "./coupon/index.js";
 import orderRoutes from "./order/index.js";
 import paymentRoutes from "./payment/index.js";
+import addressRoutes from "./address/index.js";
 
 const router = Router();
 
@@ -32,5 +33,7 @@ router.use("/cart", cartRoutes);
 router.use("/coupons", couponRoutes);
 router.use("/orders", orderRoutes);
 router.use("/webhooks", paymentRoutes);
+router.use("/payments", paymentRoutes);
+router.use("/addresses", addressRoutes);
 
 export default router;

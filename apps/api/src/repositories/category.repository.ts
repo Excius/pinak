@@ -29,6 +29,22 @@ export class CategoryRepository {
       include.children = {
         orderBy: { name: "asc" as Prisma.SortOrder },
         omit: { createdAt: true, updatedAt: true },
+        include: {
+          categoryImages: {
+            where: { isDeleted: false },
+            orderBy: [
+              { isPrimary: "desc" as Prisma.SortOrder },
+              { sortOrder: "asc" as Prisma.SortOrder },
+            ],
+            omit: {
+              createdAt: true,
+              updatedAt: true,
+              isDeleted: true,
+              id: true,
+              categoryId: true,
+            },
+          },
+        },
       };
     }
 
@@ -116,7 +132,18 @@ export class CategoryRepository {
         where: { parentId: null },
         orderBy: { name: "asc" as Prisma.SortOrder },
         include: {
-          children: { orderBy: { name: "asc" as Prisma.SortOrder } },
+          children: {
+            orderBy: { name: "asc" as Prisma.SortOrder },
+            include: {
+              categoryImages: {
+                where: { isDeleted: false },
+                orderBy: [
+                  { isPrimary: "desc" as Prisma.SortOrder },
+                  { sortOrder: "asc" as Prisma.SortOrder },
+                ],
+              },
+            },
+          },
           categoryImages: {
             where: { isDeleted: false },
             orderBy: [
@@ -143,7 +170,18 @@ export class CategoryRepository {
   /** Admin list — includes images for management UI */
   listAdmin(parentId?: string | null) {
     const include: Prisma.CategoryInclude = {
-      children: { orderBy: { name: "asc" as Prisma.SortOrder } },
+      children: {
+        orderBy: { name: "asc" as Prisma.SortOrder },
+        include: {
+          categoryImages: {
+            where: { isDeleted: false },
+            orderBy: [
+              { isPrimary: "desc" as Prisma.SortOrder },
+              { sortOrder: "asc" as Prisma.SortOrder },
+            ],
+          },
+        },
+      },
       categoryImages: {
         where: { isDeleted: false },
         orderBy: [
@@ -299,6 +337,22 @@ export class CategoryRepository {
           children: {
             orderBy: { name: "asc" as Prisma.SortOrder },
             omit: { createdAt: true, updatedAt: true },
+            include: {
+              categoryImages: {
+                where: { isDeleted: false },
+                orderBy: [
+                  { isPrimary: "desc" as Prisma.SortOrder },
+                  { sortOrder: "asc" as Prisma.SortOrder },
+                ],
+                omit: {
+                  createdAt: true,
+                  updatedAt: true,
+                  isDeleted: true,
+                  id: true,
+                  categoryId: true,
+                },
+              },
+            },
           },
           categoryImages: {
             where: { isDeleted: false },
@@ -357,6 +411,22 @@ export class CategoryRepository {
           children: {
             orderBy: { name: "asc" as Prisma.SortOrder },
             omit: { createdAt: true, updatedAt: true },
+            include: {
+              categoryImages: {
+                where: { isDeleted: false },
+                orderBy: [
+                  { isPrimary: "desc" as Prisma.SortOrder },
+                  { sortOrder: "asc" as Prisma.SortOrder },
+                ],
+                omit: {
+                  createdAt: true,
+                  updatedAt: true,
+                  isDeleted: true,
+                  id: true,
+                  categoryId: true,
+                },
+              },
+            },
           },
           categoryImages: {
             where: { isDeleted: false },
@@ -404,7 +474,18 @@ export class CategoryRepository {
         where: { id },
         include: {
           parent: true,
-          children: { orderBy: { name: "asc" as Prisma.SortOrder } },
+          children: {
+            orderBy: { name: "asc" as Prisma.SortOrder },
+            include: {
+              categoryImages: {
+                where: { isDeleted: false },
+                orderBy: [
+                  { isPrimary: "desc" as Prisma.SortOrder },
+                  { sortOrder: "asc" as Prisma.SortOrder },
+                ],
+              },
+            },
+          },
           categoryImages: {
             where: { isDeleted: false },
             orderBy: [
@@ -434,7 +515,18 @@ export class CategoryRepository {
         where: { slug },
         include: {
           parent: true,
-          children: { orderBy: { name: "asc" as Prisma.SortOrder } },
+          children: {
+            orderBy: { name: "asc" as Prisma.SortOrder },
+            include: {
+              categoryImages: {
+                where: { isDeleted: false },
+                orderBy: [
+                  { isPrimary: "desc" as Prisma.SortOrder },
+                  { sortOrder: "asc" as Prisma.SortOrder },
+                ],
+              },
+            },
+          },
           categoryImages: {
             where: { isDeleted: false },
             orderBy: [
