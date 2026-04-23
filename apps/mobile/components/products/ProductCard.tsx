@@ -11,6 +11,7 @@ interface Product {
   price: number;
   originalPrice?: number;
   badge?: "Bestseller" | "New Arrival";
+  canAddToCart?: boolean;
 }
 
 interface ProductCardProps {
@@ -126,7 +127,9 @@ export function ProductCard({
         {/* Add Button */}
         <TouchableOpacity
           onPress={onAddToCart}
+          disabled={!product.canAddToCart}
           className="absolute bottom-3 right-3 w-10 h-10 bg-primary rounded-full justify-center items-center shadow-lg active:scale-90"
+          style={{ opacity: product.canAddToCart === false ? 0.5 : 1 }}
         >
           <MaterialCommunityIcons name="plus" size={20} color="#0A0A0A" />
         </TouchableOpacity>

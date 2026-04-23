@@ -83,8 +83,13 @@ export const OrderTypes = {
   CreateOrder: {
     body: z.object({
       couponCode: z.string().optional(),
-      shippingAddress: AddressSchema,
+      shippingAddress: AddressSchema.optional(),
       billingAddress: AddressSchema.optional(),
+      shippingAddressId: z.string().optional(),
+      billingAddressId: z.string().optional(),
+    }).refine(data => data.shippingAddress || data.shippingAddressId, {
+      message: "Either shippingAddress or shippingAddressId is required",
+      path: ["shippingAddress"],
     }),
     params: z.object({}),
     query: z.object({}),
@@ -208,6 +213,16 @@ export const OrderAdminTypes = {
       message: z.string(),
       success: z.boolean(),
       data: AdminOrderDetailsSchema,
+    }),
+  },
+  HardDeleteOrder: {
+    body: z.object({}),
+    params: z.object({ id: z.string() }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({}),
     }),
   },
 };

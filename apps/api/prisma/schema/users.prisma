@@ -19,6 +19,7 @@ model User {
   cart         Cart?
   wishlist     Wishlist?
   reviews      Review[]
+  addresses    Address[]
   couponUsages CouponUsage[]
   auditLogs    AuditLog[]
 }
@@ -33,4 +34,27 @@ enum UserRole {
   ADMIN
   USER
   MODERATOR
+}
+
+model Address {
+  id     String @id @default(cuid())
+  userId String
+
+  fullName     String
+  addressLine1 String
+  addressLine2 String?
+  city         String
+  state        String
+  pincode      String
+  phone        String
+
+  label     String? // e.g., "Home", "Work"
+  isDefault Boolean @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }

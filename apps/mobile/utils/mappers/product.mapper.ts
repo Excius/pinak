@@ -16,6 +16,7 @@ export interface ProductCardItem {
     originalPrice?: number;
     badge?: "Bestseller";
     variantId?: string;
+    canAddToCart: boolean;
 }
 
 const PRODUCT_IMAGE_PLACEHOLDER =
@@ -69,8 +70,14 @@ export function mapProductsToCardItems(products: ProductListItem[]): ProductCard
         const { price, originalPrice } = getDisplayPrice(product.variants);
         const reviews = product.purchasedCount || 0;
 
-        // Get the first variant ID for wishlist operations
-        const variantId = product.variants?.[0]?.id;
+        // Prefer active and in-stock variants for cart actions.
+        const purchasableVariant =
+            product.variants.find((variant) => variant.isActive && variant.stock > 0) ||
+            product.variants.find((variant) => variant.isActive) ||
+            product.variants[0];
+
+        const variantId = purchasableVariant?.id;
+        const canAddToCart = Boolean(purchasableVariant && purchasableVariant.isActive && purchasableVariant.stock > 0);
 
         return {
             id: product.id,
@@ -82,6 +89,7 @@ export function mapProductsToCardItems(products: ProductListItem[]): ProductCard
             originalPrice,
             badge: reviews >= 20 ? "Bestseller" : undefined,
             variantId,
+            canAddToCart,
         };
     });
 }

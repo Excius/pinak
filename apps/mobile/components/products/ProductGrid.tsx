@@ -3,6 +3,7 @@ import { View, FlatList, Text, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { ProductCard } from "./ProductCard";
 import { getProductsByCategory } from "@/services/product.service";
+import { useCart } from "@/hooks/use-cart";
 import {
   mapProductsToCardItems,
   type ProductCardItem,
@@ -15,6 +16,7 @@ interface ProductGridProps {
 
 export function ProductGrid({ categoryId }: ProductGridProps) {
   const router = useRouter();
+  const { addToCart } = useCart();
   const [products, setProducts] = useState<ProductCardItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -118,6 +120,11 @@ export function ProductGrid({ categoryId }: ProductGridProps) {
           <ProductCard
             product={item}
             onPress={() => handleProductPress(item.id)}
+            onAddToCart={() => {
+              if (item.canAddToCart && item.variantId) {
+                void addToCart(item.variantId, undefined, 1);
+              }
+            }}
             onWishlistToggle={(isFavorite) =>
               handleWishlistToggle(item.id, item.variantId, isFavorite)
             }

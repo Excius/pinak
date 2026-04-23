@@ -12,6 +12,7 @@ import { OrderService } from "../../services/order.service.js";
 import { StockReservationService } from "../../services/stockReservation.service.js";
 import { MockPaymentService } from "../../services/payment/MockPaymentService.js";
 import { OrderController } from "../../controllers/order.controller.js";
+import { AddressRepository } from "../../repositories/address.repository.js";
 import { registerOrderPublicRoutes } from "./public.routes.js";
 import { registerOrderAdminRoutes } from "./admin.routes.js";
 
@@ -32,6 +33,7 @@ const jwtService = new JWTService(
 const cartRepository = new CartRepository(prisma);
 const couponRepository = new CouponRepository(prisma);
 const orderRepository = new OrderRepository(prisma);
+const addressRepository = new AddressRepository(prisma);
 
 const stockReservationService = new StockReservationService(prisma);
 const couponService = new CouponService(couponRepository);
@@ -43,6 +45,7 @@ const orderService = new OrderService(
   stockReservationService,
   couponService,
   paymentService,
+  addressRepository,
 );
 const controller = new OrderController(orderService);
 

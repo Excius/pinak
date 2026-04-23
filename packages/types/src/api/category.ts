@@ -38,9 +38,9 @@ const PublicCategoryImageSummarySchema = z.object({
 
 const CategoryNode: z.ZodTypeAny = z.lazy(() =>
   CategoryBase.extend({
-    children: z.array(CategoryNode).optional(),
+    children: z.array(CategoryNode).default([]),
     parent: CategoryBase.nullable().optional(),
-    categoryImages: z.array(PublicCategoryImageSchema).optional(),
+    categoryImages: z.array(PublicCategoryImageSchema).default([]),
   }),
 );
 
@@ -48,9 +48,9 @@ const CategoryNode: z.ZodTypeAny = z.lazy(() =>
 // lightweight image shape returned by the repository (omitted fields).
 const CategoryPublicNode: z.ZodTypeAny = z.lazy(() =>
   CategoryPublicBase.extend({
-    children: z.array(CategoryPublicNode).optional(),
+    children: z.array(CategoryPublicNode).default([]),
     parent: CategoryPublicBase.nullable().optional(),
-    categoryImages: z.array(PublicCategoryImageSummarySchema).optional(),
+    categoryImages: z.array(PublicCategoryImageSummarySchema).default([]),
   }),
 );
 

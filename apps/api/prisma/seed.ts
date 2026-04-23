@@ -1,5 +1,11 @@
 import { prisma } from "../src/lib/prisma.js";
 import { normalizeEmail } from "../src/lib/email.js";
+import fs from "fs/promises";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // ---------------------------------------------------------------------------
 // Cleanup — strict reverse-dependency order so FK constraints are satisfied
@@ -60,6 +66,12 @@ async function main() {
 
   // Clean up existing data first
   await cleanup();
+
+  // Load product image URLs from file
+  const imagesPath = path.join(__dirname, "../../../productimage.txt");
+  const imagesContent = await fs.readFile(imagesPath, "utf-8");
+  const productImages = imagesContent.split("\n").map(line => line.trim()).filter(Boolean);
+  let imageCounter = 0;
 
   // -------------------------------------------------------------------------
   // 1. Lookup tables (cleanup already ran, so use create not upsert)
@@ -220,7 +232,7 @@ async function main() {
     await prisma.categoryImage.create({
       data: {
         categoryId: catMakeup.id,
-        url: "https://example.com/images/categories/makeup-primary.jpg",
+        url: "https://lh3.googleusercontent.com/aida-public/AB6AXuAgdhlMGc4OQ2oy4ze8gfCY4wYUcajDX1_LT-a1KXKF0Gt5RPFV21noNxkXgydtab-3uMflTDWNsnULfJhICLNSfVxv_S64okiaJKmyvoH3eAM6S_msRDL7tnC1P87gHWt7Gfyfh9E2tS3XqQ1_89cOqGi0uzIeBSPFIQKhHsl-YAC_aCdeoYdQzor-g3kE01wZ6q9a1dvMUNRi-vTPA5tsyPkoC7lgtiKYmlh6V0DDO2y4wZ14FevFS1cqgzYHX7CPOVSys3fnT_g",
         altText: "Makeup — primary image",
         isPrimary: true,
         sortOrder: 0,
@@ -230,7 +242,7 @@ async function main() {
     await prisma.categoryImage.create({
       data: {
         categoryId: catMakeup.id,
-        url: "https://example.com/images/categories/makeup-secondary.jpg",
+        url: "https://lh3.googleusercontent.com/aida-public/AB6AXuB_j8yD9DHW29mHnnddf_ulUuyvgRSlVpd7WOvHqGzyrI2P0WjITqrHksEYsluf9wuc50_DDVGm7Y92OFIc_nh4ul5cddIS7BVPwYwTlDoEjb9WG7JxzXuJiSyB7mOVXnxDVVfoMBthI3A00RrHKxUemB6OauNwcgYlIAcAbA_S4XCU2rs4LPGxRvSHTBzpVo-Cahzif-q28vx9eRzuvD446uP7ykBD_wH5LNioMbgOtU8zIqhyfiYn2KoW_LrhR19GjAnr1vXal40",
         altText: "Makeup — secondary image",
         isPrimary: false,
         sortOrder: 1,
@@ -240,7 +252,7 @@ async function main() {
     await prisma.categoryImage.create({
       data: {
         categoryId: catSkincareParent.id,
-        url: "https://example.com/images/categories/skincare-primary.jpg",
+        url: "https://lh3.googleusercontent.com/aida-public/AB6AXuBEEIx79Y5z9Kqec_zbVB23sXahA7BQp9UDSlfXQ0JsPrj1UNb1yW74mh7sCB2xn023FniLEUnnd7JqxBPSvXdUONX-bMyM08qCw0RKfd5V8Q6OT5QkuA-0vTwW98LtFGDOj7ak8BKGaFOGbRatoHDKqKjupce7F4dToYt4_SmuOB4RgsY_Pxtg-NjlUtT46KKuSdAqBL6mZCFUJL3wGlJTqte0ZhoDGdT798ljSd0f3IehTP2h_C82Wl_v5aEjG-tTKke6soUPodo",
         altText: "Skincare — primary image",
         isPrimary: true,
         sortOrder: 0,
@@ -250,10 +262,32 @@ async function main() {
     await prisma.categoryImage.create({
       data: {
         categoryId: catSkincareParent.id,
-        url: "https://example.com/images/categories/skincare-secondary.jpg",
+        url: "https://lh3.googleusercontent.com/aida-public/AB6AXuBJxE2dGD3oW_hM50y1Q6caaBYNXL4LsPlod-2TPiXlZ8P95rl9OJQBc27IkaCgqt35uys5MZSHqZBu4rIYh_WLGZYEgXOMGixdPqZPxeiQE0JMD8-K97cfwzwXiQGOU4B3lNGvBcr4P53MADga1vFA0jSlfekEiO61MQpJrrP1UMzJSi-87HsQO2lgDehRYYaWu3tBwrBcRJ1Vlt9wIQKv8Sp7kleZujlLfptB3LtjDX6KXuUCkzgfJk6DCkfmnds3_M4SKLm2Apw",
         altText: "Skincare — secondary image",
         isPrimary: false,
         sortOrder: 1,
+      },
+    });
+
+    // Images for Foundation category
+    await prisma.categoryImage.create({
+      data: {
+        categoryId: catFoundation.id,
+        url: "https://lh3.googleusercontent.com/aida-public/AB6AXuAgdhlMGc4OQ2oy4ze8gfCY4wYUcajDX1_LT-a1KXKF0Gt5RPFV21noNxkXgydtab-3uMflTDWNsnULfJhICLNSfVxv_S64okiaJKmyvoH3eAM6S_msRDL7tnC1P87gHWt7Gfyfh9E2tS3XqQ1_89cOqGi0uzIeBSPFIQKhHsl-YAC_aCdeoYdQzor-g3kE01wZ6q9a1dvMUNRi-vTPA5tsyPkoC7lgtiKYmlh6V0DDO2y4wZ14FevFS1cqgzYHX7CPOVSys3fnT_g",
+        altText: "Foundation — primary image",
+        isPrimary: true,
+        sortOrder: 0,
+      },
+    });
+
+    // Images for Lipstick category
+    await prisma.categoryImage.create({
+      data: {
+        categoryId: catLipstick.id,
+        url: "https://lh3.googleusercontent.com/aida-public/AB6AXuB_j8yD9DHW29mHnnddf_ulUuyvgRSlVpd7WOvHqGzyrI2P0WjITqrHksEYsluf9wuc50_DDVGm7Y92OFIc_nh4ul5cddIS7BVPwYwTlDoEjb9WG7JxzXuJiSyB7mOVXnxDVVfoMBthI3A00RrHKxUemB6OauNwcgYlIAcAbA_S4XCU2rs4LPGxRvSHTBzpVo-Cahzif-q28vx9eRzuvD446uP7ykBD_wH5LNioMbgOtU8zIqhyfiYn2KoW_LrhR19GjAnr1vXal40",
+        altText: "Lipstick — primary image",
+        isPrimary: true,
+        sortOrder: 0,
       },
     });
 
@@ -775,10 +809,13 @@ async function main() {
         else console.warn(`⚠️  Missing OptionValue Shade='${variant.shade}'`);
       }
 
+      const imageUrl = productImages[imageCounter] || `https://example.com/images/${productData.slug}-${variant.sku.toLowerCase()}.jpg`;
+      imageCounter++;
+
       await prisma.productImage.create({
         data: {
           productVariantId: createdVariant.id,
-          url: `https://example.com/images/${productData.slug}-${variant.sku.toLowerCase()}.jpg`,
+          url: imageUrl,
           altText: `${productData.name} — ${variant.shade ?? variant.size}`,
           isPrimary: true,
         },
@@ -1057,7 +1094,7 @@ async function main() {
         "A beginner-friendly makeup combo with foundation, lipstick and eyeshadow.",
       metaKeywords: "makeup kit, starter combo, foundation lipstick palette",
       seoKeyword: "starter-makeup-kit",
-      imageUrl: "https://example.com/images/combo-starter-makeup-kit.jpg",
+      imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuB_j8yD9DHW29mHnnddf_ulUuyvgRSlVpd7WOvHqGzyrI2P0WjITqrHksEYsluf9wuc50_DDVGm7Y92OFIc_nh4ul5cddIS7BVPwYwTlDoEjb9WG7JxzXuJiSyB7mOVXnxDVVfoMBthI3A00RrHKxUemB6OauNwcgYlIAcAbA_S4XCU2rs4LPGxRvSHTBzpVo-Cahzif-q28vx9eRzuvD446uP7ykBD_wH5LNioMbgOtU8zIqhyfiYn2KoW_LrhR19GjAnr1vXal40",
       pricingStrategy: "FIXED_PRICE" as const,
       discountType: "PERCENTAGE" as const,
       discountValue: 15,
@@ -1082,7 +1119,7 @@ async function main() {
         "Hydrating skincare and dewy complexion essentials for daily glow.",
       metaKeywords: "hydration set, moisturizer combo, glow foundation",
       seoKeyword: "hydration-glow-set",
-      imageUrl: "https://example.com/images/combo-hydration-glow.jpg",
+      imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuCaWD1o8rPaCqIIYQWiyXek5dflUIWwfu6alVBAeo0r6QVpEG7jzDoMw5TpEKblRFcGlCon95s1pf7cP98rOJ8AA0NlzPON01ri8pESYrpFecC0Lzh57MQdB5WqQgBq1GbkWmlHhqtE4KLcrhzJBj7q4f32RqIb3T7MdYVfBy2oz9_aaJrFAMEqrprMWu9KnXAri3Yp_UngO-vqO6Mf2IjfQawRxBe-6Nh_xeZGsgWQYM1Y402abel6RJYRZAoJtfhsrC7BP_W-Bm8",
       pricingStrategy: "CALCULATED" as const,
       discountType: "PERCENTAGE" as const,
       discountValue: 10,
@@ -1106,7 +1143,7 @@ async function main() {
         "Two high-performance mascaras for volume, definition and all-day hold.",
       metaKeywords: "mascara duo, lash combo, waterproof mascara",
       seoKeyword: "lash-define-duo",
-      imageUrl: "https://example.com/images/combo-lash-define-duo.jpg",
+      imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuDXyLARo_crd7_eX9zhZBJa2Qpc5zunXEYVYSk2oNdSe3Tvch0tLSEQ6yNMoP8qOssEfwRn96shGGxdUOoOAPM4sbYXgHEz3scw_OjkMqN2j6-Li2Qg2S7YhH5YEXgR38Bx4cvSZGXDl3u59gvGCqg5xsu-4w7UANueDQmTXenFzFKdqlOkEnizufdBS7hN7Tj2Dnofqb9dR4hCRfqiushIcq5KjUAbYHx3JgxMHoei2ZUuYEswHFYfRcINd0xWJiAQXnMpt9A0mgw",
       pricingStrategy: "DYNAMIC" as const,
       discountType: "FIXED_AMOUNT" as const,
       discountValue: 300,

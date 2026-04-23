@@ -1,6 +1,7 @@
 import { Prisma, PrismaClient } from "../generated/prisma/client.js";
 import { NotFoundError, ValidationError } from "../lib/error.js";
 import { CartRepository } from "../repositories/cart.repository.js";
+import { AddressRepository } from "../repositories/address.repository.js";
 import {
   AdminOrderFilters,
   CreateOrderItemInput,
@@ -23,8 +24,10 @@ type AddressInput = {
 
 type CreateOrderInput = {
   couponCode?: string;
-  shippingAddress: AddressInput;
+  shippingAddress?: AddressInput;
   billingAddress?: AddressInput;
+  shippingAddressId?: string;
+  billingAddressId?: string;
 };
 
 type OrderItemResponse = {
@@ -122,6 +125,7 @@ export class OrderService {
     private stockReservationService: StockReservationService,
     private couponService: CouponService,
     private paymentService: IPaymentGateway,
+    private addressRepository: AddressRepository,
   ) {}
 
   private parseOrderStatus(status: string): OrderResponse["status"] {
@@ -264,8 +268,43 @@ export class OrderService {
 
 
   async createOrder(userId: string, input: CreateOrderInput) {
-    if (!input.shippingAddress) {
-      throw new ValidationError("shippingAddress is required");
+    let shippingAddress: AddressInput;
+    let billingAddress: AddressInput;
+
+    if (input.shippingAddressId) {
+      const addr = await this.addressRepository.findById(input.shippingAddressId, userId);
+      if (!addr) throw new ValidationError("Shipping address not found");
+      shippingAddress = {
+        fullName: addr.fullName,
+        addressLine1: addr.addressLine1,
+        addressLine2: addr.addressLine2,
+        city: addr.city,
+        state: addr.state,
+        pincode: addr.pincode,
+        phone: addr.phone,
+      };
+    } else if (input.shippingAddress) {
+      shippingAddress = input.shippingAddress;
+    } else {
+      throw new ValidationError("shippingAddress or shippingAddressId is required");
+    }
+
+    if (input.billingAddressId) {
+      const addr = await this.addressRepository.findById(input.billingAddressId, userId);
+      if (!addr) throw new ValidationError("Billing address not found");
+      billingAddress = {
+        fullName: addr.fullName,
+        addressLine1: addr.addressLine1,
+        addressLine2: addr.addressLine2,
+        city: addr.city,
+        state: addr.state,
+        pincode: addr.pincode,
+        phone: addr.phone,
+      };
+    } else if (input.billingAddress) {
+      billingAddress = input.billingAddress;
+    } else {
+      billingAddress = shippingAddress;
     }
 
     return this.prisma.$transaction(
@@ -417,7 +456,6 @@ export class OrderService {
 
         const gstPercentage =
           subtotalAmount > 0 ? Number(((taxAmount / subtotalAmount) * 100).toFixed(2)) : 0;
-        const billingAddress = input.billingAddress ?? input.shippingAddress;
 
         const order = await this.orderRepository.create(
           {
@@ -434,7 +472,7 @@ export class OrderService {
             couponDiscount: discountAmount,
             getBreakup: {
               taxBreakdown,
-              shippingAddress: input.shippingAddress,
+              shippingAddress,
               billingAddress,
             },
           },
@@ -468,7 +506,7 @@ export class OrderService {
           data: {
             getBreakup: {
               taxBreakdown,
-              shippingAddress: input.shippingAddress,
+              shippingAddress,
               billingAddress,
               reservationExpiresAt: reservation.expiresAt.toISOString(),
             },
@@ -701,5 +739,13 @@ export class OrderService {
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
     );
+  }
+
+  async hardDeleteOrderAdmin(orderId: string) {
+    const order = await this.orderRepository.findById(orderId);
+    if (!order) {
+      throw new NotFoundError("Order not found");
+    }
+    return this.orderRepository.hardDelete(orderId);
   }
 }
