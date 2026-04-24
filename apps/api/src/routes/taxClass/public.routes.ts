@@ -5,11 +5,10 @@ import type { TaxClassRouteDeps } from "./index.js";
 
 export const registerTaxClassPublicRoutes = (
   router: Router,
-  { controller, authMiddleware, rateLimiter }: TaxClassRouteDeps,
+  { controller, rateLimiter }: TaxClassRouteDeps,
 ) => {
   router.get(
     "/",
-    authMiddleware.authenticate,
     rateLimiter,
     validateMultiple(TaxClassTypes.List),
     controller.listPublic,
@@ -17,7 +16,6 @@ export const registerTaxClassPublicRoutes = (
 
   router.get(
     "/:id",
-    authMiddleware.authenticate,
     rateLimiter,
     validateMultiple(TaxClassTypes.GetById),
     controller.getPublic,

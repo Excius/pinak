@@ -5,11 +5,10 @@ import type { ProductRouteDeps } from "./index.js";
 
 export const registerProductPublicFeaturedRoutes = (
   router: Router,
-  { productController, authMiddleware, rateLimiter }: ProductRouteDeps,
+  { productController, rateLimiter }: ProductRouteDeps,
 ) => {
   router.get(
     "/featured",
-    authMiddleware.authenticate,
     rateLimiter,
     validateMultiple(ProductTypes.GetFeaturedProducts),
     productController.getFeaturedProducts,
@@ -17,7 +16,6 @@ export const registerProductPublicFeaturedRoutes = (
 
   router.get(
     "/featured/section/:sectionId",
-    authMiddleware.authenticate,
     rateLimiter,
     validateMultiple(ProductTypes.GetFeaturedProductsBySection),
     productController.getFeaturedProductsBySection,
