@@ -11,7 +11,7 @@ export default function SubCategoryProductScreen() {
   }>();
 
   return (
-    <SafeAreaView edges={["bottom"]} className="flex-1 bg-background-light">
+    <SafeAreaView edges={["bottom"]} className="flex-1 bg-surface-light">
       <ScrollView className="flex-1">
         <ProductPage
           categoryId={String(subCategoryId || "")}

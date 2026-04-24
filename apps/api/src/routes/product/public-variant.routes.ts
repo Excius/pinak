@@ -5,11 +5,10 @@ import type { ProductRouteDeps } from "./index.js";
 
 export const registerProductPublicVariantRoutes = (
   router: Router,
-  { productController, authMiddleware, rateLimiter }: ProductRouteDeps,
+  { productController, rateLimiter }: ProductRouteDeps,
 ) => {
   router.get(
     "/variant/:variantId",
-    authMiddleware.authenticate,
     rateLimiter,
     validateMultiple(ProductTypes.GetVariant),
     productController.getVariantById,
@@ -17,7 +16,6 @@ export const registerProductPublicVariantRoutes = (
 
   router.get(
     "/:productId/variants",
-    authMiddleware.authenticate,
     rateLimiter,
     validateMultiple(ProductTypes.GetProductVariants),
     productController.getProductVariants,

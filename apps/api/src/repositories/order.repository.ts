@@ -233,4 +233,18 @@ export class OrderRepository {
       include: adminOrderInclude,
     });
   }
+
+  async hardDelete(orderId: string, tx?: Prisma.TransactionClient) {
+    const db = this.getDb(tx);
+    return db.$transaction(async (dtx) => {
+      // Manually delete related records to bypass potential constraint issues
+      await dtx.orderItem.deleteMany({ where: { orderId } });
+      await dtx.couponUsage.deleteMany({ where: { oderId: orderId } });
+      await dtx.inventoryReservation.deleteMany({ where: { orderId } });
+      
+      return dtx.order.delete({
+        where: { id: orderId },
+      });
+    });
+  }
 }

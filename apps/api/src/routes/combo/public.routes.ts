@@ -9,7 +9,6 @@ export const registerComboPublicRoutes = (
 ) => {
   router.get(
     "/",
-    authMiddleware.authenticate,
     rateLimiter,
     validateMultiple(ComboKitTypes.GetComboKits),
     comboController.getComboKits,
@@ -17,7 +16,6 @@ export const registerComboPublicRoutes = (
 
   router.get(
     "/search",
-    authMiddleware.authenticate,
     rateLimiter,
     validateMultiple(ComboKitTypes.SearchComboKits),
     comboController.searchComboKits,
@@ -25,7 +23,6 @@ export const registerComboPublicRoutes = (
 
   router.get(
     "/slug/:slug",
-    authMiddleware.authenticate,
     rateLimiter,
     validateMultiple(ComboKitTypes.GetComboKitBySlug),
     comboController.getComboKitBySlug,
@@ -33,7 +30,6 @@ export const registerComboPublicRoutes = (
 
   router.get(
     "/:id/items",
-    authMiddleware.authenticate,
     rateLimiter,
     validateMultiple(ComboKitTypes.GetComboKitItems),
     comboController.getComboKitItems,
@@ -41,7 +37,6 @@ export const registerComboPublicRoutes = (
 
   router.get(
     "/:id",
-    authMiddleware.authenticate,
     rateLimiter,
     validateMultiple(ComboKitTypes.GetComboKitById),
     comboController.getComboKitById,
@@ -49,7 +44,6 @@ export const registerComboPublicRoutes = (
 
   router.patch(
     "/:id/increment-view",
-    authMiddleware.authenticate,
     rateLimiter,
     validateMultiple(ComboKitTypes.IncrementComboKitView),
     comboController.incrementComboKitView,

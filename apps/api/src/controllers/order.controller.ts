@@ -18,32 +18,26 @@ export class OrderController {
     const userId = this.getAuthenticatedUserId(req, res);
     if (!userId) return;
 
-    const { couponCode, shippingAddress, billingAddress } = req.body as {
+    const { 
+      couponCode, 
+      shippingAddress, 
+      billingAddress, 
+      shippingAddressId, 
+      billingAddressId 
+    } = req.body as {
       couponCode?: string;
-      shippingAddress: {
-        fullName: string;
-        addressLine1: string;
-        addressLine2?: string | null;
-        city: string;
-        state: string;
-        pincode: string;
-        phone: string;
-      };
-      billingAddress?: {
-        fullName: string;
-        addressLine1: string;
-        addressLine2?: string | null;
-        city: string;
-        state: string;
-        pincode: string;
-        phone: string;
-      };
+      shippingAddress?: any;
+      billingAddress?: any;
+      shippingAddressId?: string;
+      billingAddressId?: string;
     };
 
     const result = await this.orderService.createOrder(userId, {
       couponCode,
       shippingAddress,
       billingAddress,
+      shippingAddressId,
+      billingAddressId,
     });
     ResponseHandler.success(res, result, "Order created successfully");
   };
@@ -141,5 +135,11 @@ export class OrderController {
       paymentStatus,
     );
     ResponseHandler.success(res, order, "Payment status updated successfully");
+  };
+
+  hardDeleteOrderAdmin = async (req: Request, res: Response) => {
+    const { id } = req.params as { id: string };
+    await this.orderService.hardDeleteOrderAdmin(id);
+    ResponseHandler.success(res, {}, "Order permanently deleted");
   };
 }

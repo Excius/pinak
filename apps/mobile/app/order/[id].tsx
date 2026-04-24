@@ -158,7 +158,7 @@ export default function OrderDetailPage() {
   if (loading) {
     return (
       <SafeAreaView
-        edges={["bottom", "left", "right"]}
+        edges={[ "bottom", "left", "right"]}
         className="flex-1 bg-background"
       >
         <View className="flex-1 items-center justify-center">
@@ -195,17 +195,17 @@ export default function OrderDetailPage() {
 
   return (
     <SafeAreaView
-      edges={["bottom", "left", "right"]}
-      className="flex-1 bg-background"
+      edges={[ "top", "bottom", "left", "right" ]}
+      className="flex-1 bg-surface-light"
     >
       {/* Header */}
-      <View className="flex-row items-center gap-3 border-b border-surface-border px-4 py-4">
+      <View className="flex-row items-center gap-3 border-b border-surface-border/60 bg-surface-light px-4 py-4">
         <TouchableOpacity onPress={() => router.back()}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color="#333" />
+          <MaterialCommunityIcons name="arrow-left" size={24} color="#b8860b" />
         </TouchableOpacity>
         <View className="flex-1">
           <TouchableOpacity onPress={() => router.back()} className="flex-1">
-            <Text className="text-lg font-bold text-foreground">
+            <Text className="text-lg font-bold text-text-primary">
               Order Details
             </Text>
           </TouchableOpacity>
@@ -230,11 +230,11 @@ export default function OrderDetailPage() {
 
       {/* Cancel Order Button */}
       {(order.status === "PENDING" || order.status === "PROCESSING") && (
-        <View className="border-t border-surface-border px-4 py-4">
+        <View className="border-t border-surface-border/60 bg-surface-light px-4 py-4">
           <TouchableOpacity
             onPress={handleCancelOrder}
             disabled={cancelling}
-            className="rounded-lg border-2 border-red-500 bg-background py-3"
+            className="rounded-2xl border-2 border-red-500 bg-surface py-3"
           >
             <View className="items-center">
               {cancelling ? (

@@ -5,11 +5,10 @@ import type { CategoryRouteDeps } from "./category.route.js";
 
 export const registerCategoryPublicRoutes = (
   router: Router,
-  { categoryController, rateLimiter, authMiddleware }: CategoryRouteDeps,
+  { categoryController, rateLimiter }: CategoryRouteDeps,
 ) => {
   router.get(
     "/",
-    authMiddleware.authenticate,
     rateLimiter,
     validateMultiple(CategoryTypes.ListCategories),
     categoryController.listCategories,
@@ -17,7 +16,6 @@ export const registerCategoryPublicRoutes = (
 
   router.get(
     "/top",
-    authMiddleware.authenticate,
     rateLimiter,
     validateMultiple(CategoryTypes.ListTopCategories),
     categoryController.listTopCategories,
@@ -25,7 +23,6 @@ export const registerCategoryPublicRoutes = (
 
   router.get(
     "/tree",
-    authMiddleware.authenticate,
     rateLimiter,
     validateMultiple(CategoryTypes.GetCategoryTree),
     categoryController.getCategoryTree,
@@ -33,7 +30,6 @@ export const registerCategoryPublicRoutes = (
 
   router.get(
     "/slug/:slug",
-    authMiddleware.authenticate,
     rateLimiter,
     validateMultiple(CategoryTypes.GetCategoryBySlug),
     categoryController.getCategoryBySlug,
@@ -41,7 +37,6 @@ export const registerCategoryPublicRoutes = (
 
   router.get(
     "/:id",
-    authMiddleware.authenticate,
     rateLimiter,
     validateMultiple(CategoryTypes.GetCategoryById),
     categoryController.getCategoryById,

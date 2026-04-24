@@ -63,7 +63,7 @@ export default function CategoryProductScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView edges={["bottom"]} className="flex-1 bg-background-light">
+      <SafeAreaView edges={["bottom"]} className="flex-1 bg-surface-light">
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="small" color="#C9A962" />
         </View>
@@ -73,7 +73,7 @@ export default function CategoryProductScreen() {
 
   if (error) {
     return (
-      <SafeAreaView edges={["bottom"]} className="flex-1 bg-background-light">
+      <SafeAreaView edges={["bottom"]} className="flex-1 bg-surface-light">
         <View className="flex-1 px-6 py-10">
           <Text className="text-sm text-text-secondary">{error}</Text>
         </View>
@@ -83,7 +83,7 @@ export default function CategoryProductScreen() {
 
   if (subCategories.length === 0) {
     return (
-      <SafeAreaView edges={["bottom"]} className="flex-1 bg-background-light">
+      <SafeAreaView edges={["bottom"]} className="flex-1 bg-surface-light">
         <ScrollView className="flex-1">
           <ProductPage
             categoryId={resolvedCategoryId || selectedCategory}
@@ -116,7 +116,7 @@ export default function CategoryProductScreen() {
   };
 
   return (
-    <SafeAreaView edges={["bottom"]} className="flex-1 bg-background-light">
+    <SafeAreaView edges={["bottom"]} className="flex-1 bg-surface-light">
       <ScrollView
         className="flex-1 px-4 py-6"
         contentContainerStyle={{ paddingBottom: 180 }}

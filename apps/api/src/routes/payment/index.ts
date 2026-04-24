@@ -4,6 +4,7 @@ import { createRateLimiter } from "../../lib/rateLimit.js";
 import { CartRepository } from "../../repositories/cart.repository.js";
 import { CouponRepository } from "../../repositories/coupon.repository.js";
 import { OrderRepository } from "../../repositories/order.repository.js";
+import { AddressRepository } from "../../repositories/address.repository.js";
 import { CouponService } from "../../services/coupon.service.js";
 import { OrderService } from "../../services/order.service.js";
 import { StockReservationService } from "../../services/stockReservation.service.js";
@@ -21,6 +22,7 @@ const router = Router();
 const cartRepository = new CartRepository(prisma);
 const couponRepository = new CouponRepository(prisma);
 const orderRepository = new OrderRepository(prisma);
+const addressRepository = new AddressRepository(prisma);
 const stockReservationService = new StockReservationService(prisma);
 const couponService = new CouponService(couponRepository);
 const paymentService = new MockPaymentService();
@@ -31,6 +33,7 @@ const orderService = new OrderService(
   stockReservationService,
   couponService,
   paymentService,
+  addressRepository,
 );
 const controller = new PaymentController(orderService, paymentService);
 

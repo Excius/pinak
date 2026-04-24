@@ -120,6 +120,18 @@ export function useCart(): UseCartReturn {
         setLoading(true);
         setError(null);
         try {
+            const token = await getAccessToken();
+            if (!token) {
+                setCart(null);
+                Toast.show({
+                    type: 'info',
+                    text1: 'Login Required',
+                    text2: 'Please login to add items to cart',
+                    position: 'bottom',
+                });
+                return;
+            }
+
             const response = await cartService.addToCart({
                 productVariantId,
                 comboKitId,
@@ -151,6 +163,12 @@ export function useCart(): UseCartReturn {
         setLoading(true);
         setError(null);
         try {
+            const token = await getAccessToken();
+            if (!token) {
+                setCart(null);
+                return;
+            }
+
             if (quantity <= 0) {
                 await removeItem(itemId);
                 return;
@@ -182,6 +200,12 @@ export function useCart(): UseCartReturn {
         setLoading(true);
         setError(null);
         try {
+            const token = await getAccessToken();
+            if (!token) {
+                setCart(null);
+                return;
+            }
+
             const response = await cartService.removeCartItem(itemId);
             setCart(response.data);
             Toast.show({
@@ -209,6 +233,12 @@ export function useCart(): UseCartReturn {
         setLoading(true);
         setError(null);
         try {
+            const token = await getAccessToken();
+            if (!token) {
+                setCart(null);
+                return;
+            }
+
             const response = await cartService.clearCart();
             setCart(response.data);
             Toast.show({

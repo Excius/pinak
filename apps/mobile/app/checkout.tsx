@@ -11,34 +11,30 @@ import { router } from "expo-router";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useCart } from "@/hooks/use-cart";
 import * as orderService from "@/services/order.service";
-import { AddressForm } from "@/components/checkout/AddressForm";
+import { AddressSelector } from "@/components/checkout/AddressSelector";
 import { OrderSummary } from "@/components/checkout/OrderSummary";
 import Toast from "react-native-toast-message";
 
 interface Address {
+  id: string;
+  userId: string;
   fullName: string;
   addressLine1: string;
-  addressLine2: string;
+  addressLine2?: string | null;
   city: string;
   state: string;
   pincode: string;
   phone: string;
+  label?: string | null;
+  isDefault: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
-
-const emptyAddress: Address = {
-  fullName: "",
-  addressLine1: "",
-  addressLine2: "",
-  city: "",
-  state: "",
-  pincode: "",
-  phone: "",
-};
 
 export default function CheckoutPage() {
   const { cart, fetchCart } = useCart();
-  const [shippingAddress, setShippingAddress] = useState<Address>(emptyAddress);
-  const [billingAddress, setBillingAddress] = useState<Address>(emptyAddress);
+  const [shippingAddress, setShippingAddress] = useState<Address | null>(null);
+  const [billingAddress, setBillingAddress] = useState<Address | null>(null);
   const [sameAsShipping, setSameAsShipping] = useState(true);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -47,15 +43,8 @@ export default function CheckoutPage() {
     fetchCart().finally(() => setInitialLoading(false));
   }, [fetchCart]);
 
-  const isAddressValid = (address: Address) => {
-    return (
-      address.fullName.trim() &&
-      address.addressLine1.trim() &&
-      address.city.trim() &&
-      address.state.trim() &&
-      address.pincode.trim() &&
-      address.phone.trim()
-    );
+  const isAddressValid = (address: Address | null) => {
+    return address !== null;
   };
 
   const handleCreateOrder = async () => {
@@ -64,7 +53,7 @@ export default function CheckoutPage() {
       Toast.show({
         type: "error",
         text1: "Validation Error",
-        text2: "Please fill all required fields in shipping address",
+        text2: "Please select a shipping address",
         position: "bottom",
       });
       return;
@@ -77,7 +66,7 @@ export default function CheckoutPage() {
       Toast.show({
         type: "error",
         text1: "Validation Error",
-        text2: "Please fill all required fields in billing address",
+        text2: "Please select a billing address",
         position: "bottom",
       });
       return;
@@ -86,8 +75,8 @@ export default function CheckoutPage() {
     setLoading(true);
     try {
       const payload = {
-        shippingAddress,
-        billingAddress: sameAsShipping ? undefined : finalBillingAddress,
+        shippingAddressId: shippingAddress!.id,
+        billingAddressId: sameAsShipping ? undefined : billingAddress!.id,
       };
 
       const response = await orderService.createOrder(payload);
@@ -160,14 +149,14 @@ export default function CheckoutPage() {
   return (
     <SafeAreaView
       edges={["top", "bottom", "left", "right"]}
-      className="flex-1 bg-background"
+      className="flex-1 bg-surface-light"
     >
       {/* Header */}
-      <View className="flex-row items-center gap-3 border-b border-surface-border px-4 py-4">
+      <View className="flex-row items-center gap-3 border-b border-surface-border/60 bg-surface-light px-4 py-4">
         <TouchableOpacity onPress={() => router.back()}>
           <MaterialCommunityIcons name="arrow-left" size={24} color="#C9A962" />
         </TouchableOpacity>
-        <Text className="flex-1 text-lg font-bold text-text-primary">
+        <Text className="flex-1 text-lg font-bold text-foreground">
           Checkout
         </Text>
       </View>
@@ -182,36 +171,10 @@ export default function CheckoutPage() {
           <OrderSummary cart={cart} />
 
           {/* Shipping Address */}
-          <AddressForm
+          <AddressSelector
             title="Shipping Address"
-            fullName={shippingAddress.fullName}
-            addressLine1={shippingAddress.addressLine1}
-            addressLine2={shippingAddress.addressLine2}
-            city={shippingAddress.city}
-            state={shippingAddress.state}
-            pincode={shippingAddress.pincode}
-            phone={shippingAddress.phone}
-            onFullNameChange={(text) =>
-              setShippingAddress({ ...shippingAddress, fullName: text })
-            }
-            onAddressLine1Change={(text) =>
-              setShippingAddress({ ...shippingAddress, addressLine1: text })
-            }
-            onAddressLine2Change={(text) =>
-              setShippingAddress({ ...shippingAddress, addressLine2: text })
-            }
-            onCityChange={(text) =>
-              setShippingAddress({ ...shippingAddress, city: text })
-            }
-            onStateChange={(text) =>
-              setShippingAddress({ ...shippingAddress, state: text })
-            }
-            onPincodeChange={(text) =>
-              setShippingAddress({ ...shippingAddress, pincode: text })
-            }
-            onPhoneChange={(text) =>
-              setShippingAddress({ ...shippingAddress, phone: text })
-            }
+            selectedAddressId={shippingAddress?.id}
+            onAddressSelect={setShippingAddress}
           />
 
           {/* Same As Shipping Checkbox */}
@@ -237,36 +200,10 @@ export default function CheckoutPage() {
 
           {/* Billing Address */}
           {!sameAsShipping && (
-            <AddressForm
+            <AddressSelector
               title="Billing Address"
-              fullName={billingAddress.fullName}
-              addressLine1={billingAddress.addressLine1}
-              addressLine2={billingAddress.addressLine2}
-              city={billingAddress.city}
-              state={billingAddress.state}
-              pincode={billingAddress.pincode}
-              phone={billingAddress.phone}
-              onFullNameChange={(text) =>
-                setBillingAddress({ ...billingAddress, fullName: text })
-              }
-              onAddressLine1Change={(text) =>
-                setBillingAddress({ ...billingAddress, addressLine1: text })
-              }
-              onAddressLine2Change={(text) =>
-                setBillingAddress({ ...billingAddress, addressLine2: text })
-              }
-              onCityChange={(text) =>
-                setBillingAddress({ ...billingAddress, city: text })
-              }
-              onStateChange={(text) =>
-                setBillingAddress({ ...billingAddress, state: text })
-              }
-              onPincodeChange={(text) =>
-                setBillingAddress({ ...billingAddress, pincode: text })
-              }
-              onPhoneChange={(text) =>
-                setBillingAddress({ ...billingAddress, phone: text })
-              }
+              selectedAddressId={billingAddress?.id}
+              onAddressSelect={setBillingAddress}
             />
           )}
 
@@ -295,12 +232,12 @@ export default function CheckoutPage() {
       </ScrollView>
 
       {/* Place Order Button */}
-      <View className="border-t border-surface-border px-4 py-4">
+      <View className="border-t border-surface-border/60 bg-surface-light px-4 py-4">
         <TouchableOpacity
           onPress={handleCreateOrder}
           disabled={loading}
-          className={`rounded-lg py-4 ${
-            loading ? "bg-surface-light" : "bg-primary"
+          className={`rounded-2xl py-4 ${
+            loading ? "bg-surface" : "bg-primary"
           } items-center justify-center`}
         >
           {loading ? (

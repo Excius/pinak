@@ -33,4 +33,13 @@ export const registerOrderAdminRoutes = (
     validateMultiple(OrderAdminTypes.UpdatePaymentStatus),
     controller.updatePaymentStatusAdmin,
   );
+
+  router.delete(
+    "/admin/:id/hard",
+    authMiddleware.authenticate,
+    authMiddleware.requireAdmin,
+    rateLimiter,
+    validateMultiple(OrderAdminTypes.HardDeleteOrder),
+    controller.hardDeleteOrderAdmin,
+  );
 };

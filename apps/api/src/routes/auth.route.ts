@@ -4,7 +4,7 @@ import { AuthController } from "../controllers/auth.controller.js";
 import appConfig from "../lib/config.js";
 import JWTService from "../lib/jwt.js";
 import { prisma } from "../lib/prisma.js";
-import { createAuthRateLimiter } from "../lib/rateLimit.js";
+import { createAuthRateLimiter, createRateLimiter } from "../lib/rateLimit.js";
 import { validateMultiple } from "../lib/validation.js";
 import { AuthMiddleware } from "../middlewares/auth.middleware.js";
 import { AuthProviderRepository } from "../repositories/authProvider.repository.js";
@@ -39,6 +39,7 @@ const authService = new AuthService(
 const authController = new AuthController(authService);
 const authMiddleware = new AuthMiddleware(jwtService);
 const authRateLimiter = createAuthRateLimiter();
+const normalRateLimiter = createRateLimiter();
 
 // Routes
 /**
@@ -156,6 +157,7 @@ router.post(
  */
 router.get(
   "/me",
+  normalRateLimiter,
   validateMultiple(AuthTypes.Me),
   authMiddleware.authenticate,
   authController.me,

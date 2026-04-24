@@ -5,11 +5,10 @@ import type { ClassesRouteDeps } from "./index.js";
 
 export const registerClassesPublicRoutes = (
   router: Router,
-  { lengthController, weightController, authMiddleware, rateLimiter }: ClassesRouteDeps,
+  { lengthController, weightController, rateLimiter }: ClassesRouteDeps,
 ) => {
   router.get(
     "/length-classes",
-    authMiddleware.authenticate,
     rateLimiter,
     validateMultiple(LengthWeightTypes.ListLength),
     lengthController.listPublic,
@@ -17,7 +16,6 @@ export const registerClassesPublicRoutes = (
 
   router.get(
     "/length-classes/:id",
-    authMiddleware.authenticate,
     rateLimiter,
     validateMultiple(LengthWeightTypes.GetLengthById),
     lengthController.getPublic,
@@ -25,7 +23,6 @@ export const registerClassesPublicRoutes = (
 
   router.get(
     "/weight-classes",
-    authMiddleware.authenticate,
     rateLimiter,
     validateMultiple(LengthWeightTypes.ListWeight),
     weightController.listPublic,
@@ -33,7 +30,6 @@ export const registerClassesPublicRoutes = (
 
   router.get(
     "/weight-classes/:id",
-    authMiddleware.authenticate,
     rateLimiter,
     validateMultiple(LengthWeightTypes.GetWeightById),
     weightController.getPublic,

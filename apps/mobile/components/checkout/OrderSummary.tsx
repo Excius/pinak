@@ -8,10 +8,17 @@ interface OrderSummaryProps {
 
 export function OrderSummary({ cart }: OrderSummaryProps) {
   return (
-    <View className="mb-4 rounded-lg border border-surface-border bg-surface p-4">
-      <Text className="mb-3 text-base font-bold text-text-primary">
-        Order Summary
-      </Text>
+    <View className="mb-4 rounded-2xl border border-surface-border/70 bg-surface px-4 py-4">
+      <View className="mb-3 flex-row items-center justify-between">
+        <Text className="text-base font-bold text-text-primary">
+          Order Summary
+        </Text>
+        <View className="rounded-full bg-primary/10 px-2.5 py-1">
+          <Text className="text-[10px] font-semibold text-primary">
+            {cart.totalQuantity} item{cart.totalQuantity !== 1 ? "s" : ""}
+          </Text>
+        </View>
+      </View>
 
       {/* Items Preview */}
       <ScrollView
@@ -40,7 +47,7 @@ export function OrderSummary({ cart }: OrderSummaryProps) {
       </ScrollView>
 
       {/* Divider */}
-      <View className="mb-3 h-px bg-surface-border" />
+      <View className="mb-3 h-px bg-surface-border/70" />
 
       {/* Breakdown */}
       <View className="mb-2 flex-row justify-between">
@@ -59,9 +66,7 @@ export function OrderSummary({ cart }: OrderSummaryProps) {
 
       {/* Total */}
       <View className="flex-row justify-between">
-        <Text className="text-sm font-bold text-text-primary">
-          Total Amount
-        </Text>
+        <Text className="text-sm font-bold text-text-primary">Total</Text>
         <Text className="text-sm font-bold text-primary">
           ₹{cart.total.toLocaleString("en-IN")}
         </Text>
