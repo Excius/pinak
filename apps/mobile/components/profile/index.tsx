@@ -126,7 +126,10 @@ export default function ProfileLayout() {
             My Account
           </Text>
           <View className="bg-surface rounded-xl overflow-hidden border border-surface-border">
-            <Pressable className="flex-row items-center justify-between p-4 border-b border-surface-border">
+            <Pressable
+              onPress={() => router.push("/(tabs)/orders")}
+              className="flex-row items-center justify-between p-4 border-b border-surface-border active:opacity-70"
+            >
               <View className="flex-row items-center gap-3">
                 <MaterialIcons name="shopping-bag" size={22} color="#C9A962" />
                 <Text className="text-text-primary">My Orders</Text>
@@ -147,7 +150,10 @@ export default function ProfileLayout() {
               </View>
               <MaterialIcons name="chevron-right" size={22} color="#6B6B6B" />
             </Pressable>
-            <Pressable className="flex-row items-center justify-between p-4 border-b border-surface-border">
+            <Pressable
+              onPress={() => router.push("/address/manage")}
+              className="flex-row items-center justify-between p-4 border-b border-surface-border active:opacity-70"
+            >
               <View className="flex-row items-center gap-3">
                 <MaterialIcons name="location-on" size={22} color="#C9A962" />
                 <Text className="text-text-primary">Saved Addresses</Text>

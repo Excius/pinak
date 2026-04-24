@@ -5,11 +5,10 @@ import type { FeaturedSectionRouteDeps } from "./index.js";
 
 export const registerFeaturedSectionPublicRoutes = (
   router: Router,
-  { controller, authMiddleware, rateLimiter }: FeaturedSectionRouteDeps,
+  { controller, rateLimiter }: FeaturedSectionRouteDeps,
 ) => {
   router.get(
     "/",
-    authMiddleware.authenticate,
     rateLimiter,
     validateMultiple(FeaturedSectionTypes.ListFeaturedSections),
     controller.listPublic,
@@ -17,7 +16,6 @@ export const registerFeaturedSectionPublicRoutes = (
 
   router.get(
     "/:id",
-    authMiddleware.authenticate,
     rateLimiter,
     validateMultiple(FeaturedSectionTypes.GetFeaturedSectionById),
     controller.getByIdPublic,

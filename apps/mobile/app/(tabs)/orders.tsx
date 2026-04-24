@@ -18,6 +18,7 @@ interface Order {
   status: "PENDING" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED";
   totalAmount: number;
   createdAt: Date;
+  totalItems: number;
   items: Array<{
     id: string;
   }>;
@@ -91,29 +92,38 @@ export default function OrdersPage() {
   return (
     <SafeAreaView
       edges={["bottom", "left", "right"]}
-      className="flex-1 bg-background"
+      className="flex-1 bg-surface-light"
     >
       {/* Header */}
-      <View className="border-b border-surface-border px-4 py-4">
-        <View className="flex-row items-center gap-3">
-          <View className="h-10 w-10 items-center justify-center rounded-lg bg-surface">
-            <MaterialCommunityIcons
-              name={"package-variant" as any}
-              size={20}
-              color="#b8860b"
-            />
+      <View className="px-4 pt-4">
+        <View className="rounded-3xl border border-surface-border/60 bg-surface px-4 py-4">
+          <View className="flex-row items-center gap-3">
+            <View className="h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
+              <MaterialCommunityIcons
+                name={"package-variant" as any}
+                size={22}
+                color="#b8860b"
+              />
+            </View>
+            <View className="flex-1">
+              <Text className="text-lg font-bold text-text-primary">
+                My Orders
+              </Text>
+              <Text className="text-xs text-text-secondary">
+                {orders.length} order{orders.length !== 1 ? "s" : ""}
+              </Text>
+            </View>
           </View>
-          <View className="flex-1">
-            <Text className="text-lg font-bold text-foreground">My Orders</Text>
-            <Text className="text-xs text-muted-foreground">
-              {orders.length} order{orders.length !== 1 ? "s" : ""}
+          <View className="mt-3 rounded-xl bg-primary/5 px-3 py-2">
+            <Text className="text-xs text-text-primary">
+              Track, manage, and revisit your purchases in one place.
             </Text>
           </View>
         </View>
       </View>
 
       {/* Filter Buttons */}
-      <View className="border-b border-surface-border px-4 py-3">
+      <View className="px-4 py-3">
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -126,14 +136,14 @@ export default function OrdersPage() {
               className={`rounded-full px-4 py-2 ${
                 selectedFilter === btn.value
                   ? "bg-primary"
-                  : "border border-border bg-background"
+                  : "border border-surface-border/70 bg-surface"
               }`}
             >
               <Text
                 className={`text-xs font-semibold ${
                   selectedFilter === btn.value
                     ? "text-primary-foreground"
-                    : "text-foreground"
+                    : "text-text-primary"
                 }`}
               >
                 {btn.label}
@@ -153,14 +163,22 @@ export default function OrdersPage() {
           <MaterialCommunityIcons
             name={"package-variant-closed" as any}
             size={48}
-            color="#999"
+            color="#b8860b"
           />
-          <Text className="mt-4 text-center text-lg font-bold text-foreground">
+          <Text className="mt-4 text-center text-lg font-bold text-text-primary">
             No Orders Yet
           </Text>
-          <Text className="mt-2 text-center text-sm text-muted-foreground">
+          <Text className="mt-2 text-center text-sm text-text-secondary">
             Start shopping to see your orders here
           </Text>
+          <TouchableOpacity
+            onPress={() => handleFilterChange(undefined)}
+            className="mt-4 rounded-full bg-primary px-5 py-2"
+          >
+            <Text className="text-xs font-semibold text-primary-foreground">
+              Browse Products
+            </Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <FlatList
@@ -173,15 +191,15 @@ export default function OrdersPage() {
                 orderNumber={getOrderNumber(item.id)}
                 status={item.status}
                 totalAmount={item.totalAmount}
-                itemCount={item.items.length}
+                itemCount={item.totalItems ?? item.items?.length ?? 0}
                 createdAt={item.createdAt}
               />
             </View>
           )}
-          contentContainerStyle={{ paddingBottom: 16, paddingTop: 8 }}
+          contentContainerStyle={{ paddingBottom: 24, paddingTop: 4 }}
           ListFooterComponent={
             totalPages > 1 ? (
-              <View className="flex-row items-center justify-center gap-3 px-4 py-4">
+              <View className="mx-4 mb-6 mt-2 flex-row items-center justify-center gap-3 rounded-xl border border-surface-border/70 bg-surface px-4 py-3">
                 <TouchableOpacity
                   onPress={() => fetchOrders(Math.max(1, page - 1))}
                   disabled={page === 1}
@@ -200,7 +218,7 @@ export default function OrdersPage() {
                   </Text>
                 </TouchableOpacity>
 
-                <Text className="text-sm font-semibold text-foreground">
+                <Text className="text-sm font-semibold text-text-primary">
                   Page {page} of {totalPages}
                 </Text>
 

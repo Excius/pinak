@@ -5,11 +5,10 @@ import type { ProductRouteDeps } from "./index.js";
 
 export const registerProductPublicRelatedRoutes = (
   router: Router,
-  { authMiddleware, rateLimiter, relatedProductController }: ProductRouteDeps,
+  { rateLimiter, relatedProductController }: ProductRouteDeps,
 ) => {
   router.get(
     "/:productId/related",
-    authMiddleware.authenticate,
     rateLimiter,
     validateMultiple(RelatedProductTypes.ListRelated),
     relatedProductController.list,

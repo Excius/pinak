@@ -52,50 +52,54 @@ export function OrderDetailsCard({
   const getStatusBadgeColor = () => {
     switch (status) {
       case "DELIVERED":
-        return "bg-green-100";
+        return "bg-green-500/15";
       case "SHIPPED":
-        return "bg-blue-100";
+        return "bg-blue-500/15";
       case "PROCESSING":
-        return "bg-yellow-100";
+        return "bg-yellow-500/15";
       case "CANCELLED":
-        return "bg-red-100";
+        return "bg-red-500/15";
       case "PENDING":
       default:
-        return "bg-gray-100";
+        return "bg-white/10";
     }
   };
 
   const getStatusTextColor = () => {
     switch (status) {
       case "DELIVERED":
-        return "text-green-700";
+        return "text-green-400";
       case "SHIPPED":
-        return "text-blue-700";
+        return "text-blue-400";
       case "PROCESSING":
-        return "text-yellow-700";
+        return "text-yellow-400";
       case "CANCELLED":
-        return "text-red-700";
+        return "text-red-400";
       case "PENDING":
       default:
-        return "text-gray-700";
+        return "text-gray-300";
     }
   };
 
   const getPaymentStatusBadge = () => {
     switch (paymentStatus) {
       case "COMPLETED":
-        return { bg: "bg-green-100", text: "text-green-700", label: "Paid" };
+        return {
+          bg: "bg-green-500/15",
+          text: "text-green-400",
+          label: "Paid",
+        };
       case "FAILED":
         return {
-          bg: "bg-red-100",
-          text: "text-red-700",
+          bg: "bg-red-500/15",
+          text: "text-red-400",
           label: "Payment Failed",
         };
       case "PENDING":
       default:
         return {
-          bg: "bg-yellow-100",
-          text: "text-yellow-700",
+          bg: "bg-yellow-500/15",
+          text: "text-yellow-400",
           label: "Pending Payment",
         };
     }
@@ -118,12 +122,12 @@ export function OrderDetailsCard({
     <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
       <View className="px-4 py-4">
         {/* Order Header */}
-        <View className="mb-4 rounded-lg border border-surface-border bg-background p-4">
+        <View className="mb-4 rounded-2xl border border-surface-border/70 bg-surface px-4 py-4">
           <View className="mb-3 flex-row items-center justify-between">
             <View>
-              <Text className="text-xs text-muted-foreground">Order ID</Text>
-              <Text className="mt-1 font-mono text-sm font-bold text-foreground">
-                #{orderId.slice(0, 8)}
+              <Text className="text-xs text-text-secondary">Order ID</Text>
+              <Text className="mt-1 font-mono text-sm font-bold text-text-primary">
+                #{orderId.slice(-8).toUpperCase()}
               </Text>
             </View>
             <View>
@@ -137,12 +141,12 @@ export function OrderDetailsCard({
             </View>
           </View>
 
-          <View className="border-b border-surface-border pb-3" />
+          <View className="border-b border-surface-border/70 pb-3" />
 
           <View className="mt-3 flex-row items-center justify-between">
             <View>
-              <Text className="text-xs text-muted-foreground">Order Date</Text>
-              <Text className="mt-1 text-xs text-foreground">
+              <Text className="text-xs text-text-secondary">Order Date</Text>
+              <Text className="mt-1 text-xs text-text-primary">
                 {formatDate(createdAt)}
               </Text>
             </View>
@@ -155,52 +159,52 @@ export function OrderDetailsCard({
         </View>
 
         {/* Order Items */}
-        <View className="mb-4 rounded-lg border border-surface-border bg-background p-4">
-          <Text className="mb-3 text-base font-bold text-foreground">
+        <View className="mb-4 rounded-2xl border border-surface-border/70 bg-surface px-4 py-4">
+          <Text className="mb-3 text-base font-bold text-text-primary">
             Order Items
           </Text>
           {items.map((item, index) => (
             <View key={item.id}>
               <View className="flex-row justify-between">
                 <View className="flex-1">
-                  <Text className="text-sm text-foreground line-clamp-2">
+                  <Text className="text-sm text-text-primary line-clamp-2">
                     {item.productName}
                   </Text>
-                  <Text className="mt-1 text-xs text-muted-foreground">
+                  <Text className="mt-1 text-xs text-text-secondary">
                     Qty: {item.quantity} × ₹{item.price.toLocaleString("en-IN")}
                   </Text>
                 </View>
-                <Text className="ml-2 text-sm font-bold text-foreground">
+                <Text className="ml-2 text-sm font-bold text-text-primary">
                   ₹{item.lineTotal.toLocaleString("en-IN")}
                 </Text>
               </View>
               {index < items.length - 1 && (
-                <View className="my-3 h-px bg-surface-border" />
+                <View className="my-3 h-px bg-surface-border/70" />
               )}
             </View>
           ))}
         </View>
 
         {/* Price Breakdown */}
-        <View className="mb-4 rounded-lg border border-surface-border bg-background p-4">
-          <Text className="mb-3 text-base font-bold text-foreground">
+        <View className="mb-4 rounded-2xl border border-surface-border/70 bg-surface px-4 py-4">
+          <Text className="mb-3 text-base font-bold text-text-primary">
             Price Breakdown
           </Text>
           <View className="mb-2 flex-row justify-between">
-            <Text className="text-sm text-muted-foreground">Subtotal</Text>
-            <Text className="text-sm font-medium text-foreground">
+            <Text className="text-sm text-text-secondary">Subtotal</Text>
+            <Text className="text-sm font-medium text-text-primary">
               ₹{subtotalAmount.toLocaleString("en-IN")}
             </Text>
           </View>
           <View className="mb-2 flex-row justify-between">
-            <Text className="text-sm text-muted-foreground">Tax (GST)</Text>
-            <Text className="text-sm font-medium text-foreground">
+            <Text className="text-sm text-text-secondary">Tax (GST)</Text>
+            <Text className="text-sm font-medium text-text-primary">
               ₹{taxAmount.toLocaleString("en-IN")}
             </Text>
           </View>
           {discountAmount > 0 && (
             <View className="mb-2 flex-row justify-between">
-              <Text className="text-sm text-muted-foreground">Discount</Text>
+              <Text className="text-sm text-text-secondary">Discount</Text>
               <Text className="text-sm font-medium text-green-600">
                 -₹{discountAmount.toLocaleString("en-IN")}
               </Text>
@@ -208,15 +212,15 @@ export function OrderDetailsCard({
           )}
           {shippingAmount > 0 && (
             <View className="mb-2 flex-row justify-between">
-              <Text className="text-sm text-muted-foreground">Shipping</Text>
-              <Text className="text-sm font-medium text-foreground">
+              <Text className="text-sm text-text-secondary">Shipping</Text>
+              <Text className="text-sm font-medium text-text-primary">
                 ₹{shippingAmount.toLocaleString("en-IN")}
               </Text>
             </View>
           )}
-          <View className="border-b border-surface-border py-2" />
+          <View className="border-b border-surface-border/70 py-2" />
           <View className="flex-row justify-between">
-            <Text className="text-base font-bold text-foreground">Total</Text>
+            <Text className="text-base font-bold text-text-primary">Total</Text>
             <Text className="text-base font-bold text-primary">
               ₹{totalAmount.toLocaleString("en-IN")}
             </Text>
@@ -225,33 +229,33 @@ export function OrderDetailsCard({
 
         {/* Shipping Address */}
         {shippingAddress && (
-          <View className="mb-4 rounded-lg border border-surface-border bg-background p-4">
-            <Text className="mb-3 text-base font-bold text-foreground">
+          <View className="mb-4 rounded-2xl border border-surface-border/70 bg-surface px-4 py-4">
+            <Text className="mb-3 text-base font-bold text-text-primary">
               Shipping Address
             </Text>
             <View className="flex-row gap-2">
               <MaterialCommunityIcons
                 name="map-marker"
                 size={16}
-                color="#999"
+                color="#b8860b"
               />
               <View className="flex-1">
-                <Text className="text-sm font-semibold text-foreground">
+                <Text className="text-sm font-semibold text-text-primary">
                   {shippingAddress.fullName}
                 </Text>
-                <Text className="mt-1 text-xs text-muted-foreground">
+                <Text className="mt-1 text-xs text-text-secondary">
                   {shippingAddress.addressLine1}
                 </Text>
                 {shippingAddress.addressLine2 && (
-                  <Text className="text-xs text-muted-foreground">
+                  <Text className="text-xs text-text-secondary">
                     {shippingAddress.addressLine2}
                   </Text>
                 )}
-                <Text className="mt-1 text-xs text-muted-foreground">
+                <Text className="mt-1 text-xs text-text-secondary">
                   {shippingAddress.city}, {shippingAddress.state}{" "}
                   {shippingAddress.pincode}
                 </Text>
-                <Text className="mt-1 text-xs text-muted-foreground">
+                <Text className="mt-1 text-xs text-text-secondary">
                   Phone: {shippingAddress.phone}
                 </Text>
               </View>
@@ -261,33 +265,33 @@ export function OrderDetailsCard({
 
         {/* Billing Address */}
         {billingAddress && (
-          <View className="mb-4 rounded-lg border border-surface-border bg-background p-4">
-            <Text className="mb-3 text-base font-bold text-foreground">
+          <View className="mb-4 rounded-2xl border border-surface-border/70 bg-surface px-4 py-4">
+            <Text className="mb-3 text-base font-bold text-text-primary">
               Billing Address
             </Text>
             <View className="flex-row gap-2">
               <MaterialCommunityIcons
                 name="map-marker"
                 size={16}
-                color="#999"
+                color="#b8860b"
               />
               <View className="flex-1">
-                <Text className="text-sm font-semibold text-foreground">
+                <Text className="text-sm font-semibold text-text-primary">
                   {billingAddress.fullName}
                 </Text>
-                <Text className="mt-1 text-xs text-muted-foreground">
+                <Text className="mt-1 text-xs text-text-secondary">
                   {billingAddress.addressLine1}
                 </Text>
                 {billingAddress.addressLine2 && (
-                  <Text className="text-xs text-muted-foreground">
+                  <Text className="text-xs text-text-secondary">
                     {billingAddress.addressLine2}
                   </Text>
                 )}
-                <Text className="mt-1 text-xs text-muted-foreground">
+                <Text className="mt-1 text-xs text-text-secondary">
                   {billingAddress.city}, {billingAddress.state}{" "}
                   {billingAddress.pincode}
                 </Text>
-                <Text className="mt-1 text-xs text-muted-foreground">
+                <Text className="mt-1 text-xs text-text-secondary">
                   Phone: {billingAddress.phone}
                 </Text>
               </View>

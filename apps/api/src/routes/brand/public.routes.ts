@@ -5,11 +5,10 @@ import type { BrandRouteDeps } from "./index.js";
 
 export const registerBrandPublicRoutes = (
   router: Router,
-  { brandController, authMiddleware, rateLimiter }: BrandRouteDeps,
+  { brandController, rateLimiter }: BrandRouteDeps,
 ) => {
   router.get(
     "/",
-    authMiddleware.authenticate,
     rateLimiter,
     validateMultiple(BrandTypes.ListBrands),
     brandController.listPublic,
@@ -17,7 +16,6 @@ export const registerBrandPublicRoutes = (
 
   router.get(
     "/slug/:slug",
-    authMiddleware.authenticate,
     rateLimiter,
     validateMultiple(BrandTypes.GetBrandBySlug),
     brandController.getBySlugPublic,
@@ -25,7 +23,6 @@ export const registerBrandPublicRoutes = (
 
   router.get(
     "/:id",
-    authMiddleware.authenticate,
     rateLimiter,
     validateMultiple(BrandTypes.GetBrandById),
     brandController.getByIdPublic,

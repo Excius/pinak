@@ -5,11 +5,10 @@ import type { ProductRouteDeps } from "./index.js";
 
 export const registerProductPublicProductRoutes = (
   router: Router,
-  { productController, authMiddleware, rateLimiter }: ProductRouteDeps,
+  { productController, rateLimiter }: ProductRouteDeps,
 ) => {
   router.get(
     "/",
-    authMiddleware.authenticate,
     rateLimiter,
     validateMultiple(ProductTypes.GetProducts),
     productController.getProducts,
@@ -17,7 +16,6 @@ export const registerProductPublicProductRoutes = (
 
   router.get(
     "/slug/:slug",
-    authMiddleware.authenticate,
     rateLimiter,
     validateMultiple(ProductTypes.GetProductBySlug),
     productController.getProductBySlug,
@@ -25,7 +23,6 @@ export const registerProductPublicProductRoutes = (
 
   router.get(
     "/category/:categoryId",
-    authMiddleware.authenticate,
     rateLimiter,
     validateMultiple(ProductTypes.GetProductsWithCategory),
     productController.getProductsWithCategory,
@@ -33,7 +30,6 @@ export const registerProductPublicProductRoutes = (
 
   router.get(
     "/search",
-    authMiddleware.authenticate,
     rateLimiter,
     validateMultiple(ProductTypes.SearchProducts),
     productController.searchProducts,
@@ -41,7 +37,6 @@ export const registerProductPublicProductRoutes = (
 
   router.get(
     "/:id",
-    authMiddleware.authenticate,
     rateLimiter,
     validateMultiple(ProductTypes.GetProductById),
     productController.getProductWithDetails,

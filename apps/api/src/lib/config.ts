@@ -115,6 +115,21 @@ class Config {
   public readonly FRONTEND_URL: string;
 
   /**
+   * Shared rate limit window in minutes.
+   */
+  public readonly RATE_LIMIT_WINDOW_MINUTES: number;
+
+  /**
+   * Max requests for general API routes per rate limit window.
+   */
+  public readonly RATE_LIMIT_MAX: number;
+
+  /**
+   * Max requests for authentication routes per rate limit window.
+   */
+  public readonly AUTH_RATE_LIMIT_MAX: number;
+
+  /**
    * OAuth2 Client ID for third-party authentication for website.
    */
   public readonly CLIENT_ID_WEB: string;
@@ -242,6 +257,18 @@ class Config {
     this.BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3000";
     this.MOBILE_APP_URL = process.env.MOBILE_APP_URL || "myapp://app";
     this.FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+
+    this.RATE_LIMIT_WINDOW_MINUTES = parseInt(
+      process.env.RATE_LIMIT_WINDOW_MINUTES || "15",
+      10,
+    ); // Default: 15 minutes
+
+    this.RATE_LIMIT_MAX = parseInt(process.env.RATE_LIMIT_MAX || "800", 10);
+
+    this.AUTH_RATE_LIMIT_MAX = parseInt(
+      process.env.AUTH_RATE_LIMIT_MAX || "300",
+      10,
+    );
 
     if (!process.env.CLIENT_ID_WEB) {
       throw new Error("CLIENT_ID environment variable is required");

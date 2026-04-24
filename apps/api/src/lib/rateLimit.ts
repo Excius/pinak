@@ -2,6 +2,7 @@ import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import { Response, Request } from "express";
 import logger from "./logger.js";
 import { ResponseHandler } from "./response.js";
+import appConfig from "./config.js";
 
 // IPv6-safe key generation using `ipKeyGenerator` from `express-rate-limit`
 
@@ -10,8 +11,8 @@ import { ResponseHandler } from "./response.js";
  */
 export const createRateLimiter = () => {
   return rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 600, // Limit each IP/user to 600 requests per windowMs
+    windowMs: appConfig.RATE_LIMIT_WINDOW_MINUTES * 60 * 1000,
+    max: appConfig.RATE_LIMIT_MAX,
     keyGenerator: (req: Request) => {
       const userId = (req as Request & { user?: { id?: string } }).user?.id;
       return userId ? `user:${String(userId)}` : ipKeyGenerator(String(req.ip));
@@ -41,8 +42,8 @@ export const createRateLimiter = () => {
  */
 export const createAuthRateLimiter = () => {
   return rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5000, // Limit each IP/user to 5000 requests per windowMs
+    windowMs: appConfig.RATE_LIMIT_WINDOW_MINUTES * 60 * 1000,
+    max: appConfig.AUTH_RATE_LIMIT_MAX,
     keyGenerator: (req: Request) => {
       const userId = (req as Request & { user?: { id?: string } }).user?.id;
       return userId ? `user:${String(userId)}` : ipKeyGenerator(String(req.ip));

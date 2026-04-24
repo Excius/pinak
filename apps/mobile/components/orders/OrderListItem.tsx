@@ -23,16 +23,16 @@ export function OrderListItem({
   const getStatusColor = () => {
     switch (status) {
       case "DELIVERED":
-        return "text-green-600";
+        return { text: "text-green-400", bg: "bg-green-500/15" };
       case "SHIPPED":
-        return "text-blue-600";
+        return { text: "text-blue-400", bg: "bg-blue-500/15" };
       case "PROCESSING":
-        return "text-yellow-600";
+        return { text: "text-yellow-400", bg: "bg-yellow-500/15" };
       case "CANCELLED":
-        return "text-red-600";
+        return { text: "text-red-400", bg: "bg-red-500/15" };
       case "PENDING":
       default:
-        return "text-gray-600";
+        return { text: "text-gray-300", bg: "bg-white/10" };
     }
   };
 
@@ -61,13 +61,15 @@ export function OrderListItem({
     });
   };
 
+  const statusStyle = getStatusColor();
+
   return (
     <TouchableOpacity
       onPress={() => router.push(`/order/${orderId}` as never)}
-      className="mb-3 flex-row items-center gap-3 rounded-lg border border-surface-border bg-background p-4"
+      className="mb-3 flex-row items-center gap-3 rounded-2xl border border-surface-border/70 bg-surface px-4 py-4"
     >
       {/* Icon */}
-      <View className="h-12 w-12 items-center justify-center rounded-full bg-surface">
+      <View className="h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
         <MaterialCommunityIcons
           name={getStatusIcon()}
           size={24}
@@ -77,18 +79,20 @@ export function OrderListItem({
 
       {/* Details */}
       <View className="flex-1">
-        <View className="mb-1 flex-row items-center justify-between">
-          <Text className="text-sm font-bold text-foreground">
+        <View className="mb-2 flex-row items-center justify-between">
+          <Text className="text-sm font-bold text-text-primary">
             Order #{orderNumber}
           </Text>
-          <Text className={`text-xs font-semibold ${getStatusColor()}`}>
-            {status}
-          </Text>
+          <View className={`rounded-full px-2.5 py-1 ${statusStyle.bg}`}>
+            <Text className={`text-[10px] font-semibold ${statusStyle.text}`}>
+              {status}
+            </Text>
+          </View>
         </View>
-        <Text className="mb-1 text-xs text-muted-foreground">
+        <Text className="mb-1 text-xs text-text-secondary">
           {itemCount} item{itemCount !== 1 ? "s" : ""}
         </Text>
-        <Text className="text-xs text-muted-foreground">
+        <Text className="text-xs text-text-secondary">
           {formatDate(createdAt)}
         </Text>
       </View>
@@ -98,7 +102,11 @@ export function OrderListItem({
         <Text className="text-sm font-bold text-primary">
           ₹{totalAmount.toLocaleString("en-IN")}
         </Text>
-        <MaterialCommunityIcons name="chevron-right" size={20} color="#999" />
+        <MaterialCommunityIcons
+          name="chevron-right"
+          size={20}
+          color="#b8860b"
+        />
       </View>
     </TouchableOpacity>
   );
