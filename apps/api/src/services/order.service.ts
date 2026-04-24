@@ -10,7 +10,10 @@ import {
 } from "../repositories/order.repository.js";
 import { CouponService } from "./coupon.service.js";
 import { StockReservationService } from "./stockReservation.service.js";
-import { IPaymentGateway, PaymentWebhookPayload } from "./payment/IPaymentGateway.js";
+import {
+  IPaymentGateway,
+  PaymentWebhookPayload,
+} from "./payment/IPaymentGateway.js";
 
 type AddressInput = {
   fullName: string;
@@ -77,7 +80,13 @@ type AdminOrderResponse = OrderResponse & {
   };
 };
 
-const ORDER_STATUS_VALUES = ["PENDING", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"] as const;
+const ORDER_STATUS_VALUES = [
+  "PENDING",
+  "PROCESSING",
+  "SHIPPED",
+  "DELIVERED",
+  "CANCELLED",
+] as const;
 const PAYMENT_STATUS_VALUES = ["PENDING", "COMPLETED", "FAILED"] as const;
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -136,7 +145,9 @@ export class OrderService {
   }
 
   private parsePaymentStatus(status: string): OrderResponse["paymentStatus"] {
-    if (PAYMENT_STATUS_VALUES.includes(status as OrderResponse["paymentStatus"])) {
+    if (
+      PAYMENT_STATUS_VALUES.includes(status as OrderResponse["paymentStatus"])
+    ) {
       return status as OrderResponse["paymentStatus"];
     }
     throw new ValidationError("Invalid payment status");
@@ -154,7 +165,9 @@ export class OrderService {
     createdAt: Date;
     updatedAt: Date;
   }): OrderItemResponse {
-    const variantDetails = isRecord(item.variantDetails) ? item.variantDetails : null;
+    const variantDetails = isRecord(item.variantDetails)
+      ? item.variantDetails
+      : null;
     return {
       id: item.id,
       productId: item.productId,
@@ -243,7 +256,9 @@ export class OrderService {
     };
   }
 
-  private mapOrderSummary(order: Parameters<typeof this.mapOrder>[0]): OrderSummaryResponse {
+  private mapOrderSummary(
+    order: Parameters<typeof this.mapOrder>[0],
+  ): OrderSummaryResponse {
     const mapped = this.mapOrder(order);
     return {
       id: mapped.id,
@@ -266,13 +281,15 @@ export class OrderService {
     };
   }
 
-
   async createOrder(userId: string, input: CreateOrderInput) {
     let shippingAddress: AddressInput;
     let billingAddress: AddressInput;
 
     if (input.shippingAddressId) {
-      const addr = await this.addressRepository.findById(input.shippingAddressId, userId);
+      const addr = await this.addressRepository.findById(
+        input.shippingAddressId,
+        userId,
+      );
       if (!addr) throw new ValidationError("Shipping address not found");
       shippingAddress = {
         fullName: addr.fullName,
@@ -286,11 +303,16 @@ export class OrderService {
     } else if (input.shippingAddress) {
       shippingAddress = input.shippingAddress;
     } else {
-      throw new ValidationError("shippingAddress or shippingAddressId is required");
+      throw new ValidationError(
+        "shippingAddress or shippingAddressId is required",
+      );
     }
 
     if (input.billingAddressId) {
-      const addr = await this.addressRepository.findById(input.billingAddressId, userId);
+      const addr = await this.addressRepository.findById(
+        input.billingAddressId,
+        userId,
+      );
       if (!addr) throw new ValidationError("Billing address not found");
       billingAddress = {
         fullName: addr.fullName,
@@ -320,7 +342,11 @@ export class OrderService {
           quantity: number;
         }> = [];
         const orderItems: CreateOrderItemInput[] = [];
-        const taxBreakdown: Array<{ label: string; rate: number; amount: number }> = [];
+        const taxBreakdown: Array<{
+          label: string;
+          rate: number;
+          amount: number;
+        }> = [];
 
         let subtotalAmount = 0;
         let taxAmount = 0;
@@ -335,7 +361,8 @@ export class OrderService {
 
             subtotalAmount += lineSubtotal;
             taxAmount += lineTax;
-            shippingRequired = shippingRequired || variant.product.requiresShipping;
+            shippingRequired =
+              shippingRequired || variant.product.requiresShipping;
 
             reservationRequirements.push({
               productVariantId: variant.id,
@@ -381,7 +408,8 @@ export class OrderService {
               }
 
               shippingRequired =
-                shippingRequired || comboItem.productVariant.product.requiresShipping;
+                shippingRequired ||
+                comboItem.productVariant.product.requiresShipping;
 
               const componentTaxRate =
                 comboItem.productVariant.product.taxClass?.rate ?? 0;
@@ -455,7 +483,9 @@ export class OrderService {
         );
 
         const gstPercentage =
-          subtotalAmount > 0 ? Number(((taxAmount / subtotalAmount) * 100).toFixed(2)) : 0;
+          subtotalAmount > 0
+            ? Number(((taxAmount / subtotalAmount) * 100).toFixed(2))
+            : 0;
 
         const order = await this.orderRepository.create(
           {
@@ -479,11 +509,12 @@ export class OrderService {
           tx,
         );
 
-        const reservation = await this.stockReservationService.createReservations(
-          order.id,
-          reservationRequirements,
-          tx,
-        );
+        const reservation =
+          await this.stockReservationService.createReservations(
+            order.id,
+            reservationRequirements,
+            tx,
+          );
 
         const orderItemPayload = orderItems.map((item) => ({
           ...item,
@@ -513,7 +544,10 @@ export class OrderService {
           },
         });
 
-        const finalOrder = await this.orderRepository.findByIdWithItems(order.id, tx);
+        const finalOrder = await this.orderRepository.findByIdWithItems(
+          order.id,
+          tx,
+        );
         if (!finalOrder) {
           throw new NotFoundError("Order not found after creation");
         }
@@ -522,6 +556,8 @@ export class OrderService {
           orderId: finalOrder.id,
           amount: finalOrder.totalAmount,
         });
+
+        await this.cartRepository.clearCartByUser(userId, tx);
 
         return {
           order: this.mapOrder(finalOrder),
@@ -541,7 +577,10 @@ export class OrderService {
   }
 
   async getOrderById(userId: string, orderId: string) {
-    const order = await this.orderRepository.findByIdWithItemsForUser(orderId, userId);
+    const order = await this.orderRepository.findByIdWithItemsForUser(
+      orderId,
+      userId,
+    );
     if (!order) {
       throw new NotFoundError("Order not found");
     }
@@ -561,7 +600,9 @@ export class OrderService {
         }
 
         if (["SHIPPED", "DELIVERED", "CANCELLED"].includes(order.status)) {
-          throw new ValidationError("Order cannot be cancelled in current state");
+          throw new ValidationError(
+            "Order cannot be cancelled in current state",
+          );
         }
 
         if (order.paymentStatus === "COMPLETED") {
@@ -620,7 +661,8 @@ export class OrderService {
   }
 
   async listOrdersAdmin(filters: AdminOrderFilters) {
-    const { items, pagination } = await this.orderRepository.findAllOrders(filters);
+    const { items, pagination } =
+      await this.orderRepository.findAllOrders(filters);
     return {
       orders: items.map((o) => this.mapOrderAdmin(o)),
       pagination,
@@ -667,13 +709,17 @@ export class OrderService {
         }
 
         if (order.status === "CANCELLED") {
-          throw new ValidationError("Cancelled orders cannot be marked as paid");
+          throw new ValidationError(
+            "Cancelled orders cannot be marked as paid",
+          );
         }
 
         await this.stockReservationService.confirmReservations(orderId, tx);
         await this.cartRepository.clearCartByUser(order.userId, tx);
 
-        const existingBreakup = isRecord(order.getBreakup) ? order.getBreakup : {};
+        const existingBreakup = isRecord(order.getBreakup)
+          ? order.getBreakup
+          : {};
         await tx.order.update({
           where: { id: orderId },
           data: {
@@ -715,7 +761,9 @@ export class OrderService {
 
         await this.stockReservationService.releaseReservations(orderId, tx);
 
-        const existingBreakup = isRecord(order.getBreakup) ? order.getBreakup : {};
+        const existingBreakup = isRecord(order.getBreakup)
+          ? order.getBreakup
+          : {};
         await tx.order.update({
           where: { id: orderId },
           data: {
