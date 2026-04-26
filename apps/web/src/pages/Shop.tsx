@@ -6,21 +6,25 @@ import { ProductGridSkeleton } from '../components/Skeleton'
 import { getProducts } from '../api/products.api'
 import { getCategories } from '../api/categories.api'
 import { getBrands } from '../api/brands.api'
+import { getFilterGroups } from '../api/filters.api'
 import type { Product } from '../api/products.api'
 import type { Category } from '../api/categories.api'
 import type { Brand } from '../api/brands.api'
+import type { FilterGroup } from '../api/filters.api'
 
 const Shop: React.FC = () => {
   const navigate = useNavigate()
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [brands, setBrands] = useState<Brand[]>([])
+  const [filterGroups, setFilterGroups] = useState<FilterGroup[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   // Filters
   const [selectedCategory, setSelectedCategory] = useState<string>('')
   const [selectedBrand, setSelectedBrand] = useState<string>('')
+  const [selectedFilters, setSelectedFilters] = useState<string[]>([])
   const [sortBy, setSortBy] = useState<string>('newest')
   const [filterOpen, setFilterOpen] = useState(false)
 
@@ -31,6 +35,7 @@ const Shop: React.FC = () => {
       const params: any = {}
       if (selectedCategory) params.categoryId = selectedCategory
       if (selectedBrand) params.brand = selectedBrand
+      if (selectedFilters.length > 0) params.filterValueIds = selectedFilters
       switch (sortBy) {
         case 'price-low':
           params.sortBy = 'price'
@@ -49,22 +54,24 @@ const Shop: React.FC = () => {
           params.sortOrder = 'desc'
       }
 
-      const [prodData, catData, brandData] = await Promise.all([
+      const [prodData, catData, brandData, filterGroupsData] = await Promise.all([
         getProducts(params),
         getCategories(),
         getBrands(),
+        getFilterGroups()
       ])
 
       setProducts(Array.isArray(prodData) ? prodData : [])
       setCategories(Array.isArray(catData) ? catData : [])
       setBrands(Array.isArray(brandData) ? brandData : [])
+      setFilterGroups(Array.isArray(filterGroupsData) ? filterGroupsData : [])
     } catch (err: any) {
       const msg = err?.response?.data?.message || err?.message || 'Failed to load products'
       setError(msg)
     } finally {
       setLoading(false)
     }
-  }, [selectedCategory, selectedBrand, sortBy])
+  }, [selectedCategory, selectedBrand, selectedFilters, sortBy])
 
   useEffect(() => {
     fetchData()
@@ -91,13 +98,20 @@ const Shop: React.FC = () => {
     return product.categories?.[0]?.name || ''
   }
 
+  const handleFilterToggle = (valueId: string) => {
+    setSelectedFilters((prev) =>
+      prev.includes(valueId) ? prev.filter((id) => id !== valueId) : [...prev, valueId]
+    )
+  }
+
   const clearFilters = () => {
     setSelectedCategory('')
     setSelectedBrand('')
+    setSelectedFilters([])
     setSortBy('newest')
   }
 
-  const hasFilters = selectedCategory || selectedBrand || sortBy !== 'newest'
+  const hasFilters = selectedCategory || selectedBrand || selectedFilters.length > 0 || sortBy !== 'newest'
 
   return (
     <Layout>
@@ -186,6 +200,30 @@ const Shop: React.FC = () => {
                 ))}
               </ul>
             </div>
+
+            {filterGroups.map((group) => (
+              <div key={group.id} className="bg-surface-dark rounded-2xl p-6 border border-primary/10">
+                <h3 className="text-sm uppercase tracking-widest font-bold text-primary-light mb-4">{group.name}</h3>
+                <ul className="space-y-3">
+                  {group.values.map((val) => (
+                    <li key={val.id}>
+                      <label className="flex items-center gap-3 cursor-pointer group">
+                        <input 
+                          type="checkbox" 
+                          className="hidden" 
+                          checked={selectedFilters.includes(val.id)} 
+                          onChange={() => handleFilterToggle(val.id)} 
+                        />
+                        <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${selectedFilters.includes(val.id) ? 'bg-primary border-primary text-black' : 'border-primary/30 group-hover:border-primary'}`}>
+                          {selectedFilters.includes(val.id) && <span className="material-icons-outlined text-xs">check</span>}
+                        </div>
+                        <span className={`text-sm transition-colors ${selectedFilters.includes(val.id) ? 'text-primary' : 'text-text-muted group-hover:text-primary'}`}>{val.name}</span>
+                      </label>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
 
             {hasFilters && (
               <button

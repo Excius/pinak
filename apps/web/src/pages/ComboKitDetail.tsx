@@ -176,7 +176,7 @@ const ComboKitDetail: React.FC = () => {
                   const imageUrl =
                     variant?.images?.[0]?.url || product?.frontImageUrl || ''
                   const variantLabel =
-                    variant?.optionValues?.map((ov) => ov.optionValue.value).join(' / ') || ''
+                    variant?.optionValues?.map((ov: any) => ov?.optionValue?.value || ov?.valueName || ov?.value).filter(Boolean).join(' / ') || ''
 
                   return (
                     <div

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
-import { me as apiGetMe, login as apiLogin, signup as apiSignup, logout as apiLogout } from '../api/auth.api'
+import { me as apiGetMe, login as apiLogin, signup as apiSignup, logout as apiLogout, googleCallback as apiGoogleCallback } from '../api/auth.api'
 import type { LoginPayload, SignupPayload } from '../api/auth.api'
 
 interface User {
@@ -17,6 +17,7 @@ interface AuthContextType {
   isAuthenticated: boolean
   isLoading: boolean
   login: (payload: LoginPayload) => Promise<void>
+  googleLogin: (code: string) => Promise<void>
   signup: (payload: SignupPayload) => Promise<{ verificationPending: boolean }>
   logout: () => Promise<void>
   refreshUser: () => Promise<void>
@@ -75,6 +76,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }
 
+  const googleLogin = async (code: string) => {
+    const response = await apiGoogleCallback({ code, platform: 'WEB' })
+    const accessToken = (response as any)?.data?.accessToken || response?.accessToken || (response as any)?.accessToken
+    if (accessToken) {
+      localStorage.setItem('accessToken', accessToken)
+      await refreshUser()
+    } else {
+      throw new Error('No access token received from Google Login')
+    }
+  }
+
   const signup = async (payload: SignupPayload) => {
     await apiSignup(payload)
     return { verificationPending: true }
@@ -97,6 +109,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAuthenticated: !!user,
         isLoading,
         login,
+        googleLogin,
         signup,
         logout,
         refreshUser,

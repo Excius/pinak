@@ -1,11 +1,12 @@
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { signup as apiSignup } from '../api/auth.api'
+import React, { useState, useEffect } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { signup as apiSignup, getGoogleOAuthUrl, checkUsernameAvailability } from '../api/auth.api'
 import { useAuth } from '../context/AuthContext'
 import VerificationPending from './VerificationPending'
 
 const Auth: React.FC = () => {
   const navigate = useNavigate()
+  const location = useLocation()
   const { login } = useAuth()
   const [isLogin, setIsLogin] = useState(true)
   const [showPassword, setShowPassword] = useState(false)
@@ -13,12 +14,35 @@ const Auth: React.FC = () => {
   const [password, setPassword] = useState('')
   const [username, setUsername] = useState('')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [error, setError] = useState(location.state?.error || '')
   const [isVerificationPending, setIsVerificationPending] = useState(false)
   const [signupEmail, setSignupEmail] = useState('')
+  const [isUsernameChecking, setIsUsernameChecking] = useState(false)
+  const [isUsernameAvailable, setIsUsernameAvailable] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    if (isLogin || !username || username.length < 3) {
+      setIsUsernameAvailable(null)
+      setIsUsernameChecking(false)
+      return
+    }
+
+    const delayDebounceFn = setTimeout(async () => {
+      setIsUsernameChecking(true)
+      const available = await checkUsernameAvailability(username)
+      setIsUsernameAvailable(available)
+      setIsUsernameChecking(false)
+    }, 500)
+
+    return () => clearTimeout(delayDebounceFn)
+  }, [username, isLogin])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (!isLogin && isUsernameAvailable === false) {
+      setError('Please choose an available username.')
+      return
+    }
     setError('')
     setLoading(true)
     const run = async () => {
@@ -39,6 +63,17 @@ const Auth: React.FC = () => {
       }
     }
     run()
+  }
+
+  const handleGoogleLogin = async () => {
+    try {
+      const response = await getGoogleOAuthUrl('WEB')
+      if (response && response.url) {
+        window.location.href = response.url
+      }
+    } catch (err: any) {
+      setError('Failed to initiate Google Login')
+    }
   }
 
   if (isVerificationPending) {
@@ -137,16 +172,26 @@ const Auth: React.FC = () => {
                 <label className="text-xs font-bold tracking-widest text-text-muted uppercase" htmlFor="username">
                   Username
                 </label>
-                <input
-                  className="w-full px-5 py-3 rounded-2xl border border-primary/15 bg-background-dark text-text-main-light placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm"
-                  id="username"
-                  name="username"
-                  placeholder="Choose a username"
-                  required={!isLogin}
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                />
+                <div className="relative">
+                  <input
+                    className={`w-full px-5 py-3 rounded-2xl border ${isUsernameAvailable === false ? 'border-red-500/50 focus:ring-red-500' : isUsernameAvailable === true ? 'border-green-500/50 focus:ring-green-500' : 'border-primary/15 focus:ring-primary'} bg-background-dark text-text-main-light placeholder-text-muted focus:outline-none focus:ring-2 focus:border-transparent transition-all shadow-sm`}
+                    id="username"
+                    name="username"
+                    placeholder="Choose a username"
+                    required={!isLogin}
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                  />
+                  <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                    {isUsernameChecking && <span className="material-icons-outlined text-text-muted animate-spin text-xl">sync</span>}
+                    {!isUsernameChecking && isUsernameAvailable === true && <span className="material-icons-outlined text-green-400 text-xl">check_circle</span>}
+                    {!isUsernameChecking && isUsernameAvailable === false && <span className="material-icons-outlined text-red-400 text-xl">cancel</span>}
+                  </div>
+                </div>
+                {!isUsernameChecking && isUsernameAvailable === false && (
+                  <p className="text-xs text-red-400 mt-1">This username is already taken.</p>
+                )}
               </div>
             )}
 
@@ -202,10 +247,16 @@ const Auth: React.FC = () => {
               </div>
             )}
 
-            {/* Forgot Password (Login only) */}
             {isLogin && (
               <div className="flex justify-end -mt-1">
-                <a className="text-sm font-medium text-primary hover:text-primary-hover underline decoration-transparent hover:decoration-current transition-all" href="#">
+                <a 
+                  href="/forgot-password"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate('/forgot-password');
+                  }}
+                  className="text-sm font-medium text-primary hover:text-primary-hover underline decoration-transparent hover:decoration-current transition-all cursor-pointer"
+                >
                   Forgot Password?
                 </a>
               </div>
@@ -234,6 +285,8 @@ const Auth: React.FC = () => {
           <button
             className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-primary/15 rounded-2xl bg-background-dark text-text-main-light font-bold hover:bg-surface-elevated hover:border-primary/30 transition-colors shadow-sm cursor-pointer active:scale-95"
             type="button"
+            onClick={handleGoogleLogin}
+            disabled={loading}
           >
             <svg aria-hidden="true" className="h-5 w-5" viewBox="0 0 24 24">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>

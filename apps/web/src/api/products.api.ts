@@ -1,4 +1,7 @@
 import axiosInstance from './axiosInstance'
+import axios from 'axios'
+
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
 
 export interface ProductListParams {
   page?: number
@@ -13,6 +16,7 @@ export interface ProductListParams {
   isActive?: boolean
   inStock?: boolean
   tags?: string
+  filterValueIds?: string[] | string
 }
 
 export interface Product {
@@ -78,10 +82,19 @@ export interface VariantDetail {
 // For lists: data = { data: [...], pagination: {...} }
 // For single: data = { ...product }
 
+const buildQueryParams = (params?: ProductListParams) => {
+  if (!params) return undefined
+  const queryParams = { ...params }
+  if (Array.isArray(queryParams.filterValueIds)) {
+    queryParams.filterValueIds = queryParams.filterValueIds.join(',')
+  }
+  return queryParams
+}
+
 export const getProducts = async (params?: ProductListParams): Promise<Product[]> => {
-  const { data: resp } = await axiosInstance.get('/products', { params })
-  // resp = { success, message, data: { data: [...], pagination } }
-  return resp?.data?.data || resp?.data || []
+  const { data: resp } = await axiosInstance.get('/products', { params: buildQueryParams(params) })
+  const result = resp?.data
+  return result?.items || (Array.isArray(result) ? result : [])
 }
 
 export const getProductBySlug = async (slug: string): Promise<Product> => {
@@ -95,25 +108,27 @@ export const getProductById = async (id: string): Promise<Product> => {
 }
 
 export const getProductsByCategory = async (categoryId: string, params?: ProductListParams): Promise<Product[]> => {
-  const { data: resp } = await axiosInstance.get(`/products/category/${categoryId}`, { params })
-  return resp?.data?.data || resp?.data || []
+  const { data: resp } = await axiosInstance.get(`/products/category/${categoryId}`, { params: buildQueryParams(params) })
+  const result = resp?.data
+  return result?.items || (Array.isArray(result) ? result : [])
 }
 
 export const searchProducts = async (query: string, params?: ProductListParams): Promise<Product[]> => {
-  const { data: resp } = await axiosInstance.get('/products/search', { params: { q: query, ...params } })
-  // search returns array directly in data
+  const { data: resp } = await axiosInstance.get('/products/search', { params: { q: query, ...buildQueryParams(params) } })
   const result = resp?.data
-  return Array.isArray(result) ? result : (result?.data || [])
+  return result?.items || (Array.isArray(result) ? result : [])
 }
 
 export const getFeaturedProducts = async (): Promise<Product[]> => {
   const { data: resp } = await axiosInstance.get('/products/featured')
-  return resp?.data?.data || resp?.data || []
+  const result = resp?.data
+  return result?.items || (Array.isArray(result) ? result : [])
 }
 
 export const getFeaturedProductsBySection = async (sectionId: string): Promise<Product[]> => {
   const { data: resp } = await axiosInstance.get(`/products/featured/section/${sectionId}`)
-  return resp?.data?.data || resp?.data || []
+  const result = resp?.data
+  return result?.items || (Array.isArray(result) ? result : [])
 }
 
 export const getProductVariants = async (productId: string): Promise<VariantDetail[]> => {
@@ -121,4 +136,23 @@ export const getProductVariants = async (productId: string): Promise<VariantDeta
   // variants are returned as array directly in data
   const result = resp?.data
   return Array.isArray(result) ? result : []
+}
+
+export const getRelatedProducts = async (productId: string): Promise<Product[]> => {
+  try {
+    const token = localStorage.getItem('accessToken')
+    const { data: resp } = await axios.get(`${API_URL}/api/v1/products/${productId}/related`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    })
+    const result = resp?.data
+    if (!Array.isArray(result)) return []
+    
+    // The backend may return raw Prisma objects for related products, so map categories
+    return result.map(p => ({
+      ...p,
+      categories: p.categories?.map((c: any) => c.category || c) || []
+    }))
+  } catch (error) {
+    return []
+  }
 }

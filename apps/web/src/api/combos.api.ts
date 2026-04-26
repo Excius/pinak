@@ -54,7 +54,7 @@ export interface ComboKitItem {
 export const getComboKits = async (params?: { page?: number; limit?: number; sort?: string }): Promise<ComboKit[]> => {
   const { data: resp } = await axiosInstance.get('/combo-kits', { params })
   const result = resp?.data
-  return Array.isArray(result) ? result : (result?.data || result?.comboKits || [])
+  return result?.items || (Array.isArray(result) ? result : [])
 }
 
 export const getComboKitBySlug = async (slug: string): Promise<ComboKit> => {
@@ -70,11 +70,11 @@ export const getComboKitById = async (id: string): Promise<ComboKit> => {
 export const getComboKitItems = async (id: string): Promise<ComboKitItem[]> => {
   const { data: resp } = await axiosInstance.get(`/combo-kits/${id}/items`)
   const result = resp?.data
-  return Array.isArray(result) ? result : (result?.data || result?.items || [])
+  return result?.items || (Array.isArray(result) ? result : [])
 }
 
 export const searchComboKits = async (query: string): Promise<ComboKit[]> => {
   const { data: resp } = await axiosInstance.get('/combo-kits/search', { params: { q: query } })
   const result = resp?.data
-  return Array.isArray(result) ? result : (result?.data || [])
+  return result?.items || (Array.isArray(result) ? result : [])
 }

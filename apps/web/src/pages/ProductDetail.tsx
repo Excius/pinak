@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import ProductCard from '../components/ProductCard'
 import { ProductDetailSkeleton } from '../components/Skeleton'
-import { getProductBySlug, getProductVariants } from '../api/products.api'
+import { getProductBySlug, getProductVariants, getRelatedProducts, getProductsByCategory } from '../api/products.api'
 import { useCart } from '../context/CartContext'
 import { addToWishlist } from '../api/wishlist.api'
 import type { Product, VariantDetail } from '../api/products.api'
@@ -15,7 +15,10 @@ const ProductDetail: React.FC = () => {
 
   const [product, setProduct] = useState<Product | null>(null)
   const [variants, setVariants] = useState<VariantDetail[]>([])
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([])
   const [selectedVariant, setSelectedVariant] = useState<VariantDetail | null>(null)
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({})
+  const [availableOptions, setAvailableOptions] = useState<{ optionName: string; values: string[] }[]>([])
   const [selectedImage, setSelectedImage] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -37,14 +40,50 @@ const ProductDetail: React.FC = () => {
         if (prod?.id) {
           const varList = await getProductVariants(prod.id)
           setVariants(varList)
+          
+          // Fetch related products or fallback to category
+          let relList = await getRelatedProducts(prod.id)
+          if (!relList || relList.length === 0) {
+            const catId = prod.categories?.[0]?.id
+            if (catId) {
+              const fallback = await getProductsByCategory(catId, { limit: 5 })
+              relList = fallback.filter(p => p.id !== prod.id).slice(0, 4)
+            }
+          }
+          setRelatedProducts(relList || [])
+
           const firstActive = varList.find((v) => v.isActive) || varList[0]
           if (firstActive) {
             setSelectedVariant(firstActive)
+            const initialOpts: Record<string, string> = {}
+            firstActive.optionValues?.forEach(ov => {
+              initialOpts[ov.optionName] = ov.valueName
+            })
+            setSelectedOptions(initialOpts)
+
             const primary = firstActive.images?.find((img) => img.isPrimary)
             setSelectedImage(primary?.url || firstActive.images?.[0]?.url || prod.frontImageUrl || '')
           } else {
             setSelectedImage(prod.frontImageUrl || '')
           }
+
+          // Build available options groups
+          const optionsMap = new Map<string, Set<string>>()
+          varList.forEach(v => {
+            if (v.isActive) {
+              v.optionValues?.forEach(ov => {
+                if (!optionsMap.has(ov.optionName)) {
+                  optionsMap.set(ov.optionName, new Set())
+                }
+                optionsMap.get(ov.optionName)?.add(ov.valueName)
+              })
+            }
+          })
+          const optsArray = Array.from(optionsMap.entries()).map(([optionName, valSet]) => ({
+            optionName,
+            values: Array.from(valSet)
+          }))
+          setAvailableOptions(optsArray)
         }
       } catch (err: any) {
         setError(err?.response?.data?.message || err?.message || 'Failed to load product')
@@ -55,11 +94,32 @@ const ProductDetail: React.FC = () => {
     fetchProduct()
   }, [slug])
 
-  const handleVariantChange = (variant: VariantDetail) => {
-    setSelectedVariant(variant)
-    const primary = variant.images?.find((img) => img.isPrimary)
-    setSelectedImage(primary?.url || variant.images?.[0]?.url || product?.frontImageUrl || '')
-    setQuantity(1)
+  const handleOptionSelect = (optionName: string, valueName: string) => {
+    const nextOptions = { ...selectedOptions, [optionName]: valueName }
+    setSelectedOptions(nextOptions)
+
+    // Try to find a variant that perfectly matches the new options
+    let match = variants.find(v => v.isActive && v.optionValues?.every(ov => nextOptions[ov.optionName] === ov.valueName))
+    
+    // If no perfect match exists, find the first variant that at least has the newly selected value
+    if (!match) {
+      match = variants.find(v => v.isActive && v.optionValues?.some(ov => ov.optionName === optionName && ov.valueName === valueName))
+      // Update the rest of the options to match this fallback variant so the UI stays consistent
+      if (match) {
+        const fallbackOpts: Record<string, string> = {}
+        match.optionValues?.forEach(ov => {
+          fallbackOpts[ov.optionName] = ov.valueName
+        })
+        setSelectedOptions(fallbackOpts)
+      }
+    }
+
+    if (match) {
+      setSelectedVariant(match)
+      const primary = match.images?.find((img) => img.isPrimary)
+      setSelectedImage(primary?.url || match.images?.[0]?.url || product?.frontImageUrl || '')
+      setQuantity(1)
+    }
   }
 
   const handleAddToCart = () => {
@@ -172,8 +232,8 @@ const ProductDetail: React.FC = () => {
                   <button
                     key={i}
                     className={`w-20 h-20 rounded-xl overflow-hidden shrink-0 border-2 transition-all cursor-pointer ${selectedImage === url
-                        ? 'border-primary shadow-lg shadow-primary/20'
-                        : 'border-primary/10 hover:border-primary/30'
+                      ? 'border-primary shadow-lg shadow-primary/20'
+                      : 'border-primary/10 hover:border-primary/30'
                       }`}
                     onClick={() => setSelectedImage(url)}
                   >
@@ -246,28 +306,34 @@ const ProductDetail: React.FC = () => {
 
             <div className="h-px bg-primary/10"></div>
 
-            {variants.length > 1 && (
-              <div className="space-y-3">
-                <label className="text-xs font-bold tracking-widest text-primary/70 uppercase">Select Variant</label>
-                <div className="flex flex-wrap gap-3">
-                  {variants
-                    .filter((v) => v.isActive)
-                    .map((variant) => {
-                      const label = variant.optionValues?.map((ov) => ov.valueName).join(' / ') || variant.sku
-                      return (
-                        <button
-                          key={variant.id}
-                          className={`px-4 py-2.5 rounded-xl text-sm font-medium border transition-all cursor-pointer ${selectedVariant?.id === variant.id
-                              ? 'border-primary bg-primary/10 text-primary'
+            {availableOptions.length > 0 && (
+              <div className="space-y-5">
+                {availableOptions.map((optGroup) => (
+                  <div key={optGroup.optionName} className="space-y-3">
+                    <label className="text-xs font-bold tracking-widest text-primary/70 uppercase">
+                      Select {optGroup.optionName}
+                    </label>
+                    <div className="flex flex-wrap gap-3">
+                      {optGroup.values.map((val) => {
+                        const isSelected = selectedOptions[optGroup.optionName] === val
+                        // Determine if this specific value is out of stock in the CURRENT context of other selected options
+                        // (Optional advanced check: for now, we just let them click it and see if the resulting variant is Out Of Stock)
+                        return (
+                          <button
+                            key={val}
+                            className={`px-4 py-2.5 rounded-xl text-sm font-medium border transition-all cursor-pointer ${isSelected
+                              ? 'border-primary bg-primary/10 text-primary shadow-[0_0_10px_rgba(212,175,55,0.2)]'
                               : 'border-primary/20 text-text-muted hover:border-primary/40 hover:text-primary'
-                            }`}
-                          onClick={() => handleVariantChange(variant)}
-                        >
-                          {label}
-                        </button>
-                      )
-                    })}
-                </div>
+                              }`}
+                            onClick={() => handleOptionSelect(optGroup.optionName, val)}
+                          >
+                            {val}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
 
@@ -300,8 +366,8 @@ const ProductDetail: React.FC = () => {
               </button>
               <button
                 className={`w-14 h-14 rounded-xl border flex items-center justify-center transition-all cursor-pointer active:scale-95 ${wishlistAdded
-                    ? 'border-primary bg-primary/10 text-primary'
-                    : 'border-primary/20 text-text-muted hover:text-primary hover:border-primary'
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'border-primary/20 text-text-muted hover:text-primary hover:border-primary'
                   }`}
                 onClick={handleAddToWishlist}
                 disabled={wishlistLoading}
@@ -318,8 +384,8 @@ const ProductDetail: React.FC = () => {
               <div className="flex gap-6 border-b border-primary/10">
                 <button
                   className={`pb-3 text-sm font-bold uppercase tracking-wider transition-colors cursor-pointer ${activeTab === 'description'
-                      ? 'text-primary border-b-2 border-primary'
-                      : 'text-text-muted hover:text-primary'
+                    ? 'text-primary border-b-2 border-primary'
+                    : 'text-text-muted hover:text-primary'
                     }`}
                   onClick={() => setActiveTab('description')}
                 >
@@ -328,8 +394,8 @@ const ProductDetail: React.FC = () => {
                 {product.keyIngredients && (
                   <button
                     className={`pb-3 text-sm font-bold uppercase tracking-wider transition-colors cursor-pointer ${activeTab === 'ingredients'
-                        ? 'text-primary border-b-2 border-primary'
-                        : 'text-text-muted hover:text-primary'
+                      ? 'text-primary border-b-2 border-primary'
+                      : 'text-text-muted hover:text-primary'
                       }`}
                     onClick={() => setActiveTab('ingredients')}
                   >
@@ -364,6 +430,38 @@ const ProductDetail: React.FC = () => {
             )}
           </div>
         </div>
+
+        {/* Related Products */}
+        {relatedProducts.length > 0 && (
+          <div className="mt-24 border-t border-primary/10 pt-16">
+            <div className="flex flex-col items-center justify-center mb-12 space-y-4">
+              <span className="text-primary text-xs tracking-[0.2em] font-bold uppercase">Discover More</span>
+              <h2 className="font-display text-3xl md:text-4xl font-bold text-center text-text-main-light">
+                You May Also Like
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {relatedProducts.slice(0, 4).map((rel) => {
+                const bestVariant = rel.variants?.find((v) => v.isActive) || rel.variants?.[0]
+                return (
+                  <ProductCard
+                    key={rel.id}
+                    id={rel.id}
+                    name={rel.name}
+                    slug={rel.slug}
+                    imageUrl={rel.frontImageUrl || bestVariant?.image?.url || ''}
+                    price={bestVariant?.price}
+                    comparePrice={bestVariant?.compareAtPrice ?? undefined}
+                    category={rel.categories?.[0]?.name || ''}
+                    variantId={bestVariant?.id}
+                    variantLabel={bestVariant?.optionValues?.map(ov => ov.valueName).join(' / ') || ''}
+                  />
+                )
+              })}
+            </div>
+          </div>
+        )}
+
       </div>
     </Layout>
   )
