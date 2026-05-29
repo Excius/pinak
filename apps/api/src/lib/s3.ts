@@ -24,10 +24,6 @@ if (enabled) {
     };
   }
 
-  if (appConfig.S3_ENDPOINT) {
-    clientConfig.endpoint = appConfig.S3_ENDPOINT;
-  }
-
   if (appConfig.S3_FORCE_PATH_STYLE) {
     clientConfig.forcePathStyle = appConfig.S3_FORCE_PATH_STYLE;
   }
@@ -72,7 +68,6 @@ export async function uploadBuffer(
     Key: key,
     Body: buffer,
     ...(contentType ? { ContentType: contentType } : {}),
-    ...(makePublic ? { ACL: "public-read" } : {}),
   } as PutObjectCommandInput;
 
   const command = new PutObjectCommand(params);
@@ -116,13 +111,6 @@ export function getPublicUrl(key: string) {
   // /bucket/products/<productId>/<variantId>/file.jpg rather than using
   // encoded "%2F" segments which can cause confusion with some servers.
   const encodedKey = encodeURIComponent(key).replace(/%2F/g, "/");
-  if (appConfig.S3_ENDPOINT) {
-    const endpoint = appConfig.S3_ENDPOINT.replace(/\/$/, "");
-    if (appConfig.S3_FORCE_PATH_STYLE) {
-      return `${endpoint}/${appConfig.S3_BUCKET}/${encodedKey}`;
-    }
-    return `${endpoint}/${encodedKey}`;
-  }
   if (appConfig.S3_FORCE_PATH_STYLE) {
     return `https://s3.${appConfig.S3_REGION}.amazonaws.com/${appConfig.S3_BUCKET}/${encodedKey}`;
   }
