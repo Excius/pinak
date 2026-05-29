@@ -974,25 +974,6 @@ export class ProductService {
     try {
       const u = new URL(urlStr);
 
-      // If custom endpoint is configured
-      if (appConfig.S3_ENDPOINT) {
-        const endpoint = appConfig.S3_ENDPOINT.replace(/\/$/, "");
-        // Path-style: endpoint/{bucket}/{key}
-        if (appConfig.S3_FORCE_PATH_STYLE) {
-          const prefix = `${endpoint}/${appConfig.S3_BUCKET}/`;
-          if (u.href.startsWith(prefix)) {
-            return decodeURIComponent(u.href.slice(prefix.length));
-          }
-        } else {
-          // endpoint/{key} (endpoint may already include bucket)
-          const prefix = `${endpoint}/`;
-          if (u.href.startsWith(prefix)) {
-            return decodeURIComponent(u.href.slice(prefix.length));
-          }
-        }
-        return null;
-      }
-
       // No custom endpoint — handle AWS standard public URLs
       // 1) virtual-hosted-style: https://{bucket}.s3.amazonaws.com/{key} or https://{bucket}.s3.{region}.amazonaws.com/{key}
       const host = u.hostname;

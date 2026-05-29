@@ -180,11 +180,6 @@ class Config {
   public readonly S3_SECRET_ACCESS_KEY?: string;
 
   /**
-   * Optional S3 endpoint for S3-compatible storage (e.g., MinIO).
-   */
-  public readonly S3_ENDPOINT?: string;
-
-  /**
    * Use path-style addressing for S3 URLs (useful for MinIO).
    */
   public readonly S3_FORCE_PATH_STYLE?: boolean;
@@ -300,7 +295,6 @@ class Config {
     this.S3_REGION = process.env.S3_REGION || "us-east-1";
     this.S3_ACCESS_KEY_ID = process.env.S3_ACCESS_KEY_ID;
     this.S3_SECRET_ACCESS_KEY = process.env.S3_SECRET_ACCESS_KEY;
-    this.S3_ENDPOINT = process.env.S3_ENDPOINT;
     this.S3_FORCE_PATH_STYLE = process.env.S3_FORCE_PATH_STYLE === "true";
     this.S3_SIGNED_URL_EXPIRES = parseInt(
       process.env.S3_SIGNED_URL_EXPIRES || "900",
