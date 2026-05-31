@@ -15,6 +15,7 @@ const ComboKitDetail: React.FC = () => {
   const [items, setItems] = useState<ComboKitItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [selectedImage, setSelectedImage] = useState<string>('')
 
   useEffect(() => {
     const fetchData = async () => {
@@ -42,14 +43,8 @@ const ComboKitDetail: React.FC = () => {
   const handleAddComboToCart = () => {
     if (!combo) return
     addItem({
-      id: combo.id,
-      type: 'combo',
-      productName: combo.name,
-      variantLabel: `${items.length} items bundle`,
-      imageUrl: combo.imageUrl || '',
-      price: combo.price,
-      slug: combo.slug,
-      productSlug: combo.slug,
+      comboKitId: combo.id,
+      quantity: 1
     })
   }
 
@@ -58,6 +53,25 @@ const ComboKitDetail: React.FC = () => {
   }, 0)
 
   const savings = totalOriginalPrice > 0 && combo ? totalOriginalPrice - combo.price : 0
+
+  const allImages: string[] = []
+  if (combo?.imageUrl) allImages.push(combo.imageUrl)
+  items.forEach(item => {
+    const variant = item.productVariant
+    const product = variant?.product
+    const imageUrl = variant?.images?.[0]?.url || product?.frontImageUrl
+    if (imageUrl && !allImages.includes(imageUrl)) {
+      allImages.push(imageUrl)
+    }
+  })
+
+  useEffect(() => {
+    if (combo?.imageUrl) {
+      setSelectedImage(combo.imageUrl)
+    } else if (allImages.length > 0) {
+      setSelectedImage(allImages[0])
+    }
+  }, [combo, items.length])
 
   if (loading) {
     return (
@@ -99,129 +113,139 @@ const ComboKitDetail: React.FC = () => {
         </div>
 
         <div className="flex flex-col lg:flex-row gap-12">
-          {/* Image */}
-          <div className="w-full lg:w-1/2">
-            <div className="aspect-square rounded-2xl overflow-hidden bg-surface-dark border border-primary/10">
-              {combo.imageUrl ? (
-                <img src={combo.imageUrl} alt={combo.name} className="w-full h-full object-cover" />
+          {/* Image Gallery */}
+          <div className="w-full lg:w-1/2 space-y-4">
+            <div className="aspect-square rounded-2xl overflow-hidden bg-surface-dark border border-primary/10 relative">
+              {selectedImage ? (
+                <img src={selectedImage} alt={combo.name} className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
                   <span className="material-icons-outlined text-8xl text-text-muted/30">redeem</span>
                 </div>
               )}
-            </div>
-          </div>
-
-          {/* Info */}
-          <div className="w-full lg:w-1/2 space-y-6">
-            <span className="text-primary text-sm uppercase tracking-widest font-bold">Combo Kit</span>
-            <h1 className="font-display text-3xl lg:text-4xl font-bold leading-tight">{combo.name}</h1>
-
-            {combo.description && (
-              <p className="text-text-muted leading-relaxed">{combo.description}</p>
-            )}
-
-            {/* Pricing */}
-            <div className="bg-surface-dark rounded-2xl p-6 border border-primary/10 space-y-3">
-              <div className="flex items-center gap-4">
-                <span className="text-3xl font-bold text-primary">{formatPrice(combo.price)}</span>
-                {totalOriginalPrice > combo.price && (
-                  <span className="text-lg text-text-muted line-through">{formatPrice(totalOriginalPrice)}</span>
-                )}
-              </div>
-              {savings > 0 && (
-                <div className="flex items-center gap-2 text-green-400">
-                  <span className="material-icons-outlined text-lg">savings</span>
-                  <span className="font-bold">You save {formatPrice(savings)}</span>
+              {combo.imageUrl === selectedImage && (
+                <div className="absolute top-4 left-4 bg-primary text-black text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full shadow-lg">
+                  Combo Kit
                 </div>
               )}
             </div>
+            {allImages.length > 1 && (
+              <div className="flex gap-3 overflow-x-auto pb-2">
+                {allImages.map((url, i) => (
+                  <button
+                    key={i}
+                    className={`w-20 h-20 rounded-xl overflow-hidden shrink-0 border-2 transition-all cursor-pointer ${
+                      selectedImage === url
+                        ? 'border-primary shadow-lg shadow-primary/20'
+                        : 'border-primary/10 hover:border-primary/30'
+                    }`}
+                    onClick={() => setSelectedImage(url)}
+                  >
+                    <img src={url} alt="" className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
-            {/* Add to bag */}
-            <button
-              className="w-full bg-primary hover:bg-primary-hover text-black py-4 rounded-xl font-bold text-sm uppercase tracking-wider transition-all glow-gold cursor-pointer active:scale-[0.98]"
-              onClick={handleAddComboToCart}
-            >
-              Add Combo to Bag — {formatPrice(combo.price)}
-            </button>
+          {/* Info */}
+          <div className="w-full lg:w-1/2 space-y-8">
+            <div>
+              <span className="text-primary text-sm uppercase tracking-widest font-bold">Value Bundle</span>
+              <h1 className="font-display text-3xl lg:text-4xl font-bold leading-tight mt-2">{combo.name}</h1>
+              {combo.description && (
+                <p className="text-text-muted leading-relaxed mt-4">{combo.description}</p>
+              )}
+            </div>
+
+            {/* What's Included */}
+            {items.length > 0 && (
+              <div className="space-y-4">
+                <h3 className="text-sm font-bold tracking-widest text-primary/70 uppercase border-b border-primary/10 pb-2">
+                  What's Included
+                </h3>
+                <div className="space-y-3">
+                  {items
+                    .sort((a, b) => a.sortOrder - b.sortOrder)
+                    .map((item) => {
+                      const variant = item.productVariant
+                      const product = variant?.product
+                      const imageUrl = variant?.images?.[0]?.url || product?.frontImageUrl || ''
+                      const variantLabel = variant?.optionValues?.map((ov: any) => ov?.optionValue?.value || ov?.valueName || ov?.value).filter(Boolean).join(' / ') || ''
+                      
+                      return (
+                        <div 
+                          key={item.id} 
+                          className="flex gap-4 items-center p-3 bg-surface-dark rounded-xl border border-primary/5 hover:border-primary/20 transition-colors cursor-pointer"
+                          onClick={() => product?.slug && navigate(`/products/${product.slug}`)}
+                        >
+                          <div className="w-16 h-16 rounded-lg overflow-hidden bg-surface-elevated shrink-0">
+                            {imageUrl ? (
+                              <img src={imageUrl} alt={product?.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <span className="material-icons-outlined text-text-muted text-sm">image</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-sm text-text-main-light truncate">{product?.name || 'Product'}</h4>
+                            <div className="flex items-center gap-2 mt-1">
+                              {variantLabel && <span className="text-xs text-text-muted">{variantLabel}</span>}
+                              <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">Qty: {item.quantity}</span>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            {item.discountedPrice != null && (
+                              <p className="text-sm font-bold text-primary">{formatPrice(item.discountedPrice)}</p>
+                            )}
+                            {item.originalPrice != null && item.discountedPrice != null && item.originalPrice > item.discountedPrice && (
+                              <p className="text-xs text-text-muted line-through">{formatPrice(item.originalPrice)}</p>
+                            )}
+                          </div>
+                        </div>
+                      )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Pricing & Add to Cart */}
+            <div className="bg-surface-dark rounded-2xl p-6 border border-primary/10 space-y-5">
+              <div className="flex flex-col space-y-1">
+                <div className="flex items-center gap-4">
+                  <span className="text-3xl font-bold text-primary">{formatPrice(combo.price)}</span>
+                  {totalOriginalPrice > combo.price && (
+                    <span className="text-lg text-text-muted line-through">{formatPrice(totalOriginalPrice)}</span>
+                  )}
+                </div>
+                {savings > 0 && (
+                  <p className="text-sm text-green-400 font-bold flex items-center gap-1.5">
+                    <span className="material-icons-outlined text-sm">local_offer</span>
+                    Total value {formatPrice(totalOriginalPrice)} — You save {formatPrice(savings)}
+                  </p>
+                )}
+              </div>
+
+              <button
+                className="w-full bg-primary hover:bg-primary-hover text-black py-4 rounded-xl font-bold text-sm uppercase tracking-wider transition-all glow-gold cursor-pointer active:scale-[0.98]"
+                onClick={handleAddComboToCart}
+              >
+                Add Combo to Bag
+              </button>
+            </div>
 
             {combo.tags && combo.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 pt-2">
                 {combo.tags.map((tag, i) => (
-                  <span
-                    key={i}
-                    className="px-3 py-1 rounded-full bg-surface-elevated text-text-muted text-xs border border-primary/5"
-                  >
-                    #{tag}
-                  </span>
+                   <span key={i} className="px-3 py-1 rounded-full bg-surface-elevated text-text-muted text-xs border border-primary/5">
+                     #{tag}
+                   </span>
                 ))}
               </div>
             )}
           </div>
         </div>
-
-        {/* Included Items */}
-        {items.length > 0 && (
-          <section className="mt-16">
-            <div className="flex items-center gap-3 mb-8">
-              <span className="h-px w-12 bg-primary"></span>
-              <h2 className="font-display text-2xl font-bold">What's Included ({items.length} items)</h2>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {items
-                .sort((a, b) => a.sortOrder - b.sortOrder)
-                .map((item) => {
-                  const variant = item.productVariant
-                  const product = variant?.product
-                  const imageUrl =
-                    variant?.images?.[0]?.url || product?.frontImageUrl || ''
-                  const variantLabel =
-                    variant?.optionValues?.map((ov: any) => ov?.optionValue?.value || ov?.valueName || ov?.value).filter(Boolean).join(' / ') || ''
-
-                  return (
-                    <div
-                      key={item.id}
-                      className="bg-surface-dark rounded-xl border border-primary/10 overflow-hidden hover:border-primary/20 transition-colors cursor-pointer"
-                      onClick={() => product?.slug && navigate(`/products/${product.slug}`)}
-                    >
-                      <div className="flex gap-4 p-4">
-                        <div className="w-20 h-20 rounded-xl overflow-hidden bg-surface-elevated shrink-0 border border-primary/5">
-                          {imageUrl ? (
-                            <img src={imageUrl} alt={product?.name} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <span className="material-icons-outlined text-text-muted">image</span>
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-sm text-text-main-light truncate">
-                            {product?.name || 'Product'}
-                          </h4>
-                          {variantLabel && (
-                            <p className="text-xs text-text-muted mt-0.5">{variantLabel}</p>
-                          )}
-                          <p className="text-xs text-text-muted mt-1">Qty: {item.quantity}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            {item.discountedPrice != null && (
-                              <span className="text-sm font-bold text-primary">
-                                {formatPrice(item.discountedPrice)}
-                              </span>
-                            )}
-                            {item.originalPrice != null && item.discountedPrice != null && item.originalPrice > item.discountedPrice && (
-                              <span className="text-xs text-text-muted line-through">
-                                {formatPrice(item.originalPrice)}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
-            </div>
-          </section>
-        )}
       </div>
     </Layout>
   )

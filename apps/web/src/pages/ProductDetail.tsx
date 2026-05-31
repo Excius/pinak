@@ -123,22 +123,11 @@ const ProductDetail: React.FC = () => {
   }
 
   const handleAddToCart = () => {
-    if (!selectedVariant || !product) return
-    const label = selectedVariant.optionValues?.map((ov) => ov.valueName).join(' / ') || ''
-    addItem(
-      {
-        id: selectedVariant.id,
-        type: 'variant',
-        productName: product.name,
-        variantLabel: label,
-        imageUrl: selectedImage,
-        price: selectedVariant.price,
-        comparePrice: selectedVariant.compareAtPrice ?? undefined,
-        slug: product.slug,
-        productSlug: product.slug,
-      },
+    if (!selectedVariant) return
+    addItem({
+      productVariantId: selectedVariant.id,
       quantity
-    )
+    })
   }
 
   const handleAddToWishlist = async () => {

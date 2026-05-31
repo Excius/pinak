@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import {
   getAllComboKitsAdmin,
   softDeleteComboKitAdmin,
-  updateComboKitStatusAdmin
+  restoreComboKitAdmin
 } from '../../../api/admin/admin.combos.api'
 import type { AdminComboKit } from '../../../api/admin/admin.combos.api'
 
@@ -25,14 +25,7 @@ const ComboKitList = () => {
 
   useEffect(() => { fetchCombos() }, [])
 
-  const toggleStatus = async (combo: AdminComboKit) => {
-    try {
-      await updateComboKitStatusAdmin(combo.id, !combo.isActive)
-      setCombos(prev => prev.map(c => c.id === combo.id ? { ...c, isActive: !c.isActive } : c))
-    } catch (err) {
-      console.error('Failed to toggle status', err)
-    }
-  }
+
 
   const handleDelete = async (id: string) => {
     try {
@@ -41,6 +34,15 @@ const ComboKitList = () => {
       await fetchCombos()
     } catch (err) {
       console.error('Failed to delete combo kit', err)
+    }
+  }
+
+  const handleRestore = async (id: string) => {
+    try {
+      await restoreComboKitAdmin(id)
+      await fetchCombos()
+    } catch (err) {
+      console.error('Failed to restore combo kit', err)
     }
   }
 
@@ -69,13 +71,13 @@ const ComboKitList = () => {
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="flex-1 px-5 py-2.5 rounded-xl font-bold text-sm border border-primary/20 text-text-muted hover:bg-primary/5 transition-all"
+                className="flex-1 px-5 py-2.5 rounded-xl font-bold text-sm border border-primary/20 text-text-muted hover:bg-primary/5 transition-all cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleDelete(deleteConfirm)}
-                className="flex-1 bg-red-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-lg transition-all hover:bg-red-700"
+                className="flex-1 bg-red-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-lg transition-all hover:bg-red-700 cursor-pointer"
               >
                 Delete
               </button>
@@ -92,86 +94,104 @@ const ComboKitList = () => {
         </div>
         <Link
           to="/admin/combos/new"
-          className="bg-primary text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-[0_0_15px_rgba(212,175,55,0.4)] hover:shadow-[0_0_25px_rgba(212,175,55,0.6)] transition-all flex items-center gap-2"
+          className="bg-primary text-black px-5 py-2.5 rounded-xl font-bold text-sm shadow-[0_0_15px_rgba(212,175,55,0.4)] hover:shadow-[0_0_25px_rgba(212,175,55,0.6)] transition-all flex items-center gap-2"
         >
           <span className="material-icons-outlined text-[18px]">add</span>
           New Combo Kit
         </Link>
       </div>
 
-      {/* Grid */}
+      {/* Table */}
       {combos.length === 0 ? (
         <div className="bg-background-light rounded-2xl border border-primary/10 p-12 text-center">
-          <span className="material-icons-outlined text-4xl text-primary/20 mb-3">auto_awesome_mosaic</span>
+          <span className="material-icons-outlined text-4xl text-primary/20 mb-3 block">auto_awesome_mosaic</span>
           <p className="text-sm text-text-muted">No combo kits yet. Create one to get started.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {combos.map(combo => (
-            <div
-              key={combo.id}
-              className="bg-background-light rounded-2xl border border-primary/10 overflow-hidden hover:border-primary/30 transition-all group"
-            >
-              {/* Image Header */}
-              <div className="h-36 bg-background-main flex items-center justify-center relative overflow-hidden">
-                {combo.imageUrl ? (
-                  <img src={combo.imageUrl} className="w-full h-full object-cover" alt="" />
-                ) : (
-                  <span className="material-icons-outlined text-5xl text-primary/10">auto_awesome_mosaic</span>
-                )}
-                <div className="absolute top-3 right-3 flex gap-2">
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                    combo.isActive
-                      ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                      : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                  }`}>
-                    {combo.isActive ? 'Active' : 'Draft'}
-                  </span>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-primary/20 text-primary border border-primary/30">
-                    {combo.pricingStrategy.replace('_', ' ')}
-                  </span>
-                </div>
-              </div>
+        <div className="bg-background-light rounded-2xl border border-primary/10 overflow-hidden">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="border-b border-primary/10 text-xs text-text-muted uppercase tracking-widest">
+                <th className="px-6 py-4 font-bold">Combo Kit</th>
+                <th className="px-6 py-4 font-bold">Items</th>
+                <th className="px-6 py-4 font-bold">Price</th>
+                <th className="px-6 py-4 font-bold">Strategy</th>
+                <th className="px-6 py-4 font-bold text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {combos.map(combo => (
+                <tr key={combo.id} className="border-b border-primary/5 hover:bg-background-light/30 transition-colors">
+                  {/* Name + Image */}
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-lg bg-background-main border border-primary/10 overflow-hidden shrink-0 flex items-center justify-center">
+                        {combo.imageUrl ? (
+                          <img src={combo.imageUrl} alt={combo.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="material-icons-outlined text-text-muted">auto_awesome_mosaic</span>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-text-main-light truncate">{combo.name}</p>
+                        <p className="text-xs text-text-muted font-mono mt-0.5">{combo.slug}</p>
+                      </div>
+                    </div>
+                  </td>
 
-              {/* Body */}
-              <div className="p-5">
-                <h3 className="text-sm font-bold text-text-main-light mb-1 truncate">{combo.name}</h3>
-                <p className="text-xs text-text-muted mb-3 line-clamp-2">{combo.description || 'No description'}</p>
 
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <p className="text-lg font-bold text-primary">₹{combo.price}</p>
-                    <p className="text-[10px] text-text-muted">{combo.items?.length || 0} items in bundle</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[10px] text-text-muted">Views: {combo.viewCount}</p>
-                    <p className="text-[10px] text-text-muted">Sales: {combo.purchasedCount}</p>
-                  </div>
-                </div>
 
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => toggleStatus(combo)}
-                    className="flex-1 px-3 py-2 rounded-lg text-xs font-bold border border-primary/10 text-text-muted hover:bg-primary/5 transition-all"
-                  >
-                    {combo.isActive ? 'Deactivate' : 'Activate'}
-                  </button>
-                  <Link
-                    to={`/admin/combos/${combo.id}`}
-                    className="flex-1 px-3 py-2 rounded-lg text-xs font-bold text-center bg-primary/10 text-primary hover:bg-primary/20 transition-all"
-                  >
-                    Edit
-                  </Link>
-                  <button
-                    onClick={() => setDeleteConfirm(combo.id)}
-                    className="p-2 text-text-muted hover:text-red-500 transition-colors rounded-lg hover:bg-red-500/5"
-                  >
-                    <span className="material-icons-outlined text-lg">delete</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
+                  {/* Items Count */}
+                  <td className="px-6 py-4">
+                    <span className="text-sm text-text-main-light font-medium">{combo.items?.length || 0}</span>
+                    <span className="text-xs text-text-muted ml-1">items</span>
+                  </td>
+
+                  {/* Price */}
+                  <td className="px-6 py-4 text-sm font-medium text-text-main-light">
+                    ₹{combo.price?.toLocaleString('en-IN') || '0'}
+                  </td>
+
+                  {/* Strategy */}
+                  <td className="px-6 py-4">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-primary/10 text-primary border border-primary/20">
+                      {combo.pricingStrategy?.replace('_', ' ') || 'FIXED'}
+                    </span>
+                  </td>
+
+                  {/* Actions */}
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <Link
+                        to={`/admin/combos/${combo.id}`}
+                        className="p-2 text-text-muted hover:text-primary transition-colors rounded-lg hover:bg-primary/5"
+                        title="Edit"
+                      >
+                        <span className="material-icons-outlined text-lg">edit</span>
+                      </Link>
+                      {combo.isDeleted ? (
+                        <button
+                          onClick={() => handleRestore(combo.id)}
+                          className="p-2 text-text-muted hover:text-green-500 transition-colors rounded-lg hover:bg-green-500/5 cursor-pointer"
+                          title="Restore"
+                        >
+                          <span className="material-icons-outlined text-lg">restore</span>
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => setDeleteConfirm(combo.id)}
+                          className="p-2 text-text-muted hover:text-red-500 transition-colors rounded-lg hover:bg-red-500/5 cursor-pointer"
+                          title="Delete"
+                        >
+                          <span className="material-icons-outlined text-lg">delete</span>
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

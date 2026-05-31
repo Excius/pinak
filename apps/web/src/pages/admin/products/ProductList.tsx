@@ -100,7 +100,7 @@ const AdminProductList = () => {
                 <th className="px-6 py-4 font-bold">Product</th>
                 <th className="px-6 py-4 font-bold">Status</th>
                 <th className="px-6 py-4 font-bold">Visibility</th>
-                <th className="px-6 py-4 font-bold">Base Price</th>
+                <th className="px-6 py-4 font-bold">Starting From</th>
                 <th className="px-6 py-4 font-bold text-right">Actions</th>
               </tr>
             </thead>
@@ -131,7 +131,11 @@ const AdminProductList = () => {
                         </div>
                         <div className="min-w-0">
                           <p className="text-sm font-bold text-text-main-light truncate">{product.name}</p>
-                          <p className="text-xs text-text-muted font-mono mt-0.5">{product.sku || 'NO SKU'}</p>
+                          <p className="text-xs text-text-muted font-mono mt-0.5">
+                            {product.variants && product.variants.length > 0
+                              ? product.variants.slice(0, 3).map((v: any) => v.sku).join(', ') + (product.variants.length > 3 ? ' ...' : '')
+                              : 'NO SKU'}
+                          </p>
                         </div>
                       </div>
                     </td>
@@ -161,7 +165,9 @@ const AdminProductList = () => {
                       </button>
                     </td>
                     <td className="px-6 py-4 text-sm font-medium text-text-main-light">
-                      ${typeof product.basePrice === 'number' ? product.basePrice.toFixed(2) : '--'}
+                      {product.variants && product.variants.length > 0
+                        ? `₹${Math.min(...product.variants.map((v: any) => v.price ?? Infinity)).toLocaleString('en-IN')}`
+                        : '--'}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">

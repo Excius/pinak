@@ -129,3 +129,19 @@ export const addProductImageAdmin = async (variantId: string, formData: FormData
 export const deleteProductImageAdmin = async (imageId: string) => {
   await axiosInstance.delete(`/products/admin/images/${imageId}`)
 }
+
+// ── Related Products ───────────────────────────────────────────────────
+
+export const getRelatedProductsAdmin = async (productId: string) => {
+  const { data: resp } = await axiosInstance.get(`/products/${productId}/related`)
+  return resp?.data || []
+}
+
+export const addRelatedProductAdmin = async (productId: string, relatedProductId: string, sortOrder?: number) => {
+  const { data: resp } = await axiosInstance.post(`/products/admin/${productId}/related`, { relatedProductId, sortOrder })
+  return resp?.data
+}
+
+export const removeRelatedProductAdmin = async (productId: string, relatedProductId: string) => {
+  await axiosInstance.delete(`/products/admin/${productId}/related/${relatedProductId}`)
+}

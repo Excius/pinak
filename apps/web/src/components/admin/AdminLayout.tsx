@@ -12,6 +12,7 @@ const AdminLayout = () => {
     { label: 'Categories', path: '/admin/categories', icon: 'category' },
     { label: 'Brands', path: '/admin/brands', icon: 'branding_watermark' },
     { label: 'Featured', path: '/admin/featured', icon: 'star' },
+    { label: 'Orders', path: '/admin/orders', icon: 'receipt_long' },
     { label: 'Settings', path: '/admin/settings', icon: 'settings' },
   ]
 

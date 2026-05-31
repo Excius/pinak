@@ -16,6 +16,11 @@ export interface ComboKitItem {
     price: number
     stock: number
     imageUrl: string | null
+    product?: {
+      id: string
+      name: string
+      frontImageUrl: string | null
+    }
   } | null
 }
 
@@ -37,6 +42,10 @@ export interface AdminComboKit {
   isDeleted: boolean
   sortOrder: number
   items: ComboKitItem[]
+  metaTitle?: string | null
+  metaDescription?: string | null
+  metaKeywords?: string | null
+  seoKeyword?: string | null
   createdAt: string
   updatedAt: string
 }
@@ -70,9 +79,36 @@ export const softDeleteComboKitAdmin = async (id: string) => {
   await axiosInstance.patch(`/combo-kits/${id}/soft-delete`)
 }
 
+export const restoreComboKitAdmin = async (id: string) => {
+  await axiosInstance.patch(`/combo-kits/${id}/restore`)
+}
+
 export const updateComboKitStatusAdmin = async (id: string, isActive: boolean) => {
   const { data: resp } = await axiosInstance.patch(`/combo-kits/${id}/status`, { isActive })
   return resp?.data as AdminComboKit
+}
+
+// ── Combo Kit Items CRUD ───────────────────────────────────────────────
+
+export const addComboKitItemAdmin = async (
+  comboKitId: string,
+  payload: { productVariantId: string; quantity?: number; isRequired?: boolean }
+): Promise<ComboKitItem> => {
+  const { data: resp } = await axiosInstance.post(`/combo-kits/${comboKitId}/items`, payload)
+  return resp?.data as ComboKitItem
+}
+
+export const updateComboKitItemAdmin = async (
+  comboKitId: string,
+  itemId: string,
+  payload: { quantity?: number; isRequired?: boolean; sortOrder?: number }
+): Promise<ComboKitItem> => {
+  const { data: resp } = await axiosInstance.put(`/combo-kits/${comboKitId}/items/${itemId}`, payload)
+  return resp?.data as ComboKitItem
+}
+
+export const removeComboKitItemAdmin = async (comboKitId: string, itemId: string) => {
+  await axiosInstance.delete(`/combo-kits/${comboKitId}/items/${itemId}`)
 }
 
 // ── Featured Sections ──────────────────────────────────────────────────

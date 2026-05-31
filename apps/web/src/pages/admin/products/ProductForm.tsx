@@ -6,7 +6,11 @@ import {
   updateProductAdmin,
   updateProductVariantAdmin,
   addProductImageAdmin,
-  setProductCategoriesAdmin
+  setProductCategoriesAdmin,
+  getRelatedProductsAdmin,
+  addRelatedProductAdmin,
+  removeRelatedProductAdmin,
+  getAllProductsAdmin
 } from '../../../api/admin/admin.products.api'
 import type { AdminProduct, AdminProductVariant } from '../../../api/admin/admin.products.api'
 import { getAllCategoriesAdmin, getAllBrandsAdmin } from '../../../api/admin/admin.catalog.api'
@@ -39,6 +43,13 @@ const ProductForm = () => {
     variants: []
   })
 
+  // Related products state
+  const [relatedProducts, setRelatedProducts] = useState<any[]>([])
+  const [showAddRelated, setShowAddRelated] = useState(false)
+  const [relatedSearchQuery, setRelatedSearchQuery] = useState('')
+  const [relatedSearchResults, setRelatedSearchResults] = useState<AdminProduct[]>([])
+  const [isSearchingRelated, setIsSearchingRelated] = useState(false)
+
   // ── Data Fetching ──────────────────────────────────────────────────
 
   useEffect(() => {
@@ -51,6 +62,9 @@ const ProductForm = () => {
         if (isEdit && id) {
           const product = await getProductByIdAdmin(id)
           setFormData(product)
+          
+          const related = await getRelatedProductsAdmin(id)
+          setRelatedProducts(related)
         }
       } catch (err) {
         console.error('Failed to fetch data', err)
@@ -95,7 +109,7 @@ const ProductForm = () => {
       // Categories are handled via a separate junction endpoint
       // The API response may have categories as { id, name } or { categoryId, category: { id, name } }
       const categoryIds = (formData.categories || [])
-        .map((c: any) => c.id || c.categoryId)
+        .map((c: any) => getCatId(c))
         .filter((id: unknown): id is string => typeof id === 'string' && id.length > 0)
 
       if (isEdit && id) {
@@ -175,14 +189,65 @@ const ProductForm = () => {
     }
   }
 
+  // Helper: extract category ID from either API shape { categoryId, category } or flat { id }
+  const getCatId = (c: any): string => c.categoryId || c.category?.id || c.id || ''
+
   const toggleCategory = (cat: AdminCategory) => {
-    const exists = formData.categories?.some(c => c.id === cat.id)
+    const exists = formData.categories?.some(c => getCatId(c) === cat.id)
     setFormData(prev => ({
       ...prev,
       categories: exists
-        ? prev.categories?.filter(c => c.id !== cat.id)
+        ? prev.categories?.filter(c => getCatId(c) !== cat.id)
         : [...(prev.categories || []), { id: cat.id, name: cat.name, slug: cat.slug }]
     }))
+  }
+
+  // ── Related Products Handlers ────────────────────────────────────────
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (relatedSearchQuery.trim().length > 1) {
+        setIsSearchingRelated(true)
+        try {
+          const res = await getAllProductsAdmin({ search: relatedSearchQuery, limit: 10 })
+          setRelatedSearchResults(res.items.filter(p => p.id !== id)) // exclude self
+        } catch (err) {
+          console.error('Failed to search related products', err)
+        } finally {
+          setIsSearchingRelated(false)
+        }
+      } else {
+        setRelatedSearchResults([])
+      }
+    }, 500)
+
+    return () => clearTimeout(delayDebounceFn)
+  }, [relatedSearchQuery, id])
+
+  const handleAddRelatedProduct = async (relatedProductId: string) => {
+    if (!id) return
+    try {
+      await addRelatedProductAdmin(id, relatedProductId, 0)
+      const updatedRelated = await getRelatedProductsAdmin(id)
+      setRelatedProducts(updatedRelated)
+      setRelatedSearchQuery('')
+      setShowAddRelated(false)
+    } catch (err) {
+      console.error('Failed to add related product', err)
+      setSaveMessage({ type: 'error', text: 'Failed to add related product.' })
+    }
+  }
+
+  const handleRemoveRelatedProduct = async (relatedProductId: string) => {
+    if (!id) return
+    if (!window.confirm('Are you sure you want to remove this related product?')) return
+    try {
+      await removeRelatedProductAdmin(id, relatedProductId)
+      setRelatedProducts(prev => prev.filter(rp => rp.relatedProductId !== relatedProductId))
+    } catch (err) {
+      console.error('Failed to remove related product', err)
+      setSaveMessage({ type: 'error', text: 'Failed to remove related product.' })
+    }
   }
 
   // ── Loading State ──────────────────────────────────────────────────
@@ -223,7 +288,7 @@ const ProductForm = () => {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-text-muted uppercase">Price ($)</label>
+                  <label className="text-xs font-bold text-text-muted uppercase">Price (₹)</label>
                   <input
                     type="number"
                     value={editingVariant.price}
@@ -290,11 +355,10 @@ const ProductForm = () => {
 
       {/* ── Save Feedback Banner ────────────────────────────────────── */}
       {saveMessage && (
-        <div className={`p-4 rounded-xl border text-sm font-medium flex items-center gap-2 ${
-          saveMessage.type === 'success'
+        <div className={`p-4 rounded-xl border text-sm font-medium flex items-center gap-2 ${saveMessage.type === 'success'
             ? 'bg-green-500/10 border-green-500/20 text-green-400'
             : 'bg-red-500/10 border-red-500/20 text-red-400'
-        }`}>
+          }`}>
           <span className="material-icons-outlined text-lg">
             {saveMessage.type === 'success' ? 'check_circle' : 'error'}
           </span>
@@ -390,11 +454,10 @@ const ProductForm = () => {
                         {brands.map(b => (
                           <div
                             key={b.id}
-                            className={`px-4 py-2.5 cursor-pointer text-sm transition-colors ${
-                              formData.brandId === b.id
+                            className={`px-4 py-2.5 cursor-pointer text-sm transition-colors ${formData.brandId === b.id
                                 ? 'text-primary font-bold bg-primary/5'
                                 : 'text-text-main-light hover:bg-primary/10'
-                            }`}
+                              }`}
                             onClick={() => { setFormData(prev => ({ ...prev, brandId: b.id })); setShowBrandDropdown(false) }}
                           >
                             {b.name}
@@ -451,7 +514,7 @@ const ProductForm = () => {
                     </div>
                     <div className="flex items-center gap-6">
                       <div className="text-right">
-                        <p className="text-sm font-bold text-primary">${(v.price ?? 0).toFixed(0)}</p>
+                        <p className="text-sm font-bold text-primary">₹{(v.price ?? 0).toFixed(0)}</p>
                         <p className="text-[10px] text-text-muted">
                           Stock: <span className={v.stock < 10 ? 'text-red-400' : 'text-green-400'}>{v.stock}</span>
                         </p>
@@ -465,6 +528,103 @@ const ProductForm = () => {
                     </div>
                   </div>
                 ))}
+              </div>
+            </section>
+          )}
+
+          {/* Related Products (edit mode only) */}
+          {isEdit && (
+            <section className="bg-background-light rounded-2xl border border-primary/10 p-6 space-y-4">
+              <div className="flex justify-between items-center mb-2">
+                <h2 className="text-sm font-bold tracking-widest text-primary/70 uppercase">Related Products</h2>
+                <button
+                  onClick={() => setShowAddRelated(!showAddRelated)}
+                  className="px-3 py-1.5 bg-primary/10 text-primary text-xs font-bold rounded-lg hover:bg-primary/20 transition-colors"
+                >
+                  {showAddRelated ? 'Cancel' : '+ Add Related'}
+                </button>
+              </div>
+
+              {showAddRelated && (
+                <div className="bg-background-main border border-primary/20 p-4 rounded-xl space-y-3 mb-4">
+                  <input
+                    type="text"
+                    placeholder="Search products by name..."
+                    value={relatedSearchQuery}
+                    onChange={(e) => setRelatedSearchQuery(e.target.value)}
+                    className="w-full bg-background-light border border-primary/20 rounded-xl px-4 py-2 text-text-main-light focus:border-primary/50 outline-none text-sm transition-all"
+                  />
+                  {isSearchingRelated && <p className="text-xs text-text-muted">Searching...</p>}
+                  {!isSearchingRelated && relatedSearchResults.length > 0 && (
+                    <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+                      {relatedSearchResults.map(product => {
+                        const isAlreadyRelated = relatedProducts.some(rp => rp.relatedProductId === product.id)
+                        return (
+                          <div key={product.id} className="flex justify-between items-center bg-background-light p-2 rounded-lg border border-primary/10">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded bg-background-main overflow-hidden">
+                                {product.frontImageUrl ? (
+                                  <img src={product.frontImageUrl} alt={product.name} className="w-full h-full object-cover" />
+                                ) : (
+                                  <span className="material-icons-outlined text-text-muted text-xs flex items-center justify-center w-full h-full">image</span>
+                                )}
+                              </div>
+                              <span className="text-sm text-text-main-light">{product.name}</span>
+                            </div>
+                            <button
+                              disabled={isAlreadyRelated}
+                              onClick={() => handleAddRelatedProduct(product.id)}
+                              className={`px-3 py-1 rounded text-xs font-bold ${
+                                isAlreadyRelated 
+                                ? 'bg-background-main text-text-muted cursor-not-allowed' 
+                                : 'bg-primary text-white hover:bg-primary/90'
+                              }`}
+                            >
+                              {isAlreadyRelated ? 'Added' : 'Add'}
+                            </button>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                  {!isSearchingRelated && relatedSearchQuery.length > 1 && relatedSearchResults.length === 0 && (
+                    <p className="text-xs text-text-muted">No products found.</p>
+                  )}
+                </div>
+              )}
+
+              <div className="space-y-3">
+                {relatedProducts.length > 0 ? (
+                  relatedProducts.map(rp => (
+                    <div
+                      key={rp.relatedProductId}
+                      className="p-3 bg-background-main rounded-xl border border-primary/5 flex items-center justify-between group hover:border-primary/30 transition-all"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-background-light flex items-center justify-center border border-primary/10 overflow-hidden">
+                          {rp.relatedProduct?.frontImageUrl ? (
+                            <img src={rp.relatedProduct.frontImageUrl} alt={rp.relatedProduct.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="material-icons-outlined text-text-muted text-sm">image</span>
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-text-main-light line-clamp-1">{rp.relatedProduct?.name}</p>
+                          <p className="text-xs text-text-muted">Status: {rp.relatedProduct?.isActive ? 'Active' : 'Inactive'}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleRemoveRelatedProduct(rp.relatedProductId)}
+                        className="p-2 text-red-400/70 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors cursor-pointer"
+                        title="Remove related product"
+                      >
+                        <span className="material-icons-outlined text-lg">delete_outline</span>
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-text-muted italic text-center py-4">No related products assigned.</p>
+                )}
               </div>
             </section>
           )}
@@ -499,7 +659,7 @@ const ProductForm = () => {
                 <label key={cat.id} className="flex items-center gap-2 text-sm text-text-main-light cursor-pointer hover:text-primary transition-colors">
                   <input
                     type="checkbox"
-                    checked={formData.categories?.some(c => c.id === cat.id) || false}
+                    checked={formData.categories?.some(c => getCatId(c) === cat.id) || false}
                     onChange={() => toggleCategory(cat)}
                     className="rounded border-primary/20 bg-background-main text-primary accent-amber-500"
                   />

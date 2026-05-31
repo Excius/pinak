@@ -40,17 +40,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (!variantId || !price) return
+    if (!variantId) return
     addItem({
-      id: variantId,
-      type: 'variant',
-      productName: name,
-      variantLabel: variantLabel || '',
-      imageUrl: imageUrl || '',
-      price: price,
-      comparePrice: comparePrice,
-      slug: slug,
-      productSlug: slug,
+      productVariantId: variantId,
+      quantity: 1
     })
   }
 

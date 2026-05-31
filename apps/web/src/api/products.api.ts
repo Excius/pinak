@@ -146,12 +146,18 @@ export const getRelatedProducts = async (productId: string): Promise<Product[]> 
     })
     const result = resp?.data
     if (!Array.isArray(result)) return []
+
+    // The backend returns an array of RelatedProduct objects (junction table)
+    // with partial 'relatedProduct' objects. We need to fetch the full product details
+    // to render the ProductCard correctly (with prices, variants, categories).
+    const partialProducts = result.map((p: any) => p.relatedProduct).filter(Boolean)
     
-    // The backend may return raw Prisma objects for related products, so map categories
-    return result.map(p => ({
-      ...p,
-      categories: p.categories?.map((c: any) => c.category || c) || []
-    }))
+    if (partialProducts.length === 0) return []
+    
+    const fullProductsPromises = partialProducts.map((p: any) => getProductById(p.id))
+    const fullProducts = await Promise.all(fullProductsPromises)
+    
+    return fullProducts.filter(Boolean) as Product[]
   } catch (error) {
     return []
   }

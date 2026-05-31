@@ -16,6 +16,7 @@ import ComboKits from './pages/ComboKits'
 import ComboKitDetail from './pages/ComboKitDetail'
 import Wishlist from './pages/Wishlist'
 import SearchResults from './pages/SearchResults'
+import OrderConfirmation from './pages/OrderConfirmation'
 import AdminLayout from './components/admin/AdminLayout'
 import AdminDashboard from './pages/admin/Dashboard'
 import AdminProductList from './pages/admin/products/ProductList'
@@ -25,6 +26,7 @@ import AdminBrandList from './pages/admin/brands/BrandList'
 import AdminComboKitList from './pages/admin/combos/ComboKitList'
 import AdminComboKitForm from './pages/admin/combos/ComboKitForm'
 import AdminFeaturedSections from './pages/admin/featured/FeaturedSectionList'
+import AdminOrderList from './pages/admin/orders/OrderList'
 import AdminSettings from './pages/admin/settings/SettingsPage'
 
 // Protected route wrapper
@@ -99,6 +101,7 @@ function AppRoutes() {
       <Route path="/combo-kits/:slug" element={<ProtectedRoute><ComboKitDetail /></ProtectedRoute>} />
       <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
       <Route path="/search" element={<ProtectedRoute><SearchResults /></ProtectedRoute>} />
+      <Route path="/order-confirmation/:orderId" element={<ProtectedRoute><OrderConfirmation /></ProtectedRoute>} />
 
       {/* Admin routes */}
       <Route path="/admin" element={<AdminProtectedRoute><AdminLayout /></AdminProtectedRoute>}>
@@ -112,6 +115,7 @@ function AppRoutes() {
         <Route path="combos/new" element={<AdminComboKitForm />} />
         <Route path="combos/:id" element={<AdminComboKitForm />} />
         <Route path="featured" element={<AdminFeaturedSections />} />
+        <Route path="orders" element={<AdminOrderList />} />
         <Route path="settings" element={<AdminSettings />} />
       </Route>
 
