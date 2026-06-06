@@ -52,15 +52,8 @@ const Wishlist: React.FC = () => {
     const variant = item.productVariant
     if (!variant) return
     addItem({
-      id: variant.id,
-      type: 'variant',
-      productName: variant.product?.name || 'Product',
-      variantLabel: variant.optionValues?.map((ov) => ov.optionValue.value).join(' / ') || '',
-      imageUrl: variant.images?.find((img) => img.isPrimary)?.url || variant.images?.[0]?.url || variant.product?.frontImageUrl || '',
-      price: variant.price,
-      comparePrice: variant.comparePrice ?? undefined,
-      slug: variant.product?.slug || '',
-      productSlug: variant.product?.slug || '',
+      productVariantId: variant.id,
+      quantity: 1
     })
     handleRemove(item.id)
   }

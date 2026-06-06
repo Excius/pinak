@@ -93,7 +93,7 @@ export const getComboKitItems = async (id: string): Promise<ComboKitItem[]> => {
       const variantToProductMap = new Map<string, any>()
       allProducts.forEach(product => {
         if (product.variants) {
-          product.variants.forEach(v => {
+          product.variants.forEach((v: any) => {
             variantToProductMap.set(v.id, product)
           })
         }
