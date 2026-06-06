@@ -124,7 +124,7 @@ const FeaturedSectionList = () => {
                 <label className="text-xs font-bold text-text-muted uppercase">Type</label>
                 <div className="grid grid-cols-3 gap-2">
                   {sectionTypes.map(t => {
-                    const meta = typeLabel[t]
+                    const meta = typeLabel[t]!
                     return (
                       <button
                         key={t}
@@ -214,7 +214,7 @@ const FeaturedSectionList = () => {
           {sections
             .sort((a, b) => a.priority - b.priority)
             .map(section => {
-              const meta = typeLabel[section.type] || typeLabel.EXPERT_PICKS
+              const meta = typeLabel[section.type] ?? typeLabel['EXPERT_PICKS']!
               return (
                 <div
                   key={section.id}

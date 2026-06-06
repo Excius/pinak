@@ -69,7 +69,7 @@ const ComboKitDetail: React.FC = () => {
     if (combo?.imageUrl) {
       setSelectedImage(combo.imageUrl)
     } else if (allImages.length > 0) {
-      setSelectedImage(allImages[0])
+      setSelectedImage(allImages[0] ?? '')
     }
   }, [combo, items.length])
 

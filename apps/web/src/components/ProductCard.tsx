@@ -26,7 +26,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   badge,
   rating,
   variantId,
-  variantLabel,
+  variantLabel: _variantLabel,
 }) => {
   const navigate = useNavigate()
   const { addItem } = useCart()

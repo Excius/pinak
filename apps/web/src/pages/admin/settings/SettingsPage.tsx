@@ -251,8 +251,8 @@ const SettingsPage = () => {
             { key: 'name', label: 'Name' },
             { key: 'rate', label: 'Rate (%)', type: 'number' }
           ]}
-          onAdd={async (data) => { await createTaxClass({ name: data.name, rate: Number(data.rate) }); await fetchAll() }}
-          onEdit={async (id, data) => { await updateTaxClass(id, { name: data.name, rate: Number(data.rate) }); await fetchAll() }}
+          onAdd={async (data) => { await createTaxClass({ name: data.name ?? '', rate: Number(data.rate) }); await fetchAll() }}
+          onEdit={async (id, data) => { await updateTaxClass(id, { name: data.name ?? '', rate: Number(data.rate) }); await fetchAll() }}
           onDelete={async (id) => { await deleteTaxClass(id); await fetchAll() }}
         />
       )}
@@ -266,8 +266,8 @@ const SettingsPage = () => {
             { key: 'name', label: 'Name' },
             { key: 'unit', label: 'Unit (e.g. kg, g, lb)' }
           ]}
-          onAdd={async (data) => { await createWeightClass({ name: data.name, unit: data.unit }); await fetchAll() }}
-          onEdit={async (id, data) => { await updateWeightClass(id, { name: data.name, unit: data.unit }); await fetchAll() }}
+          onAdd={async (data) => { await createWeightClass({ name: data.name ?? '', unit: data.unit ?? '' }); await fetchAll() }}
+          onEdit={async (id, data) => { await updateWeightClass(id, { name: data.name ?? '', unit: data.unit ?? '' }); await fetchAll() }}
           onDelete={async (id) => { await deleteWeightClass(id); await fetchAll() }}
         />
       )}
@@ -281,8 +281,8 @@ const SettingsPage = () => {
             { key: 'name', label: 'Name' },
             { key: 'unit', label: 'Unit (e.g. cm, m, in)' }
           ]}
-          onAdd={async (data) => { await createLengthClass({ name: data.name, unit: data.unit }); await fetchAll() }}
-          onEdit={async (id, data) => { await updateLengthClass(id, { name: data.name, unit: data.unit }); await fetchAll() }}
+          onAdd={async (data) => { await createLengthClass({ name: data.name ?? '', unit: data.unit ?? '' }); await fetchAll() }}
+          onEdit={async (id, data) => { await updateLengthClass(id, { name: data.name ?? '', unit: data.unit ?? '' }); await fetchAll() }}
           onDelete={async (id) => { await deleteLengthClass(id); await fetchAll() }}
         />
       )}
