@@ -6,8 +6,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function HomeLayout() {
   return (
     <>
-      <SafeAreaView edges={["top", "left", "right"]}
-        className="bg-background">
+      <SafeAreaView
+        edges={["top", "left", "right"]}
+        className="bg-background"
+      >
         <BrandHeader />
       </SafeAreaView>
       <Stack

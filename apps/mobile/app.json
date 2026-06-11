@@ -28,7 +28,7 @@
           "data": [
             {
               "scheme": "https",
-              "host": "pinak.onrender.com",
+              "host": "temp.dpinak.com",
               "pathPrefix": "/"
             }
           ]

@@ -194,12 +194,12 @@ export default function ProfileLayout() {
         </View>
 
         {/* Logout Button */}
-        <View className="mt-8 mb-24">
+        <View className="mt-8 mb-24 pb-6">
           <Pressable
             onPress={handleLogout}
             className="bg-error/10 border border-error/30 py-4 rounded-xl items-center active:opacity-90"
           >
-            <Text className="text-error font-semibold text-base">Log Out</Text>
+            <Text className="text-error font-semibold text-base">Log out</Text>
           </Pressable>
         </View>
       </ScrollView>
