@@ -65,10 +65,13 @@ export class ProductController {
 
     // Increment view count asynchronously (non-blocking)
     this.productService.incrementViewCount(product.id).catch((e) => {
-      logger.warn("Failed to increment product viewCount", {
-        productId: product.id,
-        err: e,
-      });
+      logger.warn(
+        {
+          productId: product.id,
+          err: e,
+        },
+        "Failed to increment product viewCount",
+      );
     });
 
     const publicData = toPublicProduct(product);

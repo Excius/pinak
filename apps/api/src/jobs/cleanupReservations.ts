@@ -12,11 +12,15 @@ export const startCleanupReservationsJob = () => {
       const releasedCount = await service.cleanupExpiredReservations();
       if (releasedCount > 0) {
         logger.info(
-          `Released expired inventory reservations. Count: ${releasedCount}`
+          { releasedCount },
+          `Released expired inventory reservations. Count: ${releasedCount}`,
         );
       }
     } catch (error) {
-      logger.error(`Failed to cleanup expired reservations: ${error}`);
+      logger.error(
+        { err: error },
+        `Failed to cleanup expired reservations: ${error}`,
+      );
     }
   }, FIVE_MINUTES_MS);
 };

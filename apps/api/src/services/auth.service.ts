@@ -4,7 +4,7 @@ import JWTService from "../lib/jwt.js";
 import { normalizeEmail } from "../lib/email.js";
 import { SessionRespository } from "../repositories/session.repository.js";
 import argon2 from "argon2";
-import loggerInstance from "../lib/logger.js";
+import logger from "../lib/logger.js";
 import { UserRoles } from "@repo/types";
 import { UserRespository } from "../repositories/user.repository.js";
 import {
@@ -29,7 +29,7 @@ export class AuthService {
     private user: UserRespository,
     private magicLink: MagicLinkService,
     private authProvider: AuthProviderRepository,
-  ) { }
+  ) {}
 
   async generateTokens(
     userId: string,
@@ -75,7 +75,8 @@ export class AuthService {
 
       // If user has OAuth providers, prevent password registration
       if (existingUser.authProviders && existingUser.authProviders.length > 0) {
-        loggerInstance.warn(
+        logger.warn(
+          { email },
           `Attempt to register with existing OAuth account for email: ${email}`,
         );
         delayGenerator(delay);
@@ -86,13 +87,15 @@ export class AuthService {
 
       // Existing password-only user
       if (existingUser.username === username) {
-        loggerInstance.warn(
+        logger.warn(
+          { username },
           `Attempt to register with existing username: ${username}`,
         );
         delayGenerator(delay);
         throw new UnauthorizedError("Username already in use");
       } else if (existingUser.email === normalizedEmail) {
-        loggerInstance.warn(
+        logger.warn(
+          { email: normalizedEmail },
           `Attempt to register with existing email: ${normalizedEmail}`,
         );
         delayGenerator(delay);
@@ -106,7 +109,7 @@ export class AuthService {
     const newUser = await this.user.create(email, passwordHash, username);
 
     if (!newUser) {
-      loggerInstance.error("Error creating new user");
+      logger.error("Error creating new user");
       throw new InternalServerError();
     }
 
@@ -119,7 +122,7 @@ export class AuthService {
       to: newUser.email,
       verificationLink,
     }).catch((err) => {
-      loggerInstance.error("Failed to send welcome email:", err);
+      logger.error({ err }, "Failed to send welcome email:");
     });
 
     return;
@@ -146,7 +149,8 @@ export class AuthService {
     }
 
     if (dbUser.isEmailVerified === false) {
-      loggerInstance.warn(
+      logger.warn(
+        { userId: dbUser.id },
         `Unverified email login attempt for user ID: ${dbUser.id}`,
       );
       throw new UnauthorizedError("Email not verified");
@@ -205,7 +209,8 @@ export class AuthService {
           where: { userId: payload?.sub },
           data: { isRevoked: true },
         });
-        loggerInstance.warn(
+        logger.warn(
+          { userId: payload?.sub },
           `Refresh token reuse detected for user ${payload?.sub}`,
         );
         throw new UnauthorizedError("Token reuse detected");
@@ -217,7 +222,8 @@ export class AuthService {
           data: { isRevoked: true },
         });
 
-        loggerInstance.warn(
+        logger.warn(
+          { userId: payload!.sub },
           `Refresh token hash mismatch for user ${payload!.sub}`,
         );
         throw new UnauthorizedError("Invalid refresh token");
@@ -337,7 +343,8 @@ export class AuthService {
 
     // If user is OAuth-only (no password), skip password reset
     if (!dbUser.hashPassword) {
-      loggerInstance.info(
+      logger.info(
+        { userId: dbUser.id },
         `Password reset attempted for OAuth-only user: ${dbUser.id}`,
       );
       delayGenerator(500 + Math.random() * 500);
@@ -351,7 +358,7 @@ export class AuthService {
       dbUser.username,
       resetLink,
     ).catch((error) => {
-      loggerInstance.warn("Failed to send welcome email:", error);
+      logger.warn({ err: error }, "Failed to send welcome email:");
     });
 
     return;
@@ -371,7 +378,10 @@ export class AuthService {
     return;
   }
 
-  async googleOauthCallback(code: string, platform: string = "WEB"): Promise<{
+  async googleOauthCallback(
+    code: string,
+    platform: string = "WEB",
+  ): Promise<{
     accessToken: string;
     refreshToken: string;
     user: {
@@ -412,7 +422,7 @@ export class AuthService {
         },
       );
     } catch (error) {
-      loggerInstance.error("Error fetching Google OAuth token:", error);
+      logger.error({ err: error }, "Error fetching Google OAuth token:");
       throw new UnauthorizedError("Failed to authenticate with Google");
     }
 
@@ -436,7 +446,7 @@ export class AuthService {
     const providerId = payload.sub;
     const email = normalizeEmail(payload.email ?? "");
     if (!email) {
-      loggerInstance.warn("Google ID token missing email");
+      logger.warn("Google ID token missing email");
       throw new UnauthorizedError("Google account does not provide an email");
     }
     const name = payload.name ?? null;
@@ -554,7 +564,7 @@ export class AuthService {
     const user = await this.user.getUserByUsername(username);
 
     if (user) {
-      loggerInstance.warn("Username already exists.");
+      logger.warn({ username }, "Username already exists.");
       throw new BadRequestError("Username is not available.");
     }
 

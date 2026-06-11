@@ -151,24 +151,30 @@ class Server {
 
     // Handle uncaught exceptions
     process.on("uncaughtException", (err) => {
-      logger.fatal("Uncaught Exception:", err);
+      logger.fatal({ err }, "Uncaught Exception:");
       this.forceShutdown(1);
     });
 
     process.on("unhandledRejection", (reason, promise) => {
-      logger.fatal("Unhandled Rejection", { promise, reason });
+      logger.fatal({ promise, reason }, "Unhandled Rejection");
       this.forceShutdown(1);
     });
   }
 
   private gracefulShutdown(signal: string): void {
     if (this.isShuttingDown) {
-      logger.warn(`Shutdown already in progress, ignoring ${signal}`);
+      logger.warn(
+        { signal },
+        `Shutdown already in progress, ignoring ${signal}`,
+      );
       return;
     }
 
     this.isShuttingDown = true;
-    logger.info(`Received ${signal}. Starting graceful shutdown...`);
+    logger.info(
+      { signal },
+      `Received ${signal}. Starting graceful shutdown...`,
+    );
 
     if (!this.server) {
       logger.warn("Server not initialized, exiting immediately");
@@ -179,7 +185,7 @@ class Server {
     // Stop accepting new connections
     this.server.close((err?: Error) => {
       if (err) {
-        logger.error("Error during server close:", err);
+        logger.error({ err }, "Error during server close:");
         this.forceShutdown(1);
         return;
       }
@@ -193,7 +199,7 @@ class Server {
           process.exit(0);
         })
         .catch((cleanupError) => {
-          logger.error("Error during cleanup:", cleanupError);
+          logger.error({ err: cleanupError }, "Error during cleanup:");
           this.forceShutdown(1);
         });
     });
@@ -220,7 +226,7 @@ class Server {
       await prisma.$disconnect();
       logger.info("Database connection closed");
     } catch (error) {
-      logger.error("Error closing database connection:", error);
+      logger.error({ err: error }, "Error closing database connection:");
     }
 
     // Example cleanup operations for other services:
@@ -238,7 +244,7 @@ class Server {
   }
 
   private forceShutdown(code: number): void {
-    logger.warn(`Force shutdown with exit code: ${code}`);
+    logger.warn({ code }, `Force shutdown with exit code: ${code}`);
     process.exit(code);
   }
 
@@ -251,7 +257,7 @@ class Server {
     });
 
     this.server.on("error", (err: Error) => {
-      logger.fatal("Server failed to start:", err);
+      logger.fatal({ err }, "Server failed to start:");
       process.exit(1);
     });
   }

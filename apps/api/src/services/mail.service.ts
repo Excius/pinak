@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer";
 import type { SendMailOptions, Transporter } from "nodemailer";
 import appConfig from "../lib/config.js";
-import loggerInstance from "../lib/logger.js";
+import logger from "../lib/logger.js";
 import { VerificationEmailInput } from "../types/mail.types.js";
 import { verificationTemplate } from "../templates/mail.templates.js";
 
@@ -32,11 +32,15 @@ export class MailService {
   private static async send(options: SendMailOptions) {
     try {
       await mailer.sendMail(options);
-      loggerInstance.info(
+      logger.info(
+        { to: options.to, subject: options.subject },
         `Email sent to: ${options.to} with subject: ${options.subject}`,
       );
     } catch (error) {
-      loggerInstance.error(`Failed to send email to: ${options.to}`, error);
+      logger.error(
+        { err: error, to: options.to },
+        `Failed to send email to: ${options.to}`,
+      );
     }
   }
 
@@ -54,6 +58,7 @@ export class MailService {
     });
   }
 
+  // TODO: need to use template here
   static async sendPasswordResetEmail(
     to: string,
     name: string,
