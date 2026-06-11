@@ -1,5 +1,5 @@
 import argon2 from "argon2";
-import loggerInstance from "./logger.js";
+import logger from "./logger.js";
 
 /**
  * Password hasher service using Argon2id algorithm.
@@ -14,7 +14,7 @@ export class Passwordhasher {
     try {
       return await argon2.hash(password, { type: argon2.argon2id });
     } catch (e) {
-      loggerInstance.error("Error hashing password:", e);
+      logger.error({ err: e }, "Error hashing password:");
       throw e;
     }
   }
@@ -33,7 +33,7 @@ export class Passwordhasher {
     try {
       return await argon2.verify(hashedPassword, password);
     } catch (e) {
-      loggerInstance.error("Error verifying password:", e);
+      logger.error({ err: e }, "Error verifying password:");
       throw e;
     }
   }

@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { ResponseHandler } from "../lib/response.js";
 import JWTService from "../lib/jwt.js";
-import loggerInstance from "../lib/logger.js";
+import logger from "../lib/logger.js";
 import { UserRoles } from "@repo/types";
 
 export class AuthMiddleware {
@@ -25,7 +25,7 @@ export class AuthMiddleware {
       };
       next();
     } catch (error) {
-      loggerInstance.error("Authentication error:", error);
+      logger.error({ err: error }, "Authentication error:");
       return ResponseHandler.unauthorized(res, "Invalid token");
     }
   };

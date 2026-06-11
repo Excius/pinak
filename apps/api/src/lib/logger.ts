@@ -1,56 +1,36 @@
 import pino from "pino";
 import config from "./config.js";
+import { createRequire } from "module";
 
 const isProduction = config.NODE_ENV === "production";
 
-const logger = pino({
-  level: config.LOG_LEVEL,
-  ...(isProduction ? {} : { transport: { target: "pino-pretty" } }),
-});
-
-class Logger {
-  private logger = logger;
-
-  private formatMessage(message: string, ...args: any[]): string {
-    if (args.length === 0) return message;
-    const formattedArgs = args
-      .map((arg) =>
-        typeof arg === "string"
-          ? arg
-          : typeof arg === "object"
-            ? JSON.stringify(arg)
-            : String(arg),
-      )
-      .join(" ");
-    return `${message} ${formattedArgs}`;
-  }
-
-  info(message: string, ...args: any[]) {
-    this.logger.info(this.formatMessage(message, ...args));
-  }
-
-  error(message: string, ...args: any[]) {
-    this.logger.error(this.formatMessage(message, ...args));
-  }
-
-  warn(message: string, ...args: any[]) {
-    this.logger.warn(this.formatMessage(message, ...args));
-  }
-
-  debug(message: string, ...args: any[]) {
-    this.logger.debug(this.formatMessage(message, ...args));
-  }
-
-  trace(message: string, ...args: any[]) {
-    this.logger.trace(this.formatMessage(message, ...args));
-  }
-
-  fatal(message: string, ...args: any[]) {
-    this.logger.fatal(this.formatMessage(message, ...args));
+// Only enable human-friendly `pino-pretty` when it's actually installed.
+// Production images typically prune devDependencies (where pino-pretty is kept),
+// so attempting to use the transport will crash the app during startup.
+let transport: any = undefined;
+if (!isProduction) {
+  try {
+    const require = createRequire(import.meta.url);
+    // Throw if not resolvable
+    require.resolve("pino-pretty");
+    transport = {
+      target: "pino-pretty",
+      options: {
+        colorize: true,
+      },
+    };
+  } catch (err) {
+    // `pino-pretty` not available — fall back to JSON output
+    transport = undefined;
   }
 }
 
-// Singleton instance
-const loggerInstance = new Logger();
+const logger = pino({
+  level: config.LOG_LEVEL,
+  ...(transport ? { transport } : {}),
+  base: { pid: process.pid },
+  serializers: { err: pino.stdSerializers.err },
+  timestamp: pino.stdTimeFunctions.isoTime,
+});
 
-export default loggerInstance;
+export default logger;
