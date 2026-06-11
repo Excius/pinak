@@ -639,10 +639,10 @@ export class ProductService {
           await s3.deleteObject(oldKey);
         }
       } catch (err) {
-        logger.warn("Failed to delete old S3 object for image update", {
-          id,
-          err,
-        });
+        logger.warn(
+          { id, err },
+          "Failed to delete old S3 object for image update",
+        );
       }
     }
 
@@ -940,7 +940,7 @@ export class ProductService {
         }
       } catch (err) {
         // Log and continue to remove DB record anyway
-        logger.warn("Failed to delete S3 object for image", { id, err });
+        logger.warn({ id, err }, "Failed to delete S3 object for image");
       }
     }
 
@@ -1010,8 +1010,8 @@ export class ProductService {
       return !!category;
     } catch (error) {
       logger.warn(
+        { categoryId, err: error },
         `Error validating category existence for ID ${categoryId}:`,
-        error,
       );
       return false;
     }
@@ -1044,8 +1044,8 @@ export class ProductService {
       return !!product;
     } catch (error) {
       logger.warn(
+        { productId, err: error },
         `Error validating product existence for ID ${productId}:`,
-        error,
       );
       return false;
     }

@@ -1,6 +1,6 @@
 import jwt, { SignOptions } from "jsonwebtoken";
 import { AccessTokenPayload, RefreshTokenPayload } from "../types/jwt.types.js";
-import loggerInstance from "./logger.js";
+import logger from "./logger.js";
 import { InternalServerError, BadRequestError } from "./error.js";
 
 /**
@@ -22,7 +22,7 @@ class JWTService {
         expiresIn: this.accessTokenExpiry,
       } as SignOptions);
     } catch (error) {
-      loggerInstance.error("Error generating JWT token:", error);
+      logger.error({ err: error }, "Error generating JWT token:");
       throw new InternalServerError();
     }
   }
@@ -37,7 +37,7 @@ class JWTService {
         } as SignOptions,
       );
     } catch (error) {
-      loggerInstance.error("Error generating JWT token:", error);
+      logger.error({ err: error }, "Error generating JWT token:");
       throw new InternalServerError();
     }
   }
@@ -53,7 +53,7 @@ class JWTService {
       }
       return decoded;
     } catch (error) {
-      loggerInstance.error("Error verifying access token:", error);
+      logger.error({ err: error }, "Error verifying access token:");
       return null;
     }
   }
@@ -69,7 +69,7 @@ class JWTService {
       }
       return decoded;
     } catch (error) {
-      loggerInstance.error("Error verifying refresh token:", error);
+      logger.error({ err: error }, "Error verifying refresh token:");
       return null;
     }
   }

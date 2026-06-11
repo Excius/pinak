@@ -1,58 +1,58 @@
-# --- prune (minimal workspace for api) ---
-FROM node:20-alpine AS prune
-WORKDIR /repo
+# --- base ---
+FROM node:20-alpine AS base
+# Highly recommended: Alpine requires this for Turborepo and Prisma binaries to work reliably
+RUN apk update && apk add --no-cache libc6-compat
 RUN npm install -g turbo
 
-COPY package.json package-lock.json turbo.json ./
-COPY apps ./apps
-COPY packages ./packages
+# --- prune ---
+FROM base AS builder
+WORKDIR /app
+COPY . .
+# This securely extracts only the workspace packages 'api' depends on.
+# It creates out/json (for deps) and out/full (for source code)
+RUN turbo prune api --docker
 
-RUN turbo prune --scope=api --docker
-
-# --- deps (install pruned deps) ---
-FROM node:20-alpine AS deps
+# --- installer (Install deps & Build) ---
+FROM base AS installer
 WORKDIR /app
 
-COPY --from=prune /repo/out/json/package.json ./package.json
-COPY --from=prune /repo/out/json/package-lock.json ./package-lock.json
-COPY --from=prune /repo/out/full/ ./
+# 1. CACHE LAYER: Copy ONLY the json/lock files.
+# Docker will cache this layer as long as package.json/package-lock.json remain unchanged.
+COPY --from=builder /app/out/json/ .
 
+# 2. CACHED INSTALL: This will completely skip if dependencies haven't changed.
 RUN npm ci
 
-# --- build (compile api + generate prisma client) ---
-FROM node:20-alpine AS build
+# 3. SOURCE LAYER: Copy the actual source code. 
+# Whenever you edit a file, the cache breaks *here*, safely bypassing the npm ci step above!
+COPY --from=builder /app/out/full/ .
+
+# 4. BUILD: Build the project and its dependencies (types, etc.)
+RUN turbo run build --filter=api
+
+# 5. PRUNE: Remove devDependencies to keep the final image size small
+RUN npm prune --omit=dev
+
+# --- runner (Production) ---
+FROM base AS runner
 WORKDIR /app
-
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=prune /repo/out/full/ ./
-
-RUN npm run build:packages
-RUN npm run build --workspace=api
-
-# --- prod-deps (production-only deps for api) ---
-FROM node:20-alpine AS prod-deps
-WORKDIR /app
-
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=prune /repo/out/json/package.json ./package.json
-COPY --from=prune /repo/out/json/package-lock.json ./package-lock.json
-COPY --from=prune /repo/out/full/apps ./apps
-COPY --from=prune /repo/out/full/packages ./packages
-
-RUN npm prune --omit=dev --workspace=api --include-workspace-root
-
-# --- runtime ---
-FROM node:20-alpine AS runner
-WORKDIR /app
-
 ENV NODE_ENV=production
 
-COPY --from=prod-deps /app/node_modules ./node_modules
-COPY --from=build /app/packages/types ./packages/types
-COPY --from=build /app/apps/api/package.json ./package.json
-COPY --from=build /app/apps/api/dist ./dist
-COPY --from=build /app/apps/api/prisma ./prisma
-COPY --from=build /app/apps/api/src/generated ./src/generated
+# Don't run production as root
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nodejs
+USER nodejs
 
+# Copy the workspace structure over to maintain monorepo symlinks
+COPY --from=installer --chown=nodejs:nodejs /app/node_modules ./node_modules
+COPY --from=installer --chown=nodejs:nodejs /app/packages ./packages
+COPY --from=installer --chown=nodejs:nodejs /app/apps/api/package.json ./apps/api/package.json
+COPY --from=installer --chown=nodejs:nodejs /app/apps/api/dist ./apps/api/dist
+COPY --from=installer --chown=nodejs:nodejs /app/apps/api/prisma ./apps/api/prisma
+COPY --from=installer --chown=nodejs:nodejs /app/apps/api/src/generated ./apps/api/src/generated
+
+# Set working directory specifically to the api app for execution
+WORKDIR /app/apps/api
 EXPOSE 3000
+
 CMD ["node", "dist/index.js"]

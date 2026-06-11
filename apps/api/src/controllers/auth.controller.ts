@@ -2,11 +2,11 @@ import { Request, Response } from "express";
 import { ResponseHandler } from "../lib/response.js";
 import { AuthService } from "../services/auth.service.js";
 import appConfig from "../lib/config.js";
-import loggerInstance from "../lib/logger.js";
+import logger from "../lib/logger.js";
 import { normalizeEmail } from "../lib/email.js";
 
 export class AuthController {
-  constructor(private auth: AuthService) { }
+  constructor(private auth: AuthService) {}
 
   private setAuthCookies(
     res: Response,
@@ -68,7 +68,11 @@ export class AuthController {
 
     ResponseHandler.success(
       res,
-      { accessToken: data.accessToken, refreshToken: data.refreshToken, user: data.user },
+      {
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
+        user: data.user,
+      },
       "Login successful",
     );
   };
@@ -162,14 +166,18 @@ export class AuthController {
 
   googleOauthMobile = async (req: Request, res: Response) => {
     const code = req.query.code as string;
-    loggerInstance.info("Received Google OAuth code for mobile:", { code });
+    logger.info({ code }, "Received Google OAuth code for mobile:");
 
     res.redirect(`${appConfig.REDIRECT_URI_MOBILE}?code=${code}`);
   };
 
   googleOauthCallback = async (req: Request, res: Response) => {
     const code = (req.body?.code as string) || (req.query.code as string);
-    const platform = ((req.body?.platform as string) || (req.query.platform as string) || "WEB").toUpperCase();
+    const platform = (
+      (req.body?.platform as string) ||
+      (req.query.platform as string) ||
+      "WEB"
+    ).toUpperCase();
 
     const data = await this.auth.googleOauthCallback(code, platform);
 
@@ -192,9 +200,7 @@ export class AuthController {
     const username = (data.username as string)?.trim();
 
     if (!username) {
-      loggerInstance.info(
-        "Username is not provided in the usernameCheck route.",
-      );
+      logger.info("Username is not provided in the usernameCheck route.");
       return ResponseHandler.badRequest(res, "Username is not provided!");
     }
 

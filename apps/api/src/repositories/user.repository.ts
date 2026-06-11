@@ -1,6 +1,6 @@
 import { AuthProviderType, PrismaClient } from "../generated/prisma/client.js";
 import { InternalServerError, NotFoundError } from "../lib/error.js";
-import loggerInstance from "../lib/logger.js";
+import logger from "../lib/logger.js";
 import { normalizeEmail } from "../lib/email.js";
 
 export class UserRespository {
@@ -11,31 +11,31 @@ export class UserRespository {
     try {
       const normalized = normalizeEmail(email);
       return this.primsa.user.findFirst({
-        where: { 
+        where: {
           email: normalized,
-          status: { not: 'DELETED' }
+          status: { not: "DELETED" },
         },
       });
     } catch (error) {
-      loggerInstance.error("Error fetching user by email:", error);
+      logger.error({ err: error }, "Error fetching user by email:");
       throw new NotFoundError();
     }
   }
 
   getUserById(id: string) {
     return this.primsa.user.findFirst({
-      where: { 
+      where: {
         id,
-        status: { not: 'DELETED' }
+        status: { not: "DELETED" },
       },
     });
   }
 
   getUserByUsername(username: string) {
     return this.primsa.user.findFirst({
-      where: { 
+      where: {
         username,
-        status: { not: 'DELETED' }
+        status: { not: "DELETED" },
       },
     });
   }
@@ -45,7 +45,7 @@ export class UserRespository {
     return this.primsa.user.findFirst({
       where: {
         OR: [{ email: normalized }, { username }],
-        status: { not: 'DELETED' }
+        status: { not: "DELETED" },
       },
       include: { authProviders: true },
     });
@@ -59,7 +59,7 @@ export class UserRespository {
         where: { email: normalized },
       });
     } catch (error) {
-      loggerInstance.error("Error fetching user by email:", error);
+      logger.error({ err: error }, "Error fetching user by email:");
       throw new NotFoundError();
     }
   }
@@ -89,15 +89,15 @@ export class UserRespository {
   // Admin utility methods
   getAllUsersAdmin(includeDeleted = false) {
     return this.primsa.user.findMany({
-      where: includeDeleted ? {} : { status: { not: 'DELETED' } },
-      orderBy: { createdAt: 'desc' }
+      where: includeDeleted ? {} : { status: { not: "DELETED" } },
+      orderBy: { createdAt: "desc" },
     });
   }
 
   getDeletedUsersAdmin() {
     return this.primsa.user.findMany({
-      where: { status: 'DELETED' },
-      orderBy: { updatedAt: 'desc' }
+      where: { status: "DELETED" },
+      orderBy: { updatedAt: "desc" },
     });
   }
 
@@ -105,21 +105,25 @@ export class UserRespository {
   softDeleteUser(userId: string) {
     return this.primsa.user.update({
       where: { id: userId },
-      data: { status: 'DELETED' }
+      data: { status: "DELETED" },
     });
   }
 
   restoreUser(userId: string) {
     return this.primsa.user.update({
       where: { id: userId },
-      data: { status: 'ACTIVE' }
+      data: { status: "ACTIVE" },
     });
   }
 
   create(email: string, hashPassword: string, username: string) {
     const normalized = normalizeEmail(email);
     return this.primsa.user.create({
-      data: { email: normalized, hashPassword: hashPassword, username: username },
+      data: {
+        email: normalized,
+        hashPassword: hashPassword,
+        username: username,
+      },
     });
   }
 
@@ -142,7 +146,7 @@ export class UserRespository {
       });
 
       if (!user) {
-        loggerInstance.error("Error creating new user from Google OAuth");
+        logger.error("Error creating new user from Google OAuth");
         throw new InternalServerError("Failed to create user");
       }
 
@@ -160,9 +164,9 @@ export class UserRespository {
 
   updateUserPassword(userId: string, newHashedPassword: string) {
     return this.primsa.user.update({
-      where: { 
+      where: {
         id: userId,
-        status: { not: 'DELETED' }
+        status: { not: "DELETED" },
       },
       data: { hashPassword: newHashedPassword },
     });
@@ -170,9 +174,9 @@ export class UserRespository {
 
   updateUserName(userId: string, name: string | null) {
     return this.primsa.user.update({
-      where: { 
+      where: {
         id: userId,
-        status: { not: 'DELETED' }
+        status: { not: "DELETED" },
       },
       data: { name: name },
     });
@@ -180,9 +184,9 @@ export class UserRespository {
 
   updateUserEmailVerification(userId: string, isVerified: boolean) {
     return this.primsa.user.update({
-      where: { 
+      where: {
         id: userId,
-        status: { not: 'DELETED' }
+        status: { not: "DELETED" },
       },
       data: { isEmailVerified: isVerified },
     });
@@ -210,7 +214,10 @@ export class UserRespository {
     });
   }
 
-  updateUserStatusAdmin(userId: string, status: 'ACTIVE' | 'INACTIVE' | 'DELETED') {
+  updateUserStatusAdmin(
+    userId: string,
+    status: "ACTIVE" | "INACTIVE" | "DELETED",
+  ) {
     return this.primsa.user.update({
       where: { id: userId },
       data: { status },
