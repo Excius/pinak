@@ -56,3 +56,24 @@ cd apps/mobile && npm run dev
 ## Production
 
 For production deployments, set environment variables in your hosting platform (Vercel, Railway, etc.) instead of using `.env` files.
+
+## Build commands
+
+```bash
+# USB debugging / local native build
+npx expo prebuild --clean
+npx expo run:android --device
+```
+
+```bash
+# Cloud build using EAS
+eas build --platform android --profile <profile-name>
+```
+
+Profiles:
+
+```bash
+eas build --platform android --profile preview
+eas build --platform android --profile production
+```
+

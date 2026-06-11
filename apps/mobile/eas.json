@@ -3,6 +3,7 @@
     "version": ">= 16.28.0",
     "appVersionSource": "remote"
   },
+  
   "build": {
     "development": {
       "env": {
@@ -15,7 +16,7 @@
     },
     "preview": {
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://pinak.onrender.com/api/v1",
+        "EXPO_PUBLIC_API_URL": "https://api.dpinak.com/api/v1",
         "NODE_ENV": "development",
         "EXPO_PUBLIC_APP_NAME": "Pinak Mobile"
       },
@@ -23,7 +24,7 @@
     },
     "production": {
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://pinak.onrender.com/api/v1",
+        "EXPO_PUBLIC_API_URL": "https://api.dpinak.com/api/v1",
         "NODE_ENV": "production",
         "EXPO_PUBLIC_APP_NAME": "Pinak Mobile"
       },
