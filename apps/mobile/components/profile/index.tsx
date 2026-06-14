@@ -9,6 +9,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useAuth } from "@/contexts/AuthContext";
+import { toastSuccess } from "@/libs/toast";
 
 export default function ProfileLayout() {
   const { isAuthenticated, isLoading, user, logout } = useAuth();
@@ -20,6 +21,7 @@ export default function ProfileLayout() {
 
   const handleLogout = async () => {
     await logout();
+    toastSuccess("Logged out successfully");
   };
 
   if (isLoading) {
@@ -34,13 +36,16 @@ export default function ProfileLayout() {
   if (!isAuthenticated) {
     return (
       <SafeAreaView className="flex-1 bg-background">
-        <ScrollView className="flex-1 px-6 pt-8">
+        <ScrollView
+          className="flex-1 px-6 pt-8"
+          contentContainerClassName="grow"
+        >
           <View className="items-center justify-center py-16">
             <View className="h-24 w-24 items-center justify-center rounded-full bg-primary/20 border-2 border-primary mb-6">
               <MaterialIcons name="person-outline" size={48} color="#C9A962" />
             </View>
             <Text className="text-2xl font-bold text-text-primary mb-2">
-              Welcome to Pinak
+             🙌 Welcome 
             </Text>
             <Text className="text-center text-text-secondary mb-8 px-8">
               Sign in to access your profile, orders, wishlist, and personalized
