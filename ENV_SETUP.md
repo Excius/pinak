@@ -77,3 +77,7 @@ eas build --platform android --profile preview
 eas build --platform android --profile production
 ```
 
+```bash
+cd apps/mobile/android               
+./gradlew installRelease
+```

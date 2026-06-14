@@ -8,7 +8,7 @@ export default function HomeLayout() {
     <>
       <SafeAreaView
         edges={["top", "left", "right"]}
-        className="bg-background"
+        className="bg-background z-10"
       >
         <BrandHeader />
       </SafeAreaView>
