@@ -1,40 +1,97 @@
 import { View, Text, TouchableOpacity } from "react-native";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { useState } from "react";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
+
 import { CartIconButton } from "./CartIconButton";
+import { HamburgerMenu } from "./options/HamburgerMenu";
 
 export function BrandHeader() {
+  const [menuVisible, setMenuVisible] = useState(false);
+
+  const menuScale = useSharedValue(1);
+
+  const menuButtonStyle = useAnimatedStyle(() => ({
+    transform: [
+      {
+        scale: menuScale.value,
+      },
+    ],
+  }));
+
   return (
-    <View className="sticky top-0 z-50 bg-background px-4 py-3 border-b border-surface-border">
+    <View className="relative z-50 overflow-visible border-b border-surface-border bg-background px-4 pb-3 pt-2">
       <View className="flex-row items-center justify-between">
-        {/* Menu Button */}
-        <TouchableOpacity className="p-1 w-10">
-          <MaterialCommunityIcons name="menu" size={24} color="#C9A962" />
-        </TouchableOpacity>
+        {/* Left Section */}
+        <View className="w-10 items-start">
+          <TouchableOpacity
+            activeOpacity={1}
+            onPressIn={() => {
+              menuScale.value = withTiming(0.90, {
+                duration: 100,
+              });
+            }}
+            onPressOut={() => {
+              menuScale.value = withTiming(1, {
+                duration: 100,
+              });
+            }}
+            onPress={() => setMenuVisible((v) => !v)}
+          >
+            <Animated.View
+              style={menuButtonStyle}
+              className="rounded-full bg-surface-light/80 p-2"
+            >
+              <MaterialCommunityIcons
+                name="menu"
+                size={24}
+                color="#C9A962"
+              />
+            </Animated.View>
+          </TouchableOpacity>
+        </View>
 
-        {/* Spacer */}
-        <View className="flex-1" />
-
-        {/* Logo - Centered */}
-        <View className="flex-col items-center">
-          <Text className="text-2xl font-bold tracking-wide text-primary font-display">
+        {/* Center Section */}
+        <View className="flex-1 items-center">
+          <Text className="font-display text-2xl font-bold tracking-wide text-primary">
             PINAK
           </Text>
-          <Text className="text-[0.55rem] uppercase tracking-widest text-text-secondary">
+
+          <Text className="text-[10px] uppercase tracking-widest text-text-secondary">
             The Cosmetic World
           </Text>
         </View>
 
-        {/* Spacer */}
-        <View className="flex-1" />
-
-        {/* Search & Cart */}
-        <View className="flex-row items-center space-x-3 w-10 justify-end">
-          <TouchableOpacity className="p-1">
-            <MaterialCommunityIcons name="magnify" size={24} color="#C9A962" />
+        {/* Right Section */}
+        <View className="w-20 flex-row items-center justify-end">
+          <TouchableOpacity
+            className="mr-2 rounded-full bg-surface-light/80 p-2"
+            activeOpacity={0.8}
+          >
+            <MaterialCommunityIcons
+              name="magnify"
+              size={24}
+              color="#C9A962"
+            />
           </TouchableOpacity>
-          <CartIconButton size={24} iconColor="#C9A962" variant="icon-only" />
+
+          <CartIconButton
+            size={24}
+            iconColor="#C9A962"
+            variant="icon-only"
+          />
         </View>
       </View>
+
+      {menuVisible && (
+        <HamburgerMenu
+          onClose={() => setMenuVisible(false)}
+        />
+      )}
     </View>
   );
 }
