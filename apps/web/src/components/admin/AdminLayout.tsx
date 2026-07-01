@@ -11,6 +11,8 @@ const AdminLayout = () => {
     { label: 'Combo Kits', path: '/admin/combos', icon: 'auto_awesome_mosaic' },
     { label: 'Categories', path: '/admin/categories', icon: 'category' },
     { label: 'Brands', path: '/admin/brands', icon: 'branding_watermark' },
+    { label: 'Filters', path: '/admin/filters', icon: 'filter_alt' },
+    { label: 'Options', path: '/admin/options', icon: 'tune' },
     { label: 'Featured', path: '/admin/featured', icon: 'star' },
     { label: 'Orders', path: '/admin/orders', icon: 'receipt_long' },
     { label: 'Settings', path: '/admin/settings', icon: 'settings' },

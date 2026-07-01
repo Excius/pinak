@@ -115,7 +115,7 @@ const Shop: React.FC = () => {
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto px-6 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         {/* Header */}
         <div className="mb-12">
           <div className="flex items-center gap-2 text-sm text-text-muted mb-4">
@@ -125,7 +125,7 @@ const Shop: React.FC = () => {
           </div>
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
             <div>
-              <h1 className="font-display text-4xl md:text-5xl font-bold">All Products</h1>
+              <h1 className="font-display text-2xl sm:text-4xl md:text-5xl font-bold">All Products</h1>
               <p className="text-text-muted mt-2">Discover our complete collection of premium beauty products</p>
             </div>
             <div className="flex items-center gap-4">
@@ -152,7 +152,20 @@ const Shop: React.FC = () => {
 
         <div className="flex flex-col md:flex-row gap-8">
           {/* Sidebar Filters */}
-          <aside className={`w-full md:w-64 shrink-0 space-y-6 ${filterOpen ? 'block' : 'hidden md:block'}`}>
+          <aside className={`${filterOpen ? 'fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm md:relative md:bg-transparent md:backdrop-blur-none' : 'hidden md:block'} w-full md:w-64 shrink-0`}>
+            <div className={`${filterOpen ? 'absolute right-0 top-0 h-full w-[280px] bg-surface-dark overflow-y-auto p-4 animate-slideRight md:relative md:w-auto md:h-auto md:animate-none md:p-0' : ''} space-y-6`}>
+              {/* Mobile filter header */}
+              {filterOpen && (
+                <div className="flex items-center justify-between md:hidden mb-4 pb-4 border-b border-primary/10">
+                  <h3 className="text-lg font-bold text-text-main-light">Filters</h3>
+                  <button
+                    className="text-text-muted hover:text-primary transition-colors cursor-pointer"
+                    onClick={() => setFilterOpen(false)}
+                  >
+                    <span className="material-icons-outlined">close</span>
+                  </button>
+                </div>
+              )}
             <div className="bg-surface-dark rounded-2xl p-6 border border-primary/10">
               <h3 className="text-sm uppercase tracking-widest font-bold text-primary-light mb-4">Categories</h3>
               <ul className="space-y-2">
@@ -233,6 +246,7 @@ const Shop: React.FC = () => {
                 Clear All Filters
               </button>
             )}
+            </div>
           </aside>
 
           {/* Product Grid */}
@@ -262,7 +276,7 @@ const Shop: React.FC = () => {
             ) : (
               <>
                 <p className="text-sm text-text-muted mb-6">{products.length} product{products.length !== 1 ? 's' : ''}</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-8">
                   {products.map((product) => {
                     const variant = getFirstVariant(product)
                     return (
