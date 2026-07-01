@@ -77,8 +77,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
   }
 
   return (
-    <div className="group cursor-pointer" onClick={() => navigate(`/products/${slug}`)}>
-      <div className="relative overflow-hidden rounded-2xl bg-surface-dark aspect-[3/4] mb-4 shadow-sm hover:shadow-xl hover:shadow-primary/10 transition-all border border-primary/5 hover:border-primary/20">
+    <div className="group cursor-pointer card-lift" onClick={() => navigate(`/products/${slug}`)}>
+      <div className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-surface-dark aspect-[3/4] mb-3 sm:mb-4 shadow-sm transition-all border border-primary/5 hover:border-primary/20 img-zoom">
         {imageUrl ? (
           <img
             alt={name}
@@ -91,7 +91,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           </div>
         )}
         {badge && (
-          <div className="absolute top-3 left-3 bg-primary/90 backdrop-blur px-3 py-1 text-xs uppercase font-bold tracking-wide rounded-full text-black">
+          <div className="absolute top-3 left-3 badge-shimmer backdrop-blur px-3 py-1 text-xs uppercase font-bold tracking-wide rounded-full text-black">
             {badge}
           </div>
         )}
@@ -102,22 +102,22 @@ const ProductCard: React.FC<ProductCardProps> = ({
         )}
         {variantId && price && (
           <button
-            className="absolute bottom-4 right-4 bg-primary p-3 rounded-full shadow-lg translate-y-12 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 hover:bg-primary-hover cursor-pointer active:scale-95"
+            className="absolute bottom-3 sm:bottom-4 right-3 sm:right-4 bg-primary p-2.5 sm:p-3 rounded-full shadow-lg translate-y-12 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 touch-show transition-all duration-300 hover:bg-primary-hover cursor-pointer active:scale-95"
             onClick={handleAddToCart}
           >
             <span className="material-icons-outlined text-xl text-black">add_shopping_cart</span>
           </button>
         )}
       </div>
-      <h3 className="font-display text-lg font-semibold hover:text-primary transition-colors truncate">
+      <h3 className="font-display text-sm sm:text-lg font-semibold hover:text-primary transition-colors truncate">
         {name}
       </h3>
-      {category && <p className="text-sm text-text-muted mb-2">{category}</p>}
+      {category && <p className="text-xs sm:text-sm text-text-muted mb-1 sm:mb-2">{category}</p>}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          {price != null && <span className="font-bold text-lg text-primary">{formatPrice(price)}</span>}
+          {price != null && <span className="font-bold text-sm sm:text-lg text-primary price-glow">{formatPrice(price)}</span>}
           {comparePrice && comparePrice > (price || 0) && (
-            <span className="text-sm text-text-muted line-through">{formatPrice(comparePrice)}</span>
+            <span className="text-xs sm:text-sm text-text-muted line-through">{formatPrice(comparePrice)}</span>
           )}
         </div>
         {rating != null && <div className="flex text-primary text-xs">{renderStars(rating)}</div>}

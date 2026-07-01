@@ -1,27 +1,10 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
-import { createOrder } from '../api/cart.api'
-import type { ShippingAddress } from '../api/cart.api'
-
-const emptyAddress: ShippingAddress = {
-  fullName: '',
-  addressLine1: '',
-  addressLine2: '',
-  city: '',
-  state: '',
-  pincode: '',
-  phone: '',
-}
 
 const CartDrawer: React.FC = () => {
   const navigate = useNavigate()
-  const { items, itemCount, subtotal, isOpen, closeCart, updateQuantity, removeItem, clearCart, refreshCart } = useCart()
-
-  const [showCheckout, setShowCheckout] = useState(false)
-  const [address, setAddress] = useState<ShippingAddress>(emptyAddress)
-  const [placing, setPlacing] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const { items, itemCount, subtotal, isOpen, closeCart, updateQuantity, removeItem, clearCart } = useCart()
 
   if (!isOpen) return null
 
@@ -47,39 +30,12 @@ const CartDrawer: React.FC = () => {
     return null
   }
 
-  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setAddress(prev => ({ ...prev, [name]: value }))
-  }
-
-  const canPlaceOrder = address.fullName && address.addressLine1 && address.city && address.state && address.pincode && address.phone
-
-  const handlePlaceOrder = async () => {
-    if (!canPlaceOrder) return
-    setPlacing(true)
-    setError(null)
-    try {
-      const result = await createOrder({ shippingAddress: address })
-      closeCart()
-      setShowCheckout(false)
-      setAddress(emptyAddress)
-      await refreshCart()
-      navigate(`/order-confirmation/${result.order.id}`)
-    } catch (err: any) {
-      const msg = err?.response?.data?.message || err?.message || 'Failed to place order'
-      setError(msg)
-      console.error('Order failed', err)
-    } finally {
-      setPlacing(false)
-    }
-  }
-
   return (
     <>
       {/* Backdrop */}
       <div
         className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm animate-fadeIn"
-        onClick={() => { closeCart(); setShowCheckout(false) }}
+        onClick={() => closeCart()}
       />
 
       {/* Drawer */}
@@ -89,69 +45,19 @@ const CartDrawer: React.FC = () => {
           <div className="flex items-center gap-3">
             <span className="material-icons-outlined text-primary text-2xl">shopping_bag</span>
             <h2 className="font-display text-xl font-bold text-text-main-light">
-              {showCheckout ? 'Checkout' : `Your Bag (${itemCount})`}
+              Your Bag ({itemCount})
             </h2>
           </div>
           <button
             className="text-text-muted hover:text-primary transition-colors cursor-pointer active:scale-95"
-            onClick={() => { closeCart(); setShowCheckout(false) }}
+            onClick={() => closeCart()}
           >
             <span className="material-icons-outlined">close</span>
           </button>
         </div>
 
-        {/* Error */}
-        {error && (
-          <div className="mx-6 mt-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center gap-2">
-            <span className="material-icons-outlined text-lg">error</span>
-            {error}
-          </div>
-        )}
-
-        {/* Checkout Form */}
-        {showCheckout ? (
-          <div className="flex-1 overflow-y-auto p-6 space-y-4">
-            <p className="text-sm text-text-muted mb-2">Enter your shipping address to complete the order.</p>
-
-            {[
-              { name: 'fullName', label: 'Full Name', placeholder: 'John Doe' },
-              { name: 'phone', label: 'Phone Number', placeholder: '+91 98765 43210' },
-              { name: 'addressLine1', label: 'Address Line 1', placeholder: '123 Main Street' },
-              { name: 'addressLine2', label: 'Address Line 2 (Optional)', placeholder: 'Apt 4B' },
-              { name: 'city', label: 'City', placeholder: 'Mumbai' },
-              { name: 'state', label: 'State', placeholder: 'Maharashtra' },
-              { name: 'pincode', label: 'Pincode', placeholder: '400001' },
-            ].map(field => (
-              <div key={field.name} className="space-y-1">
-                <label className="text-[10px] font-bold text-text-muted uppercase tracking-wider">{field.label}</label>
-                <input
-                  name={field.name}
-                  value={(address as any)[field.name] || ''}
-                  onChange={handleAddressChange}
-                  placeholder={field.placeholder}
-                  className="w-full bg-background-light border border-primary/20 rounded-xl px-4 py-2.5 text-sm text-text-main-light outline-none focus:border-primary transition-colors"
-                />
-              </div>
-            ))}
-
-            {/* Order Summary mini */}
-            <div className="mt-4 p-4 bg-background-light rounded-xl border border-primary/10">
-              <p className="text-xs font-bold text-text-muted uppercase mb-2">Order Summary</p>
-              {items.map(item => (
-                <div key={item.id} className="flex justify-between text-sm py-1">
-                  <span className="text-text-main-light truncate flex-1 mr-2">{getItemName(item)} × {item.quantity}</span>
-                  <span className="text-primary font-mono shrink-0">{formatPrice(item.lineTotal)}</span>
-                </div>
-              ))}
-              <div className="border-t border-primary/10 mt-2 pt-2 flex justify-between">
-                <span className="text-sm font-bold text-text-main-light">Total</span>
-                <span className="text-lg font-bold text-primary">{formatPrice(subtotal)}</span>
-              </div>
-            </div>
-          </div>
-        ) : (
-          /* Cart Items */
-          <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        {/* Cart Items */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-4">
             {items.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
                 <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
@@ -229,57 +135,26 @@ const CartDrawer: React.FC = () => {
               ))
             )}
           </div>
-        )}
 
         {/* Footer */}
         {items.length > 0 && (
           <div className="p-6 border-t border-primary/10 space-y-3">
-            {!showCheckout && (
-              <div className="flex justify-between items-center">
-                <span className="text-text-muted font-medium">Subtotal</span>
-                <span className="text-xl font-bold text-primary">{formatPrice(subtotal)}</span>
-              </div>
-            )}
-
-            {showCheckout ? (
-              <>
-                <button
-                  className="w-full bg-primary hover:bg-primary-hover text-black py-3.5 rounded-xl font-bold text-sm uppercase tracking-wider transition-all glow-gold cursor-pointer active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={!canPlaceOrder || placing}
-                  onClick={handlePlaceOrder}
-                >
-                  {placing ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                      Placing Order...
-                    </span>
-                  ) : (
-                    `Place Order — ${formatPrice(subtotal)}`
-                  )}
-                </button>
-                <button
-                  className="w-full text-text-muted hover:text-primary text-sm font-medium transition-colors cursor-pointer"
-                  onClick={() => setShowCheckout(false)}
-                >
-                  ← Back to Bag
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  className="w-full bg-primary hover:bg-primary-hover text-black py-3.5 rounded-xl font-bold text-sm uppercase tracking-wider transition-all glow-gold cursor-pointer active:scale-[0.98]"
-                  onClick={() => setShowCheckout(true)}
-                >
-                  Checkout — {formatPrice(subtotal)}
-                </button>
-                <button
-                  className="w-full text-text-muted hover:text-red-400 text-sm font-medium transition-colors cursor-pointer"
-                  onClick={clearCart}
-                >
-                  Clear Bag
-                </button>
-              </>
-            )}
+            <div className="flex justify-between items-center">
+              <span className="text-text-muted font-medium">Subtotal</span>
+              <span className="text-xl font-bold text-primary">{formatPrice(subtotal)}</span>
+            </div>
+            <button
+              className="w-full bg-primary hover:bg-primary-hover text-black py-3.5 rounded-xl font-bold text-sm uppercase tracking-wider transition-all glow-gold cursor-pointer active:scale-[0.98]"
+              onClick={() => { closeCart(); navigate('/checkout') }}
+            >
+              Proceed to Checkout — {formatPrice(subtotal)}
+            </button>
+            <button
+              className="w-full text-text-muted hover:text-red-400 text-sm font-medium transition-colors cursor-pointer"
+              onClick={clearCart}
+            >
+              Clear Bag
+            </button>
           </div>
         )}
       </div>

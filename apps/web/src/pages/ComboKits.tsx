@@ -41,7 +41,7 @@ const ComboKits: React.FC = () => {
         {/* Header */}
         <div className="text-center mb-16">
           <span className="text-primary text-sm uppercase tracking-widest font-bold block mb-2">Save More</span>
-          <h1 className="font-display text-4xl md:text-5xl font-bold mb-4">Combo Kits</h1>
+          <h1 className="font-display text-3xl md:text-5xl font-bold mb-4">Combo Kits</h1>
           <p className="text-text-muted max-w-xl mx-auto">
             Curated bundles of our best products, specially priced for the ultimate beauty ritual.
           </p>
@@ -78,7 +78,7 @@ const ComboKits: React.FC = () => {
             {combos.map((combo) => (
               <div
                 key={combo.id}
-                className="group bg-surface-dark rounded-2xl overflow-hidden border border-primary/10 hover:border-primary/30 transition-all hover:shadow-xl hover:shadow-primary/5 cursor-pointer"
+                className="group rounded-2xl overflow-hidden border border-primary/10 hover:border-primary/30 transition-all card-lift cursor-pointer relative"
                 onClick={() => navigate(`/combo-kits/${combo.slug}`)}
               >
                 {/* Image */}
@@ -95,25 +95,25 @@ const ComboKits: React.FC = () => {
                     </div>
                   )}
                   {combo.discountValue && (
-                    <div className="absolute top-4 left-4 bg-red-500/90 backdrop-blur px-3 py-1 rounded-full text-white text-xs font-bold">
+                    <div className="absolute top-4 left-4 bg-red-500/90 backdrop-blur px-3 py-1 rounded-full text-white text-xs font-bold animate-soft-pulse shadow-[0_0_10px_rgba(239,68,68,0.3)]">
                       Save {combo.discountType === 'PERCENTAGE' ? `${combo.discountValue}%` : formatPrice(combo.discountValue)}
                     </div>
                   )}
-                  <div className="absolute top-4 right-4 bg-primary/90 backdrop-blur px-3 py-1 rounded-full text-black text-xs font-bold">
+                  <div className="absolute top-4 right-4 bg-primary/90 backdrop-blur px-3 py-1 rounded-full text-black text-xs font-bold badge-shimmer">
                     {combo.items?.length || 0} Items
                   </div>
                 </div>
 
-                {/* Info */}
-                <div className="p-6 space-y-3">
-                  <h3 className="font-display text-xl font-bold group-hover:text-primary transition-colors">
+                {/* Info Overlay */}
+                <div className="absolute bottom-0 left-0 right-0 p-6 space-y-3 glass-card rounded-t-none border-x-0 border-b-0 border-t border-primary/10 transition-colors group-hover:bg-black/80">
+                  <h3 className="font-display text-xl font-bold text-text-main-light group-hover:text-primary transition-colors text-gold-gradient">
                     {combo.name}
                   </h3>
                   {combo.description && (
                     <p className="text-sm text-text-muted line-clamp-2">{combo.description}</p>
                   )}
                   <div className="flex items-center justify-between pt-2">
-                    <span className="text-2xl font-bold text-primary">{formatPrice(combo.price)}</span>
+                    <span className="text-2xl font-bold text-primary price-glow">{formatPrice(combo.price)}</span>
                     <span className="text-xs text-text-muted">
                       {combo.purchasedCount > 0 && `${combo.purchasedCount} sold`}
                     </span>

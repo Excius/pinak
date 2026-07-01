@@ -4,6 +4,8 @@ import Layout from '../components/Layout'
 import { useAuth } from '../context/AuthContext'
 import { getMyOrders } from '../api/cart.api'
 import type { Order } from '../api/cart.api'
+import { getAddresses, createAddress, updateAddress, deleteAddress, setDefaultAddress } from '../api/addresses.api'
+import type { Address, CreateAddressPayload } from '../api/addresses.api'
 
 interface User {
   id: string
@@ -25,6 +27,15 @@ const Profile: React.FC = () => {
   const [ordersLoading, setOrdersLoading] = useState(false)
   const [error, setError] = useState('')
 
+  // Address state
+  const [addresses, setAddresses] = useState<Address[]>([])
+  const [addressesLoading, setAddressesLoading] = useState(false)
+  const [showAddressModal, setShowAddressModal] = useState(false)
+  const [editingAddressId, setEditingAddressId] = useState<string | null>(null)
+  const [addressForm, setAddressForm] = useState<CreateAddressPayload>({
+    fullName: '', phone: '', addressLine1: '', addressLine2: '', city: '', state: '', pincode: '', country: 'India'
+  })
+
   useEffect(() => {
     if (authLoading) return
     if (!authUser) {
@@ -36,20 +47,87 @@ const Profile: React.FC = () => {
   }, [authUser, authLoading, navigate])
 
   useEffect(() => {
-    const fetchOrders = async () => {
+    const fetchUserData = async () => {
       if (!authUser) return
       setOrdersLoading(true)
+      setAddressesLoading(true)
       try {
-        const data = await getMyOrders()
-        setOrders(data.items || [])
+        const [ordersData, addrData] = await Promise.all([
+          getMyOrders().catch(() => ({ items: [] })),
+          getAddresses().catch(() => [])
+        ])
+        setOrders(ordersData.items || [])
+        setAddresses(addrData || [])
       } catch (err) {
-        console.error('Failed to fetch orders', err)
+        console.error('Failed to fetch user data', err)
       } finally {
         setOrdersLoading(false)
+        setAddressesLoading(false)
       }
     }
-    fetchOrders()
+    fetchUserData()
   }, [authUser])
+
+  const handleAddressFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAddressForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
+  }
+
+  const handleSaveAddress = async () => {
+    try {
+      if (editingAddressId) {
+        const updated = await updateAddress(editingAddressId, addressForm)
+        setAddresses(prev => prev.map(a => a.id === updated.id ? updated : a))
+      } else {
+        const saved = await createAddress(addressForm)
+        setAddresses(prev => [...prev, saved])
+      }
+      setShowAddressModal(false)
+    } catch (err: any) {
+      console.error('Failed to save address', err)
+      alert(err?.response?.data?.message || 'Failed to save address')
+    }
+  }
+
+  const handleDeleteAddress = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this address?')) return
+    try {
+      await deleteAddress(id)
+      setAddresses(prev => prev.filter(a => a.id !== id))
+    } catch (err) {
+      console.error('Failed to delete address', err)
+    }
+  }
+
+  const handleSetDefaultAddress = async (id: string) => {
+    try {
+      await setDefaultAddress(id)
+      setAddresses(prev => prev.map(a => ({ ...a, isDefault: a.id === id })))
+    } catch (err) {
+      console.error('Failed to set default address', err)
+    }
+  }
+
+  const openAddressModal = (addr?: Address) => {
+    if (addr) {
+      setEditingAddressId(addr.id)
+      setAddressForm({
+        fullName: addr.fullName,
+        phone: addr.phone,
+        addressLine1: addr.addressLine1,
+        addressLine2: addr.addressLine2 || '',
+        city: addr.city,
+        state: addr.state,
+        pincode: addr.pincode,
+        country: addr.country
+      })
+    } else {
+      setEditingAddressId(null)
+      setAddressForm({
+        fullName: '', phone: '', addressLine1: '', addressLine2: '', city: '', state: '', pincode: '', country: 'India'
+      })
+    }
+    setShowAddressModal(true)
+  }
 
   const handleLogout = async () => {
     try {
@@ -145,8 +223,10 @@ const Profile: React.FC = () => {
             <div className="md:col-span-1">
               <div className="bg-surface-dark rounded-2xl shadow-sm p-8 text-center space-y-6 sticky top-24 border border-primary/10">
                 {/* Avatar */}
-                <div className="inline-flex justify-center items-center w-24 h-24 rounded-full bg-primary/10 border-2 border-primary/30 text-primary">
-                  <span className="material-icons-outlined text-5xl">person</span>
+                <div className="gradient-ring inline-block">
+                  <div className="w-24 h-24 rounded-full bg-surface-dark flex items-center justify-center text-primary">
+                    <span className="material-icons-outlined text-5xl">person</span>
+                  </div>
                 </div>
 
                 {/* User Info */}
@@ -166,7 +246,7 @@ const Profile: React.FC = () => {
                     <p className="text-xs text-text-muted">Orders</p>
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-primary">{formatPrice(totalSpent)}</p>
+                    <p className="text-2xl font-bold text-primary price-glow">{formatPrice(totalSpent)}</p>
                     <p className="text-xs text-text-muted">Spent</p>
                   </div>
                 </div>
@@ -229,6 +309,75 @@ const Profile: React.FC = () => {
                 </div>
               </div>
 
+              {/* Addresses */}
+              <div className="bg-surface-dark rounded-2xl shadow-sm p-8 border border-primary/10">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="font-display text-xl font-bold text-text-main-light">
+                    My Addresses
+                  </h3>
+                  <button 
+                    onClick={() => openAddressModal()}
+                    className="flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary-hover transition-colors cursor-pointer"
+                  >
+                    <span className="material-icons-outlined text-lg">add</span>
+                    Add New
+                  </button>
+                </div>
+                
+                <div className="space-y-4">
+                  {addressesLoading ? (
+                    <div className="flex justify-center py-4">
+                      <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+                    </div>
+                  ) : addresses.length === 0 ? (
+                    <div className="text-center py-6 border-2 border-dashed border-primary/10 rounded-xl">
+                      <p className="text-text-muted text-sm mb-2">No addresses saved yet.</p>
+                      <button onClick={() => openAddressModal()} className="text-primary text-sm font-semibold hover:underline cursor-pointer">
+                        Add your first address
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {addresses.map((addr) => (
+                        <div key={addr.id} className={`p-4 rounded-xl border-2 transition-all ${addr.isDefault ? 'border-primary bg-primary/5' : 'border-primary/10 bg-background-light'}`}>
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <p className="font-semibold text-text-main-light">{addr.fullName}</p>
+                              {addr.isDefault && (
+                                <span className="inline-block mt-1 text-[10px] font-bold uppercase tracking-wider bg-primary/20 text-primary px-2 py-0.5 rounded-full">
+                                  Default
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex gap-2 text-text-muted">
+                              <button onClick={() => openAddressModal(addr)} className="hover:text-primary transition-colors cursor-pointer" title="Edit">
+                                <span className="material-icons-outlined text-lg">edit</span>
+                              </button>
+                              <button onClick={() => handleDeleteAddress(addr.id)} className="hover:text-red-400 transition-colors cursor-pointer" title="Delete">
+                                <span className="material-icons-outlined text-lg">delete_outline</span>
+                              </button>
+                            </div>
+                          </div>
+                          <p className="text-xs text-text-muted leading-relaxed">
+                            {addr.addressLine1}{addr.addressLine2 ? `, ${addr.addressLine2}` : ''}<br />
+                            {addr.city}, {addr.state} - {addr.pincode}<br />
+                            📞 {addr.phone}
+                          </p>
+                          {!addr.isDefault && (
+                            <button 
+                              onClick={() => handleSetDefaultAddress(addr.id)}
+                              className="mt-3 text-xs font-semibold text-text-muted hover:text-primary transition-colors cursor-pointer"
+                            >
+                              Set as Default
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* Recent Orders */}
               <div className="bg-surface-dark rounded-2xl shadow-sm p-8 border border-primary/10">
                 <h3 className="font-display text-xl font-bold text-text-main-light mb-6">
@@ -244,7 +393,7 @@ const Profile: React.FC = () => {
                     <div className="text-center py-8">
                       <span className="material-icons-outlined text-4xl text-text-muted/30 mb-2">shopping_bag</span>
                       <p className="text-text-muted text-sm">No orders yet</p>
-                      <button 
+                      <button
                         className="text-primary text-sm font-bold mt-2 hover:underline cursor-pointer"
                         onClick={() => navigate('/shop')}
                       >
@@ -255,7 +404,7 @@ const Profile: React.FC = () => {
                     orders.slice(0, 5).map((order) => (
                       <div
                         key={order.id}
-                        className="flex items-center justify-between p-4 border border-primary/10 rounded-lg hover:bg-surface-elevated hover:border-primary/20 transition-all cursor-pointer group"
+                        className="flex items-center justify-between p-4 border border-primary/10 rounded-xl hover:bg-surface-elevated hover:border-primary/20 transition-all cursor-pointer group card-lift"
                         onClick={() => navigate(`/order-confirmation/${order.id}`)}
                       >
                         <div>
@@ -272,10 +421,9 @@ const Profile: React.FC = () => {
                         </div>
                         <div className="text-right">
                           <p className="font-bold text-primary">{formatPrice(order.totalAmount)}</p>
-                          <p className={`text-xs font-semibold ${
-                            order.status === 'DELIVERED' ? 'text-green-400' : 
-                            order.status === 'CANCELLED' ? 'text-red-400' : 'text-primary/70'
-                          }`}>
+                          <p className={`text-xs font-semibold ${order.status === 'DELIVERED' ? 'text-green-400' :
+                              order.status === 'CANCELLED' ? 'text-red-400' : 'text-primary/70'
+                            }`}>
                             {order.status}
                           </p>
                         </div>
@@ -284,7 +432,7 @@ const Profile: React.FC = () => {
                   )}
                 </div>
                 {orders.length > 5 && (
-                  <button className="w-full mt-6 py-3 px-4 rounded-lg border border-primary/30 text-primary hover:bg-primary hover:text-black transition-all font-semibold cursor-pointer active:scale-95">
+                  <button onClick={() => navigate('/orders')} className="w-full mt-6 py-3 px-4 rounded-lg border border-primary/30 text-primary hover:bg-primary hover:text-black transition-all font-semibold cursor-pointer active:scale-95">
                     View All Orders
                   </button>
                 )}
@@ -301,20 +449,79 @@ const Profile: React.FC = () => {
                       <p className="font-semibold text-text-main-light">Email Notifications</p>
                       <p className="text-sm text-text-muted">Receive order updates</p>
                     </div>
-                    <input type="checkbox" defaultChecked className="w-5 h-5 cursor-pointer accent-primary" />
+                    <input type="checkbox" defaultChecked className="toggle-switch" />
                   </div>
                   <div className="flex items-center justify-between pt-4 border-t border-primary/10">
                     <div>
                       <p className="font-semibold text-text-main-light">Marketing Emails</p>
                       <p className="text-sm text-text-muted">New products and offers</p>
                     </div>
-                    <input type="checkbox" className="w-5 h-5 cursor-pointer accent-primary" />
+                    <input type="checkbox" className="toggle-switch" />
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
+
+        {/* Address Modal */}
+        {showAddressModal && (
+          <>
+            <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm animate-fadeIn" onClick={() => setShowAddressModal(false)} />
+            <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 pointer-events-none">
+              <div className="bg-surface-dark w-full max-w-lg rounded-2xl border border-primary/20 shadow-2xl pointer-events-auto flex flex-col max-h-[90vh] animate-slideUp">
+                <div className="flex items-center justify-between p-6 border-b border-primary/10 shrink-0">
+                  <h2 className="font-display text-xl font-bold text-text-main-light">
+                    {editingAddressId ? 'Edit Address' : 'Add New Address'}
+                  </h2>
+                  <button onClick={() => setShowAddressModal(false)} className="text-text-muted hover:text-primary transition-colors cursor-pointer">
+                    <span className="material-icons-outlined">close</span>
+                  </button>
+                </div>
+                
+                <div className="p-6 overflow-y-auto space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {[
+                      { name: 'fullName', label: 'Full Name', placeholder: 'John Doe', full: false },
+                      { name: 'phone', label: 'Phone', placeholder: '+91 98765 43210', full: false },
+                      { name: 'addressLine1', label: 'Address Line 1', placeholder: '123 Main Street', full: true },
+                      { name: 'addressLine2', label: 'Address Line 2 (Optional)', placeholder: 'Apt, Suite', full: true },
+                      { name: 'city', label: 'City', placeholder: 'Mumbai', full: false },
+                      { name: 'state', label: 'State', placeholder: 'Maharashtra', full: false },
+                      { name: 'pincode', label: 'Pincode', placeholder: '400001', full: false },
+                    ].map(f => (
+                      <div key={f.name} className={f.full ? 'sm:col-span-2' : ''}>
+                        <label className="text-[10px] font-bold text-text-muted uppercase tracking-wider block mb-1.5">{f.label}</label>
+                        <input
+                          name={f.name}
+                          value={(addressForm as any)[f.name] || ''}
+                          onChange={handleAddressFormChange}
+                          placeholder={f.placeholder}
+                          className="w-full bg-background-light border border-primary/20 rounded-xl px-4 py-2.5 text-sm text-text-main-light outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition-all"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="p-6 border-t border-primary/10 shrink-0 bg-surface-dark rounded-b-2xl flex gap-3">
+                  <button 
+                    onClick={() => setShowAddressModal(false)}
+                    className="flex-1 py-3 rounded-xl border border-primary/20 text-text-main-light font-bold hover:bg-surface-elevated transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={handleSaveAddress}
+                    className="flex-1 py-3 rounded-xl bg-primary text-black font-bold hover:bg-primary-hover transition-colors cursor-pointer glow-gold"
+                  >
+                    Save Address
+                  </button>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
       </Layout>
     </div>
   )

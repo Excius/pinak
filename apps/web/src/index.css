@@ -216,3 +216,227 @@ body {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* ═══════════════════════════════════════════
+   MOBILE UTILITIES
+   ═══════════════════════════════════════════ */
+
+/* ── Hide scrollbar for horizontal scroll areas ── */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Reduced reveal distances on mobile ── */
+@media (max-width: 640px) {
+  .scroll-reveal {
+    transform: translateY(24px);
+  }
+  .scroll-reveal-left {
+    transform: translateX(-30px);
+  }
+  .scroll-reveal-right {
+    transform: translateX(30px);
+  }
+}
+
+/* ── Touch device: show hover-only elements ── */
+@media (hover: none) and (pointer: coarse) {
+  .touch-show {
+    transform: translateY(0) !important;
+    opacity: 1 !important;
+  }
+}
+
+/* ═══════════════════════════════════════════
+   PREMIUM DESIGN UTILITIES
+   ═══════════════════════════════════════════ */
+
+/* ── Glassmorphism card ── */
+.glass-card {
+  background: rgba(20, 20, 20, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(200, 169, 81, 0.08);
+}
+
+/* ── Card lift on hover ── */
+.card-lift {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.card-lift:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4),
+              0 0 30px rgba(200, 169, 81, 0.06);
+}
+
+/* ── Animated nav underline ── */
+.nav-link-underline {
+  position: relative;
+}
+.nav-link-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #C8A951, #E2D5A0);
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.nav-link-underline:hover::after,
+.nav-link-underline.active::after {
+  width: 100%;
+}
+
+/* ── Premium toggle switch ── */
+.toggle-switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  appearance: none;
+  background: #2A2A2A;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  border: 1px solid rgba(200, 169, 81, 0.1);
+}
+.toggle-switch::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  background: #8A8278;
+  border-radius: 50%;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.toggle-switch:checked {
+  background: linear-gradient(135deg, #C8A951, #B8952E);
+  border-color: #C8A951;
+}
+.toggle-switch:checked::before {
+  transform: translateX(20px);
+  background: #0A0A0A;
+}
+
+/* ── Gold gradient text ── */
+.text-gold-gradient {
+  background: linear-gradient(135deg, #C8A951 0%, #E2D5A0 50%, #C8A951 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ── Badge shimmer ── */
+@keyframes badge-shimmer {
+  0% { background-position: -100% 0; }
+  100% { background-position: 200% 0; }
+}
+.badge-shimmer {
+  background: linear-gradient(90deg, 
+    rgba(200,169,81,0.9) 0%, 
+    rgba(226,213,160,1) 40%, 
+    rgba(200,169,81,0.9) 60%
+  );
+  background-size: 200% 100%;
+  animation: badge-shimmer 3s ease-in-out infinite;
+}
+
+/* ── Image zoom container ── */
+.img-zoom {
+  overflow: hidden;
+}
+.img-zoom img {
+  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.img-zoom:hover img {
+  transform: scale(1.08);
+}
+
+/* ── Sparkle/particle float ── */
+@keyframes sparkle-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(-100vh) rotate(720deg); opacity: 0; }
+}
+
+.sparkle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: #C8A951;
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(200, 169, 81, 0.6);
+  animation: sparkle-float linear infinite;
+  pointer-events: none;
+}
+
+/* ── Gradient ring for avatars ── */
+.gradient-ring {
+  background: linear-gradient(135deg, #C8A951, #E2D5A0, #8C6B3D, #C8A951);
+  background-size: 300% 300%;
+  animation: gradient-spin 4s ease infinite;
+  padding: 3px;
+  border-radius: 9999px;
+}
+@keyframes gradient-spin {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ── Tab sliding indicator ── */
+.tab-indicator {
+  position: absolute;
+  bottom: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #C8A951, #E2D5A0);
+  border-radius: 1px;
+  transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── Subtle pulse for discount badges ── */
+@keyframes soft-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+.animate-soft-pulse {
+  animation: soft-pulse 2s ease-in-out infinite;
+}
+
+/* ── Gold price glow ── */
+.price-glow {
+  text-shadow: 0 0 20px rgba(200, 169, 81, 0.3);
+}
+
+/* ── Staggered mobile menu ── */
+.stagger-item:nth-child(1) { animation-delay: 0.05s; }
+.stagger-item:nth-child(2) { animation-delay: 0.1s; }
+.stagger-item:nth-child(3) { animation-delay: 0.15s; }
+.stagger-item:nth-child(4) { animation-delay: 0.2s; }
+.stagger-item:nth-child(5) { animation-delay: 0.25s; }
+
+@keyframes stagger-in {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.stagger-item {
+  animation: stagger-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ── Grab cursor for carousels ── */
+.grab-scroll {
+  cursor: grab;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+}
+.grab-scroll:active { cursor: grabbing; }
+.grab-scroll > * { scroll-snap-align: start; }
