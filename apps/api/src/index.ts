@@ -26,7 +26,7 @@ class Server {
 
     // Trust proxy for accurate IP detection behind load balancers/proxies
     if (config.NODE_ENV === "production") {
-      this.app.set("trust proxy", true);
+      this.app.set("trust proxy", 1);
     }
 
     this.initializeMiddleware();
@@ -80,14 +80,7 @@ class Server {
         xFrameOptions: { action: "deny" },
         noSniff: true,
         // Configure HSTS (only in production with HTTPS)
-        hsts:
-          config.NODE_ENV === "production"
-            ? {
-                maxAge: 31536000,
-                includeSubDomains: true,
-                preload: true,
-              }
-            : false,
+        hsts: false,
       }),
     );
     // static file serving middleware

@@ -13,10 +13,13 @@ import { WhatsAppAndStoreCTA } from "./WhatsAppCTA";
 
 export function HomeScreen() {
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView
+      edges={["top", "left", "right"]}
+      className="flex-1 bg-background"
+    >
       <ScrollView
         showsVerticalScrollIndicator={false}
-        className="flex-1"
+        className="flex-1 pt-2"
         scrollToOverflowEnabled={true}
       >
         {/* Hero Section */}

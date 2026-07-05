@@ -17,6 +17,9 @@ import ComboKitDetail from './pages/ComboKitDetail'
 import Wishlist from './pages/Wishlist'
 import SearchResults from './pages/SearchResults'
 import OrderConfirmation from './pages/OrderConfirmation'
+import Checkout from './pages/Checkout'
+import MyOrders from './pages/MyOrders'
+import OrderDetail from './pages/OrderDetail'
 import AdminLayout from './components/admin/AdminLayout'
 import AdminDashboard from './pages/admin/Dashboard'
 import AdminProductList from './pages/admin/products/ProductList'
@@ -28,6 +31,8 @@ import AdminComboKitForm from './pages/admin/combos/ComboKitForm'
 import AdminFeaturedSections from './pages/admin/featured/FeaturedSectionList'
 import AdminOrderList from './pages/admin/orders/OrderList'
 import AdminSettings from './pages/admin/settings/SettingsPage'
+import AdminFilterGroupList from './pages/admin/filters/FilterGroupList'
+import AdminOptionList from './pages/admin/options/OptionList'
 
 // Protected route wrapper
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -101,6 +106,9 @@ function AppRoutes() {
       <Route path="/combo-kits/:slug" element={<ProtectedRoute><ComboKitDetail /></ProtectedRoute>} />
       <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
       <Route path="/search" element={<ProtectedRoute><SearchResults /></ProtectedRoute>} />
+      <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+      <Route path="/orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
+      <Route path="/orders/:orderId" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
       <Route path="/order-confirmation/:orderId" element={<ProtectedRoute><OrderConfirmation /></ProtectedRoute>} />
 
       {/* Admin routes */}
@@ -116,6 +124,8 @@ function AppRoutes() {
         <Route path="combos/:id" element={<AdminComboKitForm />} />
         <Route path="featured" element={<AdminFeaturedSections />} />
         <Route path="orders" element={<AdminOrderList />} />
+        <Route path="filters" element={<AdminFilterGroupList />} />
+        <Route path="options" element={<AdminOptionList />} />
         <Route path="settings" element={<AdminSettings />} />
       </Route>
 

@@ -78,7 +78,7 @@ export function HeroCarousel() {
   };
 
   return (
-    <View className="relative mt-2">
+    <View className="relative mt-4">
       <ScrollView
         ref={scrollViewRef}
         horizontal

@@ -62,7 +62,7 @@ const Wishlist: React.FC = () => {
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto px-6 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm text-text-muted mb-8">
           <a className="hover:text-primary cursor-pointer" onClick={() => navigate('/')}>Home</a>
@@ -73,7 +73,7 @@ const Wishlist: React.FC = () => {
         {/* Header */}
         <div className="flex items-end justify-between mb-12">
           <div>
-            <h1 className="font-display text-4xl md:text-5xl font-bold">My Wishlist</h1>
+            <h1 className="font-display text-2xl sm:text-4xl md:text-5xl font-bold">My Wishlist</h1>
             <p className="text-text-muted mt-2">{items.length} saved item{items.length !== 1 ? 's' : ''}</p>
           </div>
           {items.length > 0 && (
@@ -105,7 +105,7 @@ const Wishlist: React.FC = () => {
         ) : items.length === 0 ? (
           <div className="text-center py-20 space-y-6">
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 border border-primary/20">
-              <span className="material-icons-outlined text-4xl text-primary">favorite_border</span>
+              <span className="material-icons-outlined text-4xl text-primary animate-float">favorite_border</span>
             </div>
             <div>
               <h3 className="font-display text-xl font-bold mb-2">Your wishlist is empty</h3>
@@ -119,7 +119,7 @@ const Wishlist: React.FC = () => {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 lg:gap-8">
             {items.map((item) => {
               const variant = item.productVariant
               const product = variant?.product
@@ -130,9 +130,9 @@ const Wishlist: React.FC = () => {
                 ''
 
               return (
-                <div key={item.id} className="group">
+                <div key={item.id} className="group card-lift">
                   <div
-                    className="relative overflow-hidden rounded-2xl bg-surface-dark aspect-[3/4] mb-4 shadow-sm hover:shadow-xl hover:shadow-primary/10 transition-all border border-primary/5 hover:border-primary/20 cursor-pointer"
+                    className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-surface-dark aspect-[3/4] mb-3 sm:mb-4 shadow-sm hover:shadow-xl hover:shadow-primary/10 transition-all border border-primary/5 hover:border-primary/20 cursor-pointer img-zoom"
                     onClick={() => product?.slug && navigate(`/products/${product.slug}`)}
                   >
                     {imageUrl ? (
