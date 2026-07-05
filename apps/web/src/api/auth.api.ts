@@ -83,12 +83,32 @@ export const googleCallback = async (payload: GoogleCallbackPayload): Promise<Au
   return data.data || data
 }
 
-export const checkUsernameAvailability = async (username: string): Promise<boolean> => {
+export const checkUsernameAvailability = async (
+  username: string,
+): Promise<{ available: boolean; error?: string }> => {
+  // Client-side format validation first
+  const usernameRegex = /^[a-zA-Z][a-zA-Z0-9_]*$/
+  if (!usernameRegex.test(username)) {
+    return {
+      available: false,
+      error: 'Username must start with a letter and contain only letters, numbers, and underscores.',
+    }
+  }
+
   try {
     const { data } = await axiosInstance.get(`/auth/username?username=${encodeURIComponent(username)}`)
-    return data.success
-  } catch (error) {
-    return false
+    return { available: data.success }
+  } catch (error: any) {
+    // Extract validation message from API response if available
+    const details = error?.response?.data?.details
+    const message = error?.response?.data?.message
+    if (Array.isArray(details) && details.length > 0) {
+      return { available: false, error: details[0].message }
+    }
+    if (message && message !== 'Validation failed') {
+      return { available: false, error: message }
+    }
+    return { available: false, error: 'This username is already taken.' }
   }
 }
 

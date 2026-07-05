@@ -19,18 +19,21 @@ const Auth: React.FC = () => {
   const [signupEmail, setSignupEmail] = useState('')
   const [isUsernameChecking, setIsUsernameChecking] = useState(false)
   const [isUsernameAvailable, setIsUsernameAvailable] = useState<boolean | null>(null)
+  const [usernameError, setUsernameError] = useState<string>('')
 
   useEffect(() => {
     if (isLogin || !username || username.length < 3) {
       setIsUsernameAvailable(null)
       setIsUsernameChecking(false)
+      setUsernameError('')
       return
     }
 
     const delayDebounceFn = setTimeout(async () => {
       setIsUsernameChecking(true)
-      const available = await checkUsernameAvailability(username)
-      setIsUsernameAvailable(available)
+      const result = await checkUsernameAvailability(username)
+      setIsUsernameAvailable(result.available)
+      setUsernameError(result.error || '')
       setIsUsernameChecking(false)
     }, 500)
 
@@ -113,7 +116,9 @@ const Auth: React.FC = () => {
       </div>
 
       {/* Right side - Form */}
-      <div className="w-full lg:w-1/2 flex flex-col justify-center items-center px-6 py-6 lg:p-8 relative bg-surface-dark">
+      <div className="w-full lg:w-1/2 flex flex-col justify-center items-center px-6 py-8 lg:p-8 relative bg-surface-dark">
+        {/* Decorative glow */}
+        <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-primary/5 rounded-full blur-[120px] pointer-events-none"></div>
         {/* Close button */}
         <button
           className="absolute top-6 right-6 text-text-muted hover:text-primary transition-colors cursor-pointer active:scale-95"
@@ -123,13 +128,15 @@ const Auth: React.FC = () => {
           <span className="material-icons-outlined text-2xl">close</span>
         </button>
 
-        <div className="w-full max-w-md space-y-6">
+        <div className="w-full max-w-md space-y-6 relative z-10">
           {/* Logo */}
-          <div className="text-center space-y-1">
-            <div className="inline-flex justify-center items-center w-12 h-12 rounded-full bg-primary/10 border border-primary/20 text-primary mb-1">
-              <span className="material-icons-outlined text-2xl">spa</span>
+          <div className="text-center space-y-2">
+            <div className="gradient-ring inline-block">
+              <div className="w-14 h-14 rounded-full bg-surface-dark flex items-center justify-center text-primary">
+                <span className="material-icons-outlined text-2xl">spa</span>
+              </div>
             </div>
-            <h1 className="font-display text-2xl font-bold tracking-widest text-primary">PINAK</h1>
+            <h1 className="font-display text-2xl font-bold tracking-widest text-gold-gradient">PINAK</h1>
           </div>
 
           {/* Tabs */}
@@ -173,8 +180,9 @@ const Auth: React.FC = () => {
                   Username
                 </label>
                 <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 material-icons-outlined text-text-muted text-lg">person</span>
                   <input
-                    className={`w-full px-5 py-3 rounded-2xl border ${isUsernameAvailable === false ? 'border-red-500/50 focus:ring-red-500' : isUsernameAvailable === true ? 'border-green-500/50 focus:ring-green-500' : 'border-primary/15 focus:ring-primary'} bg-background-dark text-text-main-light placeholder-text-muted focus:outline-none focus:ring-2 focus:border-transparent transition-all shadow-sm`}
+                    className={`w-full pl-11 pr-12 py-3 rounded-2xl border ${isUsernameAvailable === false ? 'border-red-500/50 focus:ring-red-500' : isUsernameAvailable === true ? 'border-green-500/50 focus:ring-green-500' : 'border-primary/15 focus:ring-primary'} bg-background-dark text-text-main-light placeholder-text-muted focus:outline-none focus:ring-2 focus:border-transparent transition-all shadow-sm`}
                     id="username"
                     name="username"
                     placeholder="Choose a username"
@@ -189,8 +197,8 @@ const Auth: React.FC = () => {
                     {!isUsernameChecking && isUsernameAvailable === false && <span className="material-icons-outlined text-red-400 text-xl">cancel</span>}
                   </div>
                 </div>
-                {!isUsernameChecking && isUsernameAvailable === false && (
-                  <p className="text-xs text-red-400 mt-1">This username is already taken.</p>
+                {!isUsernameChecking && isUsernameAvailable === false && usernameError && (
+                  <p className="text-xs text-red-400 mt-1">{usernameError}</p>
                 )}
               </div>
             )}
@@ -200,9 +208,11 @@ const Auth: React.FC = () => {
               <label className="text-xs font-bold tracking-widest text-text-muted uppercase" htmlFor="email">
                 Email Address
               </label>
-              <input
-                autoComplete="email"
-                className="w-full px-5 py-3 rounded-2xl border border-primary/15 bg-background-dark text-text-main-light placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm"
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 material-icons-outlined text-text-muted text-lg">email</span>
+                <input
+                  autoComplete="email"
+                  className="w-full pl-11 pr-5 py-3 rounded-2xl border border-primary/15 bg-background-dark text-text-main-light placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm"
                 id="email"
                 name="email"
                 placeholder="Enter your email"
@@ -211,6 +221,7 @@ const Auth: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
+              </div>
             </div>
 
             {/* Password */}
@@ -219,9 +230,10 @@ const Auth: React.FC = () => {
                 Password
               </label>
               <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 material-icons-outlined text-text-muted text-lg">lock</span>
                 <input
                   autoComplete={isLogin ? 'current-password' : 'new-password'}
-                  className="w-full px-5 py-3 rounded-2xl border border-primary/15 bg-background-dark text-text-main-light placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm"
+                  className="w-full pl-11 pr-12 py-3 rounded-2xl border border-primary/15 bg-background-dark text-text-main-light placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm"
                   id="password"
                   name="password"
                   placeholder="Enter your password"

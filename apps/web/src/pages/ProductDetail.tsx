@@ -193,7 +193,7 @@ const ProductDetail: React.FC = () => {
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto px-6 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm text-text-muted mb-8">
           <a className="hover:text-primary cursor-pointer" onClick={() => navigate('/')}>Home</a>
@@ -206,7 +206,7 @@ const ProductDetail: React.FC = () => {
         <div className="flex flex-col lg:flex-row gap-12">
           {/* Image Gallery */}
           <div className="w-full lg:w-1/2 space-y-4">
-            <div className="aspect-square rounded-2xl overflow-hidden bg-surface-dark border border-primary/10">
+            <div className="aspect-square rounded-2xl overflow-hidden bg-surface-dark border border-primary/10 img-zoom">
               {selectedImage ? (
                 <img src={selectedImage} alt={product.name} className="w-full h-full object-cover" />
               ) : (
@@ -241,7 +241,7 @@ const ProductDetail: React.FC = () => {
               </span>
             )}
 
-            <h1 className="font-display text-3xl lg:text-4xl font-bold leading-tight">{product.name}</h1>
+            <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight">{product.name}</h1>
 
             {product.categories && product.categories.length > 0 && (
               <div className="flex flex-wrap gap-2">
@@ -259,7 +259,7 @@ const ProductDetail: React.FC = () => {
 
             {selectedVariant && (
               <div className="flex items-center gap-4">
-                <span className="text-3xl font-bold text-primary">
+                <span className="text-3xl font-bold text-primary price-glow">
                   {formatPrice(selectedVariant.price)}
                 </span>
                 {selectedVariant.compareAtPrice && selectedVariant.compareAtPrice > selectedVariant.price && (
@@ -429,7 +429,7 @@ const ProductDetail: React.FC = () => {
                 You May Also Like
               </h2>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
               {relatedProducts.slice(0, 4).map((rel) => {
                 const bestVariant = rel.variants?.find((v) => v.isActive) || rel.variants?.[0]
                 return (
