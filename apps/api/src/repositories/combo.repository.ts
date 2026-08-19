@@ -179,6 +179,11 @@ export class ComboRepository {
       include: {
         productVariant: {
           include: {
+            product: {
+              include: {
+                taxClass: true,
+              },
+            },
             images: {
               where: { isDeleted: false },
               orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }],

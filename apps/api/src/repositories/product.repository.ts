@@ -432,6 +432,8 @@ export class ProductRepository {
           include: {
             product: {
               include: {
+                brand: { select: { id: true, name: true, slug: true, logoUrl: true } },
+                taxClass: { select: { id: true, name: true, rate: true } },
                 categories: { include: { category: true } },
                 variants: {
                   where: { stock: { gt: 0 } },
@@ -475,6 +477,26 @@ export class ProductRepository {
         isDeleted: false,
         ...filters,
       },
+      include: {
+        brand: { select: { id: true, name: true, slug: true, logoUrl: true } },
+        taxClass: { select: { id: true, name: true, rate: true } },
+        lengthClass: { select: { id: true, name: true, unit: true } },
+        weightClass: { select: { id: true, name: true, unit: true } },
+        categories: { include: { category: true } },
+        filterValues: { include: { filterValue: true } },
+        variants: {
+          where: { isDeleted: false },
+          include: {
+            images: {
+              where: { isPrimary: true, isDeleted: false },
+              take: 1,
+            },
+            optionValues: {
+              include: { optionValue: { include: { option: true } } },
+            },
+          },
+        },
+      },
     });
   }
 
@@ -486,6 +508,7 @@ export class ProductRepository {
         optionValues: {
           include: { optionValue: { include: { option: true } } },
         },
+        product: { select: { taxClass: true } },
       },
     });
   }
@@ -634,6 +657,7 @@ export class ProductRepository {
           orderBy,
           include: {
             brand: { select: { id: true, name: true, slug: true } },
+            taxClass: { select: { id: true, name: true, rate: true } },
             variants: {
               where: { isDeleted: false },
               include: {

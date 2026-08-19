@@ -6,6 +6,7 @@ const wishlistItemInclude = {
       product: {
         include: {
           brand: true,
+          taxClass: true,
         },
       },
       images: {
@@ -120,6 +121,7 @@ export class WishlistRepository {
             product: {
               include: {
                 brand: true,
+                taxClass: true,
               },
             },
             images: {
@@ -155,6 +157,7 @@ export class WishlistRepository {
             product: {
               include: {
                 brand: true,
+                taxClass: true,
               },
             },
             images: {
