@@ -1516,12 +1516,72 @@ async function main() {
         orderId: sarahOrder.id,
         productId: await productIdBySku("SEP-001"),
         productVariantId: sep001.id,
-        productName: "Shimmer Eyeshadow Palette — Warm Tones 12g",
+        productName: "Soothing Eye Palette — Rose Naturals",
         price: sep001.price,
         quantity: 1,
       },
     ],
   });
+
+  // --- Historical Orders for Best-Sellers Timeframe Testing ---
+  const oneWeekAgo = new Date();
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 10); // > 1 week, < 1 month
+  
+  const oneMonthAgo = new Date();
+  oneMonthAgo.setDate(oneMonthAgo.getDate() - 40); // > 1 month
+
+  const testOrder1 = await prisma.order.create({
+    data: {
+      userId: johnId,
+      status: "DELIVERED",
+      paymentStatus: "COMPLETED",
+      subtotalAmount: rgf001.price * 5,
+      taxAmount: Math.round((rgf001.price * 5) * 0.12),
+      shippingAmount: 0,
+      totalAmount: Math.round((rgf001.price * 5) * 1.12),
+      createdAt: oneWeekAgo,
+    },
+  });
+  await prisma.orderItem.createMany({
+    data: [
+      {
+        orderId: testOrder1.id,
+        productId: await productIdBySku("RGF-001"),
+        productVariantId: rgf001.id,
+        productName: "Radiant Glow Foundation — Light Beige 30ml",
+        price: rgf001.price,
+        quantity: 5,
+        createdAt: oneWeekAgo,
+      },
+    ],
+  });
+
+  const testOrder2 = await prisma.order.create({
+    data: {
+      userId: janeId,
+      status: "DELIVERED",
+      paymentStatus: "COMPLETED",
+      subtotalAmount: vml001.price * 10,
+      taxAmount: Math.round((vml001.price * 10) * 0.12),
+      shippingAmount: 0,
+      totalAmount: Math.round((vml001.price * 10) * 1.12),
+      createdAt: oneMonthAgo,
+    },
+  });
+  await prisma.orderItem.createMany({
+    data: [
+      {
+        orderId: testOrder2.id,
+        productId: await productIdBySku("VML-001"),
+        productVariantId: vml001.id,
+        productName: "Velvet Matte Lipstick — Classic Red",
+        price: vml001.price,
+        quantity: 10,
+        createdAt: oneMonthAgo,
+      },
+    ],
+  });
+  // -----------------------------------------------------------
 
   console.log("✅ Created 3 orders (DELIVERED, PROCESSING, SHIPPED)");
 

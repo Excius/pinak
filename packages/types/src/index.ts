@@ -27,6 +27,7 @@ export { CouponTypes } from "./api/coupon.js";
 export { OrderTypes } from "./api/order.js";
 export { OrderAdminTypes } from "./api/order.js";
 export { AddressTypes } from "./api/address.js";
+export { BestSellerTypes } from "./api/bestseller.js";
 
 // Namespaced exports avoid collisions for generic type names
 // like BodyTypes / ParamsTypes across different API modules.
@@ -52,3 +53,4 @@ export * as CartApi from "./api/cart.js";
 export * as CouponApi from "./api/coupon.js";
 export * as OrderApi from "./api/order.js";
 export * as AddressApi from "./api/address.js";
+export * as BestSellerApi from "./api/bestseller.js";

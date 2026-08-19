@@ -97,6 +97,28 @@ export class ProductService {
     );
   }
 
+  async getBestSellers(
+    pagination: ProductPaginationOptions,
+    timeframe: "week" | "month" | "all_time" = "all_time",
+    categoryId?: string,
+  ) {
+    return this.productRepository.getBestSellers(pagination, timeframe, categoryId);
+  }
+
+  async getBestSellersAdmin(
+    pagination: ProductPaginationOptions,
+    timeframe: "week" | "month" | "all_time" = "all_time",
+    categoryId?: string,
+  ) {
+    return this.productRepository.getBestSellersAdmin(pagination, timeframe, categoryId);
+  }
+
+  async getBestSellerAnalytics(
+    timeframe: "week" | "month" | "all_time" = "month",
+  ) {
+    return this.productRepository.getBestSellerAnalytics(timeframe);
+  }
+
   async searchProducts(query: string, filters: Prisma.ProductWhereInput = {}) {
     return this.productRepository.searchProducts(query, filters);
   }

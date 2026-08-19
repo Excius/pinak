@@ -5,6 +5,7 @@ import { registerProductPublicFeaturedRoutes } from "./public-featured.routes.js
 import { registerProductPublicProductRoutes } from "./public-product.routes.js";
 import { registerProductPublicRelatedRoutes } from "./related.routes.js";
 import { registerProductPublicVariantRoutes } from "./public-variant.routes.js";
+import { registerProductPublicBestSellerRoutes } from "./public-bestseller.routes.js";
 
 export const registerProductPublicRoutes = (
   router: Router,
@@ -14,5 +15,6 @@ export const registerProductPublicRoutes = (
   registerProductPublicVariantRoutes(router, deps);
   registerProductPublicCategoryRoutes(router, deps);
   registerProductPublicRelatedRoutes(router, deps);
+  registerProductPublicBestSellerRoutes(router, deps);
   registerProductPublicProductRoutes(router, deps);
 };
