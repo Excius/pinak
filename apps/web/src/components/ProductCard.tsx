@@ -8,7 +8,9 @@ interface ProductCardProps {
   slug: string
   imageUrl?: string
   price?: number
+  priceWithTax?: number
   comparePrice?: number
+  compareAtPriceWithTax?: number | null
   category?: string
   badge?: string
   rating?: number
@@ -21,7 +23,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
   slug,
   imageUrl,
   price,
+  priceWithTax,
   comparePrice,
+  compareAtPriceWithTax,
   category,
   badge,
   rating,
@@ -33,9 +37,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   const formatPrice = (p: number) => `₹${p.toLocaleString('en-IN')}`
 
+  const displayPrice = priceWithTax ?? price
+  const displayComparePrice = compareAtPriceWithTax ?? comparePrice
+
   const discount =
-    comparePrice && price && comparePrice > price
-      ? Math.round(((comparePrice - price) / comparePrice) * 100)
+    displayComparePrice && displayPrice && displayComparePrice > displayPrice
+      ? Math.round(((displayComparePrice - displayPrice) / displayComparePrice) * 100)
       : null
 
   const handleAddToCart = (e: React.MouseEvent) => {
@@ -100,7 +107,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             -{discount}%
           </div>
         )}
-        {variantId && price && (
+        {variantId && displayPrice && (
           <button
             className="absolute bottom-3 sm:bottom-4 right-3 sm:right-4 bg-primary p-2.5 sm:p-3 rounded-full shadow-lg translate-y-12 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 touch-show transition-all duration-300 hover:bg-primary-hover cursor-pointer active:scale-95"
             onClick={handleAddToCart}
@@ -114,13 +121,22 @@ const ProductCard: React.FC<ProductCardProps> = ({
       </h3>
       {category && <p className="text-xs sm:text-sm text-text-muted mb-1 sm:mb-2">{category}</p>}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {price != null && <span className="font-bold text-sm sm:text-lg text-primary price-glow">{formatPrice(price)}</span>}
-          {comparePrice && comparePrice > (price || 0) && (
-            <span className="text-xs sm:text-sm text-text-muted line-through">{formatPrice(comparePrice)}</span>
+        <div className="flex items-center gap-2 flex-wrap">
+          {displayPrice != null && (
+            <div className="flex flex-col">
+              <span className="font-bold text-sm sm:text-lg text-primary price-glow">
+                {formatPrice(displayPrice)}
+              </span>
+              <span className="text-[10px] text-text-muted">(incl. tax)</span>
+            </div>
+          )}
+          {displayComparePrice && displayComparePrice > (displayPrice || 0) && (
+            <span className="text-xs sm:text-sm text-text-muted line-through mb-4">
+              {formatPrice(displayComparePrice)}
+            </span>
           )}
         </div>
-        {rating != null && <div className="flex text-primary text-xs">{renderStars(rating)}</div>}
+        {rating != null && <div className="flex text-primary text-xs self-start">{renderStars(rating)}</div>}
       </div>
     </div>
   )

@@ -3,9 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import ProductCard from '../components/ProductCard'
 import { ProductGridSkeleton } from '../components/Skeleton'
-import { getFeaturedProducts } from '../api/products.api'
+import { getBestsellers } from '../api/products.api'
 import { getTopCategories } from '../api/categories.api'
-import { useAuth } from '../context/AuthContext'
 import type { Product } from '../api/products.api'
 import type { Category } from '../api/categories.api'
 
@@ -39,26 +38,21 @@ function useScrollReveal(deps: unknown[] = []) {
 
 const Landing: React.FC = () => {
   const navigate = useNavigate()
-  const { isAuthenticated } = useAuth()
-  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([])
+  const [bestsellers, setBestsellers] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loadingProducts, setLoadingProducts] = useState(true)
 
-  useScrollReveal([featuredProducts, categories, loadingProducts])
+  useScrollReveal([bestsellers, categories, loadingProducts])
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      setLoadingProducts(false)
-      return
-    }
     const fetchData = async () => {
       try {
         const [prodData, catData] = await Promise.all([
-          getFeaturedProducts().catch(() => []),
+          getBestsellers({ timeframe: 'all_time', limit: 4 }).catch(() => []),
           getTopCategories().catch(() => []),
         ])
         if (Array.isArray(prodData)) {
-          setFeaturedProducts(prodData.slice(0, 4))
+          setBestsellers(prodData.slice(0, 4))
         }
         if (Array.isArray(catData)) {
           setCategories(catData.slice(0, 3))
@@ -70,7 +64,7 @@ const Landing: React.FC = () => {
       }
     }
     fetchData()
-  }, [isAuthenticated])
+  }, [])
 
   const getFirstVariant = (product: Product) => {
     return product.variants?.find((v) => v.isActive) || product.variants?.[0]
@@ -94,7 +88,11 @@ const Landing: React.FC = () => {
   return (
     <Layout>
       {/* ════════ Hero Section ════════ */}
-      <header className="relative w-full min-h-[60vh] sm:min-h-[70vh] md:h-[90vh] overflow-hidden flex items-center justify-center bg-black">
+      <header className="relative w-full min-h-[70vh] md:h-[95vh] overflow-hidden flex items-center justify-center bg-black">
+        {/* Dynamic Orbs */}
+        <div className="orb w-[300px] h-[300px] bg-primary/40 top-10 left-10"></div>
+        <div className="orb w-[500px] h-[500px] bg-primary-dark/30 bottom-10 right-10" style={{ animationDelay: '2s' }}></div>
+
         {/* Parallax background image */}
         <div className="absolute inset-0 w-full h-full transform scale-105 transition-transform duration-[10s] hover:scale-100">
           <img
@@ -103,10 +101,10 @@ const Landing: React.FC = () => {
             src="https://lh3.googleusercontent.com/aida-public/AB6AXuBF0EWZk9ZmyUlv_3qPJjW1_-LxDzBPfkD2WETFKMe-PzM5P5Y6tBjoOgG7QgiH6pg8cFzjRdXGqtpJh78VJoBHYrflLythz-nwKZCM6zNs4yIlrLrg2OyQzqMYE0z6GpTJBoQzsc1tiQ4FwsvMt6xElyEzw6jRGU_gYyrXaVPOxiyv9dA5ISfDneXmbLEp9bIr769Tw1zMWS3byDi7k5okS6l6wFSA3Bs8TMg08P2YXHCmBcO1E4_kihsIggMuF0_FSOK6hrJgQA"
           />
         </div>
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/20"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/20"></div>
 
         {/* Floating particles */}
-        {Array.from({ length: 15 }).map((_, i) => (
+        {Array.from({ length: 20 }).map((_, i) => (
           <div
             key={i}
             className="sparkle"
@@ -118,26 +116,38 @@ const Landing: React.FC = () => {
             }}
           ></div>
         ))}
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[300px] sm:w-[600px] h-[150px] sm:h-[300px] bg-primary/10 rounded-full blur-[80px] sm:blur-[120px] pointer-events-none"></div>
+
+        {/* Glassmorphic floating card */}
+        <div className="absolute top-[30%] right-[10%] hidden xl:block glass-panel p-5 rounded-2xl animate-float z-20" style={{ animationDelay: '1s' }}>
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center shadow-lg shadow-primary/20">
+              <span className="material-icons-outlined text-primary">auto_awesome</span>
+            </div>
+            <div>
+              <p className="text-white font-bold text-sm tracking-wide">Top Rated</p>
+              <p className="text-text-muted text-xs">By Skincare Experts</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[300px] sm:w-[600px] h-[150px] sm:h-[300px] bg-primary/20 rounded-full blur-[100px] sm:blur-[120px] pointer-events-none"></div>
         <div className="relative z-10 text-center text-white px-6 sm:px-4 max-w-3xl mx-auto py-16 sm:py-0">
-          <span className="scroll-reveal block text-xs sm:text-sm md:text-base uppercase tracking-[0.15em] sm:tracking-[0.25em] mb-3 sm:mb-4 text-primary-light/80">Rooted in Tradition</span>
-          <h2 style={{ fontFamily: '"Playfair Display", serif' }} className="scroll-reveal text-3xl sm:text-5xl md:text-7xl font-medium mb-4 sm:mb-6 leading-tight">
-            The Ritual of <br /> <i className="gold-shimmer" style={{ fontFamily: '"Playfair Display", serif', fontStyle: 'italic' }}>Expert-Led</i> Beauty
+          <span className="scroll-reveal block text-xs sm:text-sm md:text-base uppercase tracking-[0.2em] sm:tracking-[0.3em] mb-4 sm:mb-6 text-primary-light/90">Rooted in Tradition</span>
+          <h2 className="scroll-reveal font-display text-4xl sm:text-5xl md:text-7xl font-bold mb-6 leading-tight">
+            The Ritual of <br /> <i className="gold-shimmer font-display italic font-medium">Expert-Led  </i> Beauty
           </h2>
-          <p style={{ fontFamily: 'Lato, sans-serif' }} className="scroll-reveal text-sm sm:text-lg md:text-xl font-light mb-6 sm:mb-10 opacity-90 max-w-xl mx-auto text-stone-300">
+          <p className="scroll-reveal font-body text-sm sm:text-lg md:text-xl font-light mb-8 sm:mb-10 opacity-90 max-w-xl mx-auto text-stone-300">
             Discover the harmony of ancient Indian botanicals and modern science for radiant, balanced skin.
           </p>
-          <div className="scroll-reveal flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+          <div className="scroll-reveal flex flex-col sm:flex-row gap-4 justify-center">
             <button
-              style={{ fontFamily: 'Lato, sans-serif' }}
-              className="bg-primary hover:bg-primary-hover text-black px-6 sm:px-8 py-3 sm:py-3.5 rounded-full uppercase tracking-wider text-xs sm:text-sm font-bold transition-all shadow-lg glow-gold cursor-pointer"
+              className="bg-primary hover:bg-primary-hover text-black px-8 py-4 rounded-full uppercase tracking-wider text-xs sm:text-sm font-bold transition-all shadow-[0_0_20px_rgba(200,169,81,0.4)] glow-gold cursor-pointer"
               onClick={() => navigate('/shop')}
             >
               Shop Collection
             </button>
             <a
-              style={{ fontFamily: 'Lato, sans-serif' }}
-              className="bg-transparent text-white border border-primary/50 hover:border-primary hover:bg-primary/10 px-6 sm:px-8 py-3 sm:py-3.5 rounded-full uppercase tracking-wider text-xs sm:text-sm font-semibold transition-all cursor-pointer"
+              className="bg-transparent text-white border border-primary/50 hover:border-primary hover:bg-primary/10 px-8 py-4 rounded-full uppercase tracking-wider text-xs sm:text-sm font-semibold transition-all cursor-pointer glass-panel"
               href="#story"
             >
               Our Story
@@ -146,32 +156,50 @@ const Landing: React.FC = () => {
         </div>
       </header>
 
+      {/* ════════ Infinite Marquee ════════ */}
+      <div className="bg-primary text-black py-4 border-y border-primary-light/30">
+        <div className="marquee-container">
+          <div className="marquee-content font-bold text-xs sm:text-sm uppercase tracking-widest flex items-center">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <React.Fragment key={i}>
+                <span className="mx-8 sm:mx-12">100% Natural Origins</span>
+                <span className="text-[10px]">✦</span>
+                <span className="mx-8 sm:mx-12">Clinically Proven</span>
+                <span className="text-[10px]">✦</span>
+                <span className="mx-8 sm:mx-12">Ayurvedic Wisdom</span>
+                <span className="text-[10px]">✦</span>
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* ════════ Trust Badges ════════ */}
       <section className="py-10 sm:py-16 bg-surface-dark border-b border-primary/10 relative overflow-hidden">
         {/* Connecting line on desktop */}
         <div className="hidden md:block absolute top-1/2 left-0 w-full h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent -translate-y-1/2 z-0"></div>
-        
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 text-center scroll-stagger relative z-10">
           <div className="scroll-reveal flex flex-col items-center group bg-surface-dark p-4 rounded-xl">
             <div className="w-14 h-14 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-primary/20 group-hover:shadow-[0_0_15px_rgba(200,169,81,0.2)] transition-all duration-300">
               <span className="material-icons-outlined text-primary text-xl">eco</span>
             </div>
-            <h3 style={{ fontFamily: '"Playfair Display", serif' }} className="text-base md:text-lg font-semibold text-text-main-light mb-2">100% Natural Origins</h3>
-            <p style={{ fontFamily: 'Lato, sans-serif' }} className="text-sm md:text-base text-text-muted max-w-xs">Sourced directly from organic farms across India.</p>
+            <h3 className="font-display text-base md:text-lg font-semibold text-text-main-light mb-2">100% Natural Origins</h3>
+            <p className="font-body text-sm md:text-base text-text-muted max-w-xs">Sourced directly from organic farms across India.</p>
           </div>
-          <div className="scroll-reveal flex flex-col items-center group bg-surface-dark p-4 rounded-xl">
-            <div className="w-14 h-14 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-primary/20 group-hover:shadow-[0_0_15px_rgba(200,169,81,0.2)] transition-all duration-300">
-              <span className="material-icons-outlined text-primary text-xl">science</span>
+          <div className="scroll-reveal flex flex-col items-center group bg-surface-dark p-6 rounded-2xl glass-card card-lift border border-primary/5">
+            <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-all duration-300">
+              <span className="material-icons-outlined text-primary text-2xl">science</span>
             </div>
-            <h3 style={{ fontFamily: '"Playfair Display", serif' }} className="text-base md:text-lg font-semibold text-text-main-light mb-2">Clinically Proven</h3>
-            <p style={{ fontFamily: 'Lato, sans-serif' }} className="text-sm md:text-base text-text-muted max-w-xs">Formulations backed by dermatological science.</p>
+            <h3 className="font-display text-base md:text-lg font-semibold text-text-main-light mb-2">Clinically Proven</h3>
+            <p className="font-body text-sm md:text-base text-text-muted max-w-xs">Formulations backed by dermatological science.</p>
           </div>
-          <div className="scroll-reveal flex flex-col items-center group bg-surface-dark p-4 rounded-xl">
-            <div className="w-14 h-14 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-primary/20 group-hover:shadow-[0_0_15px_rgba(200,169,81,0.2)] transition-all duration-300">
-              <span className="material-icons-outlined text-primary text-xl">volunteer_activism</span>
+          <div className="scroll-reveal flex flex-col items-center group bg-surface-dark p-6 rounded-2xl glass-card card-lift border border-primary/5">
+            <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-all duration-300">
+              <span className="material-icons-outlined text-primary text-2xl">volunteer_activism</span>
             </div>
-            <h3 style={{ fontFamily: '"Playfair Display", serif' }} className="text-base md:text-lg font-semibold text-text-main-light mb-2">Cruelty Free</h3>
-            <p style={{ fontFamily: 'Lato, sans-serif' }} className="text-sm md:text-base text-text-muted max-w-xs">Kind to your skin, kind to animals, always.</p>
+            <h3 className="font-display text-base md:text-lg font-semibold text-text-main-light mb-2">Cruelty Free</h3>
+            <p className="font-body text-sm md:text-base text-text-muted max-w-xs">Kind to your skin, kind to animals, always.</p>
           </div>
         </div>
       </section>
@@ -191,27 +219,11 @@ const Landing: React.FC = () => {
           </a>
         </div>
 
-        {!isAuthenticated ? (
-          <div className="text-center py-16 space-y-6 bg-surface-dark rounded-2xl border border-primary/10">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 border border-primary/20">
-              <span className="material-icons-outlined text-3xl text-primary">lock</span>
-            </div>
-            <div>
-              <h3 className="font-display text-xl font-bold mb-2">Sign in to explore our products</h3>
-              <p className="text-text-muted">Create an account or login to browse our full collection</p>
-            </div>
-            <button
-              className="bg-primary hover:bg-primary-hover text-black px-8 py-3 rounded-full text-sm font-bold uppercase tracking-wider transition-all glow-gold cursor-pointer"
-              onClick={() => navigate('/auth')}
-            >
-              Sign In
-            </button>
-          </div>
-        ) : loadingProducts ? (
+        {loadingProducts ? (
           <ProductGridSkeleton count={4} />
-        ) : featuredProducts.length > 0 ? (
+        ) : bestsellers.length > 0 ? (
           <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 scroll-stagger hide-scrollbar grab-scroll pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 sm:pb-0">
-            {featuredProducts.map((product) => {
+            {bestsellers.map((product) => {
               const variant = getFirstVariant(product)
               return (
                 <div key={product.id} className="scroll-reveal shrink-0 w-[75vw] sm:w-auto">
@@ -221,7 +233,9 @@ const Landing: React.FC = () => {
                     slug={product.slug}
                     imageUrl={getProductImage(product)}
                     price={variant?.price}
+                    priceWithTax={variant?.priceWithTax}
                     comparePrice={variant?.compareAtPrice ?? undefined}
+                    compareAtPriceWithTax={variant?.compareAtPriceWithTax ?? undefined}
                     category={product.categories?.[0]?.name}
                     variantId={variant?.id}
                     variantLabel={variant?.optionValues?.map((ov) => ov.valueName).join(' / ')}
@@ -298,25 +312,101 @@ const Landing: React.FC = () => {
             <span className="text-primary text-xs sm:text-sm uppercase tracking-widest font-bold block mb-2">Curated for you</span>
             <h2 className="font-display text-2xl sm:text-4xl font-bold">Shop by Ritual</h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 scroll-stagger">
-            {(categories.length > 0 ? categories : defaultRitualNames.map((name, i) => ({ id: String(i), name, slug: name.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-') }))).map((cat: any, i: number) => (
-              <a
-                key={cat.id}
-                className="scroll-reveal-scale group relative h-56 sm:h-72 md:h-96 rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer border border-primary/5 hover:border-primary/20 transition-all"
-                onClick={() => isAuthenticated ? navigate(`/categories/${cat.slug}`) : navigate('/auth')}
-              >
-                <img
-                  alt={cat.name}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  src={cat.categoryImages?.[0]?.url || categoryImages[i % categoryImages.length]}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent group-hover:from-black/80 transition-colors"></div>
-                <div className="absolute bottom-4 sm:bottom-8 left-4 sm:left-8">
-                  <h3 className="font-display text-lg sm:text-2xl text-white font-bold mb-1">{cat.name}</h3>
-                  <span className="text-primary text-xs sm:text-sm uppercase tracking-wider group-hover:underline transition-all">Explore →</span>
-                </div>
-              </a>
-            ))}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 scroll-stagger">
+            {/* The first category */}
+            {(() => {
+              const displayCats = categories.length > 0 ? categories : defaultRitualNames.map((name, i) => ({ id: String(i), name, slug: name.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-'), categoryImages: [{ url: categoryImages[i % categoryImages.length] }] }))
+              return (
+                <>
+                  {displayCats[0] && (
+                    <a
+                      key={displayCats[0].id}
+                      className="scroll-reveal-scale group relative h-72 md:h-[400px] rounded-2xl sm:rounded-3xl overflow-hidden cursor-pointer border border-primary/10 hover:border-primary/40 transition-all shadow-lg hover:shadow-primary/10"
+                      onClick={() => navigate(`/categories/${displayCats[0]?.slug}`)}
+                    >
+                      <img
+                        alt={displayCats[0].name}
+                        className="w-full h-full object-cover transition-transform duration-[1.5s] group-hover:scale-110"
+                        src={displayCats[0].categoryImages?.[0]?.url || categoryImages[0]}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent group-hover:from-black/90 transition-colors duration-500"></div>
+                      <div className="absolute bottom-6 left-6 right-6 p-5 glass-panel rounded-2xl transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
+                        <h3 className="font-display text-xl md:text-2xl text-white font-bold mb-1">{displayCats[0].name}</h3>
+                        <span className="text-primary text-xs uppercase tracking-widest font-bold">Explore Collection →</span>
+                      </div>
+                      <div className="absolute top-6 left-6 group-hover:opacity-0 transition-opacity duration-300">
+                        <h3 className="font-display text-xl md:text-2xl text-white font-bold text-shadow">{displayCats[0].name}</h3>
+                      </div>
+                    </a>
+                  )}
+
+                  {/* The second category */}
+                  {displayCats[1] && (
+                    <a
+                      key={displayCats[1].id}
+                      className="scroll-reveal-scale group relative h-72 md:h-[400px] rounded-2xl sm:rounded-3xl overflow-hidden cursor-pointer border border-primary/10 hover:border-primary/40 transition-all shadow-lg hover:shadow-primary/10"
+                      onClick={() => navigate(`/categories/${displayCats[1]?.slug}`)}
+                    >
+                      <img
+                        alt={displayCats[1].name}
+                        className="w-full h-full object-cover transition-transform duration-[1.5s] group-hover:scale-110"
+                        src={displayCats[1].categoryImages?.[0]?.url || categoryImages[1]}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent group-hover:from-black/90 transition-colors duration-500"></div>
+                      <div className="absolute bottom-6 left-6 right-6 p-5 glass-panel rounded-2xl transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
+                        <h3 className="font-display text-xl md:text-2xl text-white font-bold mb-1">{displayCats[1].name}</h3>
+                        <span className="text-primary text-xs uppercase tracking-widest font-bold">Explore Collection →</span>
+                      </div>
+                      <div className="absolute top-6 left-6 group-hover:opacity-0 transition-opacity duration-300">
+                        <h3 className="font-display text-xl md:text-2xl text-white font-bold text-shadow">{displayCats[1].name}</h3>
+                      </div>
+                    </a>
+                  )}
+
+                  {/* The third category */}
+                  {displayCats[2] && (
+                    <a
+                      key={displayCats[2].id}
+                      className="scroll-reveal-scale group relative h-72 md:h-[400px] rounded-2xl sm:rounded-3xl overflow-hidden cursor-pointer border border-primary/10 hover:border-primary/40 transition-all shadow-lg hover:shadow-primary/10"
+                      onClick={() => navigate(`/categories/${displayCats[2]?.slug}`)}
+                    >
+                      <img
+                        alt={displayCats[2].name}
+                        className="w-full h-full object-cover transition-transform duration-[1.5s] group-hover:scale-110"
+                        src={displayCats[2].categoryImages?.[0]?.url || categoryImages[2]}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent group-hover:from-black/90 transition-colors duration-500"></div>
+                      <div className="absolute bottom-6 left-6 right-6 p-5 glass-panel rounded-2xl transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
+                        <h3 className="font-display text-xl md:text-2xl text-white font-bold mb-1">{displayCats[2].name}</h3>
+                        <span className="text-primary text-xs uppercase tracking-widest font-bold">Explore Collection →</span>
+                      </div>
+                      <div className="absolute top-6 left-6 group-hover:opacity-0 transition-opacity duration-300">
+                        <h3 className="font-display text-xl md:text-2xl text-white font-bold text-shadow">{displayCats[2].name}</h3>
+                      </div>
+                    </a>
+                  )}
+
+                  {/* Call to action decorative banner */}
+                  <div
+                    className="scroll-reveal-scale relative md:col-span-3 rounded-2xl sm:rounded-3xl overflow-hidden bg-primary p-6 md:p-10 flex flex-col md:flex-row items-center justify-between cursor-pointer group hover:bg-primary-hover transition-colors shadow-[0_0_20px_rgba(200,169,81,0.2)] mt-2"
+                    onClick={() => navigate('/shop')}
+                  >
+                    <div className="flex items-center gap-6">
+                      <div className="w-16 h-16 rounded-full bg-black/10 flex items-center justify-center group-hover:rotate-45 transition-transform duration-500 shrink-0">
+                        <span className="material-icons-outlined text-black text-3xl">star</span>
+                      </div>
+                      <div>
+                        <h3 className="font-display text-2xl md:text-3xl text-black font-bold mb-1 leading-tight">Discover All Rituals</h3>
+                        <p className="text-black/80 font-medium text-sm">Explore our complete collection of Ayurvedic formulations.</p>
+                      </div>
+                    </div>
+                    <span className="mt-6 md:mt-0 bg-black text-white px-8 py-3 rounded-full text-sm uppercase tracking-widest font-bold group-hover:scale-105 transition-transform">
+                      Shop Now
+                    </span>
+                  </div>
+                </>
+              )
+            })()}
           </div>
         </div>
       </section>

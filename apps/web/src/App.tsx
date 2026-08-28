@@ -96,16 +96,16 @@ function AppRoutes() {
       <Route path="/verify-email" element={<VerifyEmail />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/shop" element={<Shop />} />
+      <Route path="/products/:slug" element={<ProductDetail />} />
+      <Route path="/categories/:slug" element={<CategoryPage />} />
+      <Route path="/combo-kits" element={<ComboKits />} />
+      <Route path="/combo-kits/:slug" element={<ComboKitDetail />} />
+      <Route path="/search" element={<SearchResults />} />
 
       {/* Protected routes */}
       <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-      <Route path="/shop" element={<ProtectedRoute><Shop /></ProtectedRoute>} />
-      <Route path="/products/:slug" element={<ProtectedRoute><ProductDetail /></ProtectedRoute>} />
-      <Route path="/categories/:slug" element={<ProtectedRoute><CategoryPage /></ProtectedRoute>} />
-      <Route path="/combo-kits" element={<ProtectedRoute><ComboKits /></ProtectedRoute>} />
-      <Route path="/combo-kits/:slug" element={<ProtectedRoute><ComboKitDetail /></ProtectedRoute>} />
       <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
-      <Route path="/search" element={<ProtectedRoute><SearchResults /></ProtectedRoute>} />
       <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
       <Route path="/orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
       <Route path="/orders/:orderId" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
