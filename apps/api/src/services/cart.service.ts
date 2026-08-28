@@ -13,7 +13,10 @@ export type CartItemResponse = {
   itemType: "PRODUCT_VARIANT" | "COMBO_KIT";
   quantity: number;
   unitPrice: number;
+  unitPriceWithTax?: number;
+  taxAmount?: number;
   lineTotal: number;
+  lineTotalWithTax?: number;
   availableStock: number;
   productVariantId: string | null;
   comboKitId: string | null;
@@ -21,6 +24,8 @@ export type CartItemResponse = {
     id: string;
     sku: string;
     price: number;
+    taxAmount?: number;
+    priceWithTax?: number;
     isActive: boolean;
     image: {
       id: string;
@@ -71,6 +76,8 @@ export type CartItemResponse = {
         id: string;
         sku: string;
         price: number;
+        taxAmount?: number;
+        priceWithTax?: number;
         image: {
           id: string;
           url: string;
@@ -93,6 +100,8 @@ export type CartResponse = {
   totalQuantity: number;
   subtotal: number;
   total: number;
+  taxTotal?: number;
+  totalWithTax?: number;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -161,15 +170,22 @@ export class CartService {
               item.productVariantId,
             );
 
+          const taxRate = item.productVariant.product.taxClass?.rate ?? 0;
           const unitPrice = item.productVariant.price;
+          const variantTaxAmount = Math.round((unitPrice * taxRate) / 100);
+          const unitPriceWithTax = unitPrice + variantTaxAmount;
           const lineTotal = unitPrice * item.quantity;
+          const lineTotalWithTax = unitPriceWithTax * item.quantity;
 
           return {
             id: item.id,
             itemType: "PRODUCT_VARIANT" as const,
             quantity: item.quantity,
             unitPrice,
+            unitPriceWithTax,
+            taxAmount: variantTaxAmount * item.quantity,
             lineTotal,
+            lineTotalWithTax,
             availableStock,
             productVariantId: item.productVariantId,
             comboKitId: null,
@@ -177,6 +193,8 @@ export class CartService {
               id: item.productVariant.id,
               sku: item.productVariant.sku,
               price: item.productVariant.price,
+              taxAmount: variantTaxAmount,
+              priceWithTax: unitPriceWithTax,
               isActive: item.productVariant.isActive,
               image: this.mapVariantImage(item.productVariant.images),
               optionValues: this.mapVariantOptionValues(
@@ -215,12 +233,49 @@ export class CartService {
           const unitPrice = item.comboKit.price;
           const lineTotal = unitPrice * item.quantity;
 
+          let comboItemTaxTotal = 0;
+          const mappedComboItems = item.comboKit.items.map((comboItem) => {
+            const componentVariant = comboItem.productVariant;
+            const compTaxRate = componentVariant?.product?.taxClass?.rate ?? 0;
+            const compPrice = componentVariant?.price ?? 0;
+            const compTaxAmount = Math.round((compPrice * compTaxRate) / 100);
+            const compPriceWithTax = compPrice + compTaxAmount;
+
+            comboItemTaxTotal += compTaxAmount * comboItem.quantity * item.quantity;
+
+            return {
+              id: comboItem.id,
+              productVariantId: comboItem.productVariantId,
+              quantity: comboItem.quantity,
+              sortOrder: comboItem.sortOrder,
+              isRequired: comboItem.isRequired,
+              productVariant: componentVariant
+                ? {
+                    id: componentVariant.id,
+                    sku: componentVariant.sku,
+                    price: componentVariant.price,
+                    taxAmount: compTaxAmount,
+                    priceWithTax: compPriceWithTax,
+                    image: this.mapVariantImage(componentVariant.images),
+                  }
+                : null,
+            };
+          });
+
+          const unitPriceWithTax = Math.round(
+            unitPrice + comboItemTaxTotal / item.quantity,
+          );
+          const lineTotalWithTax = lineTotal + comboItemTaxTotal;
+
           return {
             id: item.id,
             itemType: "COMBO_KIT" as const,
             quantity: item.quantity,
             unitPrice,
+            unitPriceWithTax,
+            taxAmount: comboItemTaxTotal,
             lineTotal,
+            lineTotalWithTax,
             availableStock,
             productVariantId: null,
             comboKitId: item.comboKitId,
@@ -236,21 +291,7 @@ export class CartService {
               metaDescription: item.comboKit.metaDescription,
               metaKeywords: item.comboKit.metaKeywords,
               seoKeyword: item.comboKit.seoKeyword,
-              items: item.comboKit.items.map((comboItem) => ({
-                id: comboItem.id,
-                productVariantId: comboItem.productVariantId,
-                quantity: comboItem.quantity,
-                sortOrder: comboItem.sortOrder,
-                isRequired: comboItem.isRequired,
-                productVariant: comboItem.productVariant
-                  ? {
-                      id: comboItem.productVariant.id,
-                      sku: comboItem.productVariant.sku,
-                      price: comboItem.productVariant.price,
-                      image: this.mapVariantImage(comboItem.productVariant.images),
-                    }
-                  : null,
-              })),
+              items: mappedComboItems,
             },
             createdAt: item.createdAt,
             updatedAt: item.updatedAt,
@@ -263,6 +304,11 @@ export class CartService {
 
     const subtotal = items.reduce((sum, item) => sum + item.lineTotal, 0);
     const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
+    const taxTotal = items.reduce(
+      (sum, item) => sum + (item.lineTotalWithTax ?? item.lineTotal) - item.lineTotal,
+      0,
+    );
+    const totalWithTax = subtotal + taxTotal;
 
     return {
       id: cart.id,
@@ -272,6 +318,8 @@ export class CartService {
       totalQuantity,
       subtotal,
       total: subtotal,
+      taxTotal,
+      totalWithTax,
       createdAt: cart.createdAt,
       updatedAt: cart.updatedAt,
     };

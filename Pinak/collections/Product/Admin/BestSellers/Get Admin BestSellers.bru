@@ -1,0 +1,38 @@
+meta {
+  name: Get Admin BestSellers
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/products/admin/bestsellers?page=1&limit=10&timeframe=all_time
+  body: none
+  auth: inherit
+}
+
+params:query {
+  page: 1
+  limit: 10
+  timeframe: all_time
+  ~categoryId: your-category-id
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+  authToken: your-jwt-token-here
+}
+
+docs {
+  Schema: BestSellerTypes.GetBestSellersAdmin
+  Params: none
+  Query: page, limit, timeframe, categoryId
+  Body: none
+}

@@ -432,6 +432,8 @@ export class ProductRepository {
           include: {
             product: {
               include: {
+                brand: { select: { id: true, name: true, slug: true, logoUrl: true } },
+                taxClass: { select: { id: true, name: true, rate: true } },
                 categories: { include: { category: true } },
                 variants: {
                   where: { stock: { gt: 0 } },
@@ -475,6 +477,26 @@ export class ProductRepository {
         isDeleted: false,
         ...filters,
       },
+      include: {
+        brand: { select: { id: true, name: true, slug: true, logoUrl: true } },
+        taxClass: { select: { id: true, name: true, rate: true } },
+        lengthClass: { select: { id: true, name: true, unit: true } },
+        weightClass: { select: { id: true, name: true, unit: true } },
+        categories: { include: { category: true } },
+        filterValues: { include: { filterValue: true } },
+        variants: {
+          where: { isDeleted: false },
+          include: {
+            images: {
+              where: { isPrimary: true, isDeleted: false },
+              take: 1,
+            },
+            optionValues: {
+              include: { optionValue: { include: { option: true } } },
+            },
+          },
+        },
+      },
     });
   }
 
@@ -486,6 +508,7 @@ export class ProductRepository {
         optionValues: {
           include: { optionValue: { include: { option: true } } },
         },
+        product: { select: { taxClass: true } },
       },
     });
   }
@@ -634,6 +657,7 @@ export class ProductRepository {
           orderBy,
           include: {
             brand: { select: { id: true, name: true, slug: true } },
+            taxClass: { select: { id: true, name: true, rate: true } },
             variants: {
               where: { isDeleted: false },
               include: {
@@ -1213,6 +1237,336 @@ export class ProductRepository {
       reviewCount,
       comboKitCount,
       activeVariantCount,
+    };
+  }
+
+  // --- BEST SELLER FUNCTIONALITY ---
+
+  /**
+   * Helper to get top products by aggregated order items within a timeframe.
+   */
+  private async getTopSellingProductIds(
+    timeframe: "week" | "month" | "all_time",
+    categoryId?: string,
+    limit: number = 10,
+    skip: number = 0,
+  ): Promise<{ productId: string; unitsSold: number; totalRevenue: number }[]> {
+    if (timeframe === "all_time" && !categoryId) {
+      // For all time without category, we can just use the purchasedCount column on product
+      // but if we want revenue metrics, we still need to hit OrderItem.
+      // So we hit OrderItem for consistency, or we optimize if just getting IDs.
+    }
+
+    const dateLimit = new Date();
+    if (timeframe === "week") dateLimit.setDate(dateLimit.getDate() - 7);
+    if (timeframe === "month") dateLimit.setMonth(dateLimit.getMonth() - 1);
+
+    const whereCondition: Prisma.OrderItemWhereInput = {
+      productId: { not: null },
+      ...(timeframe !== "all_time" && { createdAt: { gte: dateLimit } }),
+      ...(categoryId && {
+        product: {
+          categories: { some: { categoryId } },
+        },
+      }),
+    };
+
+    const topItems = await this.prisma.orderItem.groupBy({
+      by: ["productId"],
+      where: whereCondition,
+      _sum: {
+        quantity: true,
+        price: true, // we can sum up price*quantity by doing custom query or doing it in code, 
+                     // but prisma doesn't support sum of multiplication easily without raw SQL.
+                     // For now, we'll just sort by units sold.
+      },
+      orderBy: {
+        _sum: {
+          quantity: "desc",
+        },
+      },
+      take: limit,
+      skip,
+    });
+
+    // To get revenue, we might need a separate query per product if we want exact revenue
+    // or just raw SQL. We will use raw SQL to efficiently get both unitsSold and grossRevenue
+    // grouped by productId.
+
+    let timeFilter = "";
+    if (timeframe === "week") timeFilter = `AND oi."createdAt" >= NOW() - INTERVAL '7 days'`;
+    if (timeframe === "month") timeFilter = `AND oi."createdAt" >= NOW() - INTERVAL '1 month'`;
+
+    let categoryFilter = "";
+    if (categoryId) {
+      categoryFilter = `
+        AND EXISTS (
+          SELECT 1 FROM "ProductCategory" pc 
+          WHERE pc."productId" = oi."productId" 
+          AND pc."categoryId" = '${categoryId}'
+        )
+      `;
+    }
+
+    // Use raw query for efficient SUM(quantity) and SUM(price * quantity)
+    const rawData = await this.prisma.$queryRawUnsafe<
+      { productId: string; unitsSold: number; totalRevenue: number }[]
+    >(`
+      SELECT 
+        oi."productId" as "productId", 
+        SUM(oi.quantity)::int as "unitsSold", 
+        SUM(oi.price * oi.quantity)::int as "totalRevenue"
+      FROM "OrderItem" oi
+      WHERE oi."productId" IS NOT NULL
+      ${timeFilter}
+      ${categoryFilter}
+      GROUP BY oi."productId"
+      ORDER BY "unitsSold" DESC
+      LIMIT ${limit} OFFSET ${skip}
+    `);
+
+    return rawData;
+  }
+
+  async getBestSellers(
+    pagination: ProductPaginationOptions,
+    timeframe: "week" | "month" | "all_time" = "all_time",
+    categoryId?: string,
+  ) {
+    const skip = (pagination.page - 1) * pagination.limit;
+    const take = pagination.limit;
+
+    const topSellingData = await this.getTopSellingProductIds(
+      timeframe,
+      categoryId,
+      take,
+      skip,
+    );
+
+    const productIds = topSellingData.map((d) => d.productId);
+    
+    // If no sales in timeframe
+    if (productIds.length === 0) {
+      return {
+        data: [],
+        pagination: {
+          page: pagination.page,
+          limit: take,
+          total: 0,
+          totalPages: 0,
+          hasNext: false,
+          hasPrev: false,
+        },
+      };
+    }
+
+    const products = await this.prisma.product.findMany({
+      where: {
+        id: { in: productIds },
+        isDeleted: false,
+        isActive: true,
+      },
+      include: {
+        brand: { select: { id: true, name: true, slug: true, logoUrl: true } },
+        taxClass: { select: { id: true, name: true, rate: true } },
+        lengthClass: { select: { id: true, name: true, unit: true } },
+        weightClass: { select: { id: true, name: true, unit: true } },
+        categories: { include: { category: true } },
+        filterValues: { include: { filterValue: true } },
+        variants: {
+          where: { isDeleted: false, stock: { gt: 0 } },
+          include: {
+            images: {
+              where: { isDeleted: false },
+              orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }],
+            },
+            optionValues: {
+              include: { optionValue: { include: { option: true } } },
+            },
+          },
+        },
+      },
+    });
+
+    // Map back to maintain the descending sales order
+    const orderedProducts = productIds
+      .map((id) => products.find((p) => p.id === id))
+      .filter(Boolean) as typeof products;
+
+    // For total count, we'd theoretically need a count query. We'll use raw for total.
+    const totalCountQuery = await this.prisma.$queryRawUnsafe<{ count: number }[]>(`
+      SELECT COUNT(DISTINCT oi."productId")::int as count
+      FROM "OrderItem" oi
+      WHERE oi."productId" IS NOT NULL
+      ${timeframe === "week" ? `AND oi."createdAt" >= NOW() - INTERVAL '7 days'` : ""}
+      ${timeframe === "month" ? `AND oi."createdAt" >= NOW() - INTERVAL '1 month'` : ""}
+      ${
+        categoryId
+          ? `AND EXISTS (
+              SELECT 1 FROM "ProductCategory" pc 
+              WHERE pc."productId" = oi."productId" 
+              AND pc."categoryId" = '${categoryId}'
+            )`
+          : ""
+      }
+    `);
+    const total = totalCountQuery[0]?.count || 0;
+    const totalPages = Math.ceil(total / take);
+
+    return {
+      data: orderedProducts,
+      pagination: {
+        page: pagination.page,
+        limit: take,
+        total,
+        totalPages,
+        hasNext: pagination.page < totalPages,
+        hasPrev: pagination.page > 1,
+      },
+    };
+  }
+
+  async getBestSellersAdmin(
+    pagination: ProductPaginationOptions,
+    timeframe: "week" | "month" | "all_time" = "all_time",
+    categoryId?: string,
+  ) {
+    const skip = (pagination.page - 1) * pagination.limit;
+    const take = pagination.limit;
+
+    const topSellingData = await this.getTopSellingProductIds(
+      timeframe,
+      categoryId,
+      take,
+      skip,
+    );
+
+    const productIds = topSellingData.map((d) => d.productId);
+    
+    if (productIds.length === 0) {
+      return {
+        items: [],
+        pagination: {
+          page: pagination.page,
+          limit: take,
+          total: 0,
+          totalPages: 0,
+          hasNext: false,
+          hasPrev: false,
+        },
+      };
+    }
+
+    const products = await this.prisma.product.findMany({
+      where: {
+        id: { in: productIds },
+        isDeleted: false,
+      },
+      include: {
+        brand: true,
+        taxClass: true,
+        lengthClass: true,
+        weightClass: true,
+        categories: { include: { category: true } },
+        filterValues: { include: { filterValue: true } },
+        variants: {
+          where: { isDeleted: false },
+          include: {
+            images: {
+              where: { isDeleted: false },
+              orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }],
+            },
+            optionValues: {
+              include: { optionValue: { include: { option: true } } },
+            },
+          },
+        },
+      },
+    });
+
+    const orderedItems = topSellingData
+      .map((data) => {
+        const product = products.find((p) => p.id === data.productId);
+        if (!product) return null;
+        return {
+          product,
+          salesMetrics: {
+            unitsSold: data.unitsSold,
+            totalRevenue: data.totalRevenue,
+            timeframe,
+          },
+        };
+      })
+      .filter(Boolean);
+
+    const totalCountQuery = await this.prisma.$queryRawUnsafe<{ count: number }[]>(`
+      SELECT COUNT(DISTINCT oi."productId")::int as count
+      FROM "OrderItem" oi
+      WHERE oi."productId" IS NOT NULL
+      ${timeframe === "week" ? `AND oi."createdAt" >= NOW() - INTERVAL '7 days'` : ""}
+      ${timeframe === "month" ? `AND oi."createdAt" >= NOW() - INTERVAL '1 month'` : ""}
+      ${
+        categoryId
+          ? `AND EXISTS (
+              SELECT 1 FROM "ProductCategory" pc 
+              WHERE pc."productId" = oi."productId" 
+              AND pc."categoryId" = '${categoryId}'
+            )`
+          : ""
+      }
+    `);
+    const total = totalCountQuery[0]?.count || 0;
+    const totalPages = Math.ceil(total / take);
+
+    return {
+      items: orderedItems,
+      pagination: {
+        page: pagination.page,
+        limit: take,
+        total,
+        totalPages,
+        hasNext: pagination.page < totalPages,
+        hasPrev: pagination.page > 1,
+      },
+    };
+  }
+
+  async getBestSellerAnalytics(timeframe: "week" | "month" | "all_time" = "month") {
+    let timeFilter = "";
+    if (timeframe === "week") timeFilter = `AND oi."createdAt" >= NOW() - INTERVAL '7 days'`;
+    if (timeframe === "month") timeFilter = `AND oi."createdAt" >= NOW() - INTERVAL '1 month'`;
+
+    const rawData = await this.prisma.$queryRawUnsafe<{ totalUnitsSold: number; grossRevenue: number }[]>(`
+      SELECT 
+        COALESCE(SUM(oi.quantity), 0)::int as "totalUnitsSold", 
+        COALESCE(SUM(oi.price * oi.quantity), 0)::int as "grossRevenue"
+      FROM "OrderItem" oi
+      JOIN "Order" o ON o.id = oi."orderId"
+      WHERE oi."productId" IS NOT NULL
+      AND o.status != 'CANCELLED'
+      ${timeFilter}
+    `);
+
+    // Optionally get top category by joining ProductCategory
+    const topCatData = await this.prisma.$queryRawUnsafe<{ name: string }[]>(`
+      SELECT c.name, SUM(oi.quantity)::int as "qty"
+      FROM "OrderItem" oi
+      JOIN "Order" o ON o.id = oi."orderId"
+      JOIN "ProductCategory" pc ON pc."productId" = oi."productId"
+      JOIN "Category" c ON c.id = pc."categoryId"
+      WHERE oi."productId" IS NOT NULL
+      AND o.status != 'CANCELLED'
+      ${timeFilter}
+      GROUP BY c.id, c.name
+      ORDER BY "qty" DESC
+      LIMIT 1
+    `);
+
+    return {
+      totalUnitsSold: rawData[0]?.totalUnitsSold || 0,
+      grossRevenue: rawData[0]?.grossRevenue || 0,
+      topCategory: topCatData[0]?.name || null,
+      timeframe,
     };
   }
 }

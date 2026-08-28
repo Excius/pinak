@@ -17,6 +17,8 @@ const CartVariantSchema = z.object({
   id: z.string(),
   sku: z.string(),
   price: z.number(),
+  taxAmount: z.number().optional(),
+  priceWithTax: z.number().optional(),
   isActive: z.boolean(),
   image: VariantImageSchema.nullable(),
   optionValues: z.array(VariantOptionValueSchema),
@@ -44,6 +46,8 @@ const ComboComponentVariantSchema = z.object({
   id: z.string(),
   sku: z.string(),
   price: z.number(),
+  taxAmount: z.number().optional(),
+  priceWithTax: z.number().optional(),
   image: VariantImageSchema.nullable(),
 });
 
@@ -75,7 +79,10 @@ const CartItemSchema = z.object({
   itemType: z.enum(["PRODUCT_VARIANT", "COMBO_KIT"]),
   quantity: z.number().int().min(1),
   unitPrice: z.number(),
+  unitPriceWithTax: z.number().optional(),
+  taxAmount: z.number().optional(),
   lineTotal: z.number(),
+  lineTotalWithTax: z.number().optional(),
   availableStock: z.number().int().min(0),
   productVariantId: z.string().nullable(),
   comboKitId: z.string().nullable(),
@@ -93,6 +100,8 @@ const CartSchema = z.object({
   totalQuantity: z.number().int().min(0),
   subtotal: z.number().min(0),
   total: z.number().min(0),
+  taxTotal: z.number().min(0).optional(),
+  totalWithTax: z.number().min(0).optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
