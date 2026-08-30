@@ -3,36 +3,6 @@ import { z } from "zod";
 import { ValidationError } from "./error.js";
 
 /**
- * Validation middleware factory
- * @param schema - Zod schema to validate against
- * @param property - Request property to validate ('body', 'query', 'params')
- */
-export const validate = (
-  schema: z.ZodSchema,
-  property: "body" | "query" | "params" = "body",
-) => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const validatedData = schema.parse({
-        [property]: req[property],
-      }) as Record<string, unknown>;
-      req[property] = validatedData[property];
-      next();
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const validationErrors = error.issues.map((err: z.ZodIssue) => ({
-          field: err.path.join("."),
-          message: err.message,
-        }));
-
-        throw new ValidationError("Validation failed", validationErrors);
-      }
-      next(error);
-    }
-  };
-};
-
-/**
  * Combined validation middleware for multiple properties
  * @param schemaObj - Object with 'body', 'query', 'params' as optional keys and Zod schemas as values
  */
@@ -82,7 +52,8 @@ export const validateMultiple = (schemaObj: {
   };
 };
 
-/** * Type helper to infer validated request types
+/**
+ * Type helper to infer validated request types
  */
 export type ValidatedRequest<T extends z.ZodSchema> = Omit<
   Request,

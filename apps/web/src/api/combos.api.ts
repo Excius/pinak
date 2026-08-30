@@ -35,7 +35,10 @@ export interface ComboKitItem {
     productId: string
     sku: string
     price: number
+    taxAmount?: number
+    priceWithTax?: number
     comparePrice?: number
+    comparePriceWithTax?: number | null
     stock: number
     product?: {
       id: string

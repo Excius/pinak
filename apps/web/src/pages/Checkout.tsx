@@ -19,7 +19,7 @@ const steps = ['Address', 'Review & Pay']
 const Checkout: React.FC = () => {
   const navigate = useNavigate()
   const { isAuthenticated } = useAuth()
-  const { items, subtotal, refreshCart } = useCart()
+  const { items, subtotal, taxTotal, totalWithTax, refreshCart } = useCart()
 
   // State
   const [currentStep, setCurrentStep] = useState(0)
@@ -41,7 +41,8 @@ const Checkout: React.FC = () => {
   const [orderError, setOrderError] = useState('')
 
   const discountAmount = couponResult?.valid ? (couponResult.discountAmount || 0) : 0
-  const finalTotal = Math.max(0, subtotal - discountAmount)
+  const cartTotal = totalWithTax ?? subtotal
+  const finalTotal = Math.max(0, cartTotal - discountAmount)
 
   // Redirect if empty cart
   useEffect(() => {
@@ -386,9 +387,15 @@ const Checkout: React.FC = () => {
                 <h3 className="font-display font-bold text-text-main-light mb-4 text-sm sm:text-base">Order Summary</h3>
                 <div className="space-y-2.5 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-text-muted">Subtotal ({items.length} items)</span>
+                    <span className="text-text-muted">Subtotal ({items.length} items, excl. tax)</span>
                     <span className="text-text-main-light font-medium">{formatPrice(subtotal)}</span>
                   </div>
+                  {taxTotal !== undefined && (
+                    <div className="flex justify-between">
+                      <span className="text-text-muted">Tax</span>
+                      <span className="text-text-main-light font-medium">{formatPrice(taxTotal)}</span>
+                    </div>
+                  )}
                   {discountAmount > 0 && (
                     <div className="flex justify-between text-green-400">
                       <span>Discount</span>

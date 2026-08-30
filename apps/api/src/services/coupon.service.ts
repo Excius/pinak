@@ -128,10 +128,14 @@ export class CouponService {
     };
   }
 
-  async getCoupon(code: string) {
+  async getCoupon(code: string, activeOnly = false) {
     const normalizedCode = this.normalizeCode(code);
     const coupon = await this.couponRepository.findByCode(normalizedCode);
     if (!coupon) {
+      throw new NotFoundError("Coupon not found");
+    }
+
+    if (activeOnly && !coupon.isActive) {
       throw new NotFoundError("Coupon not found");
     }
 

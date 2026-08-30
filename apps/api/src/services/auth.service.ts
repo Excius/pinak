@@ -191,10 +191,13 @@ export class AuthService {
     refreshToken: string;
   }> {
     const payload = this.jwt.verifyRefreshToken(refreshToken);
+    if (!payload || !payload.sessionId || !payload.sub) {
+      throw new UnauthorizedError("Invalid or expired refresh token");
+    }
 
     return this.prisma.$transaction(async (tx) => {
       const session = await tx.session.findUnique({
-        where: { id: payload?.sessionId },
+        where: { id: payload.sessionId },
       });
 
       if (session && session.expiresAt < new Date()) {

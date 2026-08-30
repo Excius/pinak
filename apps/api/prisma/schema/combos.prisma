@@ -39,7 +39,6 @@ model ComboKit {
   items                 ComboKitItem[]
   orderItems            OrderItem[]
   cartItems             CartItem[]
-  inventoryReservations InventoryReservation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -10,12 +10,12 @@ export class BrandService {
     return this.repo.list(activeOnly);
   }
 
-  getBrandById(id: string) {
-    return this.repo.getById(id);
+  getBrandById(id: string, activeOnly = false) {
+    return this.repo.getById(id, activeOnly);
   }
 
-  getBrandBySlug(slug: string) {
-    return this.repo.getBySlug(slug);
+  getBrandBySlug(slug: string, activeOnly = false) {
+    return this.repo.getBySlug(slug, activeOnly);
   }
 
   async createBrand(data: Prisma.BrandCreateInput) {

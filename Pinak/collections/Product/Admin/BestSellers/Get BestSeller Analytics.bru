@@ -1,13 +1,17 @@
 meta {
-  name: Get Product by ID
+  name: Get BestSeller Analytics
   type: http
-  seq: 3
+  seq: 2
 }
 
 get {
-  url: {{baseUrl}}/api/v1/products/{{id}}
+  url: {{baseUrl}}/api/v1/products/admin/bestsellers/analytics?timeframe=all_time
   body: none
   auth: inherit
+}
+
+params:query {
+  timeframe: all_time
 }
 
 headers {
@@ -21,12 +25,11 @@ auth:bearer {
 vars:pre-request {
   baseUrl: http://localhost:3000
   authToken: your-jwt-token-here
-  id: cmtdbnbmb00447qmz0j1tzgmf
 }
 
 docs {
-  Schema: ProductTypes.GetProductById
-  Params: id
-  Query: none
+  Schema: BestSellerTypes.GetBestSellerAnalytics
+  Params: none
+  Query: timeframe
   Body: none
 }

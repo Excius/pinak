@@ -53,6 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch {
       localStorage.removeItem('accessToken')
+      localStorage.removeItem('refreshToken')
       setUser(null)
     }
   }, [])
@@ -68,8 +69,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (payload: LoginPayload) => {
     const response = await apiLogin(payload)
     const accessToken = (response as any)?.data?.accessToken || response?.accessToken
+    const refreshToken = (response as any)?.data?.refreshToken || response?.refreshToken
     if (accessToken) {
       localStorage.setItem('accessToken', accessToken)
+      if (refreshToken) localStorage.setItem('refreshToken', refreshToken)
       await refreshUser()
     } else {
       throw new Error('No access token received')
@@ -79,8 +82,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const googleLogin = async (code: string) => {
     const response = await apiGoogleCallback({ code, platform: 'WEB' })
     const accessToken = (response as any)?.data?.accessToken || response?.accessToken || (response as any)?.accessToken
+    const refreshToken = (response as any)?.data?.refreshToken || response?.refreshToken || (response as any)?.refreshToken
     if (accessToken) {
       localStorage.setItem('accessToken', accessToken)
+      if (refreshToken) localStorage.setItem('refreshToken', refreshToken)
       await refreshUser()
     } else {
       throw new Error('No access token received from Google Login')
@@ -99,6 +104,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // ignore logout errors
     }
     localStorage.removeItem('accessToken')
+    localStorage.removeItem('refreshToken')
     setUser(null)
   }
 

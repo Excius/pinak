@@ -169,9 +169,16 @@ const Wishlist: React.FC = () => {
                   )}
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      {variant && <span className="font-bold text-lg text-primary">{formatPrice(variant.price)}</span>}
-                      {variant?.comparePrice && variant.comparePrice > variant.price && (
-                        <span className="text-sm text-text-muted line-through">{formatPrice(variant.comparePrice)}</span>
+                      {variant && (
+                        <span className="font-bold text-lg text-primary">
+                          {formatPrice(variant.priceWithTax ?? variant.price)}
+                        </span>
+                      )}
+                      {(variant?.comparePriceWithTax ?? variant?.comparePrice) && 
+                       (variant.comparePriceWithTax ?? variant.comparePrice)! > (variant.priceWithTax ?? variant.price) && (
+                        <span className="text-sm text-text-muted line-through">
+                          {formatPrice((variant.comparePriceWithTax ?? variant.comparePrice)!)}
+                        </span>
                       )}
                     </div>
                   </div>

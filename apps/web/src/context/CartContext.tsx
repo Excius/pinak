@@ -8,6 +8,8 @@ interface CartContextType {
   items: CartItem[]
   itemCount: number
   subtotal: number
+  taxTotal: number
+  totalWithTax: number
   loading: boolean
   isOpen: boolean
   openCart: () => void
@@ -39,6 +41,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const items = cart?.items ?? []
   const itemCount = cart?.totalQuantity ?? 0
   const subtotal = cart?.subtotal ?? 0
+  const taxTotal = cart?.taxTotal ?? 0
+  const totalWithTax = cart?.totalWithTax ?? subtotal
 
   const openCart = useCallback(() => setIsOpen(true), [])
   const closeCart = useCallback(() => setIsOpen(false), [])
@@ -117,6 +121,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         items,
         itemCount,
         subtotal,
+        taxTotal,
+        totalWithTax,
         loading,
         isOpen,
         openCart,

@@ -97,6 +97,28 @@ export class ProductService {
     );
   }
 
+  async getBestSellers(
+    pagination: ProductPaginationOptions,
+    timeframe: "week" | "month" | "all_time" = "all_time",
+    categoryId?: string,
+  ) {
+    return this.productRepository.getBestSellers(pagination, timeframe, categoryId);
+  }
+
+  async getBestSellersAdmin(
+    pagination: ProductPaginationOptions,
+    timeframe: "week" | "month" | "all_time" = "all_time",
+    categoryId?: string,
+  ) {
+    return this.productRepository.getBestSellersAdmin(pagination, timeframe, categoryId);
+  }
+
+  async getBestSellerAnalytics(
+    timeframe: "week" | "month" | "all_time" = "month",
+  ) {
+    return this.productRepository.getBestSellerAnalytics(timeframe);
+  }
+
   async searchProducts(query: string, filters: Prisma.ProductWhereInput = {}) {
     return this.productRepository.searchProducts(query, filters);
   }
@@ -697,7 +719,6 @@ export class ProductService {
     const [
       cartCount,
       orderCount,
-      reservationCount,
       wishlistCount,
       comboKitCount,
     ] = await this.productRepository.getVariantSoftDeleteDependencies(id);
@@ -710,11 +731,6 @@ export class ProductService {
     if (orderCount > 0) {
       throw new ValidationError(
         "Cannot delete variant: it is referenced by existing orders",
-      );
-    }
-    if (reservationCount > 0) {
-      throw new ValidationError(
-        "Cannot delete variant: there are active inventory reservations",
       );
     }
     if (wishlistCount > 0) {
@@ -856,7 +872,6 @@ export class ProductService {
       variantOrderCount,
       cartCount,
       wishlistCount,
-      reservationCount,
       featuredCount,
       reviewCount,
       comboKitCount,
@@ -867,7 +882,6 @@ export class ProductService {
     if (productOrderCount || variantOrderCount) blockers.push("orders");
     if (cartCount) blockers.push("carts");
     if (wishlistCount) blockers.push("wishlists");
-    if (reservationCount) blockers.push("inventory reservations");
     if (featuredCount) blockers.push("featured sections");
     if (reviewCount) blockers.push("reviews");
     if (comboKitCount) blockers.push("combo kits");
@@ -899,7 +913,6 @@ export class ProductService {
       cartCount,
       orderCount,
       wishlistCount,
-      reservationCount,
       comboKitCount,
       imageCount,
     ] = await this.productRepository.getVariantHardDeleteDependencies(id);
@@ -908,8 +921,6 @@ export class ProductService {
     if (cartCount) blockers.push(`${cartCount} cart item(s)`);
     if (orderCount) blockers.push(`${orderCount} order item(s)`);
     if (wishlistCount) blockers.push(`${wishlistCount} wishlist item(s)`);
-    if (reservationCount)
-      blockers.push(`${reservationCount} inventory reservation(s)`);
     if (comboKitCount) blockers.push(`${comboKitCount} combo kit item(s)`);
     if (imageCount) blockers.push(`${imageCount} image(s)`);
 

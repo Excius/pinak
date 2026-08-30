@@ -14,6 +14,8 @@ type ProductWithRelations = any; // Type will be inferred from Prisma
 export const toPublicProduct = (product: ProductWithRelations) => {
   if (!product) return null;
 
+  const taxRate = product.taxClass?.rate ?? 0;
+
   const toLeanImage = (img: any) =>
     img
       ? {
@@ -60,25 +62,38 @@ export const toPublicProduct = (product: ProductWithRelations) => {
     })) || [],
 
     // Variants - lean version
-    variants: product.variants?.map((v: any) => ({
-      id: v.id,
-      sku: v.sku,
-      tags: Array.isArray(v.tags) ? v.tags : [],
-      price: v.price,
-      compareAtPrice: v.compareAtPrice,
-      stock: v.stock,
-      lowStockThreshold: v.lowStockThreshold,
-      isActive: v.isActive,
-      
-      // Primary image only (lean fields)
-      image: toLeanImage(v.images?.find((img: any) => img.isPrimary) || v.images?.[0] || null),
-      
-      // Option values
-      optionValues: v.optionValues?.map((ov: any) => ({
-        optionName: ov.optionValue?.option?.name,
-        valueName: ov.optionValue?.value,
-      })).filter((ov: any) => ov.optionName && ov.valueName) || [],
-    })) || [],
+    variants: product.variants?.map((v: any) => {
+      const price = v.price;
+      const compareAtPrice = v.compareAtPrice ?? v.comparePrice ?? null;
+      const taxAmount = Math.round((price * taxRate) / 100);
+      const priceWithTax = price + taxAmount;
+      const compareAtPriceWithTax = compareAtPrice != null
+        ? compareAtPrice + Math.round((compareAtPrice * taxRate) / 100)
+        : null;
+
+      return {
+        id: v.id,
+        sku: v.sku,
+        tags: Array.isArray(v.tags) ? v.tags : [],
+        price: v.price,
+        taxAmount,
+        priceWithTax,
+        compareAtPrice: v.compareAtPrice,
+        compareAtPriceWithTax,
+        stock: v.stock,
+        lowStockThreshold: v.lowStockThreshold,
+        isActive: v.isActive,
+        
+        // Primary image only (lean fields)
+        image: toLeanImage(v.images?.find((img: any) => img.isPrimary) || v.images?.[0] || null),
+        
+        // Option values
+        optionValues: v.optionValues?.map((ov: any) => ({
+          optionName: ov.optionValue?.option?.name,
+          valueName: ov.optionValue?.value,
+        })).filter((ov: any) => ov.optionName && ov.valueName) || [],
+      };
+    }) || [],
 
     // Filter values - for faceted search
     filterValues: product.filterValues?.map((fv: any) => ({
@@ -112,6 +127,8 @@ export const toPublicProductList = (result: { data: any[], pagination: any }) =>
  */
 export const toAdminProduct = (product: ProductWithRelations) => {
   if (!product) return null;
+
+  const taxRate = product.taxClass?.rate ?? 0;
 
   return {
     // All public fields
@@ -174,30 +191,44 @@ export const toAdminProduct = (product: ProductWithRelations) => {
     })) || [],
 
     // Full variants with all fields
-    variants: product.variants?.map((v: any) => ({
-      id: v.id,
-      productId: v.productId,
-      sku: v.sku,
-      price: v.price,
-      compareAtPrice: v.compareAtPrice,
-      costPrice: v.costPrice,
-      stock: v.stock,
-      lowStockThreshold: v.lowStockThreshold,
-      isActive: v.isActive,
-      isDeleted: v.isDeleted,
-      sortOrder: v.sortOrder,
-      tags: v.tags,
-      
-      // All images
-      images: v.images || [],
-      
-      // All option values
-      optionValues: v.optionValues || [],
-      
-      // Timestamps
-      createdAt: v.createdAt,
-      updatedAt: v.updatedAt,
-    })) || [],
+    variants: product.variants?.map((v: any) => {
+      const price = v.price;
+      const comparePrice = v.comparePrice ?? v.compareAtPrice ?? null;
+      const taxAmount = Math.round((price * taxRate) / 100);
+      const priceWithTax = price + taxAmount;
+      const comparePriceWithTax = comparePrice != null
+        ? comparePrice + Math.round((comparePrice * taxRate) / 100)
+        : null;
+
+      return {
+        id: v.id,
+        productId: v.productId,
+        sku: v.sku,
+        price: v.price,
+        taxAmount,
+        priceWithTax,
+        compareAtPrice: v.compareAtPrice,
+        comparePrice: v.comparePrice,
+        comparePriceWithTax,
+        costPrice: v.costPrice,
+        stock: v.stock,
+        lowStockThreshold: v.lowStockThreshold,
+        isActive: v.isActive,
+        isDeleted: v.isDeleted,
+        sortOrder: v.sortOrder,
+        tags: v.tags,
+        
+        // All images
+        images: v.images || [],
+        
+        // All option values
+        optionValues: v.optionValues || [],
+        
+        // Timestamps
+        createdAt: v.createdAt,
+        updatedAt: v.updatedAt,
+      };
+    }) || [],
 
     // Full filter values with IDs
     filterValues: product.filterValues || [],
@@ -227,12 +258,24 @@ export const toAdminProductList = (result: { data: any[], pagination: any }) => 
 export const toPublicVariant = (variant: any) => {
   if (!variant) return null;
 
+  const taxRate = variant.product?.taxClass?.rate ?? 0;
+  const price = variant.price;
+  const compareAtPrice = variant.compareAtPrice ?? variant.comparePrice ?? null;
+  const taxAmount = Math.round((price * taxRate) / 100);
+  const priceWithTax = price + taxAmount;
+  const compareAtPriceWithTax = compareAtPrice != null
+    ? compareAtPrice + Math.round((compareAtPrice * taxRate) / 100)
+    : null;
+
   return {
     id: variant.id,
     sku: variant.sku,
     tags: Array.isArray(variant.tags) ? variant.tags : [],
     price: variant.price,
+    taxAmount,
+    priceWithTax,
     compareAtPrice: variant.compareAtPrice,
+    compareAtPriceWithTax,
     stock: variant.stock,
     lowStockThreshold: variant.lowStockThreshold,
     isActive: variant.isActive,
@@ -260,9 +303,21 @@ export const toPublicVariant = (variant: any) => {
 export const toAdminVariant = (variant: any) => {
   if (!variant) return null;
 
+  const taxRate = variant.product?.taxClass?.rate ?? 0;
+  const price = variant.price;
+  const comparePrice = variant.comparePrice ?? variant.compareAtPrice ?? null;
+  const taxAmount = Math.round((price * taxRate) / 100);
+  const priceWithTax = price + taxAmount;
+  const comparePriceWithTax = comparePrice != null
+    ? comparePrice + Math.round((comparePrice * taxRate) / 100)
+    : null;
+
   return {
     // All fields
     ...variant,
+    taxAmount,
+    priceWithTax,
+    comparePriceWithTax,
     
     // Ensure timestamps are included
     createdAt: variant.createdAt,

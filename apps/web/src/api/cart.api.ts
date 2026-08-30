@@ -14,6 +14,8 @@ export interface CartVariant {
   id: string
   sku: string
   price: number
+  taxAmount?: number
+  priceWithTax?: number
   isActive: boolean
   image: CartVariantImage | null
   optionValues: { optionName: string; valueName: string }[]
@@ -40,7 +42,10 @@ export interface CartItem {
   itemType: 'PRODUCT_VARIANT' | 'COMBO_KIT'
   quantity: number
   unitPrice: number
+  unitPriceWithTax?: number
+  taxAmount?: number
   lineTotal: number
+  lineTotalWithTax?: number
   availableStock: number
   productVariantId: string | null
   comboKitId: string | null
@@ -56,6 +61,8 @@ export interface Cart {
   totalQuantity: number
   subtotal: number
   total: number
+  taxTotal?: number
+  totalWithTax?: number
 }
 
 // ── Cart API ───────────────────────────────────────────────────────────

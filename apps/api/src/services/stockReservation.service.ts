@@ -1,5 +1,6 @@
-import { Prisma, PrismaClient, ReservationStatus } from "../generated/prisma/client.js";
+import { Prisma, PrismaClient } from "../generated/prisma/client.js";
 import { NotFoundError, ValidationError } from "../lib/error.js";
+import redis from "../lib/redis.js";
 
 export type ReservationRequirement = {
   productVariantId?: string | null;
@@ -46,6 +47,26 @@ export class StockReservationService {
     return new Date(Date.now() + this.reservationDurationMs);
   }
 
+  private async getRedisReservedQuantity(key: string): Promise<number> {
+    const now = Date.now();
+    const pipeline = redis.pipeline();
+    pipeline.zremrangebyscore(key, 0, now);
+    pipeline.zrange(key, "0", "-1");
+    
+    const results = await pipeline.exec();
+    if (!results || results.length < 2) return 0;
+    
+    const members = (results[1]?.[1] as string[]) || [];
+    let total = 0;
+    for (const member of members) {
+      const parts = member.split("|");
+      if (parts.length === 2 && parts[1]) {
+        total += parseInt(parts[1], 10) || 0;
+      }
+    }
+    return total;
+  }
+
   async getAvailableStockForVariant(
     productVariantId: string,
     tx?: Prisma.TransactionClient,
@@ -70,22 +91,10 @@ export class StockReservationService {
       return 0;
     }
 
-    // Direct active reservations for this variant
-    const activeReservedDirect = await db.inventoryReservation.aggregate({
-      where: {
-        productVariantId,
-        status: ReservationStatus.ACTIVE,
-        expiresAt: { gt: new Date() },
-      },
-      _sum: {
-        quantity: true,
-      },
-    });
-
-    const directReserved = activeReservedDirect._sum.quantity ?? 0;
+    // Direct active reservations for this variant in Redis
+    const directReserved = await this.getRedisReservedQuantity(`reservations:variant:${productVariantId}`);
 
     // Active reservations for combos that include this variant
-    // We need to find all combos containing this variant, and see how many of those combos are reserved.
     const combosWithVariant = await db.comboKitItem.findMany({
       where: { productVariantId },
       select: { comboKitId: true, quantity: true }
@@ -93,17 +102,7 @@ export class StockReservationService {
 
     let comboReserved = 0;
     for (const comboItem of combosWithVariant) {
-      const activeReservedCombo = await db.inventoryReservation.aggregate({
-        where: {
-          comboKitId: comboItem.comboKitId,
-          status: ReservationStatus.ACTIVE,
-          expiresAt: { gt: new Date() },
-        },
-        _sum: {
-          quantity: true,
-        },
-      });
-      const comboQtyReserved = activeReservedCombo._sum.quantity ?? 0;
+      const comboQtyReserved = await this.getRedisReservedQuantity(`reservations:combo:${comboItem.comboKitId}`);
       comboReserved += (comboQtyReserved * comboItem.quantity);
     }
 
@@ -154,7 +153,6 @@ export class StockReservationService {
         return 0;
       }
 
-      // getAvailableStockForVariant already subtracts existing direct and combo reservations!
       const variantAvailable = await this.getAvailableStockForVariant(
         variant.id,
         tx,
@@ -185,8 +183,6 @@ export class StockReservationService {
       throw new ValidationError("No reservation items provided");
     }
 
-    // To avoid over-promising stock when multiple items share the same variants (direct + combos),
-    // we aggregate ALL variant requirements into a single check-map.
     const totalVariantCheckMap = new Map<string, number>();
 
     for (const requirement of normalizedRequirements) {
@@ -205,7 +201,7 @@ export class StockReservationService {
       }
     }
 
-    // Now validate the aggregated variant requirements
+    // Validate the aggregated variant requirements against Redis+Postgres stock
     for (const [variantId, totalQuantity] of totalVariantCheckMap.entries()) {
       const available = await this.getAvailableStockForVariant(variantId, tx);
       if (totalQuantity > available) {
@@ -222,18 +218,28 @@ export class StockReservationService {
       }
     }
 
-    const expiresAt = this.reservationExpiryDate();
+    const expiresAtMs = Date.now() + this.reservationDurationMs;
+    const expiresAt = new Date(expiresAtMs);
 
-    await db.inventoryReservation.createMany({
-      data: normalizedRequirements.map((requirement) => ({
-        orderId,
-        productVariantId: requirement.productVariantId || null,
-        comboKitId: requirement.comboKitId || null,
-        quantity: requirement.quantity,
-        status: ReservationStatus.ACTIVE,
-        expiresAt,
-      })),
-    });
+    // Save reservations to Redis
+    const pipeline = redis.pipeline();
+    pipeline.setex(`reservations:order:${orderId}`, Math.ceil(this.reservationDurationMs / 1000), JSON.stringify(normalizedRequirements));
+
+    for (const req of normalizedRequirements) {
+      const member = `${orderId}|${req.quantity}`;
+      const ttlSeconds = Math.ceil(this.reservationDurationMs / 1000);
+      if (req.productVariantId) {
+        const key = `reservations:variant:${req.productVariantId}`;
+        pipeline.zadd(key, expiresAtMs, member);
+        pipeline.expire(key, ttlSeconds);
+      } else if (req.comboKitId) {
+        const key = `reservations:combo:${req.comboKitId}`;
+        pipeline.zadd(key, expiresAtMs, member);
+        pipeline.expire(key, ttlSeconds);
+      }
+    }
+
+    await pipeline.exec();
 
     return {
       expiresAt,
@@ -243,19 +249,15 @@ export class StockReservationService {
 
   async confirmReservations(orderId: string, tx?: Prisma.TransactionClient) {
     const db = this.getDb(tx);
-    const activeReservations = await db.inventoryReservation.findMany({
-      where: {
-        orderId,
-        status: ReservationStatus.ACTIVE,
-        expiresAt: { gt: new Date() },
-      },
-    });
-
-    if (activeReservations.length === 0) {
+    
+    // Fetch active reservations from Redis
+    const orderData = await redis.get(`reservations:order:${orderId}`);
+    if (!orderData) {
       throw new NotFoundError("No active reservations found for this order");
     }
 
-    // We must deduct the actual stock. For variants it's direct. For combos, we deduct component variants.
+    const activeReservations = JSON.parse(orderData) as ReservationRequirement[];
+
     const variantDeductions = new Map<string, number>();
 
     for (const reservation of activeReservations) {
@@ -293,43 +295,45 @@ export class StockReservationService {
       }
     }
 
-    await db.inventoryReservation.updateMany({
-      where: {
-        orderId,
-        status: ReservationStatus.ACTIVE
-      },
-      data: {
-        status: ReservationStatus.CONFIRMED
+    // Cleanup Redis keys
+    const pipeline = redis.pipeline();
+    pipeline.del(`reservations:order:${orderId}`);
+    for (const req of activeReservations) {
+      const member = `${orderId}|${req.quantity}`;
+      if (req.productVariantId) {
+        pipeline.zrem(`reservations:variant:${req.productVariantId}`, member);
+      } else if (req.comboKitId) {
+        pipeline.zrem(`reservations:combo:${req.comboKitId}`, member);
       }
-    });
+    }
+    await pipeline.exec();
   }
 
-  async releaseReservations(orderId: string, tx?: Prisma.TransactionClient) {
-    const db = this.getDb(tx);
-    const result = await db.inventoryReservation.updateMany({
-      where: { 
-        orderId,
-        status: ReservationStatus.ACTIVE
-      },
-      data: {
-        status: ReservationStatus.RELEASED
-      }
-    });
+  async releaseReservations(orderId: string, _tx?: Prisma.TransactionClient) {
+    const orderData = await redis.get(`reservations:order:${orderId}`);
+    if (!orderData) return 0;
 
-    return result.count;
+    const activeReservations = JSON.parse(orderData) as ReservationRequirement[];
+    
+    // Cleanup Redis keys
+    const pipeline = redis.pipeline();
+    pipeline.del(`reservations:order:${orderId}`);
+    for (const req of activeReservations) {
+      const member = `${orderId}|${req.quantity}`;
+      if (req.productVariantId) {
+        pipeline.zrem(`reservations:variant:${req.productVariantId}`, member);
+      } else if (req.comboKitId) {
+        pipeline.zrem(`reservations:combo:${req.comboKitId}`, member);
+      }
+    }
+    await pipeline.exec();
+
+    return activeReservations.length;
   }
 
+  // Obsolete function kept for compatibility if needed, but it does nothing now
+  // since Redis handles expiration automatically via TTLs and ZSET score removal.
   async cleanupExpiredReservations() {
-    const result = await this.prisma.inventoryReservation.updateMany({
-      where: {
-        status: ReservationStatus.ACTIVE,
-        expiresAt: { lt: new Date() },
-      },
-      data: {
-        status: ReservationStatus.RELEASED
-      }
-    });
-
-    return result.count;
+    return 0;
   }
 }

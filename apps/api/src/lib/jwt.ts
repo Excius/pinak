@@ -18,8 +18,9 @@ class JWTService {
     payload: Omit<AccessTokenPayload, "tokenType">,
   ): string {
     try {
+      const expiresInSeconds = Math.floor(this.accessTokenExpiry / 1000);
       return jwt.sign({ ...payload, tokenType: "access" }, this.accessSecret, {
-        expiresIn: this.accessTokenExpiry,
+        expiresIn: expiresInSeconds,
       } as SignOptions);
     } catch (error) {
       logger.error({ err: error }, "Error generating JWT token:");
@@ -29,11 +30,12 @@ class JWTService {
 
   public generateRefreshToken(payload: Omit<RefreshTokenPayload, "tokenType">) {
     try {
+      const expiresInSeconds = Math.floor(this.refreshTokenExpiry / 1000);
       return jwt.sign(
         { ...payload, tokenType: "refresh" },
         this.refreshSecret,
         {
-          expiresIn: this.refreshTokenExpiry,
+          expiresIn: expiresInSeconds,
         } as SignOptions,
       );
     } catch (error) {

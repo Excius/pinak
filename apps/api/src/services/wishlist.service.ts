@@ -4,12 +4,31 @@ import { WishlistRepository } from "../repositories/wishlist.repository.js";
 export class WishlistService {
   constructor(private repo: WishlistRepository) {}
 
+  private mapWishlistVariant(variant: any) {
+    if (!variant) return null;
+    const taxRate = variant.product?.taxClass?.rate ?? 0;
+    const price = variant.price;
+    const comparePrice = variant.comparePrice ?? variant.compareAtPrice ?? null;
+    const taxAmount = Math.round((price * taxRate) / 100);
+    const priceWithTax = price + taxAmount;
+    const comparePriceWithTax = comparePrice != null
+      ? comparePrice + Math.round((comparePrice * taxRate) / 100)
+      : null;
+
+    return {
+      ...variant,
+      taxAmount,
+      priceWithTax,
+      comparePriceWithTax,
+    };
+  }
+
   async getWishlist(userId: string) {
     const wishlist = await this.repo.getWishlistWithItems(userId);
 
     const items = wishlist.items.map((item) => ({
       id: item.id,
-      productVariant: item.productVariant,
+      productVariant: this.mapWishlistVariant(item.productVariant),
       addedAt: item.createdAt,
       inStock: item.productVariant.stock > 0,
       stockCount: item.productVariant.stock,
@@ -48,7 +67,7 @@ export class WishlistService {
       message: "Item added to wishlist",
       item: {
         id: item.id,
-        productVariant: item.productVariant,
+        productVariant: this.mapWishlistVariant(item.productVariant),
         addedAt: item.createdAt,
       },
     };

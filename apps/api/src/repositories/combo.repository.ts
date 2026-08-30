@@ -151,11 +151,12 @@ export class ComboRepository {
     };
   }
 
-  getComboKitById(id: string, includeDeleted = false) {
+  getComboKitById(id: string, includeDeleted = false, includeInactive = false) {
     return this.prisma.comboKit.findFirst({
       where: {
         id,
         ...(includeDeleted ? {} : { isDeleted: false }),
+        ...(includeInactive ? {} : { isActive: true }),
       },
       include: comboKitInclude,
     });
@@ -179,6 +180,11 @@ export class ComboRepository {
       include: {
         productVariant: {
           include: {
+            product: {
+              include: {
+                taxClass: true,
+              },
+            },
             images: {
               where: { isDeleted: false },
               orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }],

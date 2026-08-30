@@ -64,6 +64,11 @@ type ComboProductVariantRecord = {
   updatedAt?: Date;
   images?: ComboProductImageRecord[];
   optionValues?: ComboVariantOptionValueRecord[];
+  product?: {
+    taxClass?: {
+      rate: number;
+    } | null;
+  } | null;
 };
 
 type ComboKitItemRecord = {
@@ -115,6 +120,9 @@ export type PublicComboKitVariant = {
   id: string;
   sku: string;
   price: number;
+  taxAmount?: number;
+  priceWithTax?: number;
+  comparePriceWithTax?: number | null;
   stock: number;
   imageUrl: string | null;
   optionValues: Array<{
@@ -168,7 +176,10 @@ export type AdminComboKitVariant = {
   ean?: string | null;
   tags: string[];
   price: number;
+  taxAmount?: number;
+  priceWithTax?: number;
   comparePrice?: number | null;
+  comparePriceWithTax?: number | null;
   stock: number;
   weightGrams?: number | null;
   weightClassId?: string | null;
@@ -240,60 +251,88 @@ const getPrimaryImageUrl = (
 
 const toPublicComboKitVariant = (
   variant: ComboProductVariantRecord,
-): PublicComboKitVariant => ({
-  id: variant.id,
-  sku: variant.sku,
-  price: variant.price,
-  stock: variant.stock,
-  imageUrl: getPrimaryImageUrl(variant.images),
-  optionValues: (variant.optionValues ?? [])
-    .map((entry) => {
-      const optionName = entry.optionValue?.option?.name;
-      const value = entry.optionValue?.value;
-      if (!optionName || !value) {
-        return null;
-      }
-      return {
-        optionName,
-        value,
-      };
-    })
-    .filter(
-      (
-        entry,
-      ): entry is {
-        optionName: string;
-        value: string;
-      } => entry !== null,
-    ),
-});
+): PublicComboKitVariant => {
+  const taxRate = variant.product?.taxClass?.rate ?? 0;
+  const price = variant.price;
+  const comparePrice = variant.comparePrice ?? (variant as any).compareAtPrice ?? null;
+  const taxAmount = Math.round((price * taxRate) / 100);
+  const priceWithTax = price + taxAmount;
+  const comparePriceWithTax = comparePrice != null
+    ? comparePrice + Math.round((comparePrice * taxRate) / 100)
+    : null;
+
+  return {
+    id: variant.id,
+    sku: variant.sku,
+    price: variant.price,
+    taxAmount,
+    priceWithTax,
+    comparePriceWithTax,
+    stock: variant.stock,
+    imageUrl: getPrimaryImageUrl(variant.images),
+    optionValues: (variant.optionValues ?? [])
+      .map((entry) => {
+        const optionName = entry.optionValue?.option?.name;
+        const value = entry.optionValue?.value;
+        if (!optionName || !value) {
+          return null;
+        }
+        return {
+          optionName,
+          value,
+        };
+      })
+      .filter(
+        (
+          entry,
+        ): entry is {
+          optionName: string;
+          value: string;
+        } => entry !== null,
+      ),
+  };
+};
 
 const toAdminComboKitVariant = (
   variant: ComboProductVariantRecord,
-): AdminComboKitVariant => ({
-  id: variant.id,
-  ...(variant.productId !== undefined && {
-    productId: variant.productId,
-  }),
-  sku: variant.sku,
-  ...(variant.ean !== undefined && { ean: variant.ean }),
-  tags: variant.tags ?? [],
-  price: variant.price,
-  ...(variant.comparePrice !== undefined && {
-    comparePrice: variant.comparePrice,
-  }),
-  stock: variant.stock,
-  ...(variant.weightGrams !== undefined && { weightGrams: variant.weightGrams }),
-  ...(variant.weightClassId !== undefined && {
-    weightClassId: variant.weightClassId,
-  }),
-  ...(variant.isActive !== undefined && { isActive: variant.isActive }),
-  ...(variant.isDeleted !== undefined && { isDeleted: variant.isDeleted }),
-  ...(variant.createdAt !== undefined && { createdAt: variant.createdAt }),
-  ...(variant.updatedAt !== undefined && { updatedAt: variant.updatedAt }),
-  images: variant.images ?? [],
-  optionValues: variant.optionValues ?? [],
-});
+): AdminComboKitVariant => {
+  const taxRate = variant.product?.taxClass?.rate ?? 0;
+  const price = variant.price;
+  const comparePrice = variant.comparePrice ?? (variant as any).compareAtPrice ?? null;
+  const taxAmount = Math.round((price * taxRate) / 100);
+  const priceWithTax = price + taxAmount;
+  const comparePriceWithTax = comparePrice != null
+    ? comparePrice + Math.round((comparePrice * taxRate) / 100)
+    : null;
+
+  return {
+    id: variant.id,
+    ...(variant.productId !== undefined && {
+      productId: variant.productId,
+    }),
+    sku: variant.sku,
+    ...(variant.ean !== undefined && { ean: variant.ean }),
+    tags: variant.tags ?? [],
+    price: variant.price,
+    taxAmount,
+    priceWithTax,
+    ...(variant.comparePrice !== undefined && {
+      comparePrice: variant.comparePrice,
+    }),
+    comparePriceWithTax,
+    stock: variant.stock,
+    ...(variant.weightGrams !== undefined && { weightGrams: variant.weightGrams }),
+    ...(variant.weightClassId !== undefined && {
+      weightClassId: variant.weightClassId,
+    }),
+    ...(variant.isActive !== undefined && { isActive: variant.isActive }),
+    ...(variant.isDeleted !== undefined && { isDeleted: variant.isDeleted }),
+    ...(variant.createdAt !== undefined && { createdAt: variant.createdAt }),
+    ...(variant.updatedAt !== undefined && { updatedAt: variant.updatedAt }),
+    images: variant.images ?? [],
+    optionValues: variant.optionValues ?? [],
+  };
+};
 
 export const toPublicComboKitItem = (
   item: ComboKitItemRecord,

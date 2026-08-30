@@ -36,7 +36,7 @@ export class CouponController {
 
   getCoupon = async (req: Request, res: Response) => {
     const { code } = req.params as { code: string };
-    const coupon = await this.couponService.getCoupon(code);
+    const coupon = await this.couponService.getCoupon(code, true);
 
     // Slim down coupon data for public view
     const publicCoupon = this.couponService.toPublicCoupon(coupon);

@@ -25,7 +25,7 @@
   --color-text-muted: #8A8278;
 
   /* ── Fonts ── */
-  --font-display: "Playfair Display", serif;
+  --font-display: "Outfit", sans-serif;
   --font-body: "Lato", sans-serif;
 }
 
@@ -263,6 +263,14 @@ body {
   border: 1px solid rgba(200, 169, 81, 0.08);
 }
 
+.glass-panel {
+  background: rgba(20, 20, 20, 0.4);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
 /* ── Card lift on hover ── */
 .card-lift {
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
@@ -440,3 +448,35 @@ body {
 }
 .grab-scroll:active { cursor: grabbing; }
 .grab-scroll > * { scroll-snap-align: start; }
+
+/* ── Infinite Marquee ── */
+.marquee-container {
+  overflow: hidden;
+  white-space: nowrap;
+  display: flex;
+}
+.marquee-content {
+  display: flex;
+  flex-shrink: 0;
+  animation: scroll-marquee 25s linear infinite;
+}
+@keyframes scroll-marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+}
+
+/* ── Orbs ── */
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.5;
+  animation: float-orb 15s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+@keyframes float-orb {
+  0% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -50px) scale(1.1); }
+  66% { transform: translate(-20px, 20px) scale(0.9); }
+  100% { transform: translate(0, 0) scale(1); }
+}
