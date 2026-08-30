@@ -21,6 +21,7 @@
         "NODE_ENV",
         "LOG_LEVEL",
         "DATABASE_URL",
+        "REDIS_URL",
         "CORS_ORIGIN",
         "CORS_ORIGINS",
         "JWT_SECRET",

@@ -258,7 +258,6 @@ model ProductVariant {
   comboKitItems         ComboKitItem[]
   cartItems             CartItem[]
   wishlistItems         WishlistItem[]
-  inventoryReservations InventoryReservation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
