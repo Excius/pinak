@@ -49,7 +49,7 @@ const ComboKitDetail: React.FC = () => {
   }
 
   const totalOriginalPrice = items.reduce((acc, item) => {
-    return acc + (item.originalPrice || item.productVariant?.price || 0) * item.quantity
+    return acc + (item.originalPrice || item.productVariant?.priceWithTax || item.productVariant?.price || 0) * item.quantity
   }, 0)
 
   const savings = totalOriginalPrice > 0 && combo ? totalOriginalPrice - combo.price : 0

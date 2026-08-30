@@ -40,8 +40,12 @@ export interface Product {
 export interface ProductVariant {
   id: string
   sku: string
+  tags?: string[]
   price: number
+  taxAmount?: number
+  priceWithTax?: number
   compareAtPrice?: number
+  compareAtPriceWithTax?: number | null
   stock: number
   lowStockThreshold?: number
   isActive: boolean
@@ -64,8 +68,12 @@ export interface ProductImage {
 export interface VariantDetail {
   id: string
   sku: string
+  tags?: string[]
   price: number
+  taxAmount?: number
+  priceWithTax?: number
   compareAtPrice?: number
+  compareAtPriceWithTax?: number | null
   stock: number
   lowStockThreshold?: number
   isActive: boolean
@@ -123,6 +131,28 @@ export const getFeaturedProducts = async (): Promise<Product[]> => {
   const { data: resp } = await axiosInstance.get('/products/featured')
   const result = resp?.data
   return result?.items || (Array.isArray(result) ? result : [])
+}
+
+export const getBestsellers = async (params?: { timeframe?: 'all_time' | 'month' | 'week'; page?: number; limit?: number; categoryId?: string }): Promise<Product[]> => {
+  const { data: resp } = await axiosInstance.get('/products/bestsellers', { params })
+  const result = resp?.data
+  return result?.items || (Array.isArray(result) ? result : [])
+}
+
+export interface BestsellerAnalytics {
+  totalUnitsSold: number
+  grossRevenue: number
+  topCategory: string
+  timeframe: string
+}
+
+export const getBestsellerAnalytics = async (timeframe: 'all_time' | 'month' | 'week'): Promise<BestsellerAnalytics | null> => {
+  try {
+    const { data: resp } = await axiosInstance.get('/products/admin/bestsellers/analytics', { params: { timeframe } })
+    return resp?.data || null
+  } catch (error) {
+    return null
+  }
 }
 
 export const getFeaturedProductsBySection = async (sectionId: string): Promise<Product[]> => {

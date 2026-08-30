@@ -146,12 +146,12 @@ const ProductDetail: React.FC = () => {
 
   const formatPrice = (p: number) => `₹${p.toLocaleString('en-IN')}`
 
+  const displayPrice = selectedVariant?.priceWithTax ?? selectedVariant?.price
+  const displayComparePrice = selectedVariant?.compareAtPriceWithTax ?? selectedVariant?.compareAtPrice
+
   const discount =
-    selectedVariant?.compareAtPrice &&
-      selectedVariant.compareAtPrice > selectedVariant.price
-      ? Math.round(
-        ((selectedVariant.compareAtPrice - selectedVariant.price) / selectedVariant.compareAtPrice) * 100
-      )
+    displayComparePrice && displayPrice && displayComparePrice > displayPrice
+      ? Math.round(((displayComparePrice - displayPrice) / displayComparePrice) * 100)
       : null
 
   const allImages: string[] = []
@@ -242,6 +242,12 @@ const ProductDetail: React.FC = () => {
             )}
 
             <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight">{product.name}</h1>
+            
+            {selectedVariant?.sku && (
+              <div className="text-xs text-text-muted">
+                SKU: <span className="font-mono tracking-wider">{selectedVariant.sku}</span>
+              </div>
+            )}
 
             {product.categories && product.categories.length > 0 && (
               <div className="flex flex-wrap gap-2">
@@ -258,20 +264,26 @@ const ProductDetail: React.FC = () => {
             )}
 
             {selectedVariant && (
-              <div className="flex items-center gap-4">
-                <span className="text-3xl font-bold text-primary price-glow">
-                  {formatPrice(selectedVariant.price)}
-                </span>
-                {selectedVariant.compareAtPrice && selectedVariant.compareAtPrice > selectedVariant.price && (
-                  <span className="text-lg text-text-muted line-through">
-                    {formatPrice(selectedVariant.compareAtPrice)}
+              <div>
+                <div className="flex items-center gap-4">
+                  <span className="text-3xl font-bold text-primary price-glow">
+                    {formatPrice(displayPrice!)}
                   </span>
-                )}
-                {discount && (
-                  <span className="px-3 py-1 rounded-full bg-red-500/20 text-red-400 text-sm font-bold">
-                    {discount}% OFF
-                  </span>
-                )}
+                  {displayComparePrice && displayComparePrice > displayPrice! && (
+                    <span className="text-lg text-text-muted line-through">
+                      {formatPrice(displayComparePrice)}
+                    </span>
+                  )}
+                  {discount && (
+                    <span className="px-3 py-1 rounded-full bg-red-500/20 text-red-400 text-sm font-bold">
+                      {discount}% OFF
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-text-muted mt-1">
+                  Price inclusive of all taxes
+                  {product.taxClass ? ` (${product.taxClass.name})` : ''}
+                </p>
               </div>
             )}
 
@@ -405,12 +417,20 @@ const ProductDetail: React.FC = () => {
               </div>
             </div>
 
-            {product.tags && product.tags.length > 0 && (
+            {((product.tags && product.tags.length > 0) || (selectedVariant?.tags && selectedVariant.tags.length > 0)) && (
               <div className="flex flex-wrap gap-2 pt-4">
-                {product.tags.map((tag, i) => (
+                {product.tags?.map((tag, i) => (
                   <span
-                    key={i}
+                    key={`p-${i}`}
                     className="px-3 py-1 rounded-full bg-surface-elevated text-text-muted text-xs border border-primary/5"
+                  >
+                    #{tag}
+                  </span>
+                ))}
+                {selectedVariant?.tags?.map((tag, i) => (
+                  <span
+                    key={`v-${i}`}
+                    className="px-3 py-1 rounded-full bg-surface-elevated text-primary/80 text-xs border border-primary/10"
                   >
                     #{tag}
                   </span>
@@ -440,7 +460,9 @@ const ProductDetail: React.FC = () => {
                     slug={rel.slug}
                     imageUrl={rel.frontImageUrl || bestVariant?.image?.url || ''}
                     price={bestVariant?.price}
+                    priceWithTax={bestVariant?.priceWithTax}
                     comparePrice={bestVariant?.compareAtPrice ?? undefined}
+                    compareAtPriceWithTax={bestVariant?.compareAtPriceWithTax ?? undefined}
                     category={rel.categories?.[0]?.name || ''}
                     variantId={bestVariant?.id}
                     variantLabel={bestVariant?.optionValues?.map(ov => ov.valueName).join(' / ') || ''}

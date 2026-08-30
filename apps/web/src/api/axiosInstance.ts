@@ -70,7 +70,9 @@ axiosInstance.interceptors.response.use(
       originalRequest._retry = true
 
       try {
-        // Call refresh endpoint without auth header to avoid infinite loop
+        const refreshToken = localStorage.getItem('refreshToken')
+        // Call refresh endpoint without auth header to avoid infinite loop, 
+        // but include the refresh token if available because cross-origin cookies might be blocked
         const refreshResponse = await axios.post(
           `${API_URL}/api/v1/auth/refresh`,
           {},
@@ -78,6 +80,7 @@ axiosInstance.interceptors.response.use(
             headers: {
               'Content-Type': 'application/json',
               Accept: 'application/json',
+              ...(refreshToken ? { Authorization: `Bearer ${refreshToken}` } : {})
             },
             withCredentials: true,
           }
@@ -85,10 +88,12 @@ axiosInstance.interceptors.response.use(
 
         // Extract new access token from response
         const newAccessToken = refreshResponse.data?.data?.accessToken
+        const newRefreshToken = refreshResponse.data?.data?.refreshToken
 
         if (newAccessToken) {
           // Save new token to localStorage
           localStorage.setItem('accessToken', newAccessToken)
+          if (newRefreshToken) localStorage.setItem('refreshToken', newRefreshToken)
 
           // Update authorization header for original request
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
@@ -101,6 +106,7 @@ axiosInstance.interceptors.response.use(
         } else {
           // No token returned, force logout
           localStorage.removeItem('accessToken')
+          localStorage.removeItem('refreshToken')
           processQueue(new Error('No access token received'), null)
           window.location.href = '/auth'
           return Promise.reject(error)
@@ -108,6 +114,7 @@ axiosInstance.interceptors.response.use(
       } catch (refreshError) {
         // Refresh failed, clear token and redirect to login
         localStorage.removeItem('accessToken')
+        localStorage.removeItem('refreshToken')
         processQueue(refreshError, null)
         window.location.href = '/auth'
         return Promise.reject(refreshError)
