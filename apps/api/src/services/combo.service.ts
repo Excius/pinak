@@ -148,7 +148,7 @@ export class ComboService {
   }
 
   async getComboKitByIdAdmin(id: string) {
-    const comboKit = await this.comboRepository.getComboKitById(id, true);
+    const comboKit = await this.comboRepository.getComboKitById(id, true, true);
     if (!comboKit) {
       throw new NotFoundError("Combo kit not found");
     }
@@ -221,7 +221,7 @@ export class ComboService {
   }
 
   async updateComboKit(id: string, data: ComboKitUpdateDTO) {
-    const existing = await this.comboRepository.getComboKitById(id, true);
+    const existing = await this.comboRepository.getComboKitById(id, true, true);
     if (!existing) {
       throw new NotFoundError("Combo kit not found");
     }
@@ -500,7 +500,7 @@ export class ComboService {
   }
 
   async restoreComboKit(id: string) {
-    const comboKit = await this.comboRepository.getComboKitById(id, true);
+    const comboKit = await this.comboRepository.getComboKitById(id, true, true);
     if (!comboKit) {
       throw new NotFoundError("Combo kit not found");
     }
@@ -566,6 +566,7 @@ export class ComboService {
     const comboKit = await this.comboRepository.getComboKitById(
       id,
       includeDeleted,
+      includeDeleted, // if we include deleted, we usually want to include inactive too
     );
     if (!comboKit) {
       throw new NotFoundError("Combo kit not found");

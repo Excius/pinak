@@ -417,7 +417,7 @@ async function main() {
       },
       variants: [
         {
-          sku: "RGF-001",
+          sku: "RGF-001-30",
           shade: "Light Beige",
           size: "30ml",
           price: 4500,
@@ -425,23 +425,31 @@ async function main() {
           tags: ["matte", "foundation", "light"],
         },
         {
-          sku: "RGF-002",
-          shade: "Medium Beige",
-          size: "30ml",
-          price: 4500,
-          stock: 30,
-          tags: ["matte", "foundation", "medium"],
+          sku: "RGF-001-50",
+          shade: "Light Beige",
+          size: "50ml",
+          price: 6500,
+          stock: 15,
+          tags: ["matte", "foundation", "light"],
         },
         {
-          sku: "RGF-003",
+          sku: "RGF-002-30",
           shade: "Deep Beige",
           size: "30ml",
           price: 4500,
           stock: 20,
           tags: ["matte", "foundation", "deep"],
         },
+        {
+          sku: "RGF-002-50",
+          shade: "Deep Beige",
+          size: "50ml",
+          price: 6500,
+          stock: 10,
+          tags: ["matte", "foundation", "deep"],
+        },
       ],
-      filterSlugs: ["light-beige", "medium-beige", "deep-beige", "matte"],
+      filterSlugs: ["light-beige", "deep-beige", "matte"],
     },
     {
       productData: {
@@ -1104,7 +1112,7 @@ async function main() {
       purchasedCount: 14,
       isActive: true,
       items: [
-        { sku: "RGF-001", quantity: 1, isRequired: true },
+        { sku: "RGF-001-30", quantity: 1, isRequired: true },
         { sku: "VML-002", quantity: 1, isRequired: true },
         { sku: "SEP-001", quantity: 1, isRequired: true },
       ],
@@ -1400,7 +1408,7 @@ async function main() {
     return v?.productId ?? null;
   }
 
-  const rgf001 = skuToVariant["RGF-001"];
+  const rgf001 = skuToVariant["RGF-001-30"];
   const vml001 = skuToVariant["VML-001"];
   const hfm001 = skuToVariant["HFM-001"];
   const vcs001 = skuToVariant["VCS-001"];
@@ -1422,7 +1430,7 @@ async function main() {
     data: [
       {
         orderId: johnOrder.id,
-        productId: await productIdBySku("RGF-001"),
+        productId: await productIdBySku("RGF-001-30"),
         productVariantId: rgf001.id,
         productName: "Radiant Glow Foundation — Light Beige 30ml",
         price: rgf001.price,
@@ -1546,7 +1554,7 @@ async function main() {
     data: [
       {
         orderId: testOrder1.id,
-        productId: await productIdBySku("RGF-001"),
+        productId: await productIdBySku("RGF-001-30"),
         productVariantId: rgf001.id,
         productName: "Radiant Glow Foundation — Light Beige 30ml",
         price: rgf001.price,

@@ -606,7 +606,6 @@ export const ProductTypes = {
       weightClassId: z.string().optional().nullable(),
       taxClassId: z.string().optional().nullable(),
       sortOrder: z.coerce.number().optional(),
-      isActive: z.coerce.boolean().optional(),
     }),
     params: z.object({
       id: z

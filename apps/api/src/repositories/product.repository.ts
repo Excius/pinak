@@ -28,7 +28,7 @@ export class ProductRepository {
    */
   getProductById(id: string) {
     return this.prisma.product.findFirst({
-      where: { id, isDeleted: false },
+      where: { id, isDeleted: false, isActive: true },
     });
   }
 
@@ -69,6 +69,7 @@ export class ProductRepository {
         variants: {
           some: {
             isDeleted: false,
+            isActive: true,
             ...(pagination.minPrice && { price: { gte: pagination.minPrice } }),
             ...(pagination.maxPrice && { price: { lte: pagination.maxPrice } }),
             ...(pagination.inStock && { stock: { gt: 0 } }),
@@ -98,8 +99,8 @@ export class ProductRepository {
             filterValues: { include: { filterValue: true } },
             variants: {
               where: pagination.inStock
-                ? { stock: { gt: 0 }, isDeleted: false }
-                : { isDeleted: false },
+                ? { stock: { gt: 0 }, isDeleted: false, isActive: true }
+                : { isDeleted: false, isActive: true },
               take: 1, // Just get one variant for preview
               include: {
                 images: {
@@ -142,6 +143,7 @@ export class ProductRepository {
       where: {
         slug,
         isDeleted: false,
+        isActive: true,
       },
       include: {
         brand: true,
@@ -164,7 +166,7 @@ export class ProductRepository {
           orderBy: { sortOrder: "asc" },
         },
         variants: {
-          where: { isDeleted: false },
+          where: { isDeleted: false, isActive: true },
           include: {
             images: {
               where: { isDeleted: false },
@@ -425,7 +427,10 @@ export class ProductRepository {
     return this.prisma.$transaction(async (tx) => {
       const [featuredProducts, total] = await Promise.all([
         tx.featuredProduct.findMany({
-          where: { sectionId },
+          where: {
+            sectionId,
+            product: { isDeleted: false, isActive: true },
+          },
           skip,
           take,
           orderBy,
@@ -436,7 +441,7 @@ export class ProductRepository {
                 taxClass: { select: { id: true, name: true, rate: true } },
                 categories: { include: { category: true } },
                 variants: {
-                  where: { stock: { gt: 0 } },
+                  where: { stock: { gt: 0 }, isDeleted: false, isActive: true },
                   orderBy: { price: "asc" },
                   take: 1,
                   include: {
@@ -475,6 +480,7 @@ export class ProductRepository {
       where: {
         name: { contains: query, mode: "insensitive" },
         isDeleted: false,
+        isActive: true,
         ...filters,
       },
       include: {
@@ -485,7 +491,7 @@ export class ProductRepository {
         categories: { include: { category: true } },
         filterValues: { include: { filterValue: true } },
         variants: {
-          where: { isDeleted: false },
+          where: { isDeleted: false, isActive: true },
           include: {
             images: {
               where: { isPrimary: true, isDeleted: false },
@@ -502,7 +508,7 @@ export class ProductRepository {
 
   getProductVariants(productId: string) {
     return this.prisma.productVariant.findMany({
-      where: { productId, isDeleted: false },
+      where: { productId, isDeleted: false, isActive: true },
       include: {
         images: true,
         optionValues: {
@@ -515,7 +521,7 @@ export class ProductRepository {
 
   getProductWithDetails(id: string) {
     return this.prisma.product.findFirst({
-      where: { id, isDeleted: false },
+      where: { id, isDeleted: false, isActive: true },
       include: {
         brand: true,
         categories: { include: { category: true } },
@@ -537,7 +543,7 @@ export class ProductRepository {
           orderBy: { sortOrder: "asc" },
         },
         variants: {
-          where: { isDeleted: false },
+          where: { isDeleted: false, isActive: true },
           include: {
             images: {
               where: { isDeleted: false },
@@ -1470,7 +1476,7 @@ export class ProductRepository {
         categories: { include: { category: true } },
         filterValues: { include: { filterValue: true } },
         variants: {
-          where: { isDeleted: false },
+          where: { isDeleted: false, isActive: true },
           include: {
             images: {
               where: { isDeleted: false },

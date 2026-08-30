@@ -11,9 +11,12 @@ export class FilterRepository {
     });
   }
 
-  getGroupById(id: string) {
+  getGroupById(id: string, activeOnly = false) {
     return this.prisma.filterGroup.findUnique({
-      where: { id },
+      where: {
+        id,
+        ...(activeOnly ? { isActive: true } : {}),
+      },
       include: { values: { orderBy: { sortOrder: "asc" } } },
     });
   }

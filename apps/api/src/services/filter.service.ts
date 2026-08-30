@@ -11,8 +11,8 @@ export class FilterService {
     return this.repo.listGroups(activeOnly);
   }
 
-  getGroupById(id: string) {
-    return this.repo.getGroupById(id);
+  getGroupById(id: string, activeOnly = false) {
+    return this.repo.getGroupById(id, activeOnly);
   }
 
   async createGroup(data: Prisma.FilterGroupCreateInput) {

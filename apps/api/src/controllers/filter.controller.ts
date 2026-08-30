@@ -13,9 +13,7 @@ export class FilterController {
   constructor(private filterService: FilterService) {}
 
   listGroupsPublic = async (req: Request, res: Response) => {
-    const activeOnly = req.query.activeOnly
-      ? req.query.activeOnly === "true"
-      : false;
+    const activeOnly = true;
     const groups = await this.filterService.listGroups(activeOnly);
     ResponseHandler.success(
       res,
@@ -26,7 +24,7 @@ export class FilterController {
 
   getGroupPublic = async (req: Request, res: Response) => {
     const { id } = req.params;
-    const group = await this.filterService.getGroupById(id as string);
+    const group = await this.filterService.getGroupById(id as string, true);
     if (!group) return ResponseHandler.notFound(res, "Filter group not found");
     ResponseHandler.success(
       res,
