@@ -10,12 +10,22 @@ export class BrandRepository {
     });
   }
 
-  getById(id: string) {
-    return this.prisma.brand.findUnique({ where: { id } });
+  getById(id: string, activeOnly = false) {
+    return this.prisma.brand.findUnique({
+      where: {
+        id,
+        ...(activeOnly ? { isActive: true } : {}),
+      },
+    });
   }
 
-  getBySlug(slug: string) {
-    return this.prisma.brand.findUnique({ where: { slug } });
+  getBySlug(slug: string, activeOnly = false) {
+    return this.prisma.brand.findUnique({
+      where: {
+        slug,
+        ...(activeOnly ? { isActive: true } : {}),
+      },
+    });
   }
 
   findByNameOrSlug(name?: string, slug?: string) {

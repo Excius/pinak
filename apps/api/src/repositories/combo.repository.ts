@@ -151,11 +151,12 @@ export class ComboRepository {
     };
   }
 
-  getComboKitById(id: string, includeDeleted = false) {
+  getComboKitById(id: string, includeDeleted = false, includeInactive = false) {
     return this.prisma.comboKit.findFirst({
       where: {
         id,
         ...(includeDeleted ? {} : { isDeleted: false }),
+        ...(includeInactive ? {} : { isActive: true }),
       },
       include: comboKitInclude,
     });

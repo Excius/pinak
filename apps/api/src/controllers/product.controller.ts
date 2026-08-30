@@ -23,7 +23,7 @@ export class ProductController {
       sortOrder: (req.query.sortOrder as "asc" | "desc") || "desc",
       search: req.query.search as string,
       categoryId: req.query.categoryId as string,
-      isActive: req.query.isActive ? req.query.isActive === "true" : undefined,
+      isActive: true,
       minPrice: req.query.minPrice
         ? parseInt(req.query.minPrice as string)
         : undefined,

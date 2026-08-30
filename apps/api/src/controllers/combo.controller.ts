@@ -18,10 +18,7 @@ export class ComboController {
     const result = await this.comboService.getComboKits({
       page: Number(req.query.page ?? 1),
       limit: Number(req.query.limit ?? 10),
-      isActive:
-        req.query.isActive !== undefined
-          ? String(req.query.isActive) === "true"
-          : undefined,
+      isActive: true,
       search: req.query.search ? String(req.query.search) : undefined,
       tags: req.query.tags
         ? String(req.query.tags)
@@ -87,9 +84,7 @@ export class ComboController {
       String(req.query.q),
       Number(req.query.page ?? 1),
       Number(req.query.limit ?? 10),
-      req.query.isActive !== undefined
-        ? String(req.query.isActive) === "true"
-        : undefined,
+      true,
     );
 
     ResponseHandler.success(

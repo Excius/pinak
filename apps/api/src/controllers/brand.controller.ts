@@ -37,7 +37,7 @@ export class BrandController {
   };
 
   listPublic = async (req: Request, res: Response) => {
-    const activeOnly = this.resolveActiveOnly(req.query.activeOnly);
+    const activeOnly = true;
     const brands = await this.brandService.listBrands(activeOnly);
     ResponseHandler.success(
       res,
@@ -48,7 +48,7 @@ export class BrandController {
 
   getByIdPublic = async (req: Request, res: Response) => {
     const { id } = req.params;
-    const brand = await this.brandService.getBrandById(id as string);
+    const brand = await this.brandService.getBrandById(id as string, true);
     if (!brand) return ResponseHandler.notFound(res, "Brand not found");
     ResponseHandler.success(
       res,
@@ -59,7 +59,7 @@ export class BrandController {
 
   getBySlugPublic = async (req: Request, res: Response) => {
     const { slug } = req.params;
-    const brand = await this.brandService.getBrandBySlug(slug as string);
+    const brand = await this.brandService.getBrandBySlug(slug as string, true);
     if (!brand) return ResponseHandler.notFound(res, "Brand not found");
     ResponseHandler.success(
       res,
