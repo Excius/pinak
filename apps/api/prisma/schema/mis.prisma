@@ -1,31 +1,4 @@
-model InventoryReservation {
-  id               String  @id @default(cuid())
-  orderId          String
-  productVariantId String?
-  comboKitId       String?
-  quantity         Int
 
-  status    ReservationStatus @default(ACTIVE)
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @updatedAt
-  expiresAt DateTime
-
-  productVariant ProductVariant? @relation(fields: [productVariantId], references: [id])
-  comboKit       ComboKit?       @relation(fields: [comboKitId], references: [id])
-  order          Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
-
-  @@index([orderId])
-  @@index([productVariantId])
-  @@index([comboKitId])
-  @@index([status])
-  @@index([expiresAt])
-}
-
-enum ReservationStatus {
-  ACTIVE
-  CONFIRMED
-  RELEASED
-}
 
 model AuditLog {
   id        String  @id @default(cuid())

@@ -1140,9 +1140,7 @@ export class ProductRepository {
           order: { isDeleted: false, status: { not: "CANCELLED" } },
         },
       }),
-      this.prisma.inventoryReservation.count({
-        where: { productVariantId: id, expiresAt: { gt: new Date() } },
-      }),
+
       this.prisma.wishlistItem.count({ where: { productVariantId: id } }),
       this.prisma.comboKitItem.count({ where: { productVariantId: id } }),
     ]);
@@ -1162,9 +1160,7 @@ export class ProductRepository {
         },
       }),
       this.prisma.wishlistItem.count({ where: { productVariantId: id } }),
-      this.prisma.inventoryReservation.count({
-        where: { productVariantId: id },
-      }),
+
       this.prisma.comboKitItem.count({ where: { productVariantId: id } }),
       this.prisma.productImage.count({ where: { productVariantId: id } }),
     ]);
@@ -1186,7 +1182,6 @@ export class ProductRepository {
       variantOrderCount,
       cartCount,
       wishlistCount,
-      reservationCount,
       featuredCount,
       reviewCount,
       comboKitCount,
@@ -1216,11 +1211,6 @@ export class ProductRepository {
             where: { productVariantId: { in: variantIds } },
           })
         : Promise.resolve(0),
-      variantIds.length
-        ? this.prisma.inventoryReservation.count({
-            where: { productVariantId: { in: variantIds } },
-          })
-        : Promise.resolve(0),
       this.prisma.featuredProduct.count({ where: { productId: id } }),
       this.prisma.review.count({ where: { productId: id } }),
       variantIds.length
@@ -1238,7 +1228,6 @@ export class ProductRepository {
       variantOrderCount,
       cartCount,
       wishlistCount,
-      reservationCount,
       featuredCount,
       reviewCount,
       comboKitCount,

@@ -25,7 +25,6 @@ model Order {
   updatedAt DateTime @updatedAt
 
   couponUsages          CouponUsage[]
-  inventoryReservations InventoryReservation[]
 
   isDeleted Boolean @default(false)
 
