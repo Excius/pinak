@@ -1,0 +1,40 @@
+info:
+  name: Add Product to Featured
+  type: http
+  seq: 32
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/v1/products/admin/featured/{{sectionId}}"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "productId": "your-product-id-here"
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: authToken
+      value: your-moderator-or-admin-jwt-token-here
+    - name: sectionId
+      value: your-section-id-here
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Schema: ProductTypes.AddProductToFeatured
+  Params: sectionId
+  Query: none
+  Body: productId

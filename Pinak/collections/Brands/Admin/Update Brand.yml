@@ -1,0 +1,43 @@
+info:
+  name: Update Brand
+  type: http
+  seq: 5
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/api/v1/brands/admin/{{brandId}}"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "name": "Nivea Updated",
+        "slug": "nivea-updated",
+        "logoUrl": "https://example.com/logo-updated.png",
+        "isActive": false
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: authToken
+      value: your-moderator-or-admin-jwt-token-here
+    - name: brandId
+      value: your-brand-id-here
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Schema: BrandTypes.UpdateBrand
+  Params: brandId
+  Query: none
+  Body: name, slug, logoUrl, isActive

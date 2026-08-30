@@ -1,0 +1,28 @@
+info:
+  name: Update Address
+  type: http
+  seq: 4
+
+http:
+  method: PATCH
+  url: "{{baseUrl}}/api/v1/addresses/:id"
+  params:
+    - name: id
+      value: cmobc2wbu0000wqmzysukkgu5
+      type: path
+  body:
+    type: json
+    data: |-
+      {
+        "fullName": "John Updated",
+        "addressLine1": "456 Oak Ave",
+        "label": "Work"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

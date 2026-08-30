@@ -1,0 +1,39 @@
+info:
+  name: Create Featured Section
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/v1/featured-sections/admin"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "title": "Homepage Hero",
+        "type": "HOMEPAGE_HERO",
+        "priority": 10
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: authToken
+      value: your-moderator-or-admin-jwt-token-here
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Schema: FeaturedSectionTypes.CreateFeaturedSection
+  Route: /featured-sections/admin
+  Access: moderator/admin

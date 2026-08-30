@@ -1,0 +1,36 @@
+info:
+  name: Admin - Update Payment Status
+  type: http
+  seq: 3
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/api/v1/orders/admin/{{orderId}}/payment"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "paymentStatus": "COMPLETED"
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: authToken
+      value: your-moderator-or-admin-jwt-token-here
+    - name: orderId
+      value: use-order-id-from-admin-list-response
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: "Schema: OrderAdminTypes.UpdatePaymentStatus"

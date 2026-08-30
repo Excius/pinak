@@ -1,0 +1,27 @@
+info:
+  name: Refresh
+  type: http
+  seq: 5
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/v1/auth/refresh"
+  headers:
+    - name: Authorization
+      value: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjZDAzZDk3Yy0zZGM1LTQ5MjgtODE2OS05YmMzYWQ2N2RmZjgiLCJzZXNzaW9uSWQiOiIxNmYyNWIyMy04Njk2LTQ3ZTctYTNjMC05MDlmOWVhY2QxMjciLCJ0b2tlblR5cGUiOiJyZWZyZXNoIiwiaWF0IjoxNzg3MTU2ODAxLCJleHAiOjQzNzkxNTY4MDF9.rfTKNtZDVYLgU7We_gZCYKzsmd0uctl06YTFuvrF5Ws
+  body:
+    type: json
+    data: ""
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

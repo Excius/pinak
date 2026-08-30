@@ -1,0 +1,55 @@
+info:
+  name: Create Order
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/v1/orders"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+      //   "couponCode": "WELCOME10",
+        "shippingAddressId": "cmobcvumz0002wqmzly0bep08"
+      //   "shippingAddress": {
+      //     "fullName": "John Doe",
+      //     "addressLine1": "123 Main Street",
+      //     "city": "Mumbai",
+      //     "state": "Maharashtra",
+      //     "pincode": "400001",
+      //     "phone": "+919876543210"
+      //   },
+      //   "billingAddressId": "optional-saved-billing-id"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  # Create Order API
+
+  This route initiates the checkout process. You can provide addresses either as full objects or as IDs of saved addresses.
+
+  ### Address Selection Rules:
+  1. **Shipping:** You MUST provide either `shippingAddress` (object) OR `shippingAddressId` (string).
+  2. **Billing Fallback:** If `billingAddress` and `billingAddressId` are both omitted, the system will use the **Shipping Address** for billing.
+  3. **Priority:** If both an ID and an object are provided for the same address type, the ID takes precedence.
+
+  ### Fields:
+  - `couponCode`: (Optional) Coupon to apply.
+  - `shippingAddressId`: (Optional) ID of a saved address.
+  - `shippingAddress`: (Optional) Full address object.
+  - `billingAddressId`: (Optional) ID of a saved address.
+  - `billingAddress`: (Optional) Full address object.
+
+  ### Schema:
+  `OrderTypes.CreateOrder`

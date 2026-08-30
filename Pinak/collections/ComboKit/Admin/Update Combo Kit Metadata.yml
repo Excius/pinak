@@ -1,0 +1,42 @@
+info:
+  name: Update Combo Kit Metadata
+  type: http
+  seq: 9
+
+http:
+  method: PATCH
+  url: "{{baseUrl}}/api/v1/combo-kits/{{id}}/metadata"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "metaTitle": "Starter Kit Updated | Pinak",
+        "metaDescription": "Updated metadata for SEO and store listing.",
+        "metaKeywords": "starter, makeup, updated",
+        "seoKeyword": "starter-kit-updated",
+        "tags": ["starter", "updated", "combo"],
+        "imageUrl": "https://example.com/images/starter-kit-updated.jpg",
+        "sortOrder": 2
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: authToken
+      value: your-jwt-token-here
+    - name: id
+      value: combo-kit-id-here
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: Update combo metadata fields. Requires Moderator or Admin.

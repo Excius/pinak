@@ -1,0 +1,20 @@
+info:
+  name: Set Default Address
+  type: http
+  seq: 6
+
+http:
+  method: PATCH
+  url: "{{baseUrl}}/api/v1/addresses/:id/default"
+  params:
+    - name: id
+      value: cmobcvumz0002wqmzly0bep08
+      type: path
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

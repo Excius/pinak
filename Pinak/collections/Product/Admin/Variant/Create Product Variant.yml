@@ -1,0 +1,49 @@
+info:
+  name: Create Product Variant
+  type: http
+  seq: 20
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/v1/products/admin/{{productId}}/variants"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "sku": "SERUM-30ML",
+        "ean": "1234567890124",
+        "price": 799,
+        "comparePrice": 999,
+        "stock": 25,
+        "weightGrams": 120,
+        "weightClassId": "your-weight-class-id",
+        "tags": ["30ml"],
+        "optionValueIds": ["option-value-id-1", "option-value-id-2"],
+        "isActive": true
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: authToken
+      value: your-moderator-or-admin-jwt-token-here
+    - name: productId
+      value: your-product-id-here
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Schema: ProductTypes.CreateProductVariant
+  Params: productId
+  Query: none
+  Body: sku(required), ean, price, comparePrice, stock, weightGrams, weightClassId, tags, optionValueIds, isActive

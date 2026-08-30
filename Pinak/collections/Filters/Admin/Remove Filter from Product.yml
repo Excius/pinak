@@ -1,0 +1,32 @@
+info:
+  name: Remove Filter from Product
+  type: http
+  seq: 8
+
+http:
+  method: DELETE
+  url: "{{baseUrl}}/api/v1/filters/products/{{productId}}/values/{{filterValueId}}"
+  headers:
+    - name: Content-Type
+      value: application/json
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: productId
+      value: your-product-id-here
+    - name: filterValueId
+      value: your-filter-value-id-here
+    - name: authToken
+      value: your-jwt-token-here
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: Remove a filter value from a product (Moderator/Admin required).

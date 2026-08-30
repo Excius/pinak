@@ -1,0 +1,37 @@
+info:
+  name: Remove Product from Featured
+  type: http
+  seq: 33
+
+http:
+  method: DELETE
+  url: "{{baseUrl}}/api/v1/products/admin/featured/{{featuredProductId}}"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: "{}"
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: authToken
+      value: your-moderator-or-admin-jwt-token-here
+    - name: featuredProductId
+      value: your-featured-product-id-here
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Schema: ProductTypes.RemoveProductFromFeatured
+  Params: featuredProductId
+  Query: none
+  Body: {}
