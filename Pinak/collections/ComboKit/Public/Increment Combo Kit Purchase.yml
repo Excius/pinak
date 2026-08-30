@@ -1,0 +1,36 @@
+info:
+  name: Increment Combo Kit Purchase
+  type: http
+  seq: 7
+
+http:
+  method: PATCH
+  url: "{{baseUrl}}/api/v1/combo-kits/{{id}}/increment-purchase"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "quantity": 1
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: authToken
+      value: your-jwt-token-here
+    - name: id
+      value: cmnj36wx700532amznio2194z
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: Increment combo kit purchased count (authenticated route).

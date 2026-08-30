@@ -1,0 +1,37 @@
+info:
+  name: Soft Delete Image
+  type: http
+  seq: 5
+
+http:
+  method: DELETE
+  url: "{{baseUrl}}/api/v1/products/admin/images/{{id}}"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: "{}"
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: authToken
+      value: your-moderator-or-admin-jwt-token-here
+    - name: id
+      value: cmnjdin8y0002ccmzubzz03sn
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Route uses ProductTypes.SoftDeleteProduct schema
+  Params: id
+  Query: none
+  Body: {}

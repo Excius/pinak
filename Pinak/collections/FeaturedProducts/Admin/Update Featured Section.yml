@@ -1,0 +1,41 @@
+info:
+  name: Update Featured Section
+  type: http
+  seq: 2
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/api/v1/featured-sections/admin/{{sectionId}}"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "title": "Homepage Hero Updated",
+        "type": "HOMEPAGE_HERO",
+        "priority": 20
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: sectionId
+      value: your-featured-section-id-here
+    - name: authToken
+      value: your-moderator-or-admin-jwt-token-here
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Schema: FeaturedSectionTypes.UpdateFeaturedSection
+  Route: /featured-sections/admin/:id
+  Access: moderator/admin

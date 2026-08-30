@@ -1,0 +1,36 @@
+info:
+  name: Update Cart Item Quantity
+  type: http
+  seq: 3
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/api/v1/cart/items/{{itemId}}"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "quantity": 2
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: authToken
+      value: your-jwt-token-here
+    - name: itemId
+      value: cmoadeytg0001bmmz9li2nou2
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: "Schema: CartTypes.UpdateCartItem"

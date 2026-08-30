@@ -1,0 +1,37 @@
+info:
+  name: Update Option Value
+  type: http
+  seq: 5
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/api/v1/options/values/{{valueId}}"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "value": "50ml",
+        "sortOrder": 1
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: valueId
+      value: your-option-value-id-here
+    - name: authToken
+      value: your-jwt-token-here
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: Update an option value (Moderator/Admin required).

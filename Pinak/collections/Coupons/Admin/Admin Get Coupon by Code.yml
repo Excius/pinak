@@ -1,0 +1,25 @@
+info:
+  name: Admin Get Coupon by Code
+  type: http
+  seq: 2
+
+http:
+  method: GET
+  url: "{{baseUrl}}/api/v1/coupons/admin/:code"
+  params:
+    - name: code
+      value: FLAT200
+      type: path
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

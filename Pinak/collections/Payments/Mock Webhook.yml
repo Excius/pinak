@@ -1,0 +1,28 @@
+info:
+  name: Mock Webhook
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/v1/payments/payment"
+  body:
+    type: json
+    data: |-
+      {
+        "orderId": "cmobe2cz70000fsmzpunso12n",
+        "paymentId": "pay_12345",
+        "status": "SUCCESS"
+      }
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

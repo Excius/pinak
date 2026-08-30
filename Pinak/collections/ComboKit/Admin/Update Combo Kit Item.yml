@@ -1,0 +1,42 @@
+info:
+  name: Update Combo Kit Item
+  type: http
+  seq: 10
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/api/v1/combo-kits/{{comboKitId}}/items/{{itemId}}"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "quantity": 2,
+        "sortOrder": 1,
+        "originalPrice": 2500,
+        "discountedPrice": 2200,
+        "isRequired": true
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: authToken
+      value: your-jwt-token-here
+    - name: comboKitId
+      value: combo-kit-id-here
+    - name: itemId
+      value: combo-kit-item-id-here
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: Update a combo item in-place. Requires Moderator or Admin.

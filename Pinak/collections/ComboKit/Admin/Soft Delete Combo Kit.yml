@@ -1,0 +1,30 @@
+info:
+  name: Soft Delete Combo Kit
+  type: http
+  seq: 5
+
+http:
+  method: PATCH
+  url: "{{baseUrl}}/api/v1/combo-kits/{{id}}/soft-delete"
+  headers:
+    - name: Content-Type
+      value: application/json
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: authToken
+      value: your-jwt-token-here
+    - name: id
+      value: combo-kit-id-here
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: Soft-delete a combo kit (mark as deleted). Requires Moderator or Admin.

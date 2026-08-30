@@ -1,0 +1,69 @@
+info:
+  name: Get Combo Kits
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: "{{baseUrl}}/api/v1/combo-kits?page=1&limit=10&sortBy=createdAt&sortOrder=desc&isActive=true"
+  headers:
+    - name: Content-Type
+      value: application/json
+  params:
+    - name: page
+      value: "1"
+      type: query
+    - name: limit
+      value: "10"
+      type: query
+    - name: sortBy
+      value: createdAt
+      type: query
+    - name: sortOrder
+      value: desc
+      type: query
+    - name: isActive
+      value: "true"
+      type: query
+    - name: search
+      value: glow
+      type: query
+      disabled: true
+    - name: tags
+      value: makeup,starter
+      type: query
+      disabled: true
+    - name: minPrice
+      value: "1000"
+      type: query
+      disabled: true
+    - name: maxPrice
+      value: "7000"
+      type: query
+      disabled: true
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Fetch paginated combo kits (public/authenticated).
+
+  Query params:
+  - page (default 1)
+  - limit (default 10)
+  - isActive (optional)
+  - search (optional)
+  - tags (optional comma-separated)
+  - minPrice / maxPrice (optional)
+  - sortBy: createdAt|updatedAt|price|sortOrder|viewCount|purchasedCount
+  - sortOrder: asc|desc

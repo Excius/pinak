@@ -1,0 +1,32 @@
+info:
+  name: Get Low Stock Products
+  type: http
+  seq: 35
+
+http:
+  method: GET
+  url: "{{baseUrl}}/api/v1/products/admin/stock/low-stock"
+  headers:
+    - name: Content-Type
+      value: application/json
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: authToken
+      value: your-moderator-or-admin-jwt-token-here
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Route: /products/admin/stock/low-stock
+  Params: none
+  Query: none
+  Body: none

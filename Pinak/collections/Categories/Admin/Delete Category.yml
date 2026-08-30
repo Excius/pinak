@@ -1,0 +1,30 @@
+info:
+  name: Delete Category
+  type: http
+  seq: 2
+
+http:
+  method: DELETE
+  url: "{{baseUrl}}/api/v1/categories/admin/{{categoryId}}"
+  headers:
+    - name: Content-Type
+      value: application/json
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: categoryId
+      value: your-category-id-here
+    - name: authToken
+      value: your-jwt-token-here
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: Delete a category (Moderator/Admin required).

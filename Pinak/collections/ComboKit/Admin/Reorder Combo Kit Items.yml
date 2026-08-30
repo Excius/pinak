@@ -1,0 +1,40 @@
+info:
+  name: Reorder Combo Kit Items
+  type: http
+  seq: 11
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/v1/combo-kits/{{comboKitId}}/items/reorder"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "items": [
+          { "id": "item-id-1", "sortOrder": 0 },
+          { "id": "item-id-2", "sortOrder": 1 },
+          { "id": "item-id-3", "sortOrder": 2 }
+        ]
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: authToken
+      value: your-jwt-token-here
+    - name: comboKitId
+      value: combo-kit-id-here
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: Reorder combo items by explicit sortOrder list. Requires Moderator or Admin.
