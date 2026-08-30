@@ -1,0 +1,34 @@
+info:
+  name: Get Brand by ID
+  type: http
+  seq: 2
+
+http:
+  method: GET
+  url: "{{baseUrl}}/api/v1/brands/{{brandId}}"
+  headers:
+    - name: Content-Type
+      value: application/json
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: authToken
+      value: your-jwt-token-here
+    - name: brandId
+      value: cmnj36a1e00032amz304sudur
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Schema: BrandTypes.GetBrandById
+  Params: brandId
+  Query: none
+  Body: none

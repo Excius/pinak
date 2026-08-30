@@ -1,0 +1,41 @@
+info:
+  name: Create Brand
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/v1/brands/admin"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "name": "Nivea",
+        "slug": "nivea",
+        "logoUrl": "https://example.com/logo.png",
+        "isActive": true
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: authToken
+      value: your-moderator-or-admin-jwt-token-here
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Schema: BrandTypes.CreateBrand
+  Params: none
+  Query: none
+  Body: name(required), slug, logoUrl, isActive

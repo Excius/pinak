@@ -1,0 +1,40 @@
+info:
+  name: Add Product to Category
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/v1/products/admin/{{productId}}/categories"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "categoryId": "your-category-id-here"
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: authToken
+      value: your-moderator-or-admin-jwt-token-here
+    - name: productId
+      value: your-product-id-here
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Schema: ProductCategoryTypes.AddProductToCategory
+  Params: productId
+  Query: none
+  Body: categoryId

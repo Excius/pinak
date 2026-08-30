@@ -1,0 +1,47 @@
+info:
+  name: Update Product Image
+  type: http
+  seq: 4
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/api/v1/products/admin/images/{{imageId}}"
+  body:
+    type: multipart-form
+    data:
+      - name: image
+        type: file
+        value:
+          - /home/excius/Downloads/profile_6e4fa855-634a-4ab8-a9e9-2532e72c795e_1766677108378.jpg
+        contentType: image/jpeg
+      - name: altText
+        type: text
+        value: Test Update Image
+        contentType: text/plain
+      - name: isPrimary
+        type: text
+        value: "false"
+        contentType: text/plain
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: authToken
+      value: your-moderator-or-admin-jwt-token-here
+    - name: imageId
+      value: cmnjeljbv00007nmz2hmm7ee6
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Schema: ProductTypes.SetPrimaryImage
+  Params: imageId
+  Query: none
+  Body: {}

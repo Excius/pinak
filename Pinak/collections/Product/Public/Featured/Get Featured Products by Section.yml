@@ -1,0 +1,41 @@
+info:
+  name: Get Featured Products by Section
+  type: http
+  seq: 9
+
+http:
+  method: GET
+  url: "{{baseUrl}}/api/v1/products/featured/section/{{sectionId}}?page=1&limit=10"
+  headers:
+    - name: Content-Type
+      value: application/json
+  params:
+    - name: page
+      value: "1"
+      type: query
+    - name: limit
+      value: "10"
+      type: query
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: authToken
+      value: your-jwt-token-here
+    - name: sectionId
+      value: cmnesso8d004a9ymzsokpjj07
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Route: /products/featured/section/:sectionId (query validated by ProductTypes.GetFeaturedProducts)
+  Params: sectionId
+  Query: page, limit
+  Body: none

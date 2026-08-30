@@ -1,0 +1,34 @@
+info:
+  name: Get Category by ID
+  type: http
+  seq: 2
+
+http:
+  method: GET
+  url: "{{baseUrl}}/api/v1/categories/{{categoryId}}"
+  headers:
+    - name: Content-Type
+      value: application/json
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: categoryId
+      value: cmnj36d8d001e2amz1j425e26
+    - name: authToken
+      value: your-jwt-token-here
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Fetch a category by its ID.
+
+  Path Parameters:
+  - categoryId: Category ID (required)

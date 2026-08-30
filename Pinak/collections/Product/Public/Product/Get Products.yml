@@ -1,0 +1,81 @@
+info:
+  name: Get Products
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: "{{baseUrl}}/api/v1/products?page=1&limit=10&sortBy=createdAt&sortOrder=desc"
+  headers:
+    - name: Content-Type
+      value: application/json
+  params:
+    - name: page
+      value: "1"
+      type: query
+    - name: limit
+      value: "10"
+      type: query
+    - name: sortBy
+      value: createdAt
+      type: query
+    - name: sortOrder
+      value: desc
+      type: query
+    - name: search
+      value: serum
+      type: query
+      disabled: true
+    - name: categoryId
+      value: your-category-id
+      type: query
+      disabled: true
+    - name: isActive
+      value: "true"
+      type: query
+      disabled: true
+    - name: minPrice
+      value: "0"
+      type: query
+      disabled: true
+    - name: maxPrice
+      value: "5000"
+      type: query
+      disabled: true
+    - name: brand
+      value: your-brand-slug-or-name
+      type: query
+      disabled: true
+    - name: inStock
+      value: "true"
+      type: query
+      disabled: true
+    - name: tags
+      value: clean,vegan
+      type: query
+      disabled: true
+    - name: filterValueIds
+      value: value-id-1,value-id-2
+      type: query
+      disabled: true
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: authToken
+      value: your-jwt-token-here
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Schema: ProductTypes.GetProducts
+  Params: none
+  Query: page, limit, sortBy, sortOrder, search, categoryId, isActive, minPrice, maxPrice, brand, inStock, tags, filterValueIds
+  Body: none

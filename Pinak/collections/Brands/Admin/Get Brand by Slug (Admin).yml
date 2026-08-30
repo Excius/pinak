@@ -1,0 +1,34 @@
+info:
+  name: Get Brand by Slug (Admin)
+  type: http
+  seq: 3
+
+http:
+  method: GET
+  url: "{{baseUrl}}/api/v1/brands/admin/slug/{{slug}}"
+  headers:
+    - name: Content-Type
+      value: application/json
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: authToken
+      value: your-moderator-or-admin-jwt-token-here
+    - name: slug
+      value: nivea
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Schema: BrandAdminTypes.GetBrandBySlug
+  Params: slug
+  Query: none
+  Body: none

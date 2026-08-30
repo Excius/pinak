@@ -1,0 +1,39 @@
+info:
+  name: Update Combo Kit Pricing
+  type: http
+  seq: 8
+
+http:
+  method: PATCH
+  url: "{{baseUrl}}/api/v1/combo-kits/{{id}}/pricing"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "pricingStrategy": "FIXED_PRICE",
+        "price": 4999,
+        "discountType": "PERCENTAGE",
+        "discountValue": 12
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: authToken
+      value: your-jwt-token-here
+    - name: id
+      value: combo-kit-id-here
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: Update combo pricing model and discount settings. Requires Moderator or Admin.

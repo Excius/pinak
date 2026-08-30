@@ -1,0 +1,46 @@
+info:
+  name: Get Admin BestSellers
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: "{{baseUrl}}/api/v1/products/admin/bestsellers?page=1&limit=10&timeframe=all_time"
+  headers:
+    - name: Content-Type
+      value: application/json
+  params:
+    - name: page
+      value: "1"
+      type: query
+    - name: limit
+      value: "10"
+      type: query
+    - name: timeframe
+      value: all_time
+      type: query
+    - name: categoryId
+      value: your-category-id
+      type: query
+      disabled: true
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: authToken
+      value: your-jwt-token-here
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Schema: BestSellerTypes.GetBestSellersAdmin
+  Params: none
+  Query: page, limit, timeframe, categoryId
+  Body: none

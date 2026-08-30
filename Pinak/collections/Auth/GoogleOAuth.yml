@@ -1,0 +1,25 @@
+info:
+  name: GoogleOAuth
+  type: http
+  seq: 10
+
+http:
+  method: GET
+  url: "{{baseUrl}}/api/v1/auth/google?platform=MOBILE"
+  params:
+    - name: platform
+      value: MOBILE
+      type: query
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

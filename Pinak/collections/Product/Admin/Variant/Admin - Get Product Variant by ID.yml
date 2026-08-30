@@ -1,0 +1,34 @@
+info:
+  name: Admin - Get Product Variant by ID
+  type: http
+  seq: 9
+
+http:
+  method: GET
+  url: "{{baseUrl}}/api/v1/products/admin/variants/{{id}}"
+  headers:
+    - name: Content-Type
+      value: application/json
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: authToken
+      value: your-moderator-or-admin-jwt-token-here
+    - name: id
+      value: cmnj36trl00412amzrokgnkoy
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Schema: ProductTypes.GetVariantAdmin
+  Params: id
+  Query: none
+  Body: none

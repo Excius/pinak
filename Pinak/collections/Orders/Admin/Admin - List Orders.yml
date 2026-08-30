@@ -1,0 +1,47 @@
+info:
+  name: Admin - List Orders
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: "{{baseUrl}}/api/v1/orders/admin?page=1&limit=10"
+  headers:
+    - name: Content-Type
+      value: application/json
+  params:
+    - name: page
+      value: "1"
+      type: query
+    - name: limit
+      value: "10"
+      type: query
+    - name: status
+      value: PROCESSING
+      type: query
+      disabled: true
+    - name: paymentStatus
+      value: COMPLETED
+      type: query
+      disabled: true
+    - name: userId
+      value: user-id
+      type: query
+      disabled: true
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: authToken
+      value: your-moderator-or-admin-jwt-token-here
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: "Schema: OrderAdminTypes.ListOrders"

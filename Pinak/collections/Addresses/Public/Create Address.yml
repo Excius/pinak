@@ -1,0 +1,30 @@
+info:
+  name: Create Address
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/v1/addresses"
+  body:
+    type: json
+    data: |-
+      {
+        "fullName": "John Doe",
+        "addressLine1": "123 Main St",
+        "addressLine2": "Apt 4B",
+        "city": "Springfield",
+        "state": "IL",
+        "pincode": "627040",
+        "phone": "1234567890",
+        "label": "Home",
+        "isDefault": true
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

@@ -1,5 +1,5 @@
 # --- base ---
-FROM node:20-alpine AS base
+FROM node:24-alpine AS base
 # Highly recommended: Alpine requires this for Turborepo and Prisma binaries to work reliably
 RUN apk update && apk add --no-cache libc6-compat
 RUN npm install -g turbo
@@ -23,7 +23,7 @@ COPY --from=builder /app/out/json/ .
 # 2. CACHED INSTALL: This will completely skip if dependencies haven't changed.
 RUN npm ci
 
-# 3. SOURCE LAYER: Copy the actual source code. 
+# 3. SOURCE LAYER: Copy the actual source code.
 # Whenever you edit a file, the cache breaks *here*, safely bypassing the npm ci step above!
 COPY --from=builder /app/out/full/ .
 
