@@ -27,7 +27,9 @@ export function ProductGrid({ categoryId }: ProductGridProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [wishlistLoading, setWishlistLoading] = useState<string | null>(null);
-  const [wishlistItems, setWishlistItems] = useState<Record<string, string>>({});
+  const [wishlistItems, setWishlistItems] = useState<Record<string, string>>(
+    {},
+  );
 
   const loadProducts = useCallback(async () => {
     if (!categoryId) {
@@ -169,7 +171,9 @@ export function ProductGrid({ categoryId }: ProductGridProps) {
             onWishlistToggle={(isFavorite) =>
               handleWishlistToggle(item.id, item.variantId, isFavorite)
             }
-            isFavorite={Boolean(item.variantId && wishlistItems[item.variantId])}
+            isFavorite={Boolean(
+              item.variantId && wishlistItems[item.variantId],
+            )}
             isWishlistLoading={wishlistLoading === item.id}
           />
         </View>

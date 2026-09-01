@@ -9,15 +9,18 @@ import "react-native-reanimated";
 import "../global.css";
 import Toast from "react-native-toast-message";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { CartProvider } from "@/hooks/use-cart";
 
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <AuthProvider>
-          <Stack screenOptions={{ headerShown: false }} />
-          <StatusBar style="auto" />
-          <Toast />
+          <CartProvider>
+            <Stack screenOptions={{ headerShown: false }} />
+            <StatusBar style="auto" />
+            <Toast />
+          </CartProvider>
         </AuthProvider>
       </GestureHandlerRootView>
     </SafeAreaProvider>
