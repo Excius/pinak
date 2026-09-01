@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { View, Text, Image, TouchableOpacity } from "react-native";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
@@ -19,6 +18,7 @@ interface ProductCardProps {
   onPress?: () => void;
   onAddToCart?: () => void;
   onWishlistToggle?: (isFavorite: boolean) => void;
+  isFavorite?: boolean;
   isWishlistLoading?: boolean;
 }
 
@@ -27,13 +27,11 @@ export function ProductCard({
   onPress,
   onAddToCart,
   onWishlistToggle,
+  isFavorite = false,
   isWishlistLoading,
 }: ProductCardProps) {
-  const [isFavorite, setIsFavorite] = useState(false);
-
-  const handleWishlistToggle = async () => {
+  const handleWishlistToggle = () => {
     const newFavoriteState = !isFavorite;
-    setIsFavorite(newFavoriteState);
     onWishlistToggle?.(newFavoriteState);
   };
 
