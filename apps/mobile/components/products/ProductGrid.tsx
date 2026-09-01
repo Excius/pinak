@@ -4,11 +4,16 @@ import { useRouter } from "expo-router";
 import { ProductCard } from "./ProductCard";
 import { getProductsByCategory } from "@/services/product.service";
 import { useCart } from "@/hooks/use-cart";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   mapProductsToCardItems,
   type ProductCardItem,
 } from "@/utils/mappers/product.mapper";
-import { addToWishlist, removeFromWishlist } from "@/services/wishlist.service";
+import {
+  addToWishlist,
+  getWishlist,
+  removeFromWishlist,
+} from "@/services/wishlist.service";
 
 interface ProductGridProps {
   categoryId: string;
@@ -17,10 +22,12 @@ interface ProductGridProps {
 export function ProductGrid({ categoryId }: ProductGridProps) {
   const router = useRouter();
   const { addToCart } = useCart();
+  const { isAuthenticated } = useAuth();
   const [products, setProducts] = useState<ProductCardItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [wishlistLoading, setWishlistLoading] = useState<string | null>(null);
+  const [wishlistItems, setWishlistItems] = useState<Record<string, string>>({});
 
   const loadProducts = useCallback(async () => {
     if (!categoryId) {
@@ -52,6 +59,31 @@ export function ProductGrid({ categoryId }: ProductGridProps) {
     void loadProducts();
   }, [loadProducts]);
 
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setWishlistItems({});
+      return;
+    }
+
+    const loadWishlist = async () => {
+      try {
+        const response = await getWishlist();
+        const items = response.data.items.reduce<Record<string, string>>(
+          (savedItems, item) => {
+            savedItems[item.productVariant.id] = item.id;
+            return savedItems;
+          },
+          {},
+        );
+        setWishlistItems(items);
+      } catch (err) {
+        console.error("Failed to load wishlist:", err);
+      }
+    };
+
+    void loadWishlist();
+  }, [isAuthenticated]);
+
   const handleProductPress = (productId: string) => {
     router.push(`/(tabs)/product/${productId}`);
   };
@@ -71,12 +103,21 @@ export function ProductGrid({ categoryId }: ProductGridProps) {
       setWishlistLoading(productId);
 
       if (isFavorite) {
-        // Add to wishlist
-        await addToWishlist(variantId);
+        const response = await addToWishlist(variantId);
+        setWishlistItems((previous) => ({
+          ...previous,
+          [variantId]: response.data.item.id,
+        }));
       } else {
-        // For remove, we would need the wishlist item ID
-        // This requires fetching the wishlist first or tracking it separately
-        console.log("Remove from wishlist:", variantId);
+        const wishlistItemId = wishlistItems[variantId];
+        if (!wishlistItemId) return;
+
+        await removeFromWishlist(wishlistItemId);
+        setWishlistItems((previous) => {
+          const next = { ...previous };
+          delete next[variantId];
+          return next;
+        });
       }
     } catch (err) {
       console.error("Wishlist action failed:", err);
@@ -128,6 +169,7 @@ export function ProductGrid({ categoryId }: ProductGridProps) {
             onWishlistToggle={(isFavorite) =>
               handleWishlistToggle(item.id, item.variantId, isFavorite)
             }
+            isFavorite={Boolean(item.variantId && wishlistItems[item.variantId])}
             isWishlistLoading={wishlistLoading === item.id}
           />
         </View>
