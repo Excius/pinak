@@ -1,5 +1,5 @@
 import { ProductRepository } from "../repositories/product.repository.js";
-import s3 from "../lib/s3.js";
+import { deleteObject, uploadBuffer } from "../lib/s3.js";
 import appConfig from "../lib/config.js";
 import { ProductPaginationOptions } from "../types/pagination.types.js";
 import { Prisma } from "../generated/prisma/client.js";
@@ -102,7 +102,11 @@ export class ProductService {
     timeframe: "week" | "month" | "all_time" = "all_time",
     categoryId?: string,
   ) {
-    return this.productRepository.getBestSellers(pagination, timeframe, categoryId);
+    return this.productRepository.getBestSellers(
+      pagination,
+      timeframe,
+      categoryId,
+    );
   }
 
   async getBestSellersAdmin(
@@ -110,7 +114,11 @@ export class ProductService {
     timeframe: "week" | "month" | "all_time" = "all_time",
     categoryId?: string,
   ) {
-    return this.productRepository.getBestSellersAdmin(pagination, timeframe, categoryId);
+    return this.productRepository.getBestSellersAdmin(
+      pagination,
+      timeframe,
+      categoryId,
+    );
   }
 
   async getBestSellerAnalytics(
@@ -587,7 +595,7 @@ export class ProductService {
     const timestamp = Date.now();
     const key = `products/${productId}/${variantId}/${timestamp}-${rand}.${ext}`;
 
-    const publicUrl = await s3.uploadBuffer(
+    const publicUrl = await uploadBuffer(
       fileBuffer,
       key,
       contentType,
@@ -646,7 +654,7 @@ export class ProductService {
       const timestamp = Date.now();
       const key = `products/${productId}/${variantId}/${timestamp}-${rand}.${ext}`;
 
-      const publicUrl = await s3.uploadBuffer(
+      const publicUrl = await uploadBuffer(
         fileBuffer,
         key,
         contentType,
@@ -658,7 +666,7 @@ export class ProductService {
       try {
         const oldKey = this.extractS3KeyFromUrl(image.url);
         if (oldKey) {
-          await s3.deleteObject(oldKey);
+          await deleteObject(oldKey);
         }
       } catch (err) {
         logger.warn(
@@ -716,12 +724,8 @@ export class ProductService {
     }
 
     // Prevent deletion when the variant is referenced by active carts/orders/reservations/etc.
-    const [
-      cartCount,
-      orderCount,
-      wishlistCount,
-      comboKitCount,
-    ] = await this.productRepository.getVariantSoftDeleteDependencies(id);
+    const [cartCount, orderCount, wishlistCount, comboKitCount] =
+      await this.productRepository.getVariantSoftDeleteDependencies(id);
 
     if (cartCount > 0) {
       throw new ValidationError(
@@ -909,13 +913,8 @@ export class ProductService {
     }
 
     // Prevent hard-delete when variant is referenced elsewhere
-    const [
-      cartCount,
-      orderCount,
-      wishlistCount,
-      comboKitCount,
-      imageCount,
-    ] = await this.productRepository.getVariantHardDeleteDependencies(id);
+    const [cartCount, orderCount, wishlistCount, comboKitCount, imageCount] =
+      await this.productRepository.getVariantHardDeleteDependencies(id);
 
     const blockers: string[] = [];
     if (cartCount) blockers.push(`${cartCount} cart item(s)`);
@@ -947,7 +946,7 @@ export class ProductService {
       try {
         const key = this.extractS3KeyFromUrl(image.url);
         if (key) {
-          await s3.deleteObject(key);
+          await deleteObject(key);
         }
       } catch (err) {
         // Log and continue to remove DB record anyway

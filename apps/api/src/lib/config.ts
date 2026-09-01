@@ -203,7 +203,10 @@ class Config {
     }
     this.DATABASE_URL = process.env.DATABASE_URL;
 
-    this.REDIS_URL = process.env.REDIS_URL || "redis://localhost:6379";
+    if (!process.env.REDIS_URL) {
+      throw new Error("REDIS_URL environment variable is required");
+    }
+    this.REDIS_URL = process.env.REDIS_URL;
 
     if (!process.env.CORS_ORIGINS) {
       throw new Error("CORS_ORIGINS environment variable is required");
