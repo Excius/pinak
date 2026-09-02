@@ -51,12 +51,28 @@ const publicComboKitItemSchema = z.object({
   productVariant: publicComboKitVariantSchema.nullable().optional(),
 });
 
+export const PublicComboKitImageSchema = z.object({
+  id: z.string(),
+  comboKitId: z.string(),
+  url: z.string(),
+  altText: z.string().nullable().optional(),
+  isPrimary: z.boolean(),
+  sortOrder: z.number(),
+  createdAt: z.date().or(z.string()).optional(),
+  updatedAt: z.date().or(z.string()).optional(),
+});
+
+export const AdminComboKitImageSchema = PublicComboKitImageSchema.extend({
+  isDeleted: z.boolean(),
+});
+
 const publicComboKitSchema = z.object({
   id: z.string(),
   name: z.string(),
   slug: z.string(),
   description: z.string().nullable(),
   audience: z.string().nullable(),
+  images: z.array(PublicComboKitImageSchema).default([]),
   metaTitle: z.string().nullable(),
   metaDescription: z.string().nullable(),
   metaKeywords: z.string().nullable(),
@@ -66,7 +82,6 @@ const publicComboKitSchema = z.object({
   discountType: discountTypeSchema.nullable(),
   discountValue: z.number().nullable(),
   tags: z.array(z.string()),
-  imageUrl: z.string().nullable(),
   viewCount: z.number(),
   purchasedCount: z.number(),
   isActive: z.boolean(),
@@ -365,7 +380,6 @@ export const ComboKitTypes = {
       metaDescription: z.string().max(1000).optional(),
       metaKeywords: z.string().max(1000).optional(),
       seoKeyword: z.string().max(255).optional(),
-      imageUrl: z.string().url().optional(),
       pricingStrategy: pricingStrategySchema.optional(),
       discountType: discountTypeSchema.optional(),
       discountValue: z.coerce.number().min(0).optional(),
@@ -394,7 +408,6 @@ export const ComboKitTypes = {
       metaDescription: z.string().max(1000).optional(),
       metaKeywords: z.string().max(1000).optional(),
       seoKeyword: z.string().max(255).optional(),
-      imageUrl: z.string().url().optional(),
       pricingStrategy: pricingStrategySchema.optional(),
       discountType: discountTypeSchema.optional(),
       discountValue: z.coerce.number().min(0).optional(),
@@ -512,7 +525,6 @@ export const ComboKitTypes = {
       metaKeywords: z.string().max(1000).optional(),
       seoKeyword: z.string().max(255).optional(),
       tags: z.array(z.string().trim().min(1)).optional(),
-      imageUrl: z.string().url().nullable().optional(),
       sortOrder: z.coerce.number().int().min(0).optional(),
     }),
     params: z.object({ id: z.string().min(1) }),
@@ -580,6 +592,80 @@ export const ComboKitTypes = {
   },
 
   HardDeleteComboKit: {
+    body: z.object({}),
+    params: z.object({ id: z.string() }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({}),
+    }),
+  },
+};
+
+export const ComboKitAdminTypes = {
+  AdminGetComboKitImages: {
+    body: z.object({}),
+    params: z.object({
+      comboKitId: z.string().min(1, { message: "comboKitId is required" }),
+    }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.array(AdminComboKitImageSchema),
+    }),
+  },
+
+  AddComboKitImage: {
+    body: z.object({
+      url: z.string().min(1).url(),
+      altText: z.string().optional(),
+      isPrimary: z.coerce.boolean().optional(),
+    }),
+    params: z.object({ comboKitId: z.string().min(1) }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: PublicComboKitImageSchema,
+    }),
+  },
+
+  SetPrimaryComboKitImage: {
+    body: z.object({}),
+    params: z.object({ imageId: z.string().min(1) }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({ id: z.string(), isPrimary: z.boolean() }),
+    }),
+  },
+
+  SoftDeleteComboKitImage: {
+    body: z.object({}),
+    params: z.object({ id: z.string() }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({}),
+    }),
+  },
+
+  RestoreComboKitImage: {
+    body: z.object({}),
+    params: z.object({ id: z.string() }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({}),
+    }),
+  },
+
+  HardDeleteComboKitImage: {
     body: z.object({}),
     params: z.object({ id: z.string() }),
     query: z.object({}),

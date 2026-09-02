@@ -663,4 +663,11 @@ export class CategoryRepository {
   getCategoryImageById(id: string) {
     return this.prisma.categoryImage.findUnique({ where: { id } });
   }
+
+  getAllImages(categoryId: string) {
+    return this.prisma.categoryImage.findMany({
+      where: { categoryId },
+      orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }],
+    });
+  }
 }

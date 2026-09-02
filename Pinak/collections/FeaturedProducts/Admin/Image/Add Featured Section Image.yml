@@ -1,0 +1,38 @@
+info:
+  name: Add Featured Section Image
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/v1/featured-sections/admin/{{sectionId}}/images"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "url": "https://example.com/images/featured/banner.jpg",
+        "altText": "Featured section banner image",
+        "isPrimary": false
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: sectionId
+      value: cmtjvfb1z004j0zmzbdxjeyn5
+    - name: authToken
+      value: your-jwt-token-here
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: "Add an image to a featured section (admin only). Body: `url`, optional `altText`, optional `isPrimary`."

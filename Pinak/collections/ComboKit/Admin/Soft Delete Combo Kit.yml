@@ -1,11 +1,11 @@
 info:
   name: Soft Delete Combo Kit
   type: http
-  seq: 5
+  seq: 6
 
 http:
   method: PATCH
-  url: "{{baseUrl}}/api/v1/combo-kits/{{id}}/soft-delete"
+  url: "{{baseUrl}}/api/v1/combo-kits/admin/{{id}}/soft-delete"
   headers:
     - name: Content-Type
       value: application/json

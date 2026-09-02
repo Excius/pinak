@@ -113,6 +113,12 @@ export class CategoryController {
     ResponseHandler.success(res, {}, "Category deleted successfully");
   };
 
+  getAllImages = async (req: Request, res: Response) => {
+    const { categoryId } = req.params;
+    const images = await this.categoryService.getAllImages(categoryId as string);
+    ResponseHandler.success(res, images, "Category images retrieved successfully");
+  };
+
   addCategoryImage = async (req: Request, res: Response) => {
     const { categoryId } = req.params;
     const data = req.body;

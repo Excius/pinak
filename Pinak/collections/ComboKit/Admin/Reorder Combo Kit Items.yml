@@ -1,11 +1,11 @@
 info:
   name: Reorder Combo Kit Items
   type: http
-  seq: 11
+  seq: 13
 
 http:
   method: POST
-  url: "{{baseUrl}}/api/v1/combo-kits/{{comboKitId}}/items/reorder"
+  url: "{{baseUrl}}/api/v1/combo-kits/admin/{{comboKitId}}/items/reorder"
   headers:
     - name: Content-Type
       value: application/json

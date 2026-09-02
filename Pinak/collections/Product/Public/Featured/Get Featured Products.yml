@@ -24,7 +24,7 @@ http:
 runtime:
   variables:
     - name: baseUrl
-      value: http://localhost:3000
+      value: https://api.dpinak.com
     - name: authToken
       value: your-jwt-token-here
 

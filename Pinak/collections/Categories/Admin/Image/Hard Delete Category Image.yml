@@ -1,7 +1,7 @@
 info:
   name: Hard Delete Category Image
   type: http
-  seq: 9
+  seq: 5
 
 http:
   method: DELETE

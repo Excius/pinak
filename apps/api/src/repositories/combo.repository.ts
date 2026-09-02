@@ -42,6 +42,10 @@ export type ComboKitItemUpdateInput = {
 };
 
 const comboKitInclude = {
+  images: {
+    where: { isDeleted: false },
+    orderBy: [{ isPrimary: "desc" as const }, { sortOrder: "asc" as const }],
+  },
   items: {
     orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
     include: {
@@ -250,7 +254,6 @@ export class ComboRepository {
       | "metaKeywords"
       | "seoKeyword"
       | "tags"
-      | "imageUrl"
       | "sortOrder"
     >,
   ) {
@@ -468,5 +471,66 @@ export class ComboRepository {
       },
       cartCount,
     };
+  }
+
+  addComboKitImage(comboKitId: string, data: Prisma.ComboKitImageCreateInput) {
+    if (data.isPrimary) {
+      return this.prisma.$transaction(async (tx) => {
+        await tx.comboKitImage.updateMany({
+          where: { comboKitId, isPrimary: true },
+          data: { isPrimary: false },
+        });
+        return tx.comboKitImage.create({ data });
+      });
+    }
+    return this.prisma.comboKitImage.create({ data });
+  }
+
+  setPrimaryImage(imageId: string) {
+    return this.prisma.$transaction(async (tx) => {
+      const image = await tx.comboKitImage.findUnique({
+        where: { id: imageId },
+      });
+      if (!image) {
+        return null;
+      }
+      await tx.comboKitImage.updateMany({
+        where: { comboKitId: image.comboKitId, isPrimary: true },
+        data: { isPrimary: false },
+      });
+      return tx.comboKitImage.update({
+        where: { id: imageId },
+        data: { isPrimary: true },
+      });
+    });
+  }
+
+  softDeleteImage(id: string) {
+    return this.prisma.comboKitImage.update({
+      where: { id },
+      data: { isDeleted: true },
+    });
+  }
+
+  restoreImage(id: string) {
+    return this.prisma.comboKitImage.update({
+      where: { id },
+      data: { isDeleted: false },
+    });
+  }
+
+  hardDeleteImage(id: string) {
+    return this.prisma.comboKitImage.delete({ where: { id } });
+  }
+
+  getComboKitImageById(id: string) {
+    return this.prisma.comboKitImage.findUnique({ where: { id } });
+  }
+
+  getAllImages(comboKitId: string) {
+    return this.prisma.comboKitImage.findMany({
+      where: { comboKitId },
+      orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }],
+    });
   }
 }

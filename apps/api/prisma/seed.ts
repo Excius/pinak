@@ -27,10 +27,13 @@ async function cleanup() {
   await prisma.auditLog.deleteMany();
 
   // Featured
+  try { await prisma.featuredSectionImage.deleteMany(); } catch {}
   await prisma.featuredProduct.deleteMany();
   await prisma.featuredSection.deleteMany();
 
   // Product-related (images, combo kits, variants, products)
+  try { await prisma.categoryImage.deleteMany(); } catch {}
+  try { await prisma.comboKitImage.deleteMany(); } catch {}
   await prisma.productImage.deleteMany();
   await prisma.comboKitItem.deleteMany();
   await prisma.comboKit.deleteMany();
@@ -941,6 +944,29 @@ async function main() {
     }),
   ]);
 
+  try {
+    await prisma.featuredSectionImage.create({
+      data: {
+        featuredSectionId: sectionHero.id,
+        url: "https://lh3.googleusercontent.com/aida-public/AB6AXuAgdhlMGc4OQ2oy4ze8gfCY4wYUcajDX1_LT-a1KXKF0Gt5RPFV21noNxkXgydtab-3uMflTDWNsnULfJhICLNSfVxv_S64okiaJKmyvoH3eAM6S_msRDL7tnC1P87gHWt7Gfyfh9E2tS3XqQ1_89cOqGi0uzIeBSPFIQKhHsl-YAC_aCdeoYdQzor-g3kE01wZ6q9a1dvMUNRi-vTPA5tsyPkoC7lgtiKYmlh6V0DDO2y4wZ14FevFS1cqgzYHX7CPOVSys3fnT_g",
+        altText: "Homepage Hero Banner image",
+        isPrimary: true,
+        sortOrder: 0,
+      },
+    });
+    await prisma.featuredSectionImage.create({
+      data: {
+        featuredSectionId: sectionExpertPicks.id,
+        url: "https://lh3.googleusercontent.com/aida-public/AB6AXuB_j8yD9DHW29mHnnddf_ulUuyvgRSlVpd7WOvHqGzyrI2P0WjITqrHksEYsluf9wuc50_DDVGm7Y92OFIc_nh4ul5cddIS7BVPwYwTlDoEjb9WG7JxzXuJiSyB7mOVXnxDVVfoMBthI3A00RrHKxUemB6OauNwcgYlIAcAbA_S4XCU2rs4LPGxRvSHTBzpVo-Cahzif-q28vx9eRzuvD446uP7ykBD_wH5LNioMbgOtU8zIqhyfiYn2KoW_LrhR19GjAnr1vXal40",
+        altText: "Beauty Expert Picks banner",
+        isPrimary: true,
+        sortOrder: 0,
+      },
+    });
+  } catch (err: any) {
+    console.warn("⚠️  Skipping seeding featured section images:", err?.message ?? err);
+  }
+
   const featuredEntries = [
     // Homepage Hero - showcase top 2 premium products
     {
@@ -1249,7 +1275,6 @@ async function main() {
         metaDescription: def.metaDescription,
         metaKeywords: def.metaKeywords,
         seoKeyword: def.seoKeyword,
-        imageUrl: def.imageUrl,
         pricingStrategy: def.pricingStrategy,
         discountType: def.discountType,
         discountValue: def.discountValue,
@@ -1272,6 +1297,21 @@ async function main() {
       },
       include: { items: true },
     });
+    if (def.imageUrl) {
+      try {
+        await prisma.comboKitImage.create({
+          data: {
+            comboKitId: kit.id,
+            url: def.imageUrl,
+            altText: `${def.name} primary image`,
+            isPrimary: true,
+            sortOrder: 0,
+          },
+        });
+      } catch (err: any) {
+        // Ignore if table missing
+      }
+    }
     comboKits.push(kit);
   }
   console.log(`✅ Created ${comboKits.length} combo kits`);
