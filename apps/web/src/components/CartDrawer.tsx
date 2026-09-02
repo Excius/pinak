@@ -1,6 +1,7 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
+import toast from 'react-hot-toast'
 
 const CartDrawer: React.FC = () => {
   const navigate = useNavigate()
@@ -122,7 +123,14 @@ const CartDrawer: React.FC = () => {
                       </span>
                       <button
                         className="w-7 h-7 rounded-full border border-primary/20 flex items-center justify-center text-text-muted hover:text-primary hover:border-primary transition-colors cursor-pointer"
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        onClick={() => {
+                          const maxStock = item.availableStock ?? Infinity;
+                          if (item.quantity >= maxStock) {
+                            toast.error(`Only ${maxStock} items available in stock.`);
+                          } else {
+                            updateQuantity(item.id, item.quantity + 1);
+                          }
+                        }}
                       >
                         <span className="material-icons-outlined text-sm">add</span>
                       </button>

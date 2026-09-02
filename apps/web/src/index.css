@@ -458,7 +458,7 @@ body {
 .marquee-content {
   display: flex;
   flex-shrink: 0;
-  animation: scroll-marquee 25s linear infinite;
+  animation: scroll-marquee 50s linear infinite;
 }
 @keyframes scroll-marquee {
   0% { transform: translateX(0); }
