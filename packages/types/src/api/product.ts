@@ -17,6 +17,12 @@ const PublicProductImageSchema = z.object({
   sortOrder: z.number(),
 });
 
+const AdminProductImageSchema = PublicProductImageSchema.extend({
+  isDeleted: z.boolean(),
+  createdAt: z.string().or(z.date()),
+  updatedAt: z.string().or(z.date()),
+});
+
 const PublicVariantRouteImageSchema = z.object({
   id: z.string(),
   url: z.string(),
@@ -125,6 +131,19 @@ const PublicVariantRouteSchema = z.object({
 });
 
 export const ProductTypes = {
+  AdminGetProductVariantImages: {
+    body: z.object({}),
+    params: z.object({
+      variantId: z.string().min(1, { message: "variantId is required" }),
+    }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.array(AdminProductImageSchema),
+    }),
+  },
+
   GetProducts: {
     body: z.object({}),
     params: z.object({}),

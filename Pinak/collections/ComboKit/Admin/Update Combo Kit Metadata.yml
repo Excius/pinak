@@ -1,11 +1,11 @@
 info:
   name: Update Combo Kit Metadata
   type: http
-  seq: 9
+  seq: 10
 
 http:
   method: PATCH
-  url: "{{baseUrl}}/api/v1/combo-kits/{{id}}/metadata"
+  url: "{{baseUrl}}/api/v1/combo-kits/admin/{{id}}/metadata"
   headers:
     - name: Content-Type
       value: application/json

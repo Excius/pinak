@@ -260,15 +260,29 @@ export class CategoryService {
     return this.categoryRepository.setPrimaryImage(imageId);
   }
 
+  async getAllImages(categoryId: string) {
+    const category = await this.categoryRepository.getById(categoryId);
+    if (!category) {
+      throw new NotFoundError("Category not found");
+    }
+    return this.categoryRepository.getAllImages(categoryId);
+  }
+
   async softDeleteImage(id: string) {
+    const image = await this.categoryRepository.getCategoryImageById(id);
+    if (!image) throw new NotFoundError("Image not found");
     return this.categoryRepository.softDeleteImage(id);
   }
 
   async restoreImage(id: string) {
+    const image = await this.categoryRepository.getCategoryImageById(id);
+    if (!image) throw new NotFoundError("Image not found");
     return this.categoryRepository.restoreImage(id);
   }
 
   async hardDeleteImage(id: string) {
+    const image = await this.categoryRepository.getCategoryImageById(id);
+    if (!image) throw new NotFoundError("Image not found");
     return this.categoryRepository.hardDeleteImage(id);
   }
 }

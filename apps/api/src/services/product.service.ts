@@ -3,7 +3,7 @@ import { deleteObject, uploadBuffer } from "../lib/s3.js";
 import appConfig from "../lib/config.js";
 import { ProductPaginationOptions } from "../types/pagination.types.js";
 import { Prisma } from "../generated/prisma/client.js";
-import { ValidationError } from "../lib/error.js";
+import { ValidationError, NotFoundError } from "../lib/error.js";
 import { isPrismaP2002 } from "../lib/prisma-errors.js";
 import logger from "../lib/logger.js";
 
@@ -755,11 +755,23 @@ export class ProductService {
     return this.productRepository.restoreProductVariant(id);
   }
 
+  async getAllVariantImages(variantId: string) {
+    const variant = await this.productRepository.getVariantById(variantId);
+    if (!variant) {
+      throw new NotFoundError("Product variant not found");
+    }
+    return this.productRepository.getAllVariantImages(variantId);
+  }
+
   async softDeleteImage(id: string) {
+    const image = await this.productRepository.getProductImageById(id);
+    if (!image) throw new NotFoundError("Image not found");
     return this.productRepository.softDeleteImage(id);
   }
 
   async restoreImage(id: string) {
+    const image = await this.productRepository.getProductImageById(id);
+    if (!image) throw new NotFoundError("Image not found");
     return this.productRepository.restoreImage(id);
   }
 

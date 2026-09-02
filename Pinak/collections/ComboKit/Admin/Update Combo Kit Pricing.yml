@@ -1,11 +1,11 @@
 info:
   name: Update Combo Kit Pricing
   type: http
-  seq: 8
+  seq: 9
 
 http:
   method: PATCH
-  url: "{{baseUrl}}/api/v1/combo-kits/{{id}}/pricing"
+  url: "{{baseUrl}}/api/v1/combo-kits/admin/{{id}}/pricing"
   headers:
     - name: Content-Type
       value: application/json

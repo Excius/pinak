@@ -5,9 +5,11 @@ model FeaturedSection {
   priority Int          @default(0)
 
   products FeaturedProduct[]
+  images   FeaturedSectionImage[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  isDeleted Boolean  @default(false)
 }
 
 model FeaturedProduct {
@@ -29,4 +31,21 @@ enum FeaturedType {
   EXPERT_PICKS
   HOMEPAGE_HERO
   DEALS
+}
+
+model FeaturedSectionImage {
+  id                String  @id @default(cuid())
+  featuredSectionId String
+  url               String
+  altText           String?
+  isPrimary         Boolean @default(false)
+  sortOrder         Int     @default(0)
+
+  featuredSection FeaturedSection @relation(fields: [featuredSectionId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isDeleted Boolean  @default(false)
+
+  @@index([featuredSectionId])
 }

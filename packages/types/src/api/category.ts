@@ -36,6 +36,12 @@ const PublicCategoryImageSummarySchema = z.object({
   sortOrder: z.number(),
 });
 
+const AdminCategoryImageSchema = PublicCategoryImageSchema.extend({
+  isDeleted: z.boolean(),
+  createdAt: z.string().or(z.date()),
+  updatedAt: z.string().or(z.date()),
+});
+
 const CategoryNode: z.ZodTypeAny = z.lazy(() =>
   CategoryBase.extend({
     children: z.array(CategoryNode).default([]),
@@ -160,6 +166,18 @@ export const CategoryTypes = {
 };
 
 export const CategoryAdminTypes = {
+  AdminGetCategoryImages: {
+    body: z.object({}),
+    params: z.object({
+      categoryId: z.string().min(1, { message: "categoryId is required" }),
+    }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.array(AdminCategoryImageSchema),
+    }),
+  },
   ListCategories: {
     body: z.object({}),
     params: z.object({}),
