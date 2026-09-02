@@ -13,10 +13,10 @@ http:
 
 runtime:
   variables:
-    - name: baseUrl
-      value: http://localhost:3000
     - name: authToken
       value: your-jwt-token-here
+    - name: baseUrl
+      value: http://localhost:3000
 
 settings:
   encodeUrl: true

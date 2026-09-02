@@ -1,0 +1,38 @@
+info:
+  name: Add Combo Kit Image
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/v1/combo-kits/admin/{{comboKitId}}/images"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "url": "https://example.com/images/combos/sample.jpg",
+        "altText": "Sample combo kit image",
+        "isPrimary": false
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: comboKitId
+      value: your-combo-kit-id-here
+    - name: authToken
+      value: your-jwt-token-here
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: "Add an image to a combo kit (admin only). Body: `url`, optional `altText`, optional `isPrimary`."

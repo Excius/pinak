@@ -60,7 +60,6 @@ export type CartItemResponse = {
     name: string;
     slug: string;
     price: number;
-    imageUrl: string | null;
     isActive: boolean;
     metaTitle: string | null;
     metaDescription: string | null;
@@ -285,7 +284,6 @@ export class CartService {
               name: item.comboKit.name,
               slug: item.comboKit.slug,
               price: item.comboKit.price,
-              imageUrl: item.comboKit.imageUrl,
               isActive: item.comboKit.isActive,
               metaTitle: item.comboKit.metaTitle,
               metaDescription: item.comboKit.metaDescription,

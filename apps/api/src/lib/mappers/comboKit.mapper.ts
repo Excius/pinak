@@ -101,13 +101,20 @@ type ComboKitRecord = {
   discountValue: number | null;
   tags: string[];
   sortOrder: number;
-  imageUrl: string | null;
   viewCount: number;
   purchasedCount: number;
   isActive: boolean;
   isDeleted: boolean;
   createdAt: Date;
   updatedAt: Date;
+  images?: Array<{
+    id: string;
+    comboKitId: string;
+    url: string;
+    altText?: string | null;
+    isPrimary: boolean;
+    sortOrder: number;
+  }>;
   items: ComboKitItemRecord[];
 };
 
@@ -157,10 +164,17 @@ export type PublicComboKit = {
   discountType: ComboKitDiscountType | null;
   discountValue: number | null;
   tags: string[];
-  imageUrl: string | null;
   viewCount: number;
   purchasedCount: number;
   isActive: boolean;
+  images: Array<{
+    id: string;
+    comboKitId: string;
+    url: string;
+    altText?: string | null;
+    isPrimary: boolean;
+    sortOrder: number;
+  }>;
   items: PublicComboKitItem[];
 };
 
@@ -221,13 +235,20 @@ export type AdminComboKit = {
   discountValue: number | null;
   tags: string[];
   sortOrder: number;
-  imageUrl: string | null;
   viewCount: number;
   purchasedCount: number;
   isActive: boolean;
   isDeleted: boolean;
   createdAt: Date;
   updatedAt: Date;
+  images: Array<{
+    id: string;
+    comboKitId: string;
+    url: string;
+    altText?: string | null;
+    isPrimary: boolean;
+    sortOrder: number;
+  }>;
   items: AdminComboKitItem[];
 };
 
@@ -370,10 +391,17 @@ export const toPublicComboKit = (comboKit: ComboKitRecord): PublicComboKit => ({
   discountType: comboKit.discountType,
   discountValue: comboKit.discountValue,
   tags: comboKit.tags,
-  imageUrl: comboKit.imageUrl,
   viewCount: comboKit.viewCount,
   purchasedCount: comboKit.purchasedCount,
   isActive: comboKit.isActive,
+  images: (comboKit.images ?? []).map((img) => ({
+    id: img.id,
+    comboKitId: img.comboKitId,
+    url: img.url,
+    altText: img.altText,
+    isPrimary: img.isPrimary,
+    sortOrder: img.sortOrder,
+  })),
   items: toPublicComboKitItems(comboKit.items),
 });
 
@@ -426,13 +454,20 @@ export const toAdminComboKit = (comboKit: ComboKitRecord): AdminComboKit => ({
   discountValue: comboKit.discountValue,
   tags: comboKit.tags,
   sortOrder: comboKit.sortOrder,
-  imageUrl: comboKit.imageUrl,
   viewCount: comboKit.viewCount,
   purchasedCount: comboKit.purchasedCount,
   isActive: comboKit.isActive,
   isDeleted: comboKit.isDeleted,
   createdAt: comboKit.createdAt,
   updatedAt: comboKit.updatedAt,
+  images: (comboKit.images ?? []).map((img) => ({
+    id: img.id,
+    comboKitId: img.comboKitId,
+    url: img.url,
+    altText: img.altText,
+    isPrimary: img.isPrimary,
+    sortOrder: img.sortOrder,
+  })),
   items: toAdminComboKitItems(comboKit.items),
 });
 

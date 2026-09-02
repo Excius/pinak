@@ -16,7 +16,7 @@ runtime:
     - name: baseUrl
       value: http://localhost:3000
     - name: sectionId
-      value: your-featured-section-id-here
+      value: cmtjwhota004gs3mzim9s1mos
     - name: authToken
       value: your-moderator-or-admin-jwt-token-here
 

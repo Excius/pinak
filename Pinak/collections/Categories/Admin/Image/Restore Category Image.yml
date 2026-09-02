@@ -1,7 +1,7 @@
 info:
   name: Restore Category Image
   type: http
-  seq: 8
+  seq: 4
 
 http:
   method: PATCH
