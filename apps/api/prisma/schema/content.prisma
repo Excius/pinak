@@ -19,3 +19,27 @@ enum ContentType {
   NEWS
   TUTORIAL
 }
+
+model DynamicAsset {
+  id          String    @id @default(cuid())
+  slug        String    @unique // The "name-id" devices use to fetch the asset (e.g. "mobile-home-banner-top")
+  url         String    // The S3 public URL
+  s3Key       String?   // The S3 object key for lifecycle management (delete/replace)
+  type        AssetType @default(IMAGE)
+  title       String?   // Optional descriptive title for admin panel
+  description String?   // Optional admin notes
+  metadata    Json?     // Optional JSON payload for the device (e.g. link URL, dimensions, etc.)
+  isActive    Boolean   @default(true)
+  isDeleted   Boolean   @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug, isActive, isDeleted])
+}
+
+enum AssetType {
+  IMAGE
+  VIDEO
+  DOCUMENT
+}
