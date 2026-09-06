@@ -2,6 +2,7 @@ import './index.css'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { CartProvider } from './context/CartContext'
+import { Toaster } from 'react-hot-toast'
 import Landing from './pages/Landing'
 import Auth from './pages/Auth'
 import VerifyEmail from './pages/VerifyEmail'
@@ -140,6 +141,17 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <CartProvider>
+          <Toaster 
+            position="top-center"
+            toastOptions={{
+              className: 'bg-surface-dark text-text-main-light border border-primary/20',
+              style: {
+                background: '#1a1a1a',
+                color: '#f5f5f5',
+                border: '1px solid rgba(212, 175, 55, 0.2)',
+              }
+            }} 
+          />
           <AppRoutes />
         </CartProvider>
       </AuthProvider>

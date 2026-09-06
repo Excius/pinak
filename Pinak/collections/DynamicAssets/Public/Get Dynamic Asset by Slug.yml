@@ -1,0 +1,28 @@
+info:
+  name: Get Dynamic Asset by Slug (Public)
+  type: http
+  seq: 2
+
+http:
+  method: GET
+  url: "{{baseUrl}}/api/v1/dynamic-assets/{{slug}}"
+  headers:
+    - name: Content-Type
+      value: application/json
+
+runtime:
+  variables:
+    - name: slug
+      value: mobile-home-banner-top
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: |-
+  Schema: DynamicAssetTypes.GetDynamicAssetBySlug
+  Route: GET /dynamic-assets/:slug
+  Access: public
+  Note: Devices use this endpoint to fetch a specific asset by its name-id slug

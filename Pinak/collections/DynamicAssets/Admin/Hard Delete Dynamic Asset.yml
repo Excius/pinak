@@ -1,0 +1,29 @@
+info:
+  name: Hard Delete Dynamic Asset
+  type: http
+  seq: 8
+
+http:
+  method: DELETE
+  url: "{{baseUrl}}/api/v1/dynamic-assets/admin/{{assetId}}/hard"
+  headers:
+    - name: Content-Type
+      value: application/json
+  auth: inherit
+
+runtime:
+  variables:
+    - name: assetId
+      value: cmtq25aby0000d8mz95tardsl
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Schema: DynamicAssetAdminTypes.HardDeleteDynamicAsset
+  Route: DELETE /dynamic-assets/admin/:id/hard
+  Access: admin only

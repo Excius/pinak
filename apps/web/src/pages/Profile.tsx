@@ -27,7 +27,6 @@ const Profile: React.FC = () => {
   const [ordersLoading, setOrdersLoading] = useState(false)
   const [error, setError] = useState('')
 
-  // Address state
   const [addresses, setAddresses] = useState<Address[]>([])
   const [addressesLoading, setAddressesLoading] = useState(false)
   const [showAddressModal, setShowAddressModal] = useState(false)
@@ -38,10 +37,7 @@ const Profile: React.FC = () => {
 
   useEffect(() => {
     if (authLoading) return
-    if (!authUser) {
-      navigate('/auth')
-      return
-    }
+    if (!authUser) { navigate('/auth'); return }
     setUser(authUser as User)
     setLoading(false)
   }, [authUser, authLoading, navigate])
@@ -111,41 +107,59 @@ const Profile: React.FC = () => {
     if (addr) {
       setEditingAddressId(addr.id)
       setAddressForm({
-        fullName: addr.fullName,
-        phone: addr.phone,
-        addressLine1: addr.addressLine1,
-        addressLine2: addr.addressLine2 || '',
-        city: addr.city,
-        state: addr.state,
-        pincode: addr.pincode,
-        country: addr.country
+        fullName: addr.fullName, phone: addr.phone, addressLine1: addr.addressLine1,
+        addressLine2: addr.addressLine2 || '', city: addr.city, state: addr.state,
+        pincode: addr.pincode, country: addr.country
       })
     } else {
       setEditingAddressId(null)
-      setAddressForm({
-        fullName: '', phone: '', addressLine1: '', addressLine2: '', city: '', state: '', pincode: '', country: 'India'
-      })
+      setAddressForm({ fullName: '', phone: '', addressLine1: '', addressLine2: '', city: '', state: '', pincode: '', country: 'India' })
     }
     setShowAddressModal(true)
   }
 
   const handleLogout = async () => {
-    try {
-      await logout()
-      navigate('/auth')
-    } catch (err: any) {
-      const msg = err?.response?.data?.message || err?.message || 'Logout failed'
-      setError(msg)
-    }
+    try { await logout(); navigate('/auth') }
+    catch (err: any) { setError(err?.response?.data?.message || err?.message || 'Logout failed') }
   }
 
   const formatPrice = (p: number) => `₹${p.toLocaleString('en-IN')}`
 
-  const totalSpent = orders.reduce((acc, order) => {
-    if (order.paymentStatus === 'COMPLETED') return acc + order.totalAmount
-    return acc
-  }, 0)
+  const totalSpent = orders.reduce((acc, o) => o.paymentStatus === 'COMPLETED' ? acc + o.totalAmount : acc, 0)
 
+  const getInitials = () => {
+    if (user?.firstName && user?.lastName) return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
+    if (user?.username) return user.username.slice(0, 2).toUpperCase()
+    return 'U'
+  }
+
+  const getDisplayName = () => {
+    if (user?.firstName && user?.lastName) return `${user.firstName} ${user.lastName}`
+    return user?.username || ''
+  }
+
+  const getMemberDuration = () => {
+    if (!user?.createdAt) return 'N/A'
+    const diff = Date.now() - new Date(user.createdAt).getTime()
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+    if (days < 30) return `${days} days`
+    if (days < 365) return `${Math.floor(days / 30)} months`
+    return `${Math.floor(days / 365)}+ years`
+  }
+
+  const getStatusColor = (status: string) => {
+    if (status === 'DELIVERED') return 'bg-emerald-500'
+    if (status === 'CANCELLED') return 'bg-red-500'
+    return 'bg-primary'
+  }
+
+  const getStatusTextColor = (status: string) => {
+    if (status === 'DELIVERED') return 'text-emerald-400'
+    if (status === 'CANCELLED') return 'text-red-400'
+    return 'text-primary'
+  }
+
+  // Loading state
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col justify-center items-center bg-background-light font-body">
@@ -167,15 +181,10 @@ const Profile: React.FC = () => {
             <span className="material-icons-outlined text-3xl text-red-400">error</span>
           </div>
           <div>
-            <h2 className="font-display text-2xl font-bold text-text-main-light mb-2">
-              Error Loading Profile
-            </h2>
+            <h2 className="font-display text-2xl font-bold text-text-main-light mb-2">Error Loading Profile</h2>
             <p className="text-text-muted">{error}</p>
           </div>
-          <button
-            className="w-full py-3 px-4 rounded-2xl shadow-lg shadow-primary/20 font-bold text-black bg-primary hover:bg-primary-hover transition-all cursor-pointer active:scale-95"
-            onClick={() => navigate('/')}
-          >
+          <button className="w-full py-3 px-4 rounded-2xl shadow-lg shadow-primary/20 font-bold text-black bg-primary hover:bg-primary-hover transition-all cursor-pointer active:scale-95" onClick={() => navigate('/')}>
             Back to Home
           </button>
         </div>
@@ -188,12 +197,7 @@ const Profile: React.FC = () => {
       <div className="min-h-screen flex flex-col justify-center items-center bg-background-light font-body">
         <div className="text-center space-y-4">
           <p className="text-text-muted">No user data found</p>
-          <button
-            className="py-2 px-6 rounded-lg bg-primary text-black font-bold hover:bg-primary-hover transition-all"
-            onClick={() => navigate('/auth')}
-          >
-            Login
-          </button>
+          <button className="py-2 px-6 rounded-lg bg-primary text-black font-bold hover:bg-primary-hover transition-all" onClick={() => navigate('/auth')}>Login</button>
         </div>
       </div>
     )
@@ -202,283 +206,268 @@ const Profile: React.FC = () => {
   return (
     <div className="min-h-screen bg-background-light font-body">
       <Layout>
-        {/* Header */}
-        <div className="bg-surface-dark border-b border-primary/10">
-          <div className="max-w-4xl mx-auto px-6 py-6 flex justify-between items-center">
-            <h1 className="font-display text-2xl font-bold text-text-main-light">My Profile</h1>
-            <button
-              className="text-text-muted hover:text-primary transition-colors cursor-pointer active:scale-95"
-              onClick={() => navigate('/')}
-              aria-label="Close"
-            >
-              <span className="material-icons-outlined text-2xl">close</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Profile Content */}
-        <div className="max-w-4xl mx-auto px-6 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Profile Card */}
-            <div className="md:col-span-1">
-              <div className="bg-surface-dark rounded-2xl shadow-sm p-8 text-center space-y-6 sticky top-24 border border-primary/10">
-                {/* Avatar */}
-                <div className="gradient-ring inline-block">
-                  <div className="w-24 h-24 rounded-full bg-surface-dark flex items-center justify-center text-primary">
-                    <span className="material-icons-outlined text-5xl">person</span>
-                  </div>
-                </div>
-
-                {/* User Info */}
-                <div className="space-y-2">
-                  <h2 className="font-display text-2xl font-bold text-text-main-light">
-                    {user.firstName && user.lastName
-                      ? `${user.firstName} ${user.lastName}`
-                      : user.username}
-                  </h2>
-                  <p className="text-sm text-text-muted">@{user.username}</p>
-                </div>
-
-                {/* Stats */}
-                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-primary/10">
-                  <div>
-                    <p className="text-2xl font-bold text-primary">{orders.length}</p>
-                    <p className="text-xs text-text-muted">Orders</p>
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-primary price-glow">{formatPrice(totalSpent)}</p>
-                    <p className="text-xs text-text-muted">Spent</p>
-                  </div>
-                </div>
-
-                {/* Logout Button */}
-                <button
-                  className="w-full py-3 px-4 rounded-lg border border-red-800/50 text-red-400 hover:bg-red-900/20 transition-all font-semibold cursor-pointer active:scale-95"
-                  onClick={handleLogout}
-                >
-                  <span className="flex items-center justify-center gap-2">
-                    <span className="material-icons-outlined text-lg">logout</span>
-                    Logout
+        {/* ── Hero Banner ── */}
+        <div className="profile-hero">
+          <div className="max-w-5xl mx-auto px-6 pt-12 pb-16 md:pt-16 md:pb-20 relative z-10">
+            <div className="profile-animate flex flex-col md:flex-row items-center gap-8">
+              {/* Avatar */}
+              <div className="profile-avatar-ring">
+                <div className="w-28 h-28 md:w-32 md:h-32 rounded-full bg-background-dark flex items-center justify-center">
+                  <span className="text-gold-gradient font-display text-4xl md:text-5xl font-black tracking-tight">
+                    {getInitials()}
                   </span>
+                </div>
+              </div>
+
+              {/* Name & Meta */}
+              <div className="text-center md:text-left flex-1">
+                <h1 className="font-display text-3xl md:text-4xl font-black text-text-main-light tracking-tight mb-1">
+                  {getDisplayName()}
+                </h1>
+                <p className="text-text-muted text-sm mb-4">@{user.username}</p>
+                <div className="flex flex-wrap justify-center md:justify-start gap-3">
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary/80 bg-primary/8 border border-primary/12 rounded-full px-3 py-1.5">
+                    <span className="material-icons-outlined text-sm">verified</span>
+                    Verified Member
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-text-muted bg-white/5 border border-white/8 rounded-full px-3 py-1.5">
+                    <span className="material-icons-outlined text-sm">schedule</span>
+                    Member for {getMemberDuration()}
+                  </span>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3 shrink-0">
+                <button onClick={() => navigate('/')} className="w-10 h-10 rounded-xl bg-white/5 border border-white/8 flex items-center justify-center text-text-muted hover:text-text-main-light hover:border-white/15 transition-all cursor-pointer" aria-label="Home">
+                  <span className="material-icons-outlined text-xl">home</span>
+                </button>
+                <button onClick={handleLogout} className="w-10 h-10 rounded-xl bg-red-500/8 border border-red-500/15 flex items-center justify-center text-red-400/70 hover:text-red-400 hover:bg-red-500/15 hover:border-red-500/25 transition-all cursor-pointer" aria-label="Logout">
+                  <span className="material-icons-outlined text-xl">logout</span>
                 </button>
               </div>
             </div>
 
-            {/* Details Section */}
-            <div className="md:col-span-2 space-y-6">
-              {/* Account Information */}
-              <div className="bg-surface-dark rounded-2xl shadow-sm p-8 space-y-6 border border-primary/10">
-                <div>
-                  <h3 className="font-display text-xl font-bold text-text-main-light mb-6">
-                    Account Information
-                  </h3>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-xs font-bold tracking-widest text-primary/70 uppercase block mb-1">
-                        Email
-                      </label>
-                      <p className="text-text-main-light">{user.email}</p>
+            {/* Stat Cards */}
+            <div className="profile-animate profile-animate-d1 grid grid-cols-3 gap-4 mt-10 max-w-xl mx-auto md:mx-0">
+              <div className="profile-stat-card">
+                <p className="text-2xl md:text-3xl font-black text-primary font-display">{orders.length}</p>
+                <p className="text-[11px] text-text-muted uppercase tracking-widest font-semibold mt-1">Orders</p>
+              </div>
+              <div className="profile-stat-card">
+                <p className="text-2xl md:text-3xl font-black text-primary font-display price-glow">{formatPrice(totalSpent)}</p>
+                <p className="text-[11px] text-text-muted uppercase tracking-widest font-semibold mt-1">Total Spent</p>
+              </div>
+              <div className="profile-stat-card">
+                <p className="text-2xl md:text-3xl font-black text-primary font-display">{addresses.length}</p>
+                <p className="text-[11px] text-text-muted uppercase tracking-widest font-semibold mt-1">Addresses</p>
+              </div>
+            </div>
+          </div>
+          {/* Bottom fade */}
+          <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-background-light to-transparent pointer-events-none" />
+        </div>
+
+        {/* ── Main Content ── */}
+        <div className="max-w-5xl mx-auto px-6 py-10 space-y-8">
+          {/* Account Information */}
+          <div className="profile-section p-8 profile-animate profile-animate-d2">
+            <div className="profile-section-header">
+              <div className="profile-section-icon">
+                <span className="material-icons-outlined text-xl">person</span>
+              </div>
+              <div>
+                <h3 className="font-display text-xl font-bold text-text-main-light">Account Information</h3>
+                <p className="text-xs text-text-muted mt-0.5">Your personal details</p>
+              </div>
+            </div>
+            <div>
+              {[
+                { icon: 'email', label: 'Email Address', value: user.email },
+                { icon: 'alternate_email', label: 'Username', value: `@${user.username}` },
+                { icon: 'calendar_today', label: 'Member Since', value: user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A' },
+              ].map((f) => (
+                <div key={f.icon} className="profile-info-field">
+                  <div className="profile-info-icon">
+                    <span className="material-icons-outlined text-lg">{f.icon}</span>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted mb-0.5">{f.label}</p>
+                    <p className="text-text-main-light font-medium">{f.value}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Addresses */}
+          <div className="profile-section p-8 profile-animate profile-animate-d3">
+            <div className="profile-section-header">
+              <div className="profile-section-icon">
+                <span className="material-icons-outlined text-xl">location_on</span>
+              </div>
+              <div className="flex-1">
+                <h3 className="font-display text-xl font-bold text-text-main-light">Saved Addresses</h3>
+                <p className="text-xs text-text-muted mt-0.5">Manage your delivery addresses</p>
+              </div>
+              <button onClick={() => openAddressModal()} className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary-hover transition-colors cursor-pointer bg-primary/8 border border-primary/15 rounded-xl px-4 py-2 hover:bg-primary/12">
+                <span className="material-icons-outlined text-lg">add</span>Add New
+              </button>
+            </div>
+
+            {addressesLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="w-7 h-7 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+              </div>
+            ) : addresses.length === 0 ? (
+              <div className="text-center py-10 border-2 border-dashed border-primary/10 rounded-2xl">
+                <span className="material-icons-outlined text-4xl text-text-muted/20 mb-3 block">home</span>
+                <p className="text-text-muted text-sm mb-3">No addresses saved yet</p>
+                <button onClick={() => openAddressModal()} className="text-primary text-sm font-semibold hover:underline cursor-pointer">Add your first address →</button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {addresses.map((addr) => (
+                  <div key={addr.id} className={`profile-address-card ${addr.isDefault ? 'is-default' : ''}`}>
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <p className="font-semibold text-text-main-light">{addr.fullName}</p>
+                        {addr.isDefault && (
+                          <span className="inline-flex items-center gap-1 mt-1.5 text-[10px] font-bold uppercase tracking-wider bg-primary/15 text-primary px-2.5 py-0.5 rounded-full">
+                            <span className="material-icons-outlined text-xs">star</span> Default
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex gap-1">
+                        <button onClick={() => openAddressModal(addr)} className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-text-muted hover:text-primary hover:bg-primary/10 transition-all cursor-pointer" title="Edit">
+                          <span className="material-icons-outlined text-base">edit</span>
+                        </button>
+                        <button onClick={() => handleDeleteAddress(addr.id)} className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-text-muted hover:text-red-400 hover:bg-red-500/10 transition-all cursor-pointer" title="Delete">
+                          <span className="material-icons-outlined text-base">delete_outline</span>
+                        </button>
+                      </div>
                     </div>
-                    <div>
-                      <label className="text-xs font-bold tracking-widest text-primary/70 uppercase block mb-1">
-                        Username
-                      </label>
-                      <p className="text-text-main-light">@{user.username}</p>
-                    </div>
-                    <div>
-                      <label className="text-xs font-bold tracking-widest text-primary/70 uppercase block mb-1">
-                        Member Since
-                      </label>
-                      <p className="text-text-main-light">
-                        {user.createdAt
-                          ? new Date(user.createdAt).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                          })
-                          : 'N/A'}
+                    <p className="text-xs text-text-muted leading-relaxed">
+                      {addr.addressLine1}{addr.addressLine2 ? `, ${addr.addressLine2}` : ''}<br />
+                      {addr.city}, {addr.state} – {addr.pincode}<br />
+                      📞 {addr.phone}
+                    </p>
+                    {!addr.isDefault && (
+                      <button onClick={() => handleSetDefaultAddress(addr.id)} className="mt-3 text-xs font-semibold text-text-muted hover:text-primary transition-colors cursor-pointer">
+                        Set as Default
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Recent Orders */}
+          <div className="profile-section p-8 profile-animate profile-animate-d4">
+            <div className="profile-section-header">
+              <div className="profile-section-icon">
+                <span className="material-icons-outlined text-xl">receipt_long</span>
+              </div>
+              <div className="flex-1">
+                <h3 className="font-display text-xl font-bold text-text-main-light">Recent Orders</h3>
+                <p className="text-xs text-text-muted mt-0.5">Track your purchase history</p>
+              </div>
+              {orders.length > 0 && (
+                <button onClick={() => navigate('/orders')} className="text-xs font-semibold text-text-muted hover:text-primary transition-colors cursor-pointer">
+                  View All →
+                </button>
+              )}
+            </div>
+
+            <div className="space-y-3">
+              {ordersLoading ? (
+                <div className="flex flex-col items-center py-10 space-y-3">
+                  <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                  <p className="text-sm text-text-muted">Fetching orders...</p>
+                </div>
+              ) : orders.length === 0 ? (
+                <div className="text-center py-10">
+                  <span className="material-icons-outlined text-5xl text-text-muted/15 mb-3 block">shopping_bag</span>
+                  <p className="text-text-muted text-sm mb-3">No orders yet</p>
+                  <button className="text-primary text-sm font-bold hover:underline cursor-pointer" onClick={() => navigate('/shop')}>
+                    Start Shopping →
+                  </button>
+                </div>
+              ) : (
+                orders.slice(0, 5).map((order) => (
+                  <div key={order.id} className="profile-order-item" onClick={() => navigate(`/order-confirmation/${order.id}`)}>
+                    <div className={`profile-order-dot ${getStatusColor(order.status)}`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-text-main-light text-sm">
+                        Order #{order.id.slice(-8).toUpperCase()}
+                      </p>
+                      <p className="text-xs text-text-muted">
+                        {new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </p>
                     </div>
+                    <div className="text-right shrink-0">
+                      <p className="font-bold text-primary text-sm">{formatPrice(order.totalAmount)}</p>
+                      <p className={`text-[11px] font-semibold ${getStatusTextColor(order.status)}`}>{order.status}</p>
+                    </div>
+                    <span className="material-icons-outlined text-lg text-text-muted/40">chevron_right</span>
                   </div>
-                </div>
+                ))
+              )}
+            </div>
+          </div>
 
-                <div className="pt-6 border-t border-primary/10">
-                  <button className="py-2 px-6 rounded-lg bg-primary text-black font-bold hover:bg-primary-hover transition-all cursor-pointer active:scale-95">
-                    Edit Profile
-                  </button>
-                </div>
+          {/* Preferences */}
+          <div className="profile-section p-8 profile-animate profile-animate-d4">
+            <div className="profile-section-header">
+              <div className="profile-section-icon">
+                <span className="material-icons-outlined text-xl">tune</span>
               </div>
-
-              {/* Addresses */}
-              <div className="bg-surface-dark rounded-2xl shadow-sm p-8 border border-primary/10">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="font-display text-xl font-bold text-text-main-light">
-                    My Addresses
-                  </h3>
-                  <button 
-                    onClick={() => openAddressModal()}
-                    className="flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary-hover transition-colors cursor-pointer"
-                  >
-                    <span className="material-icons-outlined text-lg">add</span>
-                    Add New
-                  </button>
-                </div>
-                
-                <div className="space-y-4">
-                  {addressesLoading ? (
-                    <div className="flex justify-center py-4">
-                      <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
-                    </div>
-                  ) : addresses.length === 0 ? (
-                    <div className="text-center py-6 border-2 border-dashed border-primary/10 rounded-xl">
-                      <p className="text-text-muted text-sm mb-2">No addresses saved yet.</p>
-                      <button onClick={() => openAddressModal()} className="text-primary text-sm font-semibold hover:underline cursor-pointer">
-                        Add your first address
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {addresses.map((addr) => (
-                        <div key={addr.id} className={`p-4 rounded-xl border-2 transition-all ${addr.isDefault ? 'border-primary bg-primary/5' : 'border-primary/10 bg-background-light'}`}>
-                          <div className="flex justify-between items-start mb-2">
-                            <div>
-                              <p className="font-semibold text-text-main-light">{addr.fullName}</p>
-                              {addr.isDefault && (
-                                <span className="inline-block mt-1 text-[10px] font-bold uppercase tracking-wider bg-primary/20 text-primary px-2 py-0.5 rounded-full">
-                                  Default
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex gap-2 text-text-muted">
-                              <button onClick={() => openAddressModal(addr)} className="hover:text-primary transition-colors cursor-pointer" title="Edit">
-                                <span className="material-icons-outlined text-lg">edit</span>
-                              </button>
-                              <button onClick={() => handleDeleteAddress(addr.id)} className="hover:text-red-400 transition-colors cursor-pointer" title="Delete">
-                                <span className="material-icons-outlined text-lg">delete_outline</span>
-                              </button>
-                            </div>
-                          </div>
-                          <p className="text-xs text-text-muted leading-relaxed">
-                            {addr.addressLine1}{addr.addressLine2 ? `, ${addr.addressLine2}` : ''}<br />
-                            {addr.city}, {addr.state} - {addr.pincode}<br />
-                            📞 {addr.phone}
-                          </p>
-                          {!addr.isDefault && (
-                            <button 
-                              onClick={() => handleSetDefaultAddress(addr.id)}
-                              className="mt-3 text-xs font-semibold text-text-muted hover:text-primary transition-colors cursor-pointer"
-                            >
-                              Set as Default
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+              <div>
+                <h3 className="font-display text-xl font-bold text-text-main-light">Preferences</h3>
+                <p className="text-xs text-text-muted mt-0.5">Notification settings</p>
               </div>
-
-              {/* Recent Orders */}
-              <div className="bg-surface-dark rounded-2xl shadow-sm p-8 border border-primary/10">
-                <h3 className="font-display text-xl font-bold text-text-main-light mb-6">
-                  Recent Orders
-                </h3>
-                <div className="space-y-4">
-                  {ordersLoading ? (
-                    <div className="flex flex-col items-center py-8 space-y-2">
-                      <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
-                      <p className="text-sm text-text-muted">Fetching orders...</p>
-                    </div>
-                  ) : orders.length === 0 ? (
-                    <div className="text-center py-8">
-                      <span className="material-icons-outlined text-4xl text-text-muted/30 mb-2">shopping_bag</span>
-                      <p className="text-text-muted text-sm">No orders yet</p>
-                      <button
-                        className="text-primary text-sm font-bold mt-2 hover:underline cursor-pointer"
-                        onClick={() => navigate('/shop')}
-                      >
-                        Start Shopping
-                      </button>
-                    </div>
-                  ) : (
-                    orders.slice(0, 5).map((order) => (
-                      <div
-                        key={order.id}
-                        className="flex items-center justify-between p-4 border border-primary/10 rounded-xl hover:bg-surface-elevated hover:border-primary/20 transition-all cursor-pointer group card-lift"
-                        onClick={() => navigate(`/order-confirmation/${order.id}`)}
-                      >
-                        <div>
-                          <p className="font-semibold text-text-main-light group-hover:text-primary transition-colors">
-                            Order #{order.id.slice(-8).toUpperCase()}
-                          </p>
-                          <p className="text-sm text-text-muted">
-                            {new Date(order.createdAt).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric'
-                            })}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-primary">{formatPrice(order.totalAmount)}</p>
-                          <p className={`text-xs font-semibold ${order.status === 'DELIVERED' ? 'text-green-400' :
-                              order.status === 'CANCELLED' ? 'text-red-400' : 'text-primary/70'
-                            }`}>
-                            {order.status}
-                          </p>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-                {orders.length > 5 && (
-                  <button onClick={() => navigate('/orders')} className="w-full mt-6 py-3 px-4 rounded-lg border border-primary/30 text-primary hover:bg-primary hover:text-black transition-all font-semibold cursor-pointer active:scale-95">
-                    View All Orders
-                  </button>
-                )}
-              </div>
-
-              {/* Preferences */}
-              <div className="bg-surface-dark rounded-2xl shadow-sm p-8 border border-primary/10">
-                <h3 className="font-display text-xl font-bold text-text-main-light mb-6">
-                  Preferences
-                </h3>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold text-text-main-light">Email Notifications</p>
-                      <p className="text-sm text-text-muted">Receive order updates</p>
-                    </div>
-                    <input type="checkbox" defaultChecked className="toggle-switch" />
+            </div>
+            <div className="space-y-1">
+              {[
+                { icon: 'notifications_active', title: 'Email Notifications', desc: 'Receive order updates & tracking info', checked: true },
+                { icon: 'campaign', title: 'Marketing Emails', desc: 'New products, offers & promotions', checked: false },
+              ].map((pref, i) => (
+                <div key={i} className={`flex items-center gap-4 py-4 ${i > 0 ? 'border-t border-white/5' : ''}`}>
+                  <div className="profile-info-icon">
+                    <span className="material-icons-outlined text-lg">{pref.icon}</span>
                   </div>
-                  <div className="flex items-center justify-between pt-4 border-t border-primary/10">
-                    <div>
-                      <p className="font-semibold text-text-main-light">Marketing Emails</p>
-                      <p className="text-sm text-text-muted">New products and offers</p>
-                    </div>
-                    <input type="checkbox" className="toggle-switch" />
+                  <div className="flex-1">
+                    <p className="font-semibold text-text-main-light text-sm">{pref.title}</p>
+                    <p className="text-xs text-text-muted">{pref.desc}</p>
                   </div>
+                  <input type="checkbox" defaultChecked={pref.checked} className="toggle-switch" />
                 </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Address Modal */}
+        {/* ── Address Modal ── */}
         {showAddressModal && (
           <>
-            <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm animate-fadeIn" onClick={() => setShowAddressModal(false)} />
+            <div className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-md animate-fadeIn" onClick={() => setShowAddressModal(false)} />
             <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 pointer-events-none">
-              <div className="bg-surface-dark w-full max-w-lg rounded-2xl border border-primary/20 shadow-2xl pointer-events-auto flex flex-col max-h-[90vh] animate-slideUp">
+              <div className="bg-surface-dark w-full max-w-lg rounded-2xl border border-primary/15 shadow-2xl pointer-events-auto flex flex-col max-h-[90vh] animate-slideUp">
                 <div className="flex items-center justify-between p-6 border-b border-primary/10 shrink-0">
-                  <h2 className="font-display text-xl font-bold text-text-main-light">
-                    {editingAddressId ? 'Edit Address' : 'Add New Address'}
-                  </h2>
-                  <button onClick={() => setShowAddressModal(false)} className="text-text-muted hover:text-primary transition-colors cursor-pointer">
+                  <div className="flex items-center gap-3">
+                    <div className="profile-section-icon">
+                      <span className="material-icons-outlined text-lg">{editingAddressId ? 'edit_location' : 'add_location'}</span>
+                    </div>
+                    <h2 className="font-display text-xl font-bold text-text-main-light">
+                      {editingAddressId ? 'Edit Address' : 'Add New Address'}
+                    </h2>
+                  </div>
+                  <button onClick={() => setShowAddressModal(false)} className="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center text-text-muted hover:text-primary hover:bg-white/10 transition-all cursor-pointer">
                     <span className="material-icons-outlined">close</span>
                   </button>
                 </div>
-                
+
                 <div className="p-6 overflow-y-auto space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {[
@@ -497,24 +486,18 @@ const Profile: React.FC = () => {
                           value={(addressForm as any)[f.name] || ''}
                           onChange={handleAddressFormChange}
                           placeholder={f.placeholder}
-                          className="w-full bg-background-light border border-primary/20 rounded-xl px-4 py-2.5 text-sm text-text-main-light outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition-all"
+                          className="w-full bg-background-light border border-primary/15 rounded-xl px-4 py-2.5 text-sm text-text-main-light outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition-all"
                         />
                       </div>
                     ))}
                   </div>
                 </div>
-                
+
                 <div className="p-6 border-t border-primary/10 shrink-0 bg-surface-dark rounded-b-2xl flex gap-3">
-                  <button 
-                    onClick={() => setShowAddressModal(false)}
-                    className="flex-1 py-3 rounded-xl border border-primary/20 text-text-main-light font-bold hover:bg-surface-elevated transition-colors cursor-pointer"
-                  >
+                  <button onClick={() => setShowAddressModal(false)} className="flex-1 py-3 rounded-xl border border-white/10 text-text-main-light font-bold hover:bg-white/5 transition-colors cursor-pointer">
                     Cancel
                   </button>
-                  <button 
-                    onClick={handleSaveAddress}
-                    className="flex-1 py-3 rounded-xl bg-primary text-black font-bold hover:bg-primary-hover transition-colors cursor-pointer glow-gold"
-                  >
+                  <button onClick={handleSaveAddress} className="flex-1 py-3 rounded-xl bg-primary text-black font-bold hover:bg-primary-hover transition-colors cursor-pointer glow-gold">
                     Save Address
                   </button>
                 </div>
