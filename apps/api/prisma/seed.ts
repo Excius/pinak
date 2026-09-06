@@ -47,6 +47,7 @@ async function cleanup() {
   // Content / misc
   await prisma.article.deleteMany();
   await prisma.store.deleteMany();
+  await prisma.dynamicAsset.deleteMany();
   await prisma.quizOption.deleteMany();
   await prisma.quizRule.deleteMany();
   await prisma.quizQuestion.deleteMany();
@@ -1876,6 +1877,72 @@ async function main() {
   );
 
   // -------------------------------------------------------------------------
+  // 17. Dynamic Assets
+  // -------------------------------------------------------------------------
+  const dynamicAssets = [
+    {
+      slug: "mobile-home-banner-top",
+      url: "https://via.placeholder.com/1200x400/FF6B6B/FFFFFF?text=Home+Banner",
+      type: "IMAGE" as const,
+      title: "Mobile Home Banner (Top)",
+      description: "The hero banner displayed at the top of the mobile home screen",
+      metadata: { linkUrl: "/products", aspectRatio: "3:1" },
+    },
+    {
+      slug: "mobile-home-banner-bottom",
+      url: "https://via.placeholder.com/1200x400/4ECDC4/FFFFFF?text=Bottom+Banner",
+      type: "IMAGE" as const,
+      title: "Mobile Home Banner (Bottom)",
+      description: "The secondary banner displayed near the bottom of the mobile home screen",
+      metadata: { linkUrl: "/combo-kits", aspectRatio: "3:1" },
+    },
+    {
+      slug: "web-hero-slider-1",
+      url: "https://via.placeholder.com/1920x600/556270/FFFFFF?text=Hero+Slide+1",
+      type: "IMAGE" as const,
+      title: "Website Hero Slider — Slide 1",
+      description: "First slide in the website hero carousel",
+      metadata: { linkUrl: "/new-arrivals", buttonText: "Shop Now" },
+    },
+    {
+      slug: "web-hero-slider-2",
+      url: "https://via.placeholder.com/1920x600/C7F464/333333?text=Hero+Slide+2",
+      type: "IMAGE" as const,
+      title: "Website Hero Slider — Slide 2",
+      description: "Second slide in the website hero carousel",
+      metadata: { linkUrl: "/deals", buttonText: "View Deals" },
+    },
+    {
+      slug: "app-splash-screen",
+      url: "https://via.placeholder.com/1080x1920/2C3E50/FFFFFF?text=Splash",
+      type: "IMAGE" as const,
+      title: "Mobile App Splash Screen",
+      description: "Splash/loading screen shown when the mobile app launches",
+    },
+    {
+      slug: "checkout-promo-banner",
+      url: "https://via.placeholder.com/800x200/E74C3C/FFFFFF?text=Free+Shipping",
+      type: "IMAGE" as const,
+      title: "Checkout Promo Banner",
+      description: "Promotional banner shown on the checkout page",
+      metadata: { linkUrl: "/coupons", promoCode: "FREESHIP" },
+    },
+  ];
+
+  try {
+    for (const asset of dynamicAssets) {
+      await prisma.dynamicAsset.upsert({
+        where: { slug: asset.slug },
+        update: {},
+        create: asset,
+      });
+    }
+    console.log(`✅ Seeded ${dynamicAssets.length} dynamic assets`);
+  } catch (err: any) {
+    console.warn("⚠️  Skipping seeding dynamic assets:", err?.message ?? err);
+  }
+
+  // -------------------------------------------------------------------------
   // Summary
   // -------------------------------------------------------------------------
   const totalVariants = productDefs.reduce(
@@ -1895,6 +1962,7 @@ async function main() {
   - 1 wishlist with 3 variant items
   - 3 coupons · 3 orders · 6 reviews · 3 articles · 3 stores
   - 3 quiz questions with options & rules
+  - ${dynamicAssets.length} dynamic assets
   `);
 }
 

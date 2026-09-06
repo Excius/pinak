@@ -1,0 +1,6 @@
+{
+  "version": "1",
+  "name": "Admin",
+  "type": "folder",
+  "ignore": ["node_modules", ".git"]
+}

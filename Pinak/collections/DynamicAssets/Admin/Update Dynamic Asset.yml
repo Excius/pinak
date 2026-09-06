@@ -1,0 +1,39 @@
+info:
+  name: Update Dynamic Asset
+  type: http
+  seq: 4
+
+http:
+  method: PATCH
+  url: "{{baseUrl}}/api/v1/dynamic-assets/admin/{{assetId}}"
+  headers:
+    - name: Content-Type
+      value: application/json
+  auth: inherit
+  body:
+    mode: json
+    json: |
+      {
+        "title": "Updated Title",
+        "isActive": true,
+        "metadata": {
+          "linkUrl": "/products/sale"
+        }
+      }
+
+runtime:
+  variables:
+    - name: assetId
+      value: your-asset-id-here
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Schema: DynamicAssetAdminTypes.UpdateDynamicAsset
+  Route: PATCH /dynamic-assets/admin/:id
+  Access: moderator/admin
