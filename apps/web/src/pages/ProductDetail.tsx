@@ -6,6 +6,7 @@ import { ProductDetailSkeleton } from '../components/Skeleton'
 import { getProductBySlug, getProductVariants, getRelatedProducts, getProductsByCategory } from '../api/products.api'
 import { useCart } from '../context/CartContext'
 import { addToWishlist } from '../api/wishlist.api'
+import toast from 'react-hot-toast'
 import type { Product, VariantDetail } from '../api/products.api'
 
 const ProductDetail: React.FC = () => {
@@ -350,7 +351,13 @@ const ProductDetail: React.FC = () => {
                 <span className="text-lg font-semibold w-8 text-center">{quantity}</span>
                 <button
                   className="w-10 h-10 rounded-xl border border-primary/20 flex items-center justify-center text-text-muted hover:text-primary hover:border-primary transition-colors cursor-pointer"
-                  onClick={() => setQuantity(quantity + 1)}
+                  onClick={() => {
+                    if (selectedVariant && quantity >= selectedVariant.stock) {
+                      toast.error(`Only ${selectedVariant.stock} items available in stock.`)
+                    } else {
+                      setQuantity(quantity + 1)
+                    }
+                  }}
                 >
                   <span className="material-icons-outlined">add</span>
                 </button>
