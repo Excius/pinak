@@ -176,6 +176,7 @@ export class ComboService {
       sanitized.discountType,
       sanitized.discountValue,
       finalPrice,
+      normalizedItems
     );
 
     const createInput: Prisma.ComboKitCreateInput = {
@@ -242,10 +243,7 @@ export class ComboService {
       sanitized.pricingStrategy ??
       (existing.pricingStrategy as ComboKitPricingStrategy);
 
-    const effectivePrice = this.resolvePrice(
-      sanitized.price ?? existing.price,
-      effectivePricingStrategy,
-      sanitized.items !== undefined
+    const effectiveItems = sanitized.items !== undefined
         ? updatedItems
         : existing.items.map((item) => ({
             productVariantId: item.productVariantId,
@@ -254,7 +252,12 @@ export class ComboService {
             originalPrice: item.originalPrice ?? undefined,
             discountedPrice: item.discountedPrice ?? undefined,
             isRequired: item.isRequired,
-          })),
+          }));
+
+    const effectivePrice = this.resolvePrice(
+      sanitized.price ?? existing.price,
+      effectivePricingStrategy,
+      effectiveItems,
     );
 
     const discountType =
@@ -271,6 +274,7 @@ export class ComboService {
       discountType ?? undefined,
       discountValue ?? undefined,
       effectivePrice,
+      effectiveItems
     );
 
     const updateInput: Prisma.ComboKitUpdateInput = {
@@ -359,6 +363,7 @@ export class ComboService {
       discountType ?? undefined,
       discountValue ?? undefined,
       computedPrice,
+      items
     );
 
     return this.comboRepository.updateComboKitPricing(id, {
@@ -762,16 +767,9 @@ export class ComboService {
       discountedPrice?: number;
     }>,
   ): number {
-    if (pricingStrategy === "FIXED_PRICE") {
-      if (!Number.isInteger(explicitPrice) || explicitPrice < 0) {
-        throw new ValidationError("price must be an integer >= 0");
-      }
-      return explicitPrice;
-    }
-
     if (items.length === 0) {
       throw new ValidationError(
-        "At least one item is required for CALCULATED or DYNAMIC pricing",
+        "At least one item is required in a combo kit",
       );
     }
 
@@ -781,6 +779,18 @@ export class ComboService {
       return sum + effectiveItemPrice * item.quantity;
     }, 0);
 
+    if (pricingStrategy === "FIXED_PRICE") {
+      if (!Number.isInteger(explicitPrice) || explicitPrice < 0) {
+        throw new ValidationError("price must be an integer >= 0");
+      }
+      
+      const hasItemLevelDiscounts = items.some(item => item.discountedPrice !== undefined);
+      if (hasItemLevelDiscounts && explicitPrice !== calculatedPrice) {
+         throw new ValidationError(`Mathematical mismatch: The FIXED_PRICE of the kit is ${explicitPrice}, but the sum of the discounted items is ${calculatedPrice}. They must match exactly, or you should remove item-level discounts.`);
+      }
+      return explicitPrice;
+    }
+
     return calculatedPrice;
   }
 
@@ -788,7 +798,15 @@ export class ComboService {
     discountType: ComboKitDiscountType | undefined,
     discountValue: number | undefined,
     price: number,
+    items: Array<{ discountedPrice?: number }>
   ) {
+    const hasItemLevelDiscounts = items.some(item => item.discountedPrice !== undefined);
+
+    if (discountType !== undefined || discountValue !== undefined) {
+       if (hasItemLevelDiscounts) {
+         throw new ValidationError("You cannot apply a kit-level discount if you have already set custom discounted prices on individual items. Please use one or the other.");
+       }
+    }
     if (discountType && discountValue === undefined) {
       throw new ValidationError(
         "discountValue is required when discountType is set",
