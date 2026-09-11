@@ -402,6 +402,22 @@ export class OrderService {
             const lineSubtotal = comboKit.price * item.quantity;
             subtotalAmount += lineSubtotal;
 
+            const maxTaxRate = Math.max(
+              0,
+              ...comboKit.items.map(
+                (comboItem) => comboItem.productVariant?.product?.taxClass?.rate ?? 0
+              )
+            );
+            
+            const comboTaxAmount = Math.round((lineSubtotal * maxTaxRate) / 100);
+            taxAmount += comboTaxAmount;
+
+            taxBreakdown.push({
+              label: comboKit.name,
+              rate: maxTaxRate,
+              amount: comboTaxAmount,
+            });
+
             const componentSnapshot = comboKit.items.map((comboItem) => {
               if (!comboItem.productVariant) {
                 throw new ValidationError("Combo kit contains invalid variant");
@@ -410,25 +426,6 @@ export class OrderService {
               shippingRequired =
                 shippingRequired ||
                 comboItem.productVariant.product.requiresShipping;
-
-              const componentTaxRate =
-                comboItem.productVariant.product.taxClass?.rate ?? 0;
-              const componentUnitPrice =
-                comboItem.discountedPrice ??
-                comboItem.originalPrice ??
-                comboItem.productVariant.price;
-              const componentSubtotal =
-                componentUnitPrice * comboItem.quantity * item.quantity;
-              const componentTax = Math.round(
-                (componentSubtotal * componentTaxRate) / 100,
-              );
-              taxAmount += componentTax;
-
-              taxBreakdown.push({
-                label: `${comboKit.name} / ${comboItem.productVariant.product.name}`,
-                rate: componentTaxRate,
-                amount: componentTax,
-              });
 
               return {
                 comboItemId: comboItem.id,

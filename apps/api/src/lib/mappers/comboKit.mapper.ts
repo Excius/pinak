@@ -160,6 +160,8 @@ export type PublicComboKit = {
   metaKeywords: string | null;
   seoKeyword: string | null;
   price: number;
+  taxAmount?: number;
+  priceWithTax?: number;
   pricingStrategy: ComboKitPricingStrategy;
   discountType: ComboKitDiscountType | null;
   discountValue: number | null;
@@ -230,6 +232,8 @@ export type AdminComboKit = {
   metaKeywords: string | null;
   seoKeyword: string | null;
   price: number;
+  taxAmount?: number;
+  priceWithTax?: number;
   pricingStrategy: ComboKitPricingStrategy;
   discountType: ComboKitDiscountType | null;
   discountValue: number | null;
@@ -376,34 +380,47 @@ export const toPublicComboKitItems = (
   items: ComboKitItemRecord[],
 ): PublicComboKitItem[] => items.map(toPublicComboKitItem);
 
-export const toPublicComboKit = (comboKit: ComboKitRecord): PublicComboKit => ({
-  id: comboKit.id,
-  name: comboKit.name,
-  slug: comboKit.slug,
-  description: comboKit.description,
-  audience: comboKit.audience,
-  metaTitle: comboKit.metaTitle,
-  metaDescription: comboKit.metaDescription,
-  metaKeywords: comboKit.metaKeywords,
-  seoKeyword: comboKit.seoKeyword,
-  price: comboKit.price,
-  pricingStrategy: comboKit.pricingStrategy,
-  discountType: comboKit.discountType,
-  discountValue: comboKit.discountValue,
-  tags: comboKit.tags,
-  viewCount: comboKit.viewCount,
-  purchasedCount: comboKit.purchasedCount,
-  isActive: comboKit.isActive,
-  images: (comboKit.images ?? []).map((img) => ({
-    id: img.id,
-    comboKitId: img.comboKitId,
-    url: img.url,
-    altText: img.altText,
-    isPrimary: img.isPrimary,
-    sortOrder: img.sortOrder,
-  })),
-  items: toPublicComboKitItems(comboKit.items),
-});
+export const toPublicComboKit = (comboKit: ComboKitRecord): PublicComboKit => {
+  const maxTaxRate = Math.max(
+    0,
+    ...(comboKit.items ?? []).map(
+      (item) => item.productVariant?.product?.taxClass?.rate ?? 0
+    )
+  );
+  const taxAmount = Math.round((comboKit.price * maxTaxRate) / 100);
+  const priceWithTax = comboKit.price + taxAmount;
+
+  return {
+    id: comboKit.id,
+    name: comboKit.name,
+    slug: comboKit.slug,
+    description: comboKit.description,
+    audience: comboKit.audience,
+    metaTitle: comboKit.metaTitle,
+    metaDescription: comboKit.metaDescription,
+    metaKeywords: comboKit.metaKeywords,
+    seoKeyword: comboKit.seoKeyword,
+    price: comboKit.price,
+    taxAmount,
+    priceWithTax,
+    pricingStrategy: comboKit.pricingStrategy,
+    discountType: comboKit.discountType,
+    discountValue: comboKit.discountValue,
+    tags: comboKit.tags,
+    viewCount: comboKit.viewCount,
+    purchasedCount: comboKit.purchasedCount,
+    isActive: comboKit.isActive,
+    images: (comboKit.images ?? []).map((img) => ({
+      id: img.id,
+      comboKitId: img.comboKitId,
+      url: img.url,
+      altText: img.altText,
+      isPrimary: img.isPrimary,
+      sortOrder: img.sortOrder,
+    })),
+    items: toPublicComboKitItems(comboKit.items),
+  };
+};
 
 export const toPublicComboKitList = (
   result: ComboKitListResult,
@@ -438,38 +455,51 @@ export const toAdminComboKitItems = (
   items: ComboKitItemRecord[],
 ): AdminComboKitItem[] => items.map(toAdminComboKitItem);
 
-export const toAdminComboKit = (comboKit: ComboKitRecord): AdminComboKit => ({
-  id: comboKit.id,
-  name: comboKit.name,
-  slug: comboKit.slug,
-  description: comboKit.description,
-  audience: comboKit.audience,
-  metaTitle: comboKit.metaTitle,
-  metaDescription: comboKit.metaDescription,
-  metaKeywords: comboKit.metaKeywords,
-  seoKeyword: comboKit.seoKeyword,
-  price: comboKit.price,
-  pricingStrategy: comboKit.pricingStrategy,
-  discountType: comboKit.discountType,
-  discountValue: comboKit.discountValue,
-  tags: comboKit.tags,
-  sortOrder: comboKit.sortOrder,
-  viewCount: comboKit.viewCount,
-  purchasedCount: comboKit.purchasedCount,
-  isActive: comboKit.isActive,
-  isDeleted: comboKit.isDeleted,
-  createdAt: comboKit.createdAt,
-  updatedAt: comboKit.updatedAt,
-  images: (comboKit.images ?? []).map((img) => ({
-    id: img.id,
-    comboKitId: img.comboKitId,
-    url: img.url,
-    altText: img.altText,
-    isPrimary: img.isPrimary,
-    sortOrder: img.sortOrder,
-  })),
-  items: toAdminComboKitItems(comboKit.items),
-});
+export const toAdminComboKit = (comboKit: ComboKitRecord): AdminComboKit => {
+  const maxTaxRate = Math.max(
+    0,
+    ...(comboKit.items ?? []).map(
+      (item) => item.productVariant?.product?.taxClass?.rate ?? 0
+    )
+  );
+  const taxAmount = Math.round((comboKit.price * maxTaxRate) / 100);
+  const priceWithTax = comboKit.price + taxAmount;
+
+  return {
+    id: comboKit.id,
+    name: comboKit.name,
+    slug: comboKit.slug,
+    description: comboKit.description,
+    audience: comboKit.audience,
+    metaTitle: comboKit.metaTitle,
+    metaDescription: comboKit.metaDescription,
+    metaKeywords: comboKit.metaKeywords,
+    seoKeyword: comboKit.seoKeyword,
+    price: comboKit.price,
+    taxAmount,
+    priceWithTax,
+    pricingStrategy: comboKit.pricingStrategy,
+    discountType: comboKit.discountType,
+    discountValue: comboKit.discountValue,
+    tags: comboKit.tags,
+    sortOrder: comboKit.sortOrder,
+    viewCount: comboKit.viewCount,
+    purchasedCount: comboKit.purchasedCount,
+    isActive: comboKit.isActive,
+    isDeleted: comboKit.isDeleted,
+    createdAt: comboKit.createdAt,
+    updatedAt: comboKit.updatedAt,
+    images: (comboKit.images ?? []).map((img) => ({
+      id: img.id,
+      comboKitId: img.comboKitId,
+      url: img.url,
+      altText: img.altText,
+      isPrimary: img.isPrimary,
+      sortOrder: img.sortOrder,
+    })),
+    items: toAdminComboKitItems(comboKit.items),
+  };
+};
 
 export const toAdminComboKitList = (
   result: ComboKitListResult,
