@@ -24,6 +24,11 @@ model Order {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  gatewayOrderId   String?
+  gatewayPaymentId String?
+  gatewaySignature String?
+  paymentMethod    String?
+
   couponUsages          CouponUsage[]
 
   isDeleted Boolean @default(false)

@@ -476,7 +476,8 @@ export class OrderService {
           couponCode = couponValidation.coupon.code;
         }
 
-        const shippingAmount = shippingRequired ? 100 : 0;
+        // If shipping is required, we charge 10000 paise (₹100)
+        const shippingAmount = shippingRequired ? 10000 : 0;
         const totalAmount = Math.max(
           0,
           subtotalAmount + taxAmount + shippingAmount - discountAmount,
@@ -555,6 +556,12 @@ export class OrderService {
         const payment = await this.paymentService.createPayment({
           orderId: finalOrder.id,
           amount: finalOrder.totalAmount,
+        });
+
+        // Store the Razorpay order ID
+        await tx.order.update({
+          where: { id: finalOrder.id },
+          data: { gatewayOrderId: payment.id },
         });
 
         await this.cartRepository.clearCartByUser(userId, tx);
@@ -795,5 +802,101 @@ export class OrderService {
       throw new NotFoundError("Order not found");
     }
     return this.orderRepository.hardDelete(orderId);
+  }
+
+  async confirmPaymentByGatewayOrderId(
+    gatewayOrderId: string,
+    paymentData: { paymentId: string; signature: string; method?: string },
+  ) {
+    return this.prisma.$transaction(
+      async (tx) => {
+        const order = await tx.order.findFirst({
+          where: { gatewayOrderId },
+          include: { items: true },
+        });
+
+        if (!order) {
+          throw new NotFoundError(`Order not found for gatewayOrderId: ${gatewayOrderId}`);
+        }
+
+        if (order.paymentStatus === "COMPLETED") {
+          return this.mapOrder(order);
+        }
+
+        if (order.status === "CANCELLED") {
+          throw new ValidationError("Cancelled orders cannot be marked as paid");
+        }
+
+        await this.stockReservationService.confirmReservations(order.id, tx);
+        await this.cartRepository.clearCartByUser(order.userId, tx);
+
+        const existingBreakup = isRecord(order.getBreakup) ? order.getBreakup : {};
+        
+        await tx.order.update({
+          where: { id: order.id },
+          data: {
+            gatewayPaymentId: paymentData.paymentId,
+            gatewaySignature: paymentData.signature,
+            paymentMethod: paymentData.method,
+            status: "PROCESSING",
+            paymentStatus: "COMPLETED",
+            getBreakup: {
+              ...existingBreakup,
+              payment: {
+                paymentId: paymentData.paymentId,
+                status: "SUCCESS",
+                updatedAt: new Date().toISOString(),
+              },
+            },
+          },
+        });
+
+        const updated = await this.orderRepository.findByIdWithItems(order.id, tx);
+        return this.mapOrder(updated!);
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+    );
+  }
+
+  async handlePaymentFailureByGatewayOrderId(gatewayOrderId: string, reason: string) {
+    return this.prisma.$transaction(
+      async (tx) => {
+        const order = await tx.order.findFirst({
+          where: { gatewayOrderId },
+          include: { items: true },
+        });
+
+        if (!order) {
+          throw new NotFoundError(`Order not found for gatewayOrderId: ${gatewayOrderId}`);
+        }
+
+        if (order.status === "CANCELLED" && order.paymentStatus === "FAILED") {
+          return this.mapOrder(order);
+        }
+
+        await this.stockReservationService.releaseReservations(order.id, tx);
+
+        const existingBreakup = isRecord(order.getBreakup) ? order.getBreakup : {};
+        
+        await tx.order.update({
+          where: { id: order.id },
+          data: {
+            status: "CANCELLED",
+            paymentStatus: "FAILED",
+            getBreakup: {
+              ...existingBreakup,
+              paymentFailure: {
+                reason,
+                updatedAt: new Date().toISOString(),
+              },
+            },
+          },
+        });
+
+        const updated = await this.orderRepository.findByIdWithItems(order.id, tx);
+        return this.mapOrder(updated!);
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+    );
   }
 }
