@@ -150,13 +150,11 @@ export const OrderTypes = {
       data: OrderDetailsSchema,
     }),
   },
-  PaymentWebhook: {
+  VerifyPayment: {
     body: z.object({
-      orderId: z.string(),
-      paymentId: z.string().optional(),
-      status: z.enum(["SUCCESS", "FAILED"]),
-      signature: z.string().optional(),
-      reason: z.string().optional(),
+      razorpay_order_id: z.string(),
+      razorpay_payment_id: z.string(),
+      razorpay_signature: z.string(),
     }),
     params: z.object({}),
     query: z.object({}),
