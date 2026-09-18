@@ -59,6 +59,8 @@ type OrderResponse = {
   totalAmount: number;
   couponCode: string | null;
   couponDiscount: number;
+  invoiceNumber?: string | null;
+  invoiceDate?: Date | null;
   reservationExpiresAt: Date | null;
   shippingAddress: AddressInput | null;
   billingAddress: AddressInput | null;
@@ -126,6 +128,8 @@ const parseAddress = (value: unknown): AddressInput | null => {
   };
 };
 
+import { InvoiceService } from "./invoice.service.js";
+
 export class OrderService {
   constructor(
     private prisma: PrismaClient,
@@ -135,6 +139,7 @@ export class OrderService {
     private couponService: CouponService,
     private paymentService: IPaymentGateway,
     private addressRepository: AddressRepository,
+    private invoiceService?: InvoiceService,
   ) {}
 
   private parseOrderStatus(status: string): OrderResponse["status"] {
@@ -195,6 +200,8 @@ export class OrderService {
     totalAmount: number;
     couponcode: string | null;
     couponDiscount: number;
+    invoiceNumber?: string | null;
+    invoiceDate?: Date | null;
     getBreakup: Prisma.JsonValue | null;
     items: Array<{
       id: string;
@@ -235,6 +242,8 @@ export class OrderService {
       totalAmount: order.totalAmount,
       couponCode: order.couponcode,
       couponDiscount: order.couponDiscount,
+      invoiceNumber: order.invoiceNumber ?? null,
+      invoiceDate: order.invoiceDate ?? null,
       reservationExpiresAt,
       shippingAddress,
       billingAddress,
@@ -543,6 +552,11 @@ export class OrderService {
             ? Number(((taxAmount / netSubtotal) * 100).toFixed(2))
             : 0;
 
+        const invoiceNumber = this.invoiceService
+          ? await this.invoiceService.generateInvoiceNumber(tx)
+          : undefined;
+        const invoiceDate = invoiceNumber ? new Date() : undefined;
+
         const order = await this.orderRepository.create(
           {
             user: { connect: { id: userId } },
@@ -556,6 +570,8 @@ export class OrderService {
             gstPercentage,
             couponcode: couponCode,
             couponDiscount: discountAmount,
+            invoiceNumber,
+            invoiceDate,
             getBreakup: {
               taxBreakdown,
               shippingAddress,
