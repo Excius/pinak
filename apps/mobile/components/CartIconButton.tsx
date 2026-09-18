@@ -22,11 +22,6 @@ export function CartIconButton({
   // Fetch cart when component mounts
   useEffect(() => {
     fetchCart();
-    // Refresh cart every 5 seconds to keep count updated
-    const interval = setInterval(() => {
-      fetchCart();
-    }, 30000);
-    return () => clearInterval(interval);
   }, [fetchCart]);
 
   return (

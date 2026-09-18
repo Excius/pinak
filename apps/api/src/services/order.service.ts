@@ -566,6 +566,7 @@ export class OrderService {
         return {
           order: this.mapOrder(finalOrder),
           payment,
+          
         };
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },

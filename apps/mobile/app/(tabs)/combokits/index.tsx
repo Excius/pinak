@@ -12,6 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { getComboKits } from "@/services/comboKit.service";
 import type { ComboKitApi } from "@repo/types";
+import { formatRupeesFromPaise } from "@/utils/currency";
 
 type ComboKit =
   ComboKitApi.ResponseTypes["GetComboKits"]["data"]["items"][number];
@@ -87,14 +88,13 @@ function ComboKitCard({ kit, onPress }: ComboKitCardProps) {
         {/* Pricing */}
         <View className="flex-row items-center gap-1 mb-3">
           <Text className="text-base font-bold text-primary">
-            ₹{kit.price.toLocaleString()}
+            {formatRupeesFromPaise(kit.price)}
           </Text>
           {discountPercent > 0 && (
             <Text className="text-xs text-text-muted line-through">
-              ₹
-              {Math.round(
-                kit.price / (1 - (kit.discountValue || 0) / 100),
-              ).toLocaleString()}
+              {formatRupeesFromPaise(
+                Math.round(kit.price / (1 - (kit.discountValue || 0) / 100)),
+              )}
             </Text>
           )}
         </View>

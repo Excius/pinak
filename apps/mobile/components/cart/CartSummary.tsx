@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Cart } from "@/hooks/use-cart";
+import { formatRupeesFromPaise } from "@/utils/currency";
 
 interface CartSummaryProps {
   cart: Cart | null;
@@ -23,7 +24,7 @@ export function CartSummary({
       <View className="mb-2 flex-row justify-between">
         <Text className="text-sm text-text-secondary">Subtotal</Text>
         <Text className="text-sm font-semibold text-text-primary">
-          ₹{cart.subtotal.toLocaleString("en-IN")}
+          {formatRupeesFromPaise(cart.subtotal)}
         </Text>
       </View>
 
@@ -42,7 +43,7 @@ export function CartSummary({
       <View className="mb-4 flex-row justify-between">
         <Text className="text-base font-bold text-text-primary">Total</Text>
         <Text className="text-base font-bold text-primary">
-          ₹{cart.total.toLocaleString("en-IN")}
+          {formatRupeesFromPaise(cart.total)}
         </Text>
       </View>
 

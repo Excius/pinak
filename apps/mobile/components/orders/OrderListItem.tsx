@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { router } from "expo-router";
+import { formatRupeesFromPaise } from "@/utils/currency";
 
 interface OrderListItemProps {
   orderId: string;
@@ -100,7 +101,7 @@ export function OrderListItem({
       {/* Amount */}
       <View className="items-end">
         <Text className="text-sm font-bold text-primary">
-          ₹{totalAmount.toLocaleString("en-IN")}
+          {formatRupeesFromPaise(totalAmount)}
         </Text>
         <MaterialCommunityIcons
           name="chevron-right"

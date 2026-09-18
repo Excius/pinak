@@ -4,6 +4,8 @@ import type { OrderApi } from '@repo/types';
 // Type imports for order service
 type CreateOrderRequest = OrderApi.BodyTypes['CreateOrder'];
 type CreateOrderResponse = OrderApi.ResponseTypes['CreateOrder'];
+type VerifyPaymentRequest = OrderApi.BodyTypes['VerifyPayment'];
+type VerifyPaymentResponse = OrderApi.ResponseTypes['VerifyPayment'];
 type GetOrdersResponse = OrderApi.ResponseTypes['GetOrders'];
 type GetOrderByIdResponse = OrderApi.ResponseTypes['GetOrderById'];
 type CancelOrderResponse = OrderApi.ResponseTypes['CancelOrder'];
@@ -13,6 +15,15 @@ export async function createOrder(payload: CreateOrderRequest) {
     const response = await apiRequest<CreateOrderResponse>(
         'post',
         '/orders',
+        payload
+    );
+    return response;
+}
+
+export async function verifyPayment(payload: VerifyPaymentRequest) {
+    const response = await apiRequest<VerifyPaymentResponse>(
+        'post',
+        '/payments/verify',
         payload
     );
     return response;

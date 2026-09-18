@@ -99,7 +99,7 @@ export const OrderTypes = {
       data: z.object({
         order: OrderDetailsSchema,
         payment: z.object({
-          paymentId: z.string().nullable(),
+          id: z.string().optional(),
           clientSecret: z.string().nullable(),
           amount: z.number(),
           currency: z.string(),

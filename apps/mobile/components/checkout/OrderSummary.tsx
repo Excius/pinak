@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, ScrollView } from "react-native";
 import { Cart } from "@/hooks/use-cart";
+import { formatRupeesFromPaise } from "@/utils/currency";
 
 interface OrderSummaryProps {
   cart: Cart;
@@ -39,7 +40,7 @@ export function OrderSummary({ cart }: OrderSummaryProps) {
                 </Text>
               </View>
               <Text className="text-xs font-semibold text-text-primary">
-                ₹{item.lineTotal.toLocaleString("en-IN")}
+                {formatRupeesFromPaise(item.lineTotal)}
               </Text>
             </View>
           );
@@ -53,7 +54,7 @@ export function OrderSummary({ cart }: OrderSummaryProps) {
       <View className="mb-2 flex-row justify-between">
         <Text className="text-xs text-text-secondary">Subtotal</Text>
         <Text className="text-xs font-medium text-text-primary">
-          ₹{cart.subtotal.toLocaleString("en-IN")}
+          {formatRupeesFromPaise(cart.subtotal)}
         </Text>
       </View>
 
@@ -68,7 +69,7 @@ export function OrderSummary({ cart }: OrderSummaryProps) {
       <View className="flex-row justify-between">
         <Text className="text-sm font-bold text-text-primary">Total</Text>
         <Text className="text-sm font-bold text-primary">
-          ₹{cart.total.toLocaleString("en-IN")}
+          {formatRupeesFromPaise(cart.total)}
         </Text>
       </View>
     </View>

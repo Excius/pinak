@@ -16,6 +16,7 @@ import {
 } from "@/services/comboKit.service";
 import { useCart } from "@/hooks/use-cart";
 import type { ComboKitApi } from "@repo/types";
+import { formatRupeesFromPaise } from "@/utils/currency";
 
 type ComboKit = ComboKitApi.ResponseTypes["GetComboKitById"]["data"];
 type ComboKitItem = ComboKit["items"][number];
@@ -77,11 +78,11 @@ function ComboKitItemCard({ item }: { item: ComboKitItem }) {
             {item.discountedPrice && (
               <View className="flex-row items-center gap-1">
                 <Text className="text-xs font-bold text-primary">
-                  ₹{item.discountedPrice.toLocaleString()}
+                  {formatRupeesFromPaise(item.discountedPrice)}
                 </Text>
                 {item.originalPrice && (
                   <Text className="text-[0.65rem] text-text-muted line-through">
-                    ₹{item.originalPrice.toLocaleString()}
+                    {formatRupeesFromPaise(item.originalPrice)}
                   </Text>
                 )}
               </View>
@@ -272,7 +273,7 @@ export default function ComboKitDetailScreen() {
                   Bundle Price
                 </Text>
                 <Text className="text-3xl font-bold text-primary font-display">
-                  ₹{kit.price.toLocaleString()}
+                  {formatRupeesFromPaise(kit.price)}
                 </Text>
               </View>
               {pricingMetrics.discountPercent > 0 && (
@@ -287,7 +288,7 @@ export default function ComboKitDetailScreen() {
             {pricingMetrics.savingsAmount > 0 && (
               <View className="mt-3 pt-3 border-t border-surface-border">
                 <Text className="text-xs text-text-secondary">
-                  You save ₹{pricingMetrics.savingsAmount.toLocaleString()} with
+                  You save {formatRupeesFromPaise(pricingMetrics.savingsAmount)} with
                   this bundle
                 </Text>
               </View>
@@ -356,7 +357,7 @@ export default function ComboKitDetailScreen() {
                 color="#0A0A0A"
               />
               <Text className="text-base font-bold text-background">
-                Add to Cart - ₹{kit.price.toLocaleString()}
+                Add to Cart - {formatRupeesFromPaise(kit.price)}
               </Text>
             </View>
           </TouchableOpacity>

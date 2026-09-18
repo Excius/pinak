@@ -10,6 +10,7 @@ import {
 import { useRouter } from "expo-router";
 import { getComboKits } from "@/services/comboKit.service";
 import type { ComboKitApi } from "@repo/types";
+import { formatRupeesFromPaise } from "@/utils/currency";
 
 type ComboKit =
   ComboKitApi.ResponseTypes["GetComboKits"]["data"]["items"][number];
@@ -129,7 +130,7 @@ export function ComboKits() {
                 {kit.description || "Curated collection"}
               </Text>
               <Text className="mb-4 text-base font-bold text-primary">
-                ₹ {kit.price.toLocaleString()}
+                {formatRupeesFromPaise(kit.price)}
               </Text>
               <View className="w-full rounded-full border border-primary py-2.5 px-4">
                 <Text className="text-center text-sm font-bold text-primary">
