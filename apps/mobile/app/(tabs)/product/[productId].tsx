@@ -15,6 +15,7 @@ import { getProductById, getRelatedProducts } from "@/services/product.service";
 import { useCart } from "@/hooks/use-cart";
 import type { ProductApi, RelatedProductApi } from "@repo/types";
 import { mapProductDetailImage } from "@/utils/mappers/product.mapper";
+import { formatRupeesFromPaise } from "@/utils/currency";
 
 type ProductDetail = ProductApi.ResponseTypes["GetProductById"]["data"];
 type ProductVariant = ProductDetail["variants"][number];
@@ -226,11 +227,11 @@ export default function ProductDetailScreen() {
             <View className="flex-row items-center justify-between">
               <View className="flex-1 flex-row flex-wrap items-baseline gap-x-3 gap-y-1">
                 <Text className="text-2xl font-bold text-primary">
-                  Rs. {variantPrice.toLocaleString()}
+                  {formatRupeesFromPaise(variantPrice)}
                 </Text>
                 {compareAtPrice ? (
                   <Text className="text-base text-text-muted line-through">
-                    Rs. {compareAtPrice.toLocaleString()}
+                    {formatRupeesFromPaise(compareAtPrice)}
                   </Text>
                 ) : null}
               </View>
@@ -270,13 +271,13 @@ export default function ProductDetailScreen() {
               <View className="mb-2 flex-row justify-between">
                 <Text className="text-xs text-text-secondary">Item price</Text>
                 <Text className="text-xs text-text-primary">
-                  Rs. {baseVariantPrice.toLocaleString()}
+                  {formatRupeesFromPaise(baseVariantPrice)}
                 </Text>
               </View>
               <View className="mb-2 flex-row justify-between">
                 <Text className="text-xs text-text-secondary">Taxes</Text>
                 <Text className="text-xs text-text-primary">
-                  Rs. {variantTax.toLocaleString()}
+                  {formatRupeesFromPaise(variantTax)}
                 </Text>
               </View>
               <View className="h-px bg-surface-border" />
@@ -285,7 +286,7 @@ export default function ProductDetailScreen() {
                   Final price
                 </Text>
                 <Text className="text-xs font-bold text-primary">
-                  Rs. {variantPrice.toLocaleString()}
+                  {formatRupeesFromPaise(variantPrice)}
                 </Text>
               </View>
             </View>
@@ -340,7 +341,9 @@ export default function ProductDetailScreen() {
                           className="text-xs font-semibold text-text-primary"
                           numberOfLines={1}
                         >
-                          Rs. {(variant.priceWithTax ?? variant.price).toLocaleString()}
+                          {formatRupeesFromPaise(
+                            variant.priceWithTax ?? variant.price,
+                          )}
                         </Text>
                         <Text
                           className="text-[10px] text-text-secondary"

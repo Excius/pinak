@@ -14,6 +14,8 @@ import * as orderService from "@/services/order.service";
 import { AddressSelector } from "@/components/checkout/AddressSelector";
 import { OrderSummary } from "@/components/checkout/OrderSummary";
 import Toast from "react-native-toast-message";
+import RazorpayCheckout from "react-native-razorpay";
+import { formatRupeesFromPaise } from "@/utils/currency";
 
 interface Address {
   id: string;
@@ -80,10 +82,39 @@ export default function CheckoutPage() {
       };
 
       const response = await orderService.createOrder(payload);
+      // console.log("Order created successfully:", response.data);
+      // console.log("Payment session details:", response.data.payment);
+      const payment = response.data.payment;
+      const razorpayOrderId = payment.paymentId || payment.id;
+      if (!razorpayOrderId) {
+        // console.log("Payment session creation failed:", payment);
+        throw new Error("Payment session could not be created");
+      }
+
+      const razorpayKey = process.env.EXPO_PUBLIC_RAZORPAY_KEY_ID;
+      if (!razorpayKey) {
+        throw new Error("Razorpay key is not configured");
+      }
+
+      const razorpayResponse = await RazorpayCheckout.open({
+        key: razorpayKey,
+        amount: payment.amount,
+        currency: payment.currency,
+        name: "Pinak",
+        description: "Order Payment",
+        order_id: razorpayOrderId,
+        theme: { color: "#C9A962" },
+      });
+
+      await orderService.verifyPayment({
+        razorpay_order_id: razorpayResponse.razorpay_order_id,
+        razorpay_payment_id: razorpayResponse.razorpay_payment_id,
+        razorpay_signature: razorpayResponse.razorpay_signature,
+      });
 
       Toast.show({
         type: "success",
-        text1: "Order Created",
+        text1: "Payment Successful",
         text2: "Your order has been placed successfully!",
         position: "bottom",
       });
@@ -92,7 +123,7 @@ export default function CheckoutPage() {
       router.push(`/order/${response.data.order.id}` as never);
     } catch (error: any) {
       const errorMessage =
-        error?.response?.data?.message || "Failed to create order";
+        error?.response?.data?.message || error?.message || "Payment failed";
       Toast.show({
         type: "error",
         text1: "Error",
@@ -207,7 +238,7 @@ export default function CheckoutPage() {
             />
           )}
 
-          {/* Payment Method (Dummy) */}
+          {/* Payment Method */}
           <View className="mb-4 rounded-lg border border-surface-border bg-surface p-4">
             <Text className="mb-3 text-base font-bold text-text-primary">
               Payment Method
@@ -223,7 +254,7 @@ export default function CheckoutPage() {
                   Online Payment
                 </Text>
                 <Text className="text-xs text-text-secondary">
-                  (Coming soon - Dummy for now)
+                  Secure payment via Razorpay
                 </Text>
               </View>
             </View>
@@ -244,7 +275,7 @@ export default function CheckoutPage() {
             <ActivityIndicator color="#fff" />
           ) : (
             <Text className="text-base font-bold text-primary-foreground">
-              Place Order (₹{cart.total.toLocaleString("en-IN")})
+              Place Order ({formatRupeesFromPaise(cart.total)})
             </Text>
           )}
         </TouchableOpacity>

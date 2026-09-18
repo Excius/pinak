@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, ScrollView } from "react-native";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { formatRupeesFromPaise } from "@/utils/currency";
 
 interface OrderDetailItem {
   id: string;
@@ -171,11 +172,11 @@ export function OrderDetailsCard({
                     {item.productName}
                   </Text>
                   <Text className="mt-1 text-xs text-text-secondary">
-                    Qty: {item.quantity} × ₹{item.price.toLocaleString("en-IN")}
+                    Qty: {item.quantity} × {formatRupeesFromPaise(item.price)}
                   </Text>
                 </View>
                 <Text className="ml-2 text-sm font-bold text-text-primary">
-                  ₹{item.lineTotal.toLocaleString("en-IN")}
+                  {formatRupeesFromPaise(item.lineTotal)}
                 </Text>
               </View>
               {index < items.length - 1 && (
@@ -193,20 +194,20 @@ export function OrderDetailsCard({
           <View className="mb-2 flex-row justify-between">
             <Text className="text-sm text-text-secondary">Subtotal</Text>
             <Text className="text-sm font-medium text-text-primary">
-              ₹{subtotalAmount.toLocaleString("en-IN")}
+              {formatRupeesFromPaise(subtotalAmount)}
             </Text>
           </View>
           <View className="mb-2 flex-row justify-between">
             <Text className="text-sm text-text-secondary">Tax (GST)</Text>
             <Text className="text-sm font-medium text-text-primary">
-              ₹{taxAmount.toLocaleString("en-IN")}
+              {formatRupeesFromPaise(taxAmount)}
             </Text>
           </View>
           {discountAmount > 0 && (
             <View className="mb-2 flex-row justify-between">
               <Text className="text-sm text-text-secondary">Discount</Text>
               <Text className="text-sm font-medium text-green-600">
-                -₹{discountAmount.toLocaleString("en-IN")}
+                -{formatRupeesFromPaise(discountAmount)}
               </Text>
             </View>
           )}
@@ -214,7 +215,7 @@ export function OrderDetailsCard({
             <View className="mb-2 flex-row justify-between">
               <Text className="text-sm text-text-secondary">Shipping</Text>
               <Text className="text-sm font-medium text-text-primary">
-                ₹{shippingAmount.toLocaleString("en-IN")}
+                {formatRupeesFromPaise(shippingAmount)}
               </Text>
             </View>
           )}
@@ -222,7 +223,7 @@ export function OrderDetailsCard({
           <View className="flex-row justify-between">
             <Text className="text-base font-bold text-text-primary">Total</Text>
             <Text className="text-base font-bold text-primary">
-              ₹{totalAmount.toLocaleString("en-IN")}
+              {formatRupeesFromPaise(totalAmount)}
             </Text>
           </View>
         </View>

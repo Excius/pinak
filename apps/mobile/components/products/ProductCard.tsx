@@ -1,5 +1,6 @@
 import { View, Text, Image, TouchableOpacity } from "react-native";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { formatRupeesFromPaise } from "@/utils/currency";
 
 interface Product {
   id: string;
@@ -150,10 +151,12 @@ export function ProductCard({
 
       {/* Price */}
       <View className="flex-row gap-2">
-        <Text className="text-sm font-bold text-primary">₹{product.price}</Text>
+        <Text className="text-sm font-bold text-primary">
+          {formatRupeesFromPaise(product.price)}
+        </Text>
         {product.originalPrice && (
           <Text className="text-xs text-text-muted line-through">
-            ₹{product.originalPrice}
+            {formatRupeesFromPaise(product.originalPrice)}
           </Text>
         )}
       </View>

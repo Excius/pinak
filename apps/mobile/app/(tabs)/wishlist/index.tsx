@@ -16,6 +16,7 @@ import {
   clearWishlist,
 } from "@/services/wishlist.service";
 import type { WishlistApi } from "@repo/types";
+import { formatRupeesFromPaise } from "@/utils/currency";
 
 type WishlistItem =
   WishlistApi.ResponseTypes["GetWishlist"]["data"]["items"][number];
@@ -77,7 +78,7 @@ function WishlistItemCard({
         <View className="flex-row items-center justify-between">
           <View>
             <Text className="text-base font-bold text-primary">
-              ₹{variant.price.toLocaleString()}
+              {formatRupeesFromPaise(variant.price)}
             </Text>
             <Text
               className={`text-xs font-semibold ${
