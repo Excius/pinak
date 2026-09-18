@@ -1,0 +1,58 @@
+info:
+  name: Razorpay Webhook
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/v1/payments/webhook/razorpay"
+  headers:
+    - name: Content-Type
+      value: application/json
+    - name: x-razorpay-signature
+      value: YOUR_SIGNATURE_HERE
+  auth: inherit
+  body:
+    type: json
+    data: |-
+      {
+        "entity": "event",
+        "account_id": "acc_BFQ7uQEWA7jBFz",
+        "event": "payment.captured",
+        "contains": [
+          "payment"
+        ],
+        "payload": {
+          "payment": {
+            "entity": {
+              "id": "pay_OXXXXXXX",
+              "entity": "payment",
+              "amount": 50000,
+              "currency": "INR",
+              "status": "captured",
+              "order_id": "order_OXXXXXXX",
+              "method": "card",
+              "captured": true,
+              "description": "Test Transaction"
+            }
+          }
+        },
+        "created_at": 1726058000
+      }
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Route: POST /payments/webhook/razorpay
+  Access: public (secured via x-razorpay-signature)
+  Description: Emulates a webhook request from Razorpay's servers. Note that to actually test this via Bruno, you would need to generate a valid HMAC SHA256 signature of the raw body using your test RAZORPAY_WEBHOOK_SECRET and place it in the `x-razorpay-signature` header.

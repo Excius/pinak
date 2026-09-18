@@ -5,7 +5,7 @@ info:
 
 http:
   method: GET
-  url: "{{baseUrl}}/api/v1/orders/admin?page=1&limit=10"
+  url: "{{baseUrl}}/api/v1/orders/admin?page=1&limit=10&userId=d6b8ef7d-0836-4b2e-93b1-f1a41d5924ee"
   headers:
     - name: Content-Type
       value: application/json
@@ -25,9 +25,8 @@ http:
       type: query
       disabled: true
     - name: userId
-      value: user-id
+      value: d6b8ef7d-0836-4b2e-93b1-f1a41d5924ee
       type: query
-      disabled: true
   auth: inherit
 
 runtime:

@@ -64,6 +64,11 @@ const comboKitInclude = {
               },
             },
           },
+          product: {
+            include: {
+              taxClass: true,
+            },
+          },
         },
       },
     },
