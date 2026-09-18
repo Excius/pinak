@@ -1,5 +1,10 @@
 import { apiRequest } from "./api";
-import type { ProductApi, RelatedProductApi, ProductCategoryApi } from '@repo/types';
+import type {
+    ProductApi,
+    RelatedProductApi,
+    ProductCategoryApi,
+    BestSellerApi,
+} from '@repo/types';
 
 
 // used for building query params
@@ -157,6 +162,27 @@ export async function getFeaturedProducts(page?: number, limit?: number) {
         `/products/featured?${queryString}`
     );
     return getFeaturedProductResponse;
+}
+
+export async function getBestSellers(
+    page: number,
+    limit: number,
+    timeframe: 'all_time' | 'month' | 'week' = 'all_time',
+) {
+    const queryString = buildQueryParams({
+        page,
+        limit,
+        timeframe,
+    });
+
+    const getBestSellersResponse = await apiRequest<
+        BestSellerApi.ResponseTypes['GetBestSellers']
+    >(
+        'get',
+        `/products/bestsellers?${queryString}`
+    );
+
+    return getBestSellersResponse;
 }
 
 

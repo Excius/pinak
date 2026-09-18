@@ -1,44 +1,62 @@
-import { View, Text, TouchableOpacity, Image } from "react-native";
+import { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { useRouter } from "expo-router";
 
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  originalPrice?: number;
-  badge: string;
-  badgeStyle: "bestseller" | "discount";
-  image: string;
-}
+import { ProductCard } from "@/components/products/ProductCard";
+import { getBestSellers } from "@/services/product.service";
+import { useCart } from "@/hooks/use-cart";
+import { mapProductsToCardItems } from "@/utils/mappers/product.mapper";
 
-const PRODUCTS: Product[] = [
-  {
-    id: "1",
-    name: "Radiance Liquid Foundation",
-    price: 899,
-    badge: "BESTSELLER",
-    badgeStyle: "bestseller",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuCXmu7iznwH4qnTf6BKTzi7dZlo51ovYsHhoVForDubs80UCnKDsLXo6sT8yta7gSUa1Uo07e4Vh8uC3GfgKyAQ4lw90l0vACEce1vG1b-7bItV2YuA-7wtckWlqUx_TVSznAMpryYMk6YE0edEumCSwr4szuIKPKJ9njyZIn1qFx8rYDRt0Qo_KvMrM0tJsMBLWLlDQY28gd7SCdIAg6vsyx6FOGZ2na8TDR14jai_WgJWb_pbu3Veq8HfeB20q1VNLxOTh-24BpY",
-  },
-  {
-    id: "2",
-    name: "Velvet Matte Lipstick",
-    price: 559,
-    originalPrice: 699,
-    badge: "-20%",
-    badgeStyle: "discount",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuAtZCamXqwv1TNUoKS9Rf9YavunpAOo1rn440-pqmUvtP12vAOV6h185YYNyPnD3ygx2DX6jdRtsTG_-axGv0SRz5vqdrcLUhKWJOu223FP3LLKxwHi_2omGSWa3oZ7mpuqHAOpFqzLm-ve7fGTXSkE1QyV6UTJ8IPGdD14qEnkhjLro4zd9Rae9J7_8uP1dTk8Og6hy-frAF3wbrMudi6Pa49fnBOr4xK97R9N7jMvNMVGs2gI5RPe2M1zJfH4iOWBYodWNE44wjg",
-  },
-];
+const PAGE_SIZE = 8;
 
 export function BestSellers() {
+  const router = useRouter();
+  const { addToCart } = useCart();
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadBestSellers = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await getBestSellers(1, PAGE_SIZE, "all_time");
+      const mappedProducts = mapProductsToCardItems(response.data.items as any);
+
+      setProducts(mappedProducts);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load best sellers");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadBestSellers();
+  }, []);
+
+  const handleProductPress = (productId: string) => {
+    router.push(`/(tabs)/product/${productId}` as never);
+  };
+
+  const handleAddToCart = (product: { canAddToCart?: boolean; variantId?: string }) => {
+    if (product.canAddToCart && product.variantId) {
+      void addToCart(product.variantId, undefined, 1);
+    }
+  };
+
   return (
     <View className="overflow-hidden rounded-t-[2.5rem] border-t border-surface-border bg-surface">
-      {/* Header */}
       <View className="items-center border-b border-surface-border px-4 py-3 pt-2">
-        <Text className="text-xs font-bold uppercase tracking-widest text-primary pt-4">
+        <Text className="pt-4 text-xs font-bold uppercase tracking-widest text-primary">
           Customer Favorites
         </Text>
         <Text className="mt-1 text-2xl font-bold font-display text-text-primary">
@@ -46,77 +64,45 @@ export function BestSellers() {
         </Text>
       </View>
 
-      {/* Products Grid */}
-      <View className="gap-4 px-4 py-6">
-        {PRODUCTS.reduce((rows, product, index) => {
-          if (index % 2 === 0) rows.push([]);
-          rows[rows.length - 1].push(product);
-          return rows;
-        }, [] as Product[][]).map((row, rowIndex) => (
-          <View key={rowIndex} className="flex-row gap-4">
-            {row.map((product) => (
-              <View key={product.id} className="flex-1">
-                {/* Product Image */}
-                <View className="relative mb-3 aspect-square overflow-hidden rounded-xl bg-surface-light border border-surface-border">
-                  <Image
-                    source={{ uri: product.image }}
-                    className="h-full w-full"
-                    resizeMode="cover"
-                  />
-                  {/* Badge */}
-                  <View
-                    className={`absolute left-2 top-2 rounded-full px-2 py-1 z-10 ${
-                      product.badgeStyle === "bestseller"
-                        ? "bg-primary"
-                        : "bg-error"
-                    }`}
-                  >
-                    <Text
-                      className={`text-[0.6rem] font-bold uppercase ${
-                        product.badgeStyle === "bestseller"
-                          ? "text-background"
-                          : "text-text-primary"
-                      }`}
-                    >
-                      {product.badge}
-                    </Text>
-                  </View>
-                  {/* Add Button */}
-                  <TouchableOpacity className="absolute bottom-2 right-2 h-8 w-8 items-center justify-center rounded-full bg-primary">
-                    <MaterialCommunityIcons
-                      name="plus"
-                      size={14}
-                      color="#0A0A0A"
-                    />
-                  </TouchableOpacity>
-                </View>
-
-                {/* Product Info */}
-                <Text className="leading-tight text-base font-semibold text-text-primary font-display">
-                  {product.name}
-                </Text>
-                <View className="mt-1 flex-row items-center gap-2">
-                  {product.originalPrice && (
-                    <Text className="text-xs text-text-muted line-through">
-                      ₹ {product.originalPrice}
-                    </Text>
-                  )}
-                  <Text
-                    className={`text-xs font-bold ${
-                      product.originalPrice
-                        ? "text-error"
-                        : "text-text-secondary"
-                    }`}
-                  >
-                    ₹ {product.price}
-                  </Text>
-                </View>
+      {loading ? (
+        <View className="items-center justify-center px-4 py-10">
+          <ActivityIndicator size="small" color="#C9A962" />
+        </View>
+      ) : error ? (
+        <View className="px-4 py-6">
+          <Text className="text-sm text-error">{error}</Text>
+        </View>
+      ) : (
+        <View className="px-4 py-6">
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: 14, paddingRight: 8 }}
+          >
+            {products.map((product) => (
+              <View key={product.id} className="w-[180px]">
+                <ProductCard
+                  product={product}
+                  onPress={() => handleProductPress(product.id)}
+                  onAddToCart={() => handleAddToCart(product)}
+                />
               </View>
             ))}
-            {row.length === 1 && <View className="flex-1" />}
-          </View>
-        ))}
-      </View>
+
+            <TouchableOpacity
+              onPress={() => router.push("/(tabs)/bestsellers" as never)}
+              className="ml-1 w-[160px] items-center justify-center rounded-3xl border border-dashed border-primary bg-primary/5 px-4 py-6"
+            >
+              <View className="mb-3 h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                <MaterialCommunityIcons name="arrow-right" size={22} color="#C9A962" />
+              </View>
+              <Text className="text-center text-sm font-bold uppercase tracking-[0.18em] text-primary">
+                See more
+              </Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
+      )}
     </View>
   );
 }
