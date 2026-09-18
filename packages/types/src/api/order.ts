@@ -12,13 +12,19 @@ const OrderStatusSchema = z.enum([
 const PaymentStatusSchema = z.enum(["PENDING", "COMPLETED", "FAILED"]);
 
 const AddressSchema = z.object({
-  fullName: z.string(),
-  addressLine1: z.string(),
-  addressLine2: z.string().nullable().optional(),
-  city: z.string(),
-  state: z.string(),
-  pincode: z.string(),
-  phone: z.string(),
+  fullName: z.string().trim().min(1, "Full name is required"),
+  addressLine1: z.string().trim().min(1, "Address line 1 is required"),
+  addressLine2: z.string().trim().nullable().optional(),
+  city: z.string().trim().min(1, "City is required"),
+  state: z.string().trim().min(1, "State is required"),
+  pincode: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/, "Pincode must be exactly 6 digits"),
+  phone: z
+    .string()
+    .trim()
+    .regex(/^\d{10}$/, "Phone number must be exactly 10 digits"),
 });
 
 const OrderItemSchema = z.object({

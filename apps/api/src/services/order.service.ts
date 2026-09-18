@@ -94,20 +94,20 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 
 const parseAddress = (value: unknown): AddressInput | null => {
   if (!isRecord(value)) return null;
-  const fullName = value.fullName;
-  const addressLine1 = value.addressLine1;
-  const city = value.city;
-  const state = value.state;
-  const pincode = value.pincode;
-  const phone = value.phone;
+  const fullName = typeof value.fullName === "string" ? value.fullName.trim() : "";
+  const addressLine1 = typeof value.addressLine1 === "string" ? value.addressLine1.trim() : "";
+  const city = typeof value.city === "string" ? value.city.trim() : "";
+  const state = typeof value.state === "string" ? value.state.trim() : "";
+  const pincode = typeof value.pincode === "string" ? value.pincode.trim() : "";
+  const phone = typeof value.phone === "string" ? value.phone.trim() : "";
 
   if (
-    typeof fullName !== "string" ||
-    typeof addressLine1 !== "string" ||
-    typeof city !== "string" ||
-    typeof state !== "string" ||
-    typeof pincode !== "string" ||
-    typeof phone !== "string"
+    !fullName ||
+    !addressLine1 ||
+    !city ||
+    !state ||
+    !/^\d{6}$/.test(pincode) ||
+    !/^\d{10}$/.test(phone)
   ) {
     return null;
   }
@@ -342,14 +342,20 @@ export class OrderService {
           quantity: number;
         }> = [];
         const orderItems: CreateOrderItemInput[] = [];
-        const taxBreakdown: Array<{
-          label: string;
-          rate: number;
-          amount: number;
-        }> = [];
 
+        type ParsedCartItem = {
+          item: typeof cart.items[0];
+          lineSubtotal: number;
+          taxRate: number;
+          label: string;
+          itemType: "PRODUCT_VARIANT" | "COMBO_KIT";
+          variant?: any;
+          comboKit?: any;
+          componentSnapshot?: any;
+        };
+
+        const parsedItems: ParsedCartItem[] = [];
         let subtotalAmount = 0;
-        let taxAmount = 0;
         let shippingRequired = false;
 
         for (const item of cart.items) {
@@ -357,41 +363,22 @@ export class OrderService {
             const variant = item.productVariant;
             const lineSubtotal = variant.price * item.quantity;
             const taxRate = variant.product.taxClass?.rate ?? 0;
-            const lineTax = Math.round((lineSubtotal * taxRate) / 100);
 
             subtotalAmount += lineSubtotal;
-            taxAmount += lineTax;
-            shippingRequired =
-              shippingRequired || variant.product.requiresShipping;
+            shippingRequired = shippingRequired || variant.product.requiresShipping;
+
+            parsedItems.push({
+              item,
+              lineSubtotal,
+              taxRate,
+              label: variant.product.name,
+              itemType: "PRODUCT_VARIANT",
+              variant,
+            });
 
             reservationRequirements.push({
               productVariantId: variant.id,
               quantity: item.quantity,
-            });
-
-            orderItems.push({
-              orderId: "",
-              productId: variant.productId,
-              productVariantId: variant.id,
-              productName: variant.product.name,
-              variantDetails: {
-                itemType: "PRODUCT_VARIANT",
-                sku: variant.sku,
-                ean: variant.ean,
-                tags: variant.tags,
-                optionValues: variant.optionValues.map((entry) => ({
-                  optionName: entry.optionValue.option.name,
-                  valueName: entry.optionValue.value,
-                })),
-              },
-              price: variant.price,
-              quantity: item.quantity,
-            });
-
-            taxBreakdown.push({
-              label: variant.product.name,
-              rate: taxRate,
-              amount: lineTax,
             });
 
             continue;
@@ -408,15 +395,6 @@ export class OrderService {
                 (comboItem) => comboItem.productVariant?.product?.taxClass?.rate ?? 0
               )
             );
-            
-            const comboTaxAmount = Math.round((lineSubtotal * maxTaxRate) / 100);
-            taxAmount += comboTaxAmount;
-
-            taxBreakdown.push({
-              label: comboKit.name,
-              rate: maxTaxRate,
-              amount: comboTaxAmount,
-            });
 
             const componentSnapshot = comboKit.items.map((comboItem) => {
               if (!comboItem.productVariant) {
@@ -435,21 +413,18 @@ export class OrderService {
               };
             });
 
-            reservationRequirements.push({
-              comboKitId: comboKit.id,
-              quantity: item.quantity,
+            parsedItems.push({
+              item,
+              lineSubtotal,
+              taxRate: maxTaxRate,
+              label: comboKit.name,
+              itemType: "COMBO_KIT",
+              comboKit,
+              componentSnapshot,
             });
 
-            orderItems.push({
-              orderId: "",
+            reservationRequirements.push({
               comboKitId: comboKit.id,
-              productName: comboKit.name,
-              variantDetails: {
-                itemType: "COMBO_KIT",
-                slug: comboKit.slug,
-                components: componentSnapshot,
-              },
-              price: comboKit.price,
               quantity: item.quantity,
             });
 
@@ -473,16 +448,99 @@ export class OrderService {
           couponCode = couponValidation.coupon.code;
         }
 
-        // If shipping is required, we charge 10000 paise (₹100)
+        // Pro-rata discount allocation across items for GST compliance (CGST Act Sec 15(3))
+        const itemDiscounts: number[] = parsedItems.map(() => 0);
+        if (discountAmount > 0 && subtotalAmount > 0) {
+          let allocatedSum = 0;
+          let maxSubtotalIndex = 0;
+          let maxSubtotalValue = -1;
+
+          parsedItems.forEach((pItem, idx) => {
+            if (pItem.lineSubtotal > maxSubtotalValue) {
+              maxSubtotalValue = pItem.lineSubtotal;
+              maxSubtotalIndex = idx;
+            }
+            const alloc = Math.round((pItem.lineSubtotal / subtotalAmount) * discountAmount);
+            itemDiscounts[idx] = alloc;
+            allocatedSum += alloc;
+          });
+
+          // Adjust any rounding residue (1-2 paise) on the item with highest subtotal
+          const residue = discountAmount - allocatedSum;
+          if (residue !== 0) {
+            itemDiscounts[maxSubtotalIndex] = (itemDiscounts[maxSubtotalIndex] ?? 0) + residue;
+          }
+        }
+
+        let taxAmount = 0;
+        const taxBreakdown: Array<{
+          label: string;
+          rate: number;
+          taxableValue: number;
+          discountAmount: number;
+          amount: number;
+        }> = [];
+
+        parsedItems.forEach((pItem, idx) => {
+          const allocatedDisc = itemDiscounts[idx] ?? 0;
+          const netTaxable = Math.max(0, pItem.lineSubtotal - allocatedDisc);
+          const lineTax = Math.round((netTaxable * pItem.taxRate) / 100);
+
+          taxAmount += lineTax;
+
+          taxBreakdown.push({
+            label: pItem.label,
+            rate: pItem.taxRate,
+            taxableValue: netTaxable,
+            discountAmount: allocatedDisc,
+            amount: lineTax,
+          });
+
+          if (pItem.itemType === "PRODUCT_VARIANT") {
+            const variant = pItem.variant;
+            orderItems.push({
+              orderId: "",
+              productId: variant.productId,
+              productVariantId: variant.id,
+              productName: variant.product.name,
+              variantDetails: {
+                itemType: "PRODUCT_VARIANT",
+                sku: variant.sku,
+                ean: variant.ean,
+                tags: variant.tags,
+                optionValues: variant.optionValues.map((entry: any) => ({
+                  optionName: entry.optionValue.option.name,
+                  valueName: entry.optionValue.value,
+                })),
+              },
+              price: variant.price,
+              quantity: pItem.item.quantity,
+            });
+          } else {
+            const comboKit = pItem.comboKit;
+            orderItems.push({
+              orderId: "",
+              comboKitId: comboKit.id,
+              productName: comboKit.name,
+              variantDetails: {
+                itemType: "COMBO_KIT",
+                slug: comboKit.slug,
+                components: pItem.componentSnapshot,
+              },
+              price: comboKit.price,
+              quantity: pItem.item.quantity,
+            });
+          }
+        });
+
+        // If shipping is required, charge 10000 paise (₹100)
         const shippingAmount = shippingRequired ? 10000 : 0;
-        const totalAmount = Math.max(
-          0,
-          subtotalAmount + taxAmount + shippingAmount - discountAmount,
-        );
+        const netSubtotal = Math.max(0, subtotalAmount - discountAmount);
+        const totalAmount = Math.max(0, netSubtotal + taxAmount + shippingAmount);
 
         const gstPercentage =
-          subtotalAmount > 0
-            ? Number(((taxAmount / subtotalAmount) * 100).toFixed(2))
+          netSubtotal > 0
+            ? Number(((taxAmount / netSubtotal) * 100).toFixed(2))
             : 0;
 
         const order = await this.orderRepository.create(
