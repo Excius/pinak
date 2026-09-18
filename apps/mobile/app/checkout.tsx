@@ -275,7 +275,7 @@ export default function CheckoutPage() {
             <ActivityIndicator color="#fff" />
           ) : (
             <Text className="text-base font-bold text-primary-foreground">
-              Place Order ({formatRupeesFromPaise(cart.total)})
+              Place Order ({formatRupeesFromPaise(cart.grandTotal ?? cart.total)})
             </Text>
           )}
         </TouchableOpacity>
