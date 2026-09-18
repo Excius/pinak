@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { UserSchema } from "../user.js";
+import { INDIAN_STATES_AND_CODES } from "./address.js";
 
 const OrderStatusSchema = z.enum([
   "PENDING",
@@ -16,7 +17,13 @@ const AddressSchema = z.object({
   addressLine1: z.string().trim().min(1, "Address line 1 is required"),
   addressLine2: z.string().trim().nullable().optional(),
   city: z.string().trim().min(1, "City is required"),
-  state: z.string().trim().min(1, "State is required"),
+  state: z
+    .string()
+    .trim()
+    .min(1, "State is required")
+    .refine((val) => Boolean(INDIAN_STATES_AND_CODES[val.trim().toUpperCase()]), {
+      message: "Must be a valid Indian state or union territory",
+    }),
   pincode: z
     .string()
     .trim()
@@ -53,6 +60,8 @@ const OrderBaseSchema = z.object({
   totalAmount: z.number().min(0),
   couponCode: z.string().nullable(),
   couponDiscount: z.number().min(0),
+  invoiceNumber: z.string().nullable().optional(),
+  invoiceDate: z.date().nullable().optional(),
   reservationExpiresAt: z.date().nullable(),
   shippingAddress: AddressSchema.nullable(),
   billingAddress: AddressSchema.nullable(),
@@ -174,6 +183,102 @@ export const OrderTypes = {
         status: z.string(),
       }),
     }),
+  },
+  GetInvoiceData: {
+    body: z.object({}),
+    params: z.object({
+      orderId: z.string().min(1, { message: "orderId is required" }),
+    }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({
+        supplier: z.object({
+          companyName: z.string(),
+          brandName: z.string(),
+          gstin: z.string(),
+          pan: z.string(),
+          state: z.string(),
+          stateCode: z.string(),
+          addressLine1: z.string(),
+          addressLine2: z.string(),
+          city: z.string(),
+          pincode: z.string(),
+          email: z.string(),
+          phone: z.string(),
+        }),
+        customer: z.object({
+          name: z.string(),
+          email: z.string(),
+          phone: z.string(),
+          shippingAddress: z.string(),
+          billingAddress: z.string(),
+          state: z.string(),
+          stateCode: z.string(),
+          gstin: z.string(),
+        }),
+        invoice: z.object({
+          number: z.string(),
+          date: z.date(),
+          orderId: z.string(),
+          orderDate: z.date(),
+          paymentStatus: z.string(),
+          paymentMethod: z.string(),
+          gatewayPaymentId: z.string(),
+        }),
+        pricing: z.object({
+          grossSubtotal: z.number(),
+          discountAmount: z.number(),
+          netTaxableAmount: z.number(),
+          totalCgst: z.number(),
+          totalSgst: z.number(),
+          totalIgst: z.number(),
+          totalTaxAmount: z.number(),
+          shippingAmount: z.number(),
+          totalAmount: z.number(),
+          amountInWords: z.string(),
+          isSameState: z.boolean(),
+        }),
+        items: z.array(
+          z.object({
+            itemNo: z.number(),
+            description: z.string(),
+            hsnCode: z.string(),
+            quantity: z.number(),
+            unitPrice: z.number(),
+            lineSubtotal: z.number(),
+            discount: z.number(),
+            taxableValue: z.number(),
+            gstRate: z.number(),
+            cgstRate: z.number(),
+            cgstAmount: z.number(),
+            sgstRate: z.number(),
+            sgstAmount: z.number(),
+            igstRate: z.number(),
+            igstAmount: z.number(),
+            totalTax: z.number(),
+            totalLineAmount: z.number(),
+          })
+        ),
+      }),
+    }),
+  },
+  GetInvoiceHtml: {
+    body: z.object({}),
+    params: z.object({
+      orderId: z.string().min(1, { message: "orderId is required" }),
+    }),
+    query: z.object({}),
+    response: z.string(),
+  },
+  GetInvoicePdf: {
+    body: z.object({}),
+    params: z.object({
+      orderId: z.string().min(1, { message: "orderId is required" }),
+    }),
+    query: z.object({}),
+    response: z.unknown(),
   },
 };
 

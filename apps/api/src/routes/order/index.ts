@@ -13,11 +13,14 @@ import { StockReservationService } from "../../services/stockReservation.service
 import { RazorpayPaymentService } from "../../services/payment/RazorpayPaymentService.js";
 import { OrderController } from "../../controllers/order.controller.js";
 import { AddressRepository } from "../../repositories/address.repository.js";
+import { InvoiceService } from "../../services/invoice.service.js";
+import { InvoiceController } from "../../controllers/invoice.controller.js";
 import { registerOrderPublicRoutes } from "./public.routes.js";
 import { registerOrderAdminRoutes } from "./admin.routes.js";
 
 export type OrderRouteDeps = {
   controller: OrderController;
+  invoiceController: InvoiceController;
   authMiddleware: AuthMiddleware;
   rateLimiter: ReturnType<typeof createRateLimiter>;
 };
@@ -38,6 +41,7 @@ const addressRepository = new AddressRepository(prisma);
 const stockReservationService = new StockReservationService(prisma);
 const couponService = new CouponService(couponRepository);
 const paymentService = new RazorpayPaymentService();
+const invoiceService = new InvoiceService(prisma);
 const orderService = new OrderService(
   prisma,
   orderRepository,
@@ -46,11 +50,14 @@ const orderService = new OrderService(
   couponService,
   paymentService,
   addressRepository,
+  invoiceService,
 );
 const controller = new OrderController(orderService);
+const invoiceController = new InvoiceController(invoiceService);
 
 const deps: OrderRouteDeps = {
   controller,
+  invoiceController,
   authMiddleware: new AuthMiddleware(jwtService),
   rateLimiter: createRateLimiter(),
 };

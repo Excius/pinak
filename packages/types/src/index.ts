@@ -28,7 +28,7 @@ export { CartTypes } from "./api/cart.js";
 export { CouponTypes } from "./api/coupon.js";
 export { OrderTypes } from "./api/order.js";
 export { OrderAdminTypes } from "./api/order.js";
-export { AddressTypes } from "./api/address.js";
+export { AddressTypes, INDIAN_STATES_AND_CODES, INDIAN_STATE_NAMES } from "./api/address.js";
 export { BestSellerTypes } from "./api/bestseller.js";
 export { DynamicAssetTypes } from "./api/dynamicAsset.js";
 export { DynamicAssetAdminTypes } from "./api/dynamicAsset.js";

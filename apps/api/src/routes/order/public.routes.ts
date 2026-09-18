@@ -5,7 +5,7 @@ import type { OrderRouteDeps } from "./index.js";
 
 export const registerOrderPublicRoutes = (
   router: Router,
-  { controller, authMiddleware, rateLimiter }: OrderRouteDeps,
+  { controller, invoiceController, authMiddleware, rateLimiter }: OrderRouteDeps,
 ) => {
   router.post(
     "/",
@@ -21,6 +21,27 @@ export const registerOrderPublicRoutes = (
     rateLimiter,
     validateMultiple(OrderTypes.GetOrders),
     controller.getOrders,
+  );
+
+  router.get(
+    "/:orderId/invoice/pdf",
+    authMiddleware.authenticate,
+    rateLimiter,
+    invoiceController.getInvoicePdf,
+  );
+
+  router.get(
+    "/:orderId/invoice/data",
+    authMiddleware.authenticate,
+    rateLimiter,
+    invoiceController.getInvoiceData,
+  );
+
+  router.get(
+    "/:orderId/invoice",
+    authMiddleware.authenticate,
+    rateLimiter,
+    invoiceController.getInvoiceHtml,
   );
 
   router.get(

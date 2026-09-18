@@ -101,6 +101,9 @@ export type CartResponse = {
   total: number;
   taxTotal?: number;
   totalWithTax?: number;
+  shippingFee?: number;
+  shippingRequired?: boolean;
+  grandTotal?: number;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -310,6 +313,15 @@ export class CartService {
     );
     const totalWithTax = subtotal + taxTotal;
 
+    const shippingRequired = cart.items.some((item) => {
+      if (item.productVariant?.product?.requiresShipping) return true;
+      if (item.comboKit?.items?.some((ci) => ci.productVariant?.product?.requiresShipping)) return true;
+      return false;
+    });
+
+    const shippingFee = shippingRequired && items.length > 0 ? 10000 : 0;
+    const grandTotal = totalWithTax + shippingFee;
+
     return {
       id: cart.id,
       userId: cart.userId,
@@ -320,6 +332,9 @@ export class CartService {
       total: subtotal,
       taxTotal,
       totalWithTax,
+      shippingFee,
+      shippingRequired,
+      grandTotal,
       createdAt: cart.createdAt,
       updatedAt: cart.updatedAt,
     };
