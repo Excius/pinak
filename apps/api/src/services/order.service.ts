@@ -565,12 +565,8 @@ export class OrderService {
 
         return {
           order: this.mapOrder(finalOrder),
-          payment: {
-            paymentId: payment.id,
-            amount: payment.amount,
-            currency: payment.currency,
-            status: "created",
-          },
+          payment,
+          
         };
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },

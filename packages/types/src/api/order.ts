@@ -99,14 +99,11 @@ export const OrderTypes = {
       data: z.object({
         order: OrderDetailsSchema,
         payment: z.object({
-          paymentId: z.string().nullable().optional(),
           id: z.string().optional(),
           clientSecret: z.string().nullable(),
           amount: z.number(),
           currency: z.string(),
           status: z.string(),
-        }).refine(payment => payment.paymentId || payment.id, {
-          message: "A payment or gateway order ID is required",
         }),
       }),
     }),
