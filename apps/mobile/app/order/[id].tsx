@@ -105,8 +105,7 @@ export default function OrderDetailPage() {
   const handleCancelOrder = () => {
     if (
       !order ||
-      order.status === "DELIVERED" ||
-      order.status === "CANCELLED"
+      (order.status !== "PENDING" && order.status !== "PROCESSING")
     ) {
       Toast.show({
         type: "error",
@@ -158,7 +157,7 @@ export default function OrderDetailPage() {
   if (loading) {
     return (
       <SafeAreaView
-        edges={[ "bottom", "left", "right"]}
+        edges={["bottom", "left", "right"]}
         className="flex-1 bg-background"
       >
         <View className="flex-1 items-center justify-center">
@@ -195,7 +194,7 @@ export default function OrderDetailPage() {
 
   return (
     <SafeAreaView
-      edges={[ "top", "bottom", "left", "right" ]}
+      edges={["top", "bottom", "left", "right"]}
       className="flex-1 bg-surface-light"
     >
       {/* Header */}
@@ -228,24 +227,47 @@ export default function OrderDetailPage() {
         createdAt={order.createdAt}
       />
 
-      {/* Cancel Order Button */}
-      {(order.status === "PENDING" || order.status === "PROCESSING") && (
-        <View className="border-t border-surface-border/60 bg-surface-light px-4 py-4">
+      {/* Order Actions */}
+      <View className="border-t border-surface-border/60 bg-surface-light px-4 py-4">
+        <View className="flex-row gap-3">
           <TouchableOpacity
-            onPress={handleCancelOrder}
-            disabled={cancelling}
-            className="rounded-2xl border-2 border-red-500 bg-surface py-3"
+            onPress={() => router.push("/(tabs)")}
+            className="flex-1 flex-row items-center justify-center gap-2 rounded-xl bg-primary py-3.5"
           >
-            <View className="items-center">
-              {cancelling ? (
-                <ActivityIndicator color="#ef4444" />
-              ) : (
-                <Text className="font-semibold text-red-500">Cancel Order</Text>
-              )}
-            </View>
+            <MaterialCommunityIcons
+              name="shopping-outline"
+              size={18}
+              color="#171717"
+            />
+            <Text className="text-center text-sm font-bold text-primary-foreground">
+              Continue Shopping
+            </Text>
           </TouchableOpacity>
+
+          {(order.status === "PENDING" || order.status === "PROCESSING") && (
+            <TouchableOpacity
+              onPress={handleCancelOrder}
+              disabled={cancelling}
+              className="flex-1 flex-row items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 py-3.5"
+            >
+              {cancelling ? (
+                <ActivityIndicator color="#dc2626" />
+              ) : (
+                <>
+                  <MaterialCommunityIcons
+                    name="close-circle-outline"
+                    size={18}
+                    color="#dc2626"
+                  />
+                  <Text className="text-center text-sm font-semibold text-red-600">
+                    Cancel Order
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+          )}
         </View>
-      )}
+      </View>
     </SafeAreaView>
   );
 }

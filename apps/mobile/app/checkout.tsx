@@ -7,7 +7,7 @@ import {
   Text,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useCart } from "@/hooks/use-cart";
 import * as orderService from "@/services/order.service";
@@ -34,6 +34,9 @@ interface Address {
 }
 
 export default function CheckoutPage() {
+  const { selectedAddressId } = useLocalSearchParams<{
+    selectedAddressId?: string;
+  }>();
   const { cart, fetchCart } = useCart();
   const [shippingAddress, setShippingAddress] = useState<Address | null>(null);
   const [billingAddress, setBillingAddress] = useState<Address | null>(null);
@@ -187,7 +190,7 @@ export default function CheckoutPage() {
         <TouchableOpacity onPress={() => router.back()}>
           <MaterialCommunityIcons name="arrow-left" size={24} color="#C9A962" />
         </TouchableOpacity>
-        <Text className="flex-1 text-lg font-bold text-foreground">
+        <Text className="flex-1 text-lg font-bold text-foreground color-white">
           Checkout
         </Text>
       </View>
@@ -204,7 +207,12 @@ export default function CheckoutPage() {
           {/* Shipping Address */}
           <AddressSelector
             title="Shipping Address"
-            selectedAddressId={shippingAddress?.id}
+            selectedAddressId={
+              shippingAddress?.id ||
+              (typeof selectedAddressId === "string"
+                ? selectedAddressId
+                : undefined)
+            }
             onAddressSelect={setShippingAddress}
           />
 
@@ -275,7 +283,8 @@ export default function CheckoutPage() {
             <ActivityIndicator color="#fff" />
           ) : (
             <Text className="text-base font-bold text-primary-foreground">
-              Place Order ({formatRupeesFromPaise(cart.grandTotal ?? cart.total)})
+              Place Order (
+              {formatRupeesFromPaise(cart.grandTotal ?? cart.total)})
             </Text>
           )}
         </TouchableOpacity>
