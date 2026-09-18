@@ -7,6 +7,7 @@ import {
 import { getAllProductsAdmin } from '../../../api/admin/admin.products.api'
 import type { AdminComboKit, ComboKitItem } from '../../../api/admin/admin.combos.api'
 import type { AdminProduct } from '../../../api/admin/admin.products.api'
+import { formatPaise } from '../../../utils/currency'
 
 const STRATEGIES = ['FIXED_PRICE', 'CALCULATED', 'DYNAMIC'] as const
 const DISCOUNT_TYPES = ['PERCENTAGE', 'FIXED_AMOUNT'] as const
@@ -220,7 +221,7 @@ const ComboKitForm = () => {
                           </button>
                         </div>
                         {item.productVariant?.price != null && (
-                          <span className="text-xs text-text-muted">₹{(item.productVariant.price * item.quantity).toLocaleString('en-IN')}</span>
+                          <span className="text-xs text-text-muted">{formatPaise(item.productVariant.price * item.quantity)}</span>
                         )}
                         <button onClick={() => removeItem(item.id)} className="p-1.5 text-text-muted hover:text-red-500 transition-colors cursor-pointer" title="Remove">
                           <span className="material-icons-outlined text-lg">close</span>
@@ -318,7 +319,7 @@ const ComboKitForm = () => {
                       <div key={v.id} className="flex items-center justify-between py-1.5 pl-3 border-l-2 border-primary/10 ml-1 mb-1">
                         <div>
                           <span className="text-xs font-mono text-text-muted">{v.sku}</span>
-                          <span className="text-xs text-text-muted ml-2">₹{v.price?.toLocaleString('en-IN')}</span>
+                          <span className="text-xs text-text-muted ml-2">{formatPaise(v.price ?? 0)}</span>
                           <span className="text-xs text-text-muted ml-2">Stock: {v.stock}</span>
                         </div>
                         <button

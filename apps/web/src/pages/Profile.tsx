@@ -6,6 +6,7 @@ import { getMyOrders } from '../api/cart.api'
 import type { Order } from '../api/cart.api'
 import { getAddresses, createAddress, updateAddress, deleteAddress, setDefaultAddress } from '../api/addresses.api'
 import type { Address, CreateAddressPayload } from '../api/addresses.api'
+import { formatPaise } from '../utils/currency'
 
 interface User {
   id: string
@@ -122,8 +123,6 @@ const Profile: React.FC = () => {
     try { await logout(); navigate('/auth') }
     catch (err: any) { setError(err?.response?.data?.message || err?.message || 'Logout failed') }
   }
-
-  const formatPrice = (p: number) => `₹${p.toLocaleString('en-IN')}`
 
   const totalSpent = orders.reduce((acc, o) => o.paymentStatus === 'COMPLETED' ? acc + o.totalAmount : acc, 0)
 
@@ -255,7 +254,7 @@ const Profile: React.FC = () => {
                 <p className="text-[11px] text-text-muted uppercase tracking-widest font-semibold mt-1">Orders</p>
               </div>
               <div className="profile-stat-card">
-                <p className="text-2xl md:text-3xl font-black text-primary font-display price-glow">{formatPrice(totalSpent)}</p>
+                <p className="text-2xl md:text-3xl font-black text-primary font-display price-glow">{formatPaise(totalSpent)}</p>
                 <p className="text-[11px] text-text-muted uppercase tracking-widest font-semibold mt-1">Total Spent</p>
               </div>
               <div className="profile-stat-card">
@@ -407,7 +406,7 @@ const Profile: React.FC = () => {
                       </p>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="font-bold text-primary text-sm">{formatPrice(order.totalAmount)}</p>
+                      <p className="font-bold text-primary text-sm">{formatPaise(order.totalAmount)}</p>
                       <p className={`text-[11px] font-semibold ${getStatusTextColor(order.status)}`}>{order.status}</p>
                     </div>
                     <span className="material-icons-outlined text-lg text-text-muted/40">chevron_right</span>

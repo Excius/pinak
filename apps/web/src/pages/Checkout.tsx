@@ -5,9 +5,11 @@ import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { getAddresses, createAddress } from '../api/addresses.api'
 import { validateCoupon } from '../api/coupons.api'
-import { createOrder } from '../api/cart.api'
+import { createOrder, verifyPayment } from '../api/cart.api'
 import type { Address, CreateAddressPayload } from '../api/addresses.api'
 import type { CouponValidation } from '../api/coupons.api'
+import { formatPaise } from '../utils/currency'
+import toast from 'react-hot-toast'
 
 const emptyAddress: CreateAddressPayload = {
   fullName: '', phone: '', addressLine1: '', addressLine2: '',
@@ -18,7 +20,7 @@ const steps = ['Address', 'Review & Pay']
 
 const Checkout: React.FC = () => {
   const navigate = useNavigate()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
   const { items, subtotal, taxTotal, totalWithTax, refreshCart } = useCart()
 
   // State
@@ -98,32 +100,95 @@ const Checkout: React.FC = () => {
     } finally { setValidatingCoupon(false) }
   }
 
+  // ── Razorpay Checkout Flow ────────────────────────────────────────────
   const handlePlaceOrder = async () => {
-    if (!selectedAddress) return
+    if (!selectedAddressId) return
     setPlacing(true)
     setOrderError('')
+
     try {
-      const shippingAddress = {
-        fullName: selectedAddress.fullName,
-        addressLine1: selectedAddress.addressLine1,
-        addressLine2: selectedAddress.addressLine2 || undefined,
-        city: selectedAddress.city,
-        state: selectedAddress.state,
-        pincode: selectedAddress.pincode,
-        phone: selectedAddress.phone,
+      // Step 1: Create order on backend → get Razorpay order details
+      const payload: { shippingAddressId: string; couponCode?: string } = {
+        shippingAddressId: selectedAddressId,
       }
-      const payload: any = { shippingAddress }
-      if (couponResult?.valid && couponCode.trim()) payload.couponCode = couponCode.trim()
+      if (couponResult?.valid && couponCode.trim()) {
+        payload.couponCode = couponCode.trim()
+      }
+
       const result = await createOrder(payload)
-      await refreshCart()
-      navigate(`/order-confirmation/${result.order.id}`)
+      const { order, payment } = result
+
+      // Step 2: Open Razorpay checkout modal
+      const razorpayKeyId = import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TaqR6UpdRUL0Oz'
+      if (!razorpayKeyId) {
+        setOrderError('Payment configuration error. Please contact support.')
+        setPlacing(false)
+        return
+      }
+
+      const options: RazorpayOptions = {
+        key: razorpayKeyId,
+        amount: payment.amount,            // Already in paise from backend
+        currency: payment.currency || 'INR',
+        name: 'Pinak',
+        description: 'Order Payment',
+        order_id: payment.id,       // Razorpay Order ID e.g. order_Pabc12345
+        handler: async function (sdkResponse: any) {
+          console.log("Razorpay SDK Response:", sdkResponse);
+          // Step 3: Verify payment synchronously
+          try {
+            await verifyPayment({
+              razorpay_order_id: sdkResponse.razorpay_order_id,
+              razorpay_payment_id: sdkResponse.razorpay_payment_id,
+              razorpay_signature: sdkResponse.razorpay_signature,
+            })
+
+            // Step 4: Payment verified — navigate to success
+            await refreshCart()
+            toast.success('Payment successful!')
+            navigate(`/order-confirmation/${order.id}`)
+          } catch (verifyErr: any) {
+            setOrderError(
+              verifyErr?.response?.data?.message ||
+              'Payment verification failed. If money was deducted, it will be refunded automatically.'
+            )
+            toast.error('Payment verification failed')
+          } finally {
+            setPlacing(false)
+          }
+        },
+        prefill: {
+          name: user?.name || selectedAddress?.fullName || '',
+          email: user?.email || '',
+          contact: selectedAddress?.phone || '',
+        },
+        theme: {
+          color: '#C8A951', // Pinak gold
+        },
+        modal: {
+          ondismiss: () => {
+            // User closed the modal without paying
+            setPlacing(false)
+            setOrderError('Payment was cancelled. Your order has been saved — you can retry payment.')
+          },
+          confirm_close: true,
+        },
+      }
+
+      const rzp = new window.Razorpay(options)
+      rzp.on('payment.failed', function (response) {
+        setOrderError('Payment failed: ' + response.error.description)
+        toast.error('Payment failed: ' + response.error.description)
+        setPlacing(false)
+      })
+      rzp.open()
     } catch (err: any) {
-      setOrderError(err?.response?.data?.message || err?.message || 'Failed to place order')
-    } finally { setPlacing(false) }
+      setOrderError(err?.response?.data?.message || err?.message || 'Failed to create order')
+      setPlacing(false)
+    }
   }
 
   const canProceedToReview = !!selectedAddressId
-  const formatPrice = (p: number) => `₹${p.toLocaleString('en-IN')}`
 
   const getItemName = (item: typeof items[0]) => {
     if (item.itemType === 'COMBO_KIT' && item.comboKit) return item.comboKit.name
@@ -335,7 +400,7 @@ const Checkout: React.FC = () => {
                             {getItemVariant(item) && <p className="text-[11px] text-text-muted mt-0.5">{getItemVariant(item)}</p>}
                             <div className="flex items-center justify-between mt-1">
                               <span className="text-xs text-text-muted">Qty: {item.quantity}</span>
-                              <span className="text-sm font-bold text-primary">{formatPrice(item.lineTotal)}</span>
+                              <span className="text-sm font-bold text-primary">{formatPaise(item.lineTotal)}</span>
                             </div>
                           </div>
                         </div>
@@ -367,7 +432,7 @@ const Checkout: React.FC = () => {
                     {couponResult?.valid && (
                       <div className="mt-2 p-2.5 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium flex items-center gap-2">
                         <span className="material-icons-outlined text-sm">check_circle</span>
-                        Coupon applied! You save {formatPrice(discountAmount)}
+                        Coupon applied! You save {formatPaise(discountAmount)}
                       </div>
                     )}
                     {couponError && (
@@ -387,28 +452,28 @@ const Checkout: React.FC = () => {
                 <h3 className="font-display font-bold text-text-main-light mb-4 text-sm sm:text-base">Order Summary</h3>
                 <div className="space-y-2.5 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-text-muted">Subtotal ({items.length} items, excl. tax)</span>
-                    <span className="text-text-main-light font-medium">{formatPrice(subtotal)}</span>
+                    <span className="text-text-muted">Subtotal ({items.length} items)</span>
+                    <span className="text-text-main-light font-medium">{formatPaise(subtotal)}</span>
                   </div>
                   {taxTotal !== undefined && (
                     <div className="flex justify-between">
                       <span className="text-text-muted">Tax</span>
-                      <span className="text-text-main-light font-medium">{formatPrice(taxTotal)}</span>
-                    </div>
-                  )}
-                  {discountAmount > 0 && (
-                    <div className="flex justify-between text-green-400">
-                      <span>Discount</span>
-                      <span className="font-medium">-{formatPrice(discountAmount)}</span>
+                      <span className="text-text-main-light font-medium">{formatPaise(taxTotal)}</span>
                     </div>
                   )}
                   <div className="flex justify-between">
                     <span className="text-text-muted">Shipping</span>
                     <span className="text-green-400 font-medium text-xs">FREE</span>
                   </div>
+                  {discountAmount > 0 && (
+                    <div className="flex justify-between text-green-400">
+                      <span>Coupon Discount</span>
+                      <span className="font-medium">-{formatPaise(discountAmount)}</span>
+                    </div>
+                  )}
                   <div className="border-t border-primary/10 pt-3 mt-3 flex justify-between items-center">
                     <span className="font-bold text-text-main-light">Total</span>
-                    <span className="text-xl font-bold text-primary">{formatPrice(finalTotal)}</span>
+                    <span className="text-xl font-bold text-primary">{formatPaise(finalTotal)}</span>
                   </div>
                 </div>
 
@@ -430,17 +495,17 @@ const Checkout: React.FC = () => {
                     {placing ? (
                       <span className="flex items-center justify-center gap-2">
                         <span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                        Placing Order...
+                        Processing...
                       </span>
                     ) : (
-                      `Place Order — ${formatPrice(finalTotal)}`
+                      `Pay Now — ${formatPaise(finalTotal)}`
                     )}
                   </button>
                 )}
 
                 <div className="mt-4 flex items-center gap-2 text-[10px] text-text-muted/60">
                   <span className="material-icons-outlined text-xs">lock</span>
-                  Secure checkout · SSL encrypted
+                  Secure checkout · SSL encrypted · Powered by Razorpay
                 </div>
               </div>
             </div>

@@ -7,6 +7,7 @@ import {
   restoreProductAdmin,
 } from '../../../api/admin/admin.products.api'
 import type { AdminProduct, AdminProductListParams } from '../../../api/admin/admin.products.api'
+import { formatPaise } from '../../../utils/currency'
 
 const AdminProductList = () => {
   const [products, setProducts] = useState<AdminProduct[]>([])
@@ -166,7 +167,7 @@ const AdminProductList = () => {
                     </td>
                     <td className="px-6 py-4 text-sm font-medium text-text-main-light">
                       {product.variants && product.variants.length > 0
-                        ? `₹${Math.min(...product.variants.map((v: any) => v.price ?? Infinity)).toLocaleString('en-IN')}`
+                        ? formatPaise(Math.min(...product.variants.map((v: any) => v.price ?? Infinity)))
                         : '--'}
                     </td>
                     <td className="px-6 py-4 text-right">
