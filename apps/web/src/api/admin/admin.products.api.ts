@@ -107,6 +107,14 @@ export const setProductCategoriesAdmin = async (productId: string, categoryIds: 
 
 // ── Variant CRUD ───────────────────────────────────────────────────────
 
+export const createProductVariantAdmin = async (
+  productId: string,
+  payload: { sku: string; price: number; stock: number; comparePrice?: number }
+): Promise<AdminProductVariant> => {
+  const { data: resp } = await axiosInstance.post(`/products/admin/${productId}/variants`, payload)
+  return resp?.data as AdminProductVariant
+}
+
 export const updateProductVariantAdmin = async (
   id: string,
   payload: { sku?: string; price?: number; stock?: number }

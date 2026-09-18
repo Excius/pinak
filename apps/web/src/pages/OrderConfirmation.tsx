@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getOrderById } from '../api/cart.api'
 import type { Order } from '../api/cart.api'
+import { formatPaise } from '../utils/currency'
 
 const OrderConfirmation: React.FC = () => {
   const { orderId } = useParams<{ orderId: string }>()
@@ -60,8 +61,6 @@ const OrderConfirmation: React.FC = () => {
     )
   }
 
-  const formatPrice = (price: number) => `₹${price.toLocaleString('en-IN')}`
-
   return (
     <div className="min-h-screen bg-background-light py-20 px-4">
       <div className="max-w-3xl mx-auto space-y-8 animate-fade-in">
@@ -96,7 +95,7 @@ const OrderConfirmation: React.FC = () => {
                       <p className="text-xs text-text-muted mt-0.5">Quantity: {item.quantity}</p>
                     </div>
                     <p className="text-sm font-bold text-primary font-mono ml-4">
-                      {formatPrice(item.lineTotal)}
+                      {formatPaise(item.lineTotal)}
                     </p>
                   </div>
                 ))}
@@ -104,19 +103,25 @@ const OrderConfirmation: React.FC = () => {
               <div className="p-6 bg-background-light/30 border-t border-primary/10 space-y-3">
                 <div className="flex justify-between text-sm text-text-muted">
                   <span>Subtotal</span>
-                  <span className="font-mono">{formatPrice(order.subtotalAmount)}</span>
-                </div>
-                <div className="flex justify-between text-sm text-text-muted">
-                  <span>Shipping</span>
-                  <span className="font-mono">{formatPrice(order.shippingAmount)}</span>
+                  <span className="font-mono">{formatPaise(order.subtotalAmount)}</span>
                 </div>
                 <div className="flex justify-between text-sm text-text-muted">
                   <span>Tax</span>
-                  <span className="font-mono">{formatPrice(order.taxAmount)}</span>
+                  <span className="font-mono">{formatPaise(order.taxAmount)}</span>
                 </div>
+                <div className="flex justify-between text-sm text-text-muted">
+                  <span>Shipping</span>
+                  <span className="font-mono">{formatPaise(order.shippingAmount)}</span>
+                </div>
+                {order.discountAmount > 0 && (
+                  <div className="flex justify-between text-sm text-green-400">
+                    <span>Coupon Discount</span>
+                    <span className="font-mono">-{formatPaise(order.discountAmount)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-lg font-bold text-text-main-light pt-2 border-t border-primary/5">
                   <span>Total Paid</span>
-                  <span className="text-primary font-mono">{formatPrice(order.totalAmount)}</span>
+                  <span className="text-primary font-mono">{formatPaise(order.totalAmount)}</span>
                 </div>
               </div>
             </div>

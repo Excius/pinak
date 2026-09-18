@@ -5,6 +5,7 @@ import { ProductGridSkeleton } from '../components/Skeleton'
 import { getWishlist, removeFromWishlist, clearWishlist as apiClearWishlist } from '../api/wishlist.api'
 import { useCart } from '../context/CartContext'
 import type { WishlistItem } from '../api/wishlist.api'
+import { formatPaise } from '../utils/currency'
 
 const Wishlist: React.FC = () => {
   const navigate = useNavigate()
@@ -57,8 +58,6 @@ const Wishlist: React.FC = () => {
     })
     handleRemove(item.id)
   }
-
-  const formatPrice = (p: number) => `₹${p.toLocaleString('en-IN')}`
 
   return (
     <Layout>
@@ -171,13 +170,13 @@ const Wishlist: React.FC = () => {
                     <div className="flex items-center gap-2">
                       {variant && (
                         <span className="font-bold text-lg text-primary">
-                          {formatPrice(variant.priceWithTax ?? variant.price)}
+                          {formatPaise(variant.priceWithTax ?? variant.price)}
                         </span>
                       )}
                       {(variant?.comparePriceWithTax ?? variant?.comparePrice) && 
                        (variant.comparePriceWithTax ?? variant.comparePrice)! > (variant.priceWithTax ?? variant.price) && (
                         <span className="text-sm text-text-muted line-through">
-                          {formatPrice((variant.comparePriceWithTax ?? variant.comparePrice)!)}
+                          {formatPaise((variant.comparePriceWithTax ?? variant.comparePrice)!)}
                         </span>
                       )}
                     </div>

@@ -5,6 +5,7 @@ import { ProductDetailSkeleton } from '../components/Skeleton'
 import { getComboKitBySlug, getComboKitItems } from '../api/combos.api'
 import { useCart } from '../context/CartContext'
 import type { ComboKit, ComboKitItem } from '../api/combos.api'
+import { formatPaise } from '../utils/currency'
 
 const ComboKitDetail: React.FC = () => {
   const { slug } = useParams<{ slug: string }>()
@@ -37,8 +38,6 @@ const ComboKitDetail: React.FC = () => {
     }
     fetchData()
   }, [slug])
-
-  const formatPrice = (p: number) => `₹${p.toLocaleString('en-IN')}`
 
   const handleAddComboToCart = () => {
     if (!combo) return
@@ -197,10 +196,10 @@ const ComboKitDetail: React.FC = () => {
                           </div>
                           <div className="text-right">
                             {item.discountedPrice != null && (
-                              <p className="text-sm font-bold text-primary">{formatPrice(item.discountedPrice)}</p>
+                              <p className="text-sm font-bold text-primary">{formatPaise(item.discountedPrice)}</p>
                             )}
                             {item.originalPrice != null && item.discountedPrice != null && item.originalPrice > item.discountedPrice && (
-                              <p className="text-xs text-text-muted line-through">{formatPrice(item.originalPrice)}</p>
+                              <p className="text-xs text-text-muted line-through">{formatPaise(item.originalPrice)}</p>
                             )}
                           </div>
                         </div>
@@ -214,15 +213,15 @@ const ComboKitDetail: React.FC = () => {
             <div className="bg-surface-dark rounded-2xl p-6 border border-primary/10 space-y-5">
               <div className="flex flex-col space-y-1">
                 <div className="flex items-center gap-4">
-                  <span className="text-3xl font-bold text-primary">{formatPrice(combo.price)}</span>
+                  <span className="text-3xl font-bold text-primary">{formatPaise(combo.price)}</span>
                   {totalOriginalPrice > combo.price && (
-                    <span className="text-lg text-text-muted line-through">{formatPrice(totalOriginalPrice)}</span>
+                    <span className="text-lg text-text-muted line-through">{formatPaise(totalOriginalPrice)}</span>
                   )}
                 </div>
                 {savings > 0 && (
                   <p className="text-sm text-green-400 font-bold flex items-center gap-1.5">
                     <span className="material-icons-outlined text-sm">local_offer</span>
-                    Total value {formatPrice(totalOriginalPrice)} — You save {formatPrice(savings)}
+                    Total value {formatPaise(totalOriginalPrice)} — You save {formatPaise(savings)}
                   </p>
                 )}
               </div>

@@ -8,6 +8,7 @@ import { useCart } from '../context/CartContext'
 import { addToWishlist } from '../api/wishlist.api'
 import toast from 'react-hot-toast'
 import type { Product, VariantDetail } from '../api/products.api'
+import { formatPaise } from '../utils/currency'
 
 const ProductDetail: React.FC = () => {
   const { slug } = useParams<{ slug: string }>()
@@ -145,8 +146,6 @@ const ProductDetail: React.FC = () => {
     }
   }
 
-  const formatPrice = (p: number) => `₹${p.toLocaleString('en-IN')}`
-
   const displayPrice = selectedVariant?.priceWithTax ?? selectedVariant?.price
   const displayComparePrice = selectedVariant?.compareAtPriceWithTax ?? selectedVariant?.compareAtPrice
 
@@ -268,11 +267,11 @@ const ProductDetail: React.FC = () => {
               <div>
                 <div className="flex items-center gap-4">
                   <span className="text-3xl font-bold text-primary price-glow">
-                    {formatPrice(displayPrice!)}
+                    {formatPaise(displayPrice!)}
                   </span>
                   {displayComparePrice && displayComparePrice > displayPrice! && (
                     <span className="text-lg text-text-muted line-through">
-                      {formatPrice(displayComparePrice)}
+                      {formatPaise(displayComparePrice)}
                     </span>
                   )}
                   {discount && (

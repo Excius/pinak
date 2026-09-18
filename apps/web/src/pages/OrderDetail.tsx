@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { getOrderById, cancelOrder } from '../api/cart.api'
 import type { Order } from '../api/cart.api'
+import { formatPaise } from '../utils/currency'
 
 const statusSteps = ['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED']
 const statusColors: Record<string, string> = {
@@ -51,7 +52,6 @@ const OrderDetail: React.FC = () => {
     } finally { setCancelling(false) }
   }
 
-  const formatPrice = (p: number) => `₹${p.toLocaleString('en-IN')}`
   const formatDate = (d: string) => new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 
   const canCancel = order && ['PENDING', 'PROCESSING'].includes(order.status)
@@ -148,8 +148,8 @@ const OrderDetail: React.FC = () => {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-text-main-light truncate">{item.productName}</p>
                     <div className="flex items-center justify-between mt-1">
-                      <span className="text-xs text-text-muted">Qty: {item.quantity} × {formatPrice(item.price)}</span>
-                      <span className="text-sm font-bold text-primary">{formatPrice(item.lineTotal)}</span>
+                      <span className="text-xs text-text-muted">Qty: {item.quantity} × {formatPaise(item.price)}</span>
+                      <span className="text-sm font-bold text-primary">{formatPaise(item.lineTotal)}</span>
                     </div>
                   </div>
                 </div>
@@ -161,15 +161,15 @@ const OrderDetail: React.FC = () => {
           <div className="bg-surface-dark rounded-2xl border border-primary/10 p-5 sm:p-6">
             <h3 className="font-display font-bold text-text-main-light mb-4 text-sm sm:text-base">Payment Summary</h3>
             <div className="space-y-2.5 text-sm">
-              <div className="flex justify-between"><span className="text-text-muted">Subtotal</span><span className="text-text-main-light">{formatPrice(order.subtotalAmount)}</span></div>
+              <div className="flex justify-between"><span className="text-text-muted">Subtotal</span><span className="text-text-main-light">{formatPaise(order.subtotalAmount)}</span></div>
+              <div className="flex justify-between"><span className="text-text-muted">Tax</span><span className="text-text-main-light">{formatPaise(order.taxAmount)}</span></div>
+              <div className="flex justify-between"><span className="text-text-muted">Shipping</span><span className="text-text-main-light">{formatPaise(order.shippingAmount)}</span></div>
               {order.discountAmount > 0 && (
-                <div className="flex justify-between text-green-400"><span>Discount</span><span>-{formatPrice(order.discountAmount)}</span></div>
+                <div className="flex justify-between text-green-400"><span>Coupon Discount</span><span>-{formatPaise(order.discountAmount)}</span></div>
               )}
-              <div className="flex justify-between"><span className="text-text-muted">Tax</span><span className="text-text-main-light">{formatPrice(order.taxAmount)}</span></div>
-              <div className="flex justify-between"><span className="text-text-muted">Shipping</span><span className="text-text-main-light">{formatPrice(order.shippingAmount)}</span></div>
               <div className="border-t border-primary/10 pt-3 mt-3 flex justify-between items-center">
                 <span className="font-bold text-text-main-light">Total</span>
-                <span className="text-xl font-bold text-primary">{formatPrice(order.totalAmount)}</span>
+                <span className="text-xl font-bold text-primary">{formatPaise(order.totalAmount)}</span>
               </div>
               <div className="flex justify-between pt-2">
                 <span className="text-text-muted">Payment Status</span>

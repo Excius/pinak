@@ -1,6 +1,7 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
+import { formatPaise } from '../utils/currency'
 
 interface ProductCardProps {
   id: string
@@ -34,8 +35,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
 }) => {
   const navigate = useNavigate()
   const { addItem } = useCart()
-
-  const formatPrice = (p: number) => `₹${p.toLocaleString('en-IN')}`
 
   const displayPrice = priceWithTax ?? price
   const displayComparePrice = compareAtPriceWithTax ?? comparePrice
@@ -125,14 +124,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
           {displayPrice != null && (
             <div className="flex flex-col">
               <span className="font-bold text-sm sm:text-lg text-primary price-glow">
-                {formatPrice(displayPrice)}
+                {formatPaise(displayPrice)}
               </span>
               <span className="text-[10px] text-text-muted">(incl. tax)</span>
             </div>
           )}
           {displayComparePrice && displayComparePrice > (displayPrice || 0) && (
             <span className="text-xs sm:text-sm text-text-muted line-through mb-4">
-              {formatPrice(displayComparePrice)}
+              {formatPaise(displayComparePrice)}
             </span>
           )}
         </div>
