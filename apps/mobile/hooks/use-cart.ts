@@ -10,6 +10,7 @@ export interface CartItem {
     unitPrice: number;
     unitPriceWithTax?: number;
     lineTotal: number;
+    lineTotalWithTax?: number;
     availableStock: number;
     productVariantId: string | null;
     comboKitId: string | null;
