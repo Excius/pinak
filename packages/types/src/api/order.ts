@@ -81,16 +81,18 @@ const PaginationSchema = z.object({
 
 export const OrderTypes = {
   CreateOrder: {
-    body: z.object({
-      couponCode: z.string().optional(),
-      shippingAddress: AddressSchema.optional(),
-      billingAddress: AddressSchema.optional(),
-      shippingAddressId: z.string().optional(),
-      billingAddressId: z.string().optional(),
-    }).refine(data => data.shippingAddress || data.shippingAddressId, {
-      message: "Either shippingAddress or shippingAddressId is required",
-      path: ["shippingAddress"],
-    }),
+    body: z
+      .object({
+        couponCode: z.string().optional(),
+        shippingAddress: AddressSchema.optional(),
+        billingAddress: AddressSchema.optional(),
+        shippingAddressId: z.string().optional(),
+        billingAddressId: z.string().optional(),
+      })
+      .refine((data) => data.shippingAddress || data.shippingAddressId, {
+        message: "Either shippingAddress or shippingAddressId is required",
+        path: ["shippingAddress"],
+      }),
     params: z.object({}),
     query: z.object({}),
     response: z.object({
@@ -99,11 +101,11 @@ export const OrderTypes = {
       data: z.object({
         order: OrderDetailsSchema,
         payment: z.object({
-          id: z.string().optional(),
-          clientSecret: z.string().nullable(),
+          id: z.string(),
+          method: z.string().nullable(),
           amount: z.number(),
           currency: z.string(),
-          status: z.string(),
+          redirectUrl: z.string(),
         }),
       }),
     }),
