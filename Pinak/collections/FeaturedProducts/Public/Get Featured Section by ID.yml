@@ -16,7 +16,7 @@ runtime:
     - name: baseUrl
       value: http://localhost:3000
     - name: sectionId
-      value: cmnj36uiv004f2amzrsvnxnh9
+      value: cmtjwhota004gs3mzim9s1mos
     - name: authToken
       value: your-jwt-token-here
 

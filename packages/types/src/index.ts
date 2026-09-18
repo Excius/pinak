@@ -6,6 +6,7 @@ export * from "./user.js";
 export { AuthTypes } from "./api/auth.js";
 export { ProductTypes } from "./api/product.js";
 export { ComboKitTypes } from "./api/comboKit.js";
+export { ComboKitAdminTypes } from "./api/comboKit.js";
 export { BrandTypes } from "./api/brand.js";
 export { BrandAdminTypes } from "./api/brand.js";
 export { OptionTypes } from "./api/option.js";
@@ -21,6 +22,7 @@ export { RelatedProductTypes } from "./api/relatedProduct.js";
 export { CategoryTypes } from "./api/category.js";
 export { CategoryAdminTypes } from "./api/category.js";
 export { FeaturedSectionTypes } from "./api/featuredSection.js";
+export { FeaturedSectionAdminTypes } from "./api/featuredSection.js";
 export { WishlistTypes } from "./api/wishlist.js";
 export { CartTypes } from "./api/cart.js";
 export { CouponTypes } from "./api/coupon.js";
@@ -28,6 +30,8 @@ export { OrderTypes } from "./api/order.js";
 export { OrderAdminTypes } from "./api/order.js";
 export { AddressTypes } from "./api/address.js";
 export { BestSellerTypes } from "./api/bestseller.js";
+export { DynamicAssetTypes } from "./api/dynamicAsset.js";
+export { DynamicAssetAdminTypes } from "./api/dynamicAsset.js";
 
 // Namespaced exports avoid collisions for generic type names
 // like BodyTypes / ParamsTypes across different API modules.
@@ -54,3 +58,4 @@ export * as CouponApi from "./api/coupon.js";
 export * as OrderApi from "./api/order.js";
 export * as AddressApi from "./api/address.js";
 export * as BestSellerApi from "./api/bestseller.js";
+export * as DynamicAssetApi from "./api/dynamicAsset.js";

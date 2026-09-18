@@ -27,10 +27,13 @@ async function cleanup() {
   await prisma.auditLog.deleteMany();
 
   // Featured
+  try { await prisma.featuredSectionImage.deleteMany(); } catch {}
   await prisma.featuredProduct.deleteMany();
   await prisma.featuredSection.deleteMany();
 
   // Product-related (images, combo kits, variants, products)
+  try { await prisma.categoryImage.deleteMany(); } catch {}
+  try { await prisma.comboKitImage.deleteMany(); } catch {}
   await prisma.productImage.deleteMany();
   await prisma.comboKitItem.deleteMany();
   await prisma.comboKit.deleteMany();
@@ -44,6 +47,7 @@ async function cleanup() {
   // Content / misc
   await prisma.article.deleteMany();
   await prisma.store.deleteMany();
+  await prisma.dynamicAsset.deleteMany();
   await prisma.quizOption.deleteMany();
   await prisma.quizRule.deleteMany();
   await prisma.quizQuestion.deleteMany();
@@ -420,7 +424,7 @@ async function main() {
           sku: "RGF-001-30",
           shade: "Light Beige",
           size: "30ml",
-          price: 4500,
+          price: 450000,
           stock: 25,
           tags: ["matte", "foundation", "light"],
         },
@@ -428,7 +432,7 @@ async function main() {
           sku: "RGF-001-50",
           shade: "Light Beige",
           size: "50ml",
-          price: 6500,
+          price: 650000,
           stock: 15,
           tags: ["matte", "foundation", "light"],
         },
@@ -436,7 +440,7 @@ async function main() {
           sku: "RGF-002-30",
           shade: "Deep Beige",
           size: "30ml",
-          price: 4500,
+          price: 450000,
           stock: 20,
           tags: ["matte", "foundation", "deep"],
         },
@@ -444,7 +448,7 @@ async function main() {
           sku: "RGF-002-50",
           shade: "Deep Beige",
           size: "50ml",
-          price: 6500,
+          price: 650000,
           stock: 10,
           tags: ["matte", "foundation", "deep"],
         },
@@ -468,7 +472,7 @@ async function main() {
           sku: "VML-001",
           shade: "Ruby Red",
           size: "4g",
-          price: 2800,
+          price: 280000,
           stock: 40,
           tags: ["matte", "lipstick", "red"],
         },
@@ -476,7 +480,7 @@ async function main() {
           sku: "VML-002",
           shade: "Nude Pink",
           size: "4g",
-          price: 2800,
+          price: 280000,
           stock: 35,
           tags: ["matte", "lipstick", "nude"],
         },
@@ -484,7 +488,7 @@ async function main() {
           sku: "VML-003",
           shade: "Deep Plum",
           size: "4g",
-          price: 2800,
+          price: 280000,
           stock: 28,
           tags: ["matte", "lipstick", "plum"],
         },
@@ -508,7 +512,7 @@ async function main() {
           sku: "VBM-001",
           shade: "Black",
           size: "10ml",
-          price: 2200,
+          price: 220000,
           stock: 50,
           tags: ["mascara", "volume", "black"],
         },
@@ -516,7 +520,7 @@ async function main() {
           sku: "VBM-002",
           shade: "Brown",
           size: "10ml",
-          price: 2200,
+          price: 220000,
           stock: 45,
           tags: ["mascara", "volume", "brown"],
         },
@@ -540,7 +544,7 @@ async function main() {
           sku: "SEP-001",
           shade: "Warm Tones",
           size: "12g",
-          price: 3800,
+          price: 380000,
           stock: 15,
           tags: ["eyeshadow", "shimmer", "warm"],
         },
@@ -548,7 +552,7 @@ async function main() {
           sku: "SEP-002",
           shade: "Cool Tones",
           size: "12g",
-          price: 3800,
+          price: 380000,
           stock: 18,
           tags: ["eyeshadow", "shimmer", "cool"],
         },
@@ -572,7 +576,7 @@ async function main() {
           sku: "HFM-001",
           shade: null,
           size: "50ml",
-          price: 3200,
+          price: 320000,
           stock: 60,
           tags: ["moisturizer", "skincare", "hydration"],
         },
@@ -580,7 +584,7 @@ async function main() {
           sku: "HFM-002",
           shade: null,
           size: "100ml",
-          price: 5200,
+          price: 520000,
           stock: 40,
           tags: ["moisturizer", "skincare", "hydration"],
         },
@@ -604,7 +608,7 @@ async function main() {
           sku: "LGF-001",
           shade: "Porcelain",
           size: "35ml",
-          price: 4800,
+          price: 480000,
           stock: 22,
           tags: ["foundation", "glow", "porcelain"],
         },
@@ -612,7 +616,7 @@ async function main() {
           sku: "LGF-002",
           shade: "Ivory",
           size: "35ml",
-          price: 4800,
+          price: 480000,
           stock: 28,
           tags: ["foundation", "glow", "ivory"],
         },
@@ -620,7 +624,7 @@ async function main() {
           sku: "LGF-003",
           shade: "Sand",
           size: "35ml",
-          price: 4800,
+          price: 480000,
           stock: 19,
           tags: ["foundation", "glow", "sand"],
         },
@@ -644,7 +648,7 @@ async function main() {
           sku: "SL-001",
           shade: "Coral",
           size: "4g",
-          price: 2600,
+          price: 260000,
           stock: 32,
           tags: ["lipstick", "satin", "coral"],
         },
@@ -652,7 +656,7 @@ async function main() {
           sku: "SL-002",
           shade: "Rose",
           size: "4g",
-          price: 2600,
+          price: 260000,
           stock: 29,
           tags: ["lipstick", "satin", "rose"],
         },
@@ -660,7 +664,7 @@ async function main() {
           sku: "SL-003",
           shade: "Berry",
           size: "4g",
-          price: 2600,
+          price: 260000,
           stock: 24,
           tags: ["lipstick", "satin", "berry"],
         },
@@ -684,7 +688,7 @@ async function main() {
           sku: "WM-001",
           shade: "Jet Black",
           size: "8ml",
-          price: 2500,
+          price: 250000,
           stock: 38,
           tags: ["mascara", "waterproof", "black"],
         },
@@ -692,7 +696,7 @@ async function main() {
           sku: "WM-002",
           shade: "Deep Brown",
           size: "8ml",
-          price: 2500,
+          price: 250000,
           stock: 42,
           tags: ["mascara", "waterproof", "brown"],
         },
@@ -716,7 +720,7 @@ async function main() {
           sku: "MEP-001",
           shade: "Neutral",
           size: "15g",
-          price: 4200,
+          price: 420000,
           stock: 12,
           tags: ["eyeshadow", "matte", "neutral"],
         },
@@ -724,7 +728,7 @@ async function main() {
           sku: "MEP-002",
           shade: "Smoky",
           size: "15g",
-          price: 4200,
+          price: 420000,
           stock: 16,
           tags: ["eyeshadow", "matte", "smoky"],
         },
@@ -748,7 +752,7 @@ async function main() {
           sku: "VCS-001",
           shade: null,
           size: "30ml",
-          price: 5800,
+          price: 580000,
           stock: 25,
           tags: ["serum", "skincare", "vitamin-c"],
         },
@@ -756,7 +760,7 @@ async function main() {
           sku: "VCS-002",
           shade: null,
           size: "50ml",
-          price: 8500,
+          price: 850000,
           stock: 15,
           tags: ["serum", "skincare", "vitamin-c"],
         },
@@ -940,6 +944,29 @@ async function main() {
       data: { title: "New This Week", type: "DEALS", priority: 60 },
     }),
   ]);
+
+  try {
+    await prisma.featuredSectionImage.create({
+      data: {
+        featuredSectionId: sectionHero.id,
+        url: "https://lh3.googleusercontent.com/aida-public/AB6AXuAgdhlMGc4OQ2oy4ze8gfCY4wYUcajDX1_LT-a1KXKF0Gt5RPFV21noNxkXgydtab-3uMflTDWNsnULfJhICLNSfVxv_S64okiaJKmyvoH3eAM6S_msRDL7tnC1P87gHWt7Gfyfh9E2tS3XqQ1_89cOqGi0uzIeBSPFIQKhHsl-YAC_aCdeoYdQzor-g3kE01wZ6q9a1dvMUNRi-vTPA5tsyPkoC7lgtiKYmlh6V0DDO2y4wZ14FevFS1cqgzYHX7CPOVSys3fnT_g",
+        altText: "Homepage Hero Banner image",
+        isPrimary: true,
+        sortOrder: 0,
+      },
+    });
+    await prisma.featuredSectionImage.create({
+      data: {
+        featuredSectionId: sectionExpertPicks.id,
+        url: "https://lh3.googleusercontent.com/aida-public/AB6AXuB_j8yD9DHW29mHnnddf_ulUuyvgRSlVpd7WOvHqGzyrI2P0WjITqrHksEYsluf9wuc50_DDVGm7Y92OFIc_nh4ul5cddIS7BVPwYwTlDoEjb9WG7JxzXuJiSyB7mOVXnxDVVfoMBthI3A00RrHKxUemB6OauNwcgYlIAcAbA_S4XCU2rs4LPGxRvSHTBzpVo-Cahzif-q28vx9eRzuvD446uP7ykBD_wH5LNioMbgOtU8zIqhyfiYn2KoW_LrhR19GjAnr1vXal40",
+        altText: "Beauty Expert Picks banner",
+        isPrimary: true,
+        sortOrder: 0,
+      },
+    });
+  } catch (err: any) {
+    console.warn("⚠️  Skipping seeding featured section images:", err?.message ?? err);
+  }
 
   const featuredEntries = [
     // Homepage Hero - showcase top 2 premium products
@@ -1154,7 +1181,7 @@ async function main() {
       imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuDXyLARo_crd7_eX9zhZBJa2Qpc5zunXEYVYSk2oNdSe3Tvch0tLSEQ6yNMoP8qOssEfwRn96shGGxdUOoOAPM4sbYXgHEz3scw_OjkMqN2j6-Li2Qg2S7YhH5YEXgR38Bx4cvSZGXDl3u59gvGCqg5xsu-4w7UANueDQmTXenFzFKdqlOkEnizufdBS7hN7Tj2Dnofqb9dR4hCRfqiushIcq5KjUAbYHx3JgxMHoei2ZUuYEswHFYfRcINd0xWJiAQXnMpt9A0mgw",
       pricingStrategy: "DYNAMIC" as const,
       discountType: "FIXED_AMOUNT" as const,
-      discountValue: 300,
+      discountValue: 30000,
       tags: ["eye-makeup", "mascara", "duo"],
       sortOrder: 3,
       viewCount: 160,
@@ -1178,7 +1205,7 @@ async function main() {
       imageUrl: "https://example.com/images/combo-weekend-glam-kit.jpg",
       pricingStrategy: "FIXED_PRICE" as const,
       discountType: "PERCENTAGE" as const,
-      discountValue: 12,
+      discountValue: 1200,
       tags: ["glam", "premium", "makeup"],
       sortOrder: 4,
       viewCount: 120,
@@ -1249,7 +1276,6 @@ async function main() {
         metaDescription: def.metaDescription,
         metaKeywords: def.metaKeywords,
         seoKeyword: def.seoKeyword,
-        imageUrl: def.imageUrl,
         pricingStrategy: def.pricingStrategy,
         discountType: def.discountType,
         discountValue: def.discountValue,
@@ -1272,6 +1298,21 @@ async function main() {
       },
       include: { items: true },
     });
+    if (def.imageUrl) {
+      try {
+        await prisma.comboKitImage.create({
+          data: {
+            comboKitId: kit.id,
+            url: def.imageUrl,
+            altText: `${def.name} primary image`,
+            isPrimary: true,
+            sortOrder: 0,
+          },
+        });
+      } catch (err: any) {
+        // Ignore if table missing
+      }
+    }
     comboKits.push(kit);
   }
   console.log(`✅ Created ${comboKits.length} combo kits`);
@@ -1361,8 +1402,8 @@ async function main() {
         code: "WELCOME10",
         discountType: "PERCENTAGE",
         discountValue: 10,
-        minOderValue: 1000,
-        maxDiscountValue: 500,
+        minOderValue: 100000,
+        maxDiscountValue: 50000,
         validFrom: now,
         validUntil: in6Months,
         maxTotalUsers: 1000,
@@ -1372,8 +1413,8 @@ async function main() {
       {
         code: "FLAT200",
         discountType: "FLAT",
-        discountValue: 200,
-        minOderValue: 2000,
+        discountValue: 20000,
+        minOderValue: 200000,
         validFrom: now,
         validUntil: in6Months,
         maxUsesPerUser: 2,
@@ -1383,8 +1424,8 @@ async function main() {
         code: "SKINCARE15",
         discountType: "PERCENTAGE",
         discountValue: 15,
-        minOderValue: 3000,
-        maxDiscountValue: 750,
+        minOderValue: 300000,
+        maxDiscountValue: 75000,
         validFrom: now,
         validUntil: in6Months,
         isActive: true,
@@ -1836,6 +1877,72 @@ async function main() {
   );
 
   // -------------------------------------------------------------------------
+  // 17. Dynamic Assets
+  // -------------------------------------------------------------------------
+  const dynamicAssets = [
+    {
+      slug: "mobile-home-banner-top",
+      url: "https://via.placeholder.com/1200x400/FF6B6B/FFFFFF?text=Home+Banner",
+      type: "IMAGE" as const,
+      title: "Mobile Home Banner (Top)",
+      description: "The hero banner displayed at the top of the mobile home screen",
+      metadata: { linkUrl: "/products", aspectRatio: "3:1" },
+    },
+    {
+      slug: "mobile-home-banner-bottom",
+      url: "https://via.placeholder.com/1200x400/4ECDC4/FFFFFF?text=Bottom+Banner",
+      type: "IMAGE" as const,
+      title: "Mobile Home Banner (Bottom)",
+      description: "The secondary banner displayed near the bottom of the mobile home screen",
+      metadata: { linkUrl: "/combo-kits", aspectRatio: "3:1" },
+    },
+    {
+      slug: "web-hero-slider-1",
+      url: "https://via.placeholder.com/1920x600/556270/FFFFFF?text=Hero+Slide+1",
+      type: "IMAGE" as const,
+      title: "Website Hero Slider — Slide 1",
+      description: "First slide in the website hero carousel",
+      metadata: { linkUrl: "/new-arrivals", buttonText: "Shop Now" },
+    },
+    {
+      slug: "web-hero-slider-2",
+      url: "https://via.placeholder.com/1920x600/C7F464/333333?text=Hero+Slide+2",
+      type: "IMAGE" as const,
+      title: "Website Hero Slider — Slide 2",
+      description: "Second slide in the website hero carousel",
+      metadata: { linkUrl: "/deals", buttonText: "View Deals" },
+    },
+    {
+      slug: "app-splash-screen",
+      url: "https://via.placeholder.com/1080x1920/2C3E50/FFFFFF?text=Splash",
+      type: "IMAGE" as const,
+      title: "Mobile App Splash Screen",
+      description: "Splash/loading screen shown when the mobile app launches",
+    },
+    {
+      slug: "checkout-promo-banner",
+      url: "https://via.placeholder.com/800x200/E74C3C/FFFFFF?text=Free+Shipping",
+      type: "IMAGE" as const,
+      title: "Checkout Promo Banner",
+      description: "Promotional banner shown on the checkout page",
+      metadata: { linkUrl: "/coupons", promoCode: "FREESHIP" },
+    },
+  ];
+
+  try {
+    for (const asset of dynamicAssets) {
+      await prisma.dynamicAsset.upsert({
+        where: { slug: asset.slug },
+        update: {},
+        create: asset,
+      });
+    }
+    console.log(`✅ Seeded ${dynamicAssets.length} dynamic assets`);
+  } catch (err: any) {
+    console.warn("⚠️  Skipping seeding dynamic assets:", err?.message ?? err);
+  }
+
+  // -------------------------------------------------------------------------
   // Summary
   // -------------------------------------------------------------------------
   const totalVariants = productDefs.reduce(
@@ -1855,6 +1962,7 @@ async function main() {
   - 1 wishlist with 3 variant items
   - 3 coupons · 3 orders · 6 reviews · 3 articles · 3 stores
   - 3 quiz questions with options & rules
+  - ${dynamicAssets.length} dynamic assets
   `);
 }
 

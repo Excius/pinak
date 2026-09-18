@@ -1,0 +1,50 @@
+info:
+  name: Create Dynamic Asset
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/v1/dynamic-assets/admin"
+  body:
+    type: multipart-form
+    data:
+      - name: slug
+        type: text
+        value: my-new-banner
+        contentType: text
+      - name: type
+        type: text
+        value: IMAGE
+        contentType: text
+      - name: title
+        type: text
+        value: My New Banner
+        contentType: text
+      - name: description
+        type: text
+        value: A test dynamic asset
+        contentType: text
+      - name: metadata
+        type: text
+        value: '{"linkUrl": "/products", "aspectRatio": "16:9"}'
+        contentType: text
+      - name: file
+        type: file
+        value:
+          - /home/excius/Downloads/idk.jpeg
+        contentType: image/jpeg
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Schema: DynamicAssetAdminTypes.CreateDynamicAsset
+  Route: POST /dynamic-assets/admin
+  Access: moderator/admin
+  Body: multipart/form-data with file field + slug, type, title, description, metadata fields

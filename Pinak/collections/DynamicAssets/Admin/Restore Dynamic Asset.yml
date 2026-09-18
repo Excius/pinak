@@ -1,0 +1,29 @@
+info:
+  name: Restore Dynamic Asset
+  type: http
+  seq: 7
+
+http:
+  method: PATCH
+  url: "{{baseUrl}}/api/v1/dynamic-assets/admin/{{assetId}}/restore"
+  headers:
+    - name: Content-Type
+      value: application/json
+  auth: inherit
+
+runtime:
+  variables:
+    - name: assetId
+      value: cmtq25aby0000d8mz95tardsl
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Schema: DynamicAssetAdminTypes.RestoreDynamicAsset
+  Route: PATCH /dynamic-assets/admin/:id/restore
+  Access: moderator/admin

@@ -82,6 +82,15 @@ export const registerCategoryAdminRoutes = (
   );
 
   // Admin image routes
+  router.get(
+    "/admin/:categoryId/images",
+    rateLimiter,
+    validateMultiple(CategoryAdminTypes.AdminGetCategoryImages),
+    authMiddleware.authenticate,
+    authMiddleware.requireModeratorOrAdmin,
+    categoryController.getAllImages,
+  );
+
   router.post(
     "/admin/:categoryId/images",
     rateLimiter,

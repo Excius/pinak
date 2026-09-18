@@ -366,6 +366,14 @@ export class ProductController {
     );
   };
 
+  getAllImages = async (req: Request, res: Response) => {
+    const { variantId } = req.params;
+    const images = await this.productService.getAllVariantImages(
+      variantId as string,
+    );
+    ResponseHandler.success(res, images, "Product variant images retrieved successfully");
+  };
+
   addProductImage = async (req: Request, res: Response) => {
     const { variantId } = req.params;
     const data = req.body;

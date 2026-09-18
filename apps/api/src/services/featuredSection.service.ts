@@ -69,13 +69,101 @@ export class FeaturedSectionService {
       throw new NotFoundError("Featured section not found");
     }
 
+    await this.repository.delete(id);
+  }
+
+  async restoreFeaturedSection(id: string): Promise<FeaturedSectionWithCount> {
+    const existing = await this.repository.getById(id, true);
+    if (!existing) {
+      throw new NotFoundError("Featured section not found");
+    }
+    return this.repository.restore(id);
+  }
+
+  async hardDeleteFeaturedSection(id: string): Promise<void> {
+    const existing = await this.repository.getById(id, true);
+    if (!existing) {
+      throw new NotFoundError("Featured section not found");
+    }
+
     const productCount = existing._count.products;
     if (productCount > 0) {
       throw new ValidationError(
-        `Cannot delete section: ${productCount} product(s) are still linked. Remove products from this section first.`,
+        `Cannot hard delete section: ${productCount} product(s) are still linked. Remove products from this section first.`,
       );
     }
 
-    await this.repository.delete(id);
+    await this.repository.hardDelete(id);
+  }
+
+  // Image management for FeaturedSections
+  async addFeaturedSectionImage(
+    featuredSectionId: string,
+    data: Prisma.FeaturedSectionImageCreateInput,
+  ) {
+    const section = await this.repository.getById(featuredSectionId);
+    if (!section) {
+      throw new ValidationError("Featured section not found");
+    }
+
+    const sanitizedData = { ...data } as Prisma.FeaturedSectionImageCreateInput;
+
+    if (sanitizedData.url) {
+      try {
+        new URL(sanitizedData.url as string);
+      } catch {
+        throw new ValidationError("Invalid image URL format");
+      }
+    }
+
+    if (sanitizedData.altText) {
+      sanitizedData.altText = (sanitizedData.altText as string).trim();
+    }
+
+    sanitizedData.featuredSection = { connect: { id: featuredSectionId } };
+
+    return this.repository.addFeaturedSectionImage(
+      featuredSectionId,
+      sanitizedData as Prisma.FeaturedSectionImageCreateInput,
+    );
+  }
+
+  async setPrimaryImage(imageId: string) {
+    const image = await this.repository.getFeaturedSectionImageById(imageId);
+    if (!image) {
+      throw new ValidationError("Image not found");
+    }
+
+    if (image.isDeleted) {
+      throw new ValidationError("Cannot set deleted image as primary");
+    }
+
+    return this.repository.setPrimaryImage(imageId);
+  }
+
+  async getAllImages(featuredSectionId: string) {
+    const section = await this.repository.getById(featuredSectionId, true);
+    if (!section) {
+      throw new NotFoundError("Featured section not found");
+    }
+    return this.repository.getAllImages(featuredSectionId);
+  }
+
+  async softDeleteImage(id: string) {
+    const image = await this.repository.getFeaturedSectionImageById(id);
+    if (!image) throw new NotFoundError("Image not found");
+    return this.repository.softDeleteImage(id);
+  }
+
+  async restoreImage(id: string) {
+    const image = await this.repository.getFeaturedSectionImageById(id);
+    if (!image) throw new NotFoundError("Image not found");
+    return this.repository.restoreImage(id);
+  }
+
+  async hardDeleteImage(id: string) {
+    const image = await this.repository.getFeaturedSectionImageById(id);
+    if (!image) throw new NotFoundError("Image not found");
+    return this.repository.hardDeleteImage(id);
   }
 }

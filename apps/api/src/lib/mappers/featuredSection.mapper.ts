@@ -1,11 +1,21 @@
 import type { FeaturedType } from "../../generated/prisma/enums.js";
 import type { FeaturedSectionWithCount } from "../../repositories/featuredSection.repository.js";
 
+export type PublicFeaturedSectionImage = {
+  id: string;
+  featuredSectionId: string;
+  url: string;
+  altText?: string | null;
+  isPrimary: boolean;
+  sortOrder: number;
+};
+
 export type PublicFeaturedSection = {
   id: string;
   title: string;
   type: FeaturedType;
   priority: number;
+  images: PublicFeaturedSectionImage[];
 };
 
 export type AdminFeaturedSection = PublicFeaturedSection & {
@@ -21,6 +31,14 @@ export const toPublicFeaturedSection = (
   title: section.title,
   type: section.type,
   priority: section.priority,
+  images: ((section as any).images ?? []).map((img: any) => ({
+    id: img.id,
+    featuredSectionId: img.featuredSectionId,
+    url: img.url,
+    altText: img.altText,
+    isPrimary: img.isPrimary,
+    sortOrder: img.sortOrder,
+  })),
 });
 
 export const toPublicFeaturedSectionList = (

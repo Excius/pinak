@@ -60,7 +60,6 @@ export type CartItemResponse = {
     name: string;
     slug: string;
     price: number;
-    imageUrl: string | null;
     isActive: boolean;
     metaTitle: string | null;
     metaDescription: string | null;
@@ -233,15 +232,19 @@ export class CartService {
           const unitPrice = item.comboKit.price;
           const lineTotal = unitPrice * item.quantity;
 
-          let comboItemTaxTotal = 0;
+          const maxTaxRate = Math.max(
+            0,
+            ...item.comboKit.items.map(
+              (comboItem) => comboItem.productVariant?.product?.taxClass?.rate ?? 0
+            )
+          );
+          
+          const comboTaxAmount = Math.round((unitPrice * maxTaxRate) / 100);
+          const comboItemTaxTotal = comboTaxAmount * item.quantity;
+
           const mappedComboItems = item.comboKit.items.map((comboItem) => {
             const componentVariant = comboItem.productVariant;
-            const compTaxRate = componentVariant?.product?.taxClass?.rate ?? 0;
-            const compPrice = componentVariant?.price ?? 0;
-            const compTaxAmount = Math.round((compPrice * compTaxRate) / 100);
-            const compPriceWithTax = compPrice + compTaxAmount;
-
-            comboItemTaxTotal += compTaxAmount * comboItem.quantity * item.quantity;
+            const baseVal = comboItem.discountedPrice ?? comboItem.originalPrice ?? componentVariant?.price ?? 0;
 
             return {
               id: comboItem.id,
@@ -253,18 +256,16 @@ export class CartService {
                 ? {
                     id: componentVariant.id,
                     sku: componentVariant.sku,
-                    price: componentVariant.price,
-                    taxAmount: compTaxAmount,
-                    priceWithTax: compPriceWithTax,
+                    price: baseVal,
+                    taxAmount: 0,
+                    priceWithTax: baseVal,
                     image: this.mapVariantImage(componentVariant.images),
                   }
                 : null,
             };
           });
 
-          const unitPriceWithTax = Math.round(
-            unitPrice + comboItemTaxTotal / item.quantity,
-          );
+          const unitPriceWithTax = unitPrice + comboTaxAmount;
           const lineTotalWithTax = lineTotal + comboItemTaxTotal;
 
           return {
@@ -285,7 +286,6 @@ export class CartService {
               name: item.comboKit.name,
               slug: item.comboKit.slug,
               price: item.comboKit.price,
-              imageUrl: item.comboKit.imageUrl,
               isActive: item.comboKit.isActive,
               metaTitle: item.comboKit.metaTitle,
               metaDescription: item.comboKit.metaDescription,

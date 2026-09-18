@@ -90,6 +90,61 @@ export class FeaturedSectionController {
   delete = async (req: Request, res: Response) => {
     const { id } = req.params;
     await this.service.deleteFeaturedSection(id as string);
-    ResponseHandler.success(res, {}, "Featured section deleted successfully");
+    ResponseHandler.success(res, {}, "Featured section soft deleted successfully");
+  };
+
+  restore = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const section = await this.service.restoreFeaturedSection(id as string);
+    ResponseHandler.success(
+      res,
+      toAdminFeaturedSection(section),
+      "Featured section restored successfully",
+    );
+  };
+
+  hardDelete = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    await this.service.hardDeleteFeaturedSection(id as string);
+    ResponseHandler.success(res, {}, "Featured section permanently deleted successfully");
+  };
+
+  getAllImages = async (req: Request, res: Response) => {
+    const { sectionId } = req.params;
+    const images = await this.service.getAllImages(sectionId as string);
+    ResponseHandler.success(res, images, "Featured section images retrieved successfully");
+  };
+
+  addFeaturedSectionImage = async (req: Request, res: Response) => {
+    const { sectionId } = req.params;
+    const image = await this.service.addFeaturedSectionImage(
+      sectionId as string,
+      req.body,
+    );
+    ResponseHandler.created(res, image, "Featured section image added successfully");
+  };
+
+  setPrimaryImage = async (req: Request, res: Response) => {
+    const { imageId } = req.params;
+    const image = await this.service.setPrimaryImage(imageId as string);
+    ResponseHandler.success(res, image, "Primary image set successfully");
+  };
+
+  softDeleteImage = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    await this.service.softDeleteImage(id as string);
+    ResponseHandler.success(res, {}, "Image soft deleted successfully");
+  };
+
+  restoreImage = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    await this.service.restoreImage(id as string);
+    ResponseHandler.success(res, {}, "Image restored successfully");
+  };
+
+  hardDeleteImage = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    await this.service.hardDeleteImage(id as string);
+    ResponseHandler.success(res, {}, "Image hard deleted successfully");
   };
 }

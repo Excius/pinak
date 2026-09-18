@@ -12,6 +12,15 @@ export const registerProductAdminImageRoutes = (
     limits: { fileSize: 10 * 1024 * 1024 },
   }); // 10MB
 
+  router.get(
+    "/admin/variants/:variantId/images",
+    rateLimiter,
+    validateMultiple(ProductTypes.AdminGetProductVariantImages),
+    authMiddleware.authenticate,
+    authMiddleware.requireModeratorOrAdmin,
+    productController.getAllImages,
+  );
+
   router.post(
     "/admin/variants/:variantId/images",
     rateLimiter,

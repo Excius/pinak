@@ -30,6 +30,10 @@ export class MailService {
   private static from = appConfig.MAIL_FROM;
 
   private static async send(options: SendMailOptions) {
+    if (appConfig.NODE_ENV !== "production") {
+      return;
+    }
+
     try {
       await mailer.sendMail(options);
       logger.info(

@@ -194,6 +194,21 @@ class Config {
    */
   public readonly S3_SIGNED_URL_EXPIRES?: number;
 
+  /**
+   * Razorpay Key ID
+   */
+  public readonly RAZORPAY_KEY_ID: string;
+
+  /**
+   * Razorpay Key Secret
+   */
+  public readonly RAZORPAY_KEY_SECRET: string;
+
+  /**
+   * Razorpay Webhook Secret (for verifying webhook signatures)
+   */
+  public readonly RAZORPAY_WEBHOOK_SECRET: string;
+
   constructor() {
     this.NODE_ENV = process.env.NODE_ENV || "development";
     this.PORT = parseInt(process.env.PORT || "3000", 10);
@@ -203,7 +218,10 @@ class Config {
     }
     this.DATABASE_URL = process.env.DATABASE_URL;
 
-    this.REDIS_URL = process.env.REDIS_URL || "redis://localhost:6379";
+    if (!process.env.REDIS_URL) {
+      throw new Error("REDIS_URL environment variable is required");
+    }
+    this.REDIS_URL = process.env.REDIS_URL;
 
     if (!process.env.CORS_ORIGINS) {
       throw new Error("CORS_ORIGINS environment variable is required");
@@ -314,6 +332,21 @@ class Config {
         "S3_BUCKET environment variable is required when S3_ENABLED=true",
       );
     }
+
+    if (!process.env.RAZORPAY_KEY_ID) {
+      throw new Error("RAZORPAY_KEY_ID environment variable is required");
+    }
+    this.RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID;
+
+    if (!process.env.RAZORPAY_KEY_SECRET) {
+      throw new Error("RAZORPAY_KEY_SECRET environment variable is required");
+    }
+    this.RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
+
+    if (!process.env.RAZORPAY_WEBHOOK_SECRET) {
+      throw new Error("RAZORPAY_WEBHOOK_SECRET environment variable is required");
+    }
+    this.RAZORPAY_WEBHOOK_SECRET = process.env.RAZORPAY_WEBHOOK_SECRET;
   }
 }
 

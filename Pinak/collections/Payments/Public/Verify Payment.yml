@@ -1,0 +1,37 @@
+info:
+  name: Verify Payment
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/v1/payments/verify"
+  headers:
+    - name: Content-Type
+      value: application/json
+  auth: inherit
+  body:
+    type: json
+    data: |-
+      {
+        "razorpay_order_id": "order_OXXXXXXX",
+        "razorpay_payment_id": "pay_OXXXXXXX",
+        "razorpay_signature": "YOUR_HMAC_SIGNATURE_HERE"
+      }
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Route: POST /payments/verify
+  Access: public (called by frontend)
+  Description: Synchronously verifies the Razorpay payment signature returned by the frontend SDK, and confirms the order in the backend if valid.

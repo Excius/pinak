@@ -1,0 +1,34 @@
+info:
+  name: Replace Asset File
+  type: http
+  seq: 5
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/api/v1/dynamic-assets/admin/{{assetId}}/file"
+  headers: []
+  auth: inherit
+  body:
+    type: multipart-form
+    data:
+      - name: file
+        type: file
+        value: ""
+
+runtime:
+  variables:
+    - name: assetId
+      value: your-asset-id-here
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Schema: DynamicAssetAdminTypes.ReplaceAssetFile
+  Route: PUT /dynamic-assets/admin/:id/file
+  Access: moderator/admin
+  Body: multipart/form-data with file field only

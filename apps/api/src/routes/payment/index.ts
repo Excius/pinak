@@ -8,7 +8,7 @@ import { AddressRepository } from "../../repositories/address.repository.js";
 import { CouponService } from "../../services/coupon.service.js";
 import { OrderService } from "../../services/order.service.js";
 import { StockReservationService } from "../../services/stockReservation.service.js";
-import { MockPaymentService } from "../../services/payment/MockPaymentService.js";
+import { RazorpayPaymentService } from "../../services/payment/RazorpayPaymentService.js";
 import { PaymentController } from "../../controllers/payment.controller.js";
 import { registerPaymentPublicRoutes } from "./public.routes.js";
 
@@ -25,7 +25,7 @@ const orderRepository = new OrderRepository(prisma);
 const addressRepository = new AddressRepository(prisma);
 const stockReservationService = new StockReservationService(prisma);
 const couponService = new CouponService(couponRepository);
-const paymentService = new MockPaymentService();
+const paymentService = new RazorpayPaymentService();
 const orderService = new OrderService(
   prisma,
   orderRepository,

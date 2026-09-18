@@ -1,0 +1,33 @@
+info:
+  name: Admin Get Combo Kit Images
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: "{{baseUrl}}/api/v1/combo-kits/admin/{{comboKitId}}/images"
+  headers:
+    - name: Content-Type
+      value: application/json
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: comboKitId
+      value: cmtjwhovm005bs3mz4o9kyx4z
+    - name: authToken
+      value: your-moderator-or-admin-jwt-token-here
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Schema: ComboKitAdminTypes.AdminGetComboKitImages
+  Route: GET /combo-kits/admin/:comboKitId/images
+  Access: moderator/admin

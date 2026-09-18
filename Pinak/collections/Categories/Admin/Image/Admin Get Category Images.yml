@@ -1,0 +1,33 @@
+info:
+  name: Admin Get Category Images
+  type: http
+  seq: 10
+
+http:
+  method: GET
+  url: "{{baseUrl}}/api/v1/categories/admin/{{categoryId}}/images"
+  headers:
+    - name: Content-Type
+      value: application/json
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: categoryId
+      value: your-category-id-here
+    - name: authToken
+      value: your-moderator-or-admin-jwt-token-here
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Schema: CategoryAdminTypes.AdminGetCategoryImages
+  Route: GET /categories/admin/:categoryId/images
+  Access: moderator/admin

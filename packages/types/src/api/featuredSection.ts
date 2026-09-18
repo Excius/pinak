@@ -7,11 +7,27 @@ const FeaturedSectionTypeSchema = z.enum(
   },
 );
 
+const PublicFeaturedSectionImageSchema = z.object({
+  id: z.string(),
+  featuredSectionId: z.string(),
+  url: z.string(),
+  altText: z.string().nullable().optional(),
+  isPrimary: z.boolean(),
+  sortOrder: z.number(),
+  createdAt: z.date().or(z.string()).optional(),
+  updatedAt: z.date().or(z.string()).optional(),
+});
+
+export const AdminFeaturedSectionImageSchema = PublicFeaturedSectionImageSchema.extend({
+  isDeleted: z.boolean(),
+});
+
 const PublicFeaturedSectionSchema = z.object({
   id: z.string(),
   title: z.string(),
   type: FeaturedSectionTypeSchema,
   priority: z.number().int(),
+  images: z.array(PublicFeaturedSectionImageSchema).default([]),
 });
 
 const AdminFeaturedSectionSchema = PublicFeaturedSectionSchema.extend({
@@ -113,6 +129,106 @@ export const FeaturedSectionTypes = {
     params: z.object({
       id: z.string().min(1, { message: "section id is required" }),
     }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({}),
+    }),
+  },
+
+  RestoreFeaturedSection: {
+    body: z.object({}),
+    params: z.object({
+      id: z.string().min(1, { message: "section id is required" }),
+    }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: AdminFeaturedSectionSchema,
+    }),
+  },
+
+  HardDeleteFeaturedSection: {
+    body: z.object({}),
+    params: z.object({
+      id: z.string().min(1, { message: "section id is required" }),
+    }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({}),
+    }),
+  },
+};
+
+export const FeaturedSectionAdminTypes = {
+  AdminGetFeaturedSectionImages: {
+    body: z.object({}),
+    params: z.object({
+      sectionId: z.string().min(1, { message: "section id is required" }),
+    }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.array(AdminFeaturedSectionImageSchema),
+    }),
+  },
+
+  AddFeaturedSectionImage: {
+    body: z.object({
+      url: z.string().min(1).url(),
+      altText: z.string().optional(),
+      isPrimary: z.coerce.boolean().optional(),
+    }),
+    params: z.object({ sectionId: z.string().min(1) }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: PublicFeaturedSectionImageSchema,
+    }),
+  },
+
+  SetPrimaryFeaturedSectionImage: {
+    body: z.object({}),
+    params: z.object({ imageId: z.string().min(1) }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({ id: z.string(), isPrimary: z.boolean() }),
+    }),
+  },
+
+  SoftDeleteFeaturedSectionImage: {
+    body: z.object({}),
+    params: z.object({ id: z.string() }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({}),
+    }),
+  },
+
+  RestoreFeaturedSectionImage: {
+    body: z.object({}),
+    params: z.object({ id: z.string() }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({}),
+    }),
+  },
+
+  HardDeleteFeaturedSectionImage: {
+    body: z.object({}),
+    params: z.object({ id: z.string() }),
     query: z.object({}),
     response: z.object({
       message: z.string(),

@@ -1,7 +1,7 @@
 info:
   name: Admin - Get Combo Kit Analytics
   type: http
-  seq: 18
+  seq: 20
 
 http:
   method: GET

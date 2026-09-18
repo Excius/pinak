@@ -85,7 +85,7 @@ export class CouponService {
 
     if (coupon.minOderValue !== null && cartTotal < coupon.minOderValue) {
       throw new ValidationError(
-        `Minimum order value ₹${coupon.minOderValue} is required`,
+        `Minimum order value ₹${coupon.minOderValue / 100} is required`,
       );
     }
 

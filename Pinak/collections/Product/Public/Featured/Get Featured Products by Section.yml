@@ -21,11 +21,11 @@ http:
 runtime:
   variables:
     - name: baseUrl
-      value: http://localhost:3000
+      value: https://api.dpinak.com
     - name: authToken
       value: your-jwt-token-here
     - name: sectionId
-      value: cmnesso8d004a9ymzsokpjj07
+      value: cmobesz7f004h0emz0h01mk6e
 
 settings:
   encodeUrl: true

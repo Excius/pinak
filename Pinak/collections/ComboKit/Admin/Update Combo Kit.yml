@@ -1,11 +1,11 @@
 info:
   name: Update Combo Kit
   type: http
-  seq: 2
+  seq: 3
 
 http:
   method: PUT
-  url: "{{baseUrl}}/api/v1/combo-kits/{{id}}"
+  url: "{{baseUrl}}/api/v1/combo-kits/admin/{{id}}"
   headers:
     - name: Content-Type
       value: application/json

@@ -1,11 +1,11 @@
 info:
   name: Bulk Set Combo Kit Items
   type: http
-  seq: 12
+  seq: 14
 
 http:
   method: POST
-  url: "{{baseUrl}}/api/v1/combo-kits/{{comboKitId}}/items/bulk-set"
+  url: "{{baseUrl}}/api/v1/combo-kits/admin/{{comboKitId}}/items/bulk-set"
   headers:
     - name: Content-Type
       value: application/json

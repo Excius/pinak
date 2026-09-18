@@ -1,7 +1,7 @@
 info:
   name: Admin - Get Deleted Combo Kits
   type: http
-  seq: 14
+  seq: 16
 
 http:
   method: GET

@@ -29,8 +29,6 @@ model ComboKit {
   tags      String[] @default([])
   sortOrder Int      @default(0)
 
-  imageUrl String?
-
   viewCount      Int @default(0)
   purchasedCount Int @default(0)
 
@@ -39,6 +37,7 @@ model ComboKit {
   items                 ComboKitItem[]
   orderItems            OrderItem[]
   cartItems             CartItem[]
+  images                ComboKitImage[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -71,4 +70,21 @@ model ComboKitItem {
   @@unique([comboKitId, productVariantId])
   @@index([comboKitId])
   @@index([productVariantId])
+}
+
+model ComboKitImage {
+  id         String  @id @default(cuid())
+  comboKitId String
+  url        String
+  altText    String?
+  isPrimary  Boolean @default(false)
+  sortOrder  Int     @default(0)
+
+  comboKit ComboKit @relation(fields: [comboKitId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isDeleted Boolean  @default(false)
+
+  @@index([comboKitId])
 }

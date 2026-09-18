@@ -1,11 +1,11 @@
 info:
   name: Update Combo Kit Status
   type: http
-  seq: 7
+  seq: 8
 
 http:
   method: PATCH
-  url: "{{baseUrl}}/api/v1/combo-kits/{{id}}/status"
+  url: "{{baseUrl}}/api/v1/combo-kits/admin/{{id}}/status"
   headers:
     - name: Content-Type
       value: application/json

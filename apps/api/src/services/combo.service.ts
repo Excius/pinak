@@ -28,7 +28,6 @@ type ComboKitCreateDTO = {
   metaDescription?: string;
   metaKeywords?: string;
   seoKeyword?: string;
-  imageUrl?: string;
   pricingStrategy?: ComboKitPricingStrategy;
   discountType?: ComboKitDiscountType;
   discountValue?: number;
@@ -58,7 +57,6 @@ type ComboKitMetadataDTO = {
   metaKeywords?: string;
   seoKeyword?: string;
   tags?: string[];
-  imageUrl?: string | null;
   sortOrder?: number;
 };
 
@@ -71,7 +69,6 @@ type SanitizedComboKitCreatePayload = {
   metaDescription: string | null;
   metaKeywords: string | null;
   seoKeyword: string | null;
-  imageUrl: string | null;
   pricingStrategy: ComboKitPricingStrategy;
   discountType?: ComboKitDiscountType;
   discountValue?: number;
@@ -179,6 +176,7 @@ export class ComboService {
       sanitized.discountType,
       sanitized.discountValue,
       finalPrice,
+      normalizedItems
     );
 
     const createInput: Prisma.ComboKitCreateInput = {
@@ -190,7 +188,6 @@ export class ComboService {
       metaDescription: sanitized.metaDescription,
       metaKeywords: sanitized.metaKeywords,
       seoKeyword: sanitized.seoKeyword,
-      imageUrl: sanitized.imageUrl,
       pricingStrategy: sanitized.pricingStrategy,
       discountType: sanitized.discountType,
       discountValue: sanitized.discountValue,
@@ -246,10 +243,7 @@ export class ComboService {
       sanitized.pricingStrategy ??
       (existing.pricingStrategy as ComboKitPricingStrategy);
 
-    const effectivePrice = this.resolvePrice(
-      sanitized.price ?? existing.price,
-      effectivePricingStrategy,
-      sanitized.items !== undefined
+    const effectiveItems = sanitized.items !== undefined
         ? updatedItems
         : existing.items.map((item) => ({
             productVariantId: item.productVariantId,
@@ -258,7 +252,12 @@ export class ComboService {
             originalPrice: item.originalPrice ?? undefined,
             discountedPrice: item.discountedPrice ?? undefined,
             isRequired: item.isRequired,
-          })),
+          }));
+
+    const effectivePrice = this.resolvePrice(
+      sanitized.price ?? existing.price,
+      effectivePricingStrategy,
+      effectiveItems,
     );
 
     const discountType =
@@ -275,6 +274,7 @@ export class ComboService {
       discountType ?? undefined,
       discountValue ?? undefined,
       effectivePrice,
+      effectiveItems
     );
 
     const updateInput: Prisma.ComboKitUpdateInput = {
@@ -296,7 +296,6 @@ export class ComboService {
       ...(sanitized.seoKeyword !== undefined && {
         seoKeyword: sanitized.seoKeyword,
       }),
-      ...(sanitized.imageUrl !== undefined && { imageUrl: sanitized.imageUrl }),
       ...(sanitized.pricingStrategy !== undefined && {
         pricingStrategy: sanitized.pricingStrategy,
       }),
@@ -364,6 +363,7 @@ export class ComboService {
       discountType ?? undefined,
       discountValue ?? undefined,
       computedPrice,
+      items
     );
 
     return this.comboRepository.updateComboKitPricing(id, {
@@ -398,9 +398,6 @@ export class ComboService {
       }),
       ...(data.tags !== undefined && {
         tags: this.normalizeTags(data.tags),
-      }),
-      ...(data.imageUrl !== undefined && {
-        imageUrl: data.imageUrl,
       }),
       ...(data.sortOrder !== undefined && {
         sortOrder: data.sortOrder,
@@ -594,7 +591,6 @@ export class ComboService {
       metaDescription: data.metaDescription?.trim() || null,
       metaKeywords: data.metaKeywords?.trim() || null,
       seoKeyword: data.seoKeyword?.trim() || null,
-      imageUrl: data.imageUrl?.trim() || null,
       pricingStrategy,
       discountType: data.discountType,
       discountValue: data.discountValue,
@@ -629,9 +625,6 @@ export class ComboService {
       }),
       ...(data.seoKeyword !== undefined && {
         seoKeyword: data.seoKeyword.trim() || undefined,
-      }),
-      ...(data.imageUrl !== undefined && {
-        imageUrl: data.imageUrl.trim() || undefined,
       }),
       ...(data.pricingStrategy !== undefined && {
         pricingStrategy: data.pricingStrategy,
@@ -774,16 +767,9 @@ export class ComboService {
       discountedPrice?: number;
     }>,
   ): number {
-    if (pricingStrategy === "FIXED_PRICE") {
-      if (!Number.isInteger(explicitPrice) || explicitPrice < 0) {
-        throw new ValidationError("price must be an integer >= 0");
-      }
-      return explicitPrice;
-    }
-
     if (items.length === 0) {
       throw new ValidationError(
-        "At least one item is required for CALCULATED or DYNAMIC pricing",
+        "At least one item is required in a combo kit",
       );
     }
 
@@ -793,6 +779,18 @@ export class ComboService {
       return sum + effectiveItemPrice * item.quantity;
     }, 0);
 
+    if (pricingStrategy === "FIXED_PRICE") {
+      if (!Number.isInteger(explicitPrice) || explicitPrice < 0) {
+        throw new ValidationError("price must be an integer >= 0");
+      }
+      
+      const hasItemLevelDiscounts = items.some(item => item.discountedPrice !== undefined);
+      if (hasItemLevelDiscounts && explicitPrice !== calculatedPrice) {
+         throw new ValidationError(`Mathematical mismatch: The FIXED_PRICE of the kit is ${explicitPrice}, but the sum of the discounted items is ${calculatedPrice}. They must match exactly, or you should remove item-level discounts.`);
+      }
+      return explicitPrice;
+    }
+
     return calculatedPrice;
   }
 
@@ -800,7 +798,15 @@ export class ComboService {
     discountType: ComboKitDiscountType | undefined,
     discountValue: number | undefined,
     price: number,
+    items: Array<{ discountedPrice?: number }>
   ) {
+    const hasItemLevelDiscounts = items.some(item => item.discountedPrice !== undefined);
+
+    if (discountType !== undefined || discountValue !== undefined) {
+       if (hasItemLevelDiscounts) {
+         throw new ValidationError("You cannot apply a kit-level discount if you have already set custom discounted prices on individual items. Please use one or the other.");
+       }
+    }
     if (discountType && discountValue === undefined) {
       throw new ValidationError(
         "discountValue is required when discountType is set",
@@ -833,5 +839,76 @@ export class ComboService {
         );
       }
     }
+  }
+
+  // Image management for ComboKits
+  async addComboKitImage(
+    comboKitId: string,
+    data: Prisma.ComboKitImageCreateInput,
+  ) {
+    const comboKit = await this.comboRepository.getComboKitById(comboKitId);
+    if (!comboKit) {
+      throw new ValidationError("ComboKit not found");
+    }
+
+    const sanitizedData = { ...data } as Prisma.ComboKitImageCreateInput;
+
+    if (sanitizedData.url) {
+      try {
+        new URL(sanitizedData.url as string);
+      } catch {
+        throw new ValidationError("Invalid image URL format");
+      }
+    }
+
+    if (sanitizedData.altText) {
+      sanitizedData.altText = (sanitizedData.altText as string).trim();
+    }
+
+    sanitizedData.comboKit = { connect: { id: comboKitId } };
+
+    return this.comboRepository.addComboKitImage(
+      comboKitId,
+      sanitizedData as Prisma.ComboKitImageCreateInput,
+    );
+  }
+
+  async setPrimaryImage(imageId: string) {
+    const image = await this.comboRepository.getComboKitImageById(imageId);
+    if (!image) {
+      throw new ValidationError("Image not found");
+    }
+
+    if (image.isDeleted) {
+      throw new ValidationError("Cannot set deleted image as primary");
+    }
+
+    return this.comboRepository.setPrimaryImage(imageId);
+  }
+
+  async getAllImages(comboKitId: string) {
+    const combo = await this.comboRepository.getComboKitById(comboKitId);
+    if (!combo) {
+      throw new NotFoundError("Combo kit not found");
+    }
+    return this.comboRepository.getAllImages(comboKitId);
+  }
+
+  async softDeleteImage(id: string) {
+    const image = await this.comboRepository.getComboKitImageById(id);
+    if (!image) throw new NotFoundError("Image not found");
+    return this.comboRepository.softDeleteImage(id);
+  }
+
+  async restoreImage(id: string) {
+    const image = await this.comboRepository.getComboKitImageById(id);
+    if (!image) throw new NotFoundError("Image not found");
+    return this.comboRepository.restoreImage(id);
+  }
+
+  async hardDeleteImage(id: string) {
+    const image = await this.comboRepository.getComboKitImageById(id);
+    if (!image) throw new NotFoundError("Image not found");
+    return this.comboRepository.hardDeleteImage(id);
   }
 }

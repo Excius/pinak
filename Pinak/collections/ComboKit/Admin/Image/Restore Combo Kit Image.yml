@@ -1,0 +1,30 @@
+info:
+  name: Restore Combo Kit Image
+  type: http
+  seq: 5
+
+http:
+  method: PATCH
+  url: "{{baseUrl}}/api/v1/combo-kits/admin/images/{{id}}/restore"
+  headers:
+    - name: Content-Type
+      value: application/json
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: id
+      value: cmtjwhovr005es3mz936mzegu
+    - name: authToken
+      value: your-jwt-token-here
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: Restore a soft-deleted combo kit image (admin only).

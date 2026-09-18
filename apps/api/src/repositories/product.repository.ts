@@ -1077,6 +1077,13 @@ export class ProductRepository {
     return this.prisma.productImage.findUnique({ where: { id } });
   }
 
+  getAllVariantImages(variantId: string) {
+    return this.prisma.productImage.findMany({
+      where: { productVariantId: variantId },
+      orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }],
+    });
+  }
+
   /** Resolve legacy size/shade strings to the matching OptionValue row. */
   findOptionValueByNameAndValue(optionName: string, value: string) {
     return this.prisma.optionValue.findFirst({

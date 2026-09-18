@@ -1,11 +1,11 @@
 info:
   name: Add Combo Kit Item
   type: http
-  seq: 3
+  seq: 4
 
 http:
   method: POST
-  url: "{{baseUrl}}/api/v1/combo-kits/{{comboKitId}}/items"
+  url: "{{baseUrl}}/api/v1/combo-kits/admin/{{comboKitId}}/items"
   headers:
     - name: Content-Type
       value: application/json
