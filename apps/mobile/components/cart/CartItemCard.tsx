@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, Image } from "react-native";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { CartItem } from "@/hooks/use-cart";
+import { formatRupeesFromPaise } from "@/utils/currency";
 
 interface CartItemCardProps {
   item: CartItem;
@@ -68,7 +69,7 @@ export function CartItemCard({
 
         {/* Price */}
         <Text className="mb-2 text-sm font-bold text-primary">
-          ₹{item.unitPrice.toLocaleString("en-IN")}
+          {formatRupeesFromPaise(item.unitPrice)}
         </Text>
 
         {/* Quantity Controls */}

@@ -1,6 +1,6 @@
-import { useState } from "react";
 import { View, Text, Image, TouchableOpacity } from "react-native";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { formatRupeesFromPaise } from "@/utils/currency";
 
 interface Product {
   id: string;
@@ -19,6 +19,7 @@ interface ProductCardProps {
   onPress?: () => void;
   onAddToCart?: () => void;
   onWishlistToggle?: (isFavorite: boolean) => void;
+  isFavorite?: boolean;
   isWishlistLoading?: boolean;
 }
 
@@ -27,13 +28,11 @@ export function ProductCard({
   onPress,
   onAddToCart,
   onWishlistToggle,
+  isFavorite = false,
   isWishlistLoading,
 }: ProductCardProps) {
-  const [isFavorite, setIsFavorite] = useState(false);
-
-  const handleWishlistToggle = async () => {
+  const handleWishlistToggle = () => {
     const newFavoriteState = !isFavorite;
-    setIsFavorite(newFavoriteState);
     onWishlistToggle?.(newFavoriteState);
   };
 
@@ -152,10 +151,12 @@ export function ProductCard({
 
       {/* Price */}
       <View className="flex-row gap-2">
-        <Text className="text-sm font-bold text-primary">₹{product.price}</Text>
+        <Text className="text-sm font-bold text-primary">
+          {formatRupeesFromPaise(product.price)}
+        </Text>
         {product.originalPrice && (
           <Text className="text-xs text-text-muted line-through">
-            ₹{product.originalPrice}
+            {formatRupeesFromPaise(product.originalPrice)}
           </Text>
         )}
       </View>
