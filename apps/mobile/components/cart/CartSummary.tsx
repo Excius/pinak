@@ -28,6 +28,13 @@ export function CartSummary({
         </Text>
       </View>
 
+      <View className="mb-2 flex-row justify-between">
+        <Text className="text-sm text-text-secondary">Tax</Text>
+        <Text className="text-sm font-semibold text-text-primary">
+          {formatRupeesFromPaise(cart.taxTotal ?? 0)}
+        </Text>
+      </View>
+
       {/* Tax */}
       <View className="mb-3 flex-row justify-between">
         <Text className="text-sm text-text-secondary">Items</Text>
@@ -36,6 +43,17 @@ export function CartSummary({
         </Text>
       </View>
 
+      {cart.shippingRequired && (
+        <View className="mb-3 flex-row justify-between">
+          <Text className="text-sm text-text-secondary">Shipping</Text>
+          <Text className="text-sm font-semibold text-text-primary">
+            {cart.shippingFee
+              ? formatRupeesFromPaise(cart.shippingFee)
+              : "Free"}
+          </Text>
+        </View>
+      )}
+
       {/* Divider */}
       <View className="mb-3 h-px bg-surface-border" />
 
@@ -43,7 +61,7 @@ export function CartSummary({
       <View className="mb-4 flex-row justify-between">
         <Text className="text-base font-bold text-text-primary">Total</Text>
         <Text className="text-base font-bold text-primary">
-          {formatRupeesFromPaise(cart.total)}
+          {formatRupeesFromPaise(cart.grandTotal ?? cart.total)}
         </Text>
       </View>
 

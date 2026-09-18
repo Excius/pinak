@@ -8,6 +8,7 @@ export interface CartItem {
     itemType: 'PRODUCT_VARIANT' | 'COMBO_KIT';
     quantity: number;
     unitPrice: number;
+    unitPriceWithTax?: number;
     lineTotal: number;
     availableStock: number;
     productVariantId: string | null;
@@ -59,6 +60,10 @@ export interface Cart {
     totalQuantity: number;
     subtotal: number;
     total: number;
+    taxTotal?: number;
+    shippingFee?: number;
+    shippingRequired?: boolean;
+    grandTotal?: number;
     createdAt: Date;
     updatedAt: Date;
 }
