@@ -21,6 +21,9 @@ model Order {
   items OrderItem[]
   user  User        @relation(fields: [userId], references: [id])
 
+  invoiceNumber String?   @unique
+  invoiceDate   DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

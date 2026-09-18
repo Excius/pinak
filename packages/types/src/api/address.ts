@@ -1,16 +1,83 @@
 import { z } from "zod";
 
+export const INDIAN_STATES_AND_CODES: Record<string, string> = {
+  "JAMMU AND KASHMIR": "01",
+  "HIMACHAL PRADESH": "02",
+  "PUNJAB": "03",
+  "CHANDIGARH": "04",
+  "UTTARAKHAND": "05",
+  "HARYANA": "06",
+  "DELHI": "07",
+  "RAJASTHAN": "08",
+  "UTTAR PRADESH": "09",
+  "BIHAR": "10",
+  "SIKKIM": "11",
+  "ARUNACHAL PRADESH": "12",
+  "NAGALAND": "13",
+  "MANIPUR": "14",
+  "MIZORAM": "15",
+  "TRIPURA": "16",
+  "MEGHALAYA": "17",
+  "ASSAM": "18",
+  "WEST BENGAL": "19",
+  "JHARKHAND": "20",
+  "ODISHA": "21",
+  "CHHATTISGARH": "22",
+  "MADHYA PRADESH": "23",
+  "GUJARAT": "24",
+  "DADRA AND NAGAR HAVELI AND DAMAN AND DIU": "26",
+  "MAHARASHTRA": "27",
+  "ANDHRA PRADESH": "37",
+  "KARNATAKA": "29",
+  "GOA": "30",
+  "LAKSHADWEEP": "31",
+  "KERALA": "32",
+  "TAMIL NADU": "33",
+  "PUDUCHERRY": "34",
+  "ANDAMAN AND NICOBAR ISLANDS": "35",
+  "TELANGANA": "36",
+  "LADAKH": "38",
+};
+
+export const INDIAN_STATE_NAMES = Object.keys(INDIAN_STATES_AND_CODES).map(
+  (name) =>
+    name
+      .toLowerCase()
+      .replace(/\b\w/g, (char) => char.toUpperCase())
+);
+
+const pincodeValidation = z
+  .string()
+  .trim()
+  .regex(/^\d{6}$/, "Pincode must be exactly 6 digits");
+
+const phoneValidation = z
+  .string()
+  .trim()
+  .regex(/^\d{10}$/, "Phone number must be exactly 10 digits");
+
+const stateValidation = z
+  .string()
+  .trim()
+  .min(1, "State is required")
+  .refine(
+    (val) => Boolean(INDIAN_STATES_AND_CODES[val.trim().toUpperCase()]),
+    {
+      message: "Must be a valid Indian state or union territory",
+    }
+  );
+
 export const AddressSchema = z.object({
   id: z.string(),
   userId: z.string(),
-  fullName: z.string().min(1, "Full name is required"),
-  addressLine1: z.string().min(1, "Address line 1 is required"),
-  addressLine2: z.string().nullable().optional(),
-  city: z.string().min(1, "City is required"),
-  state: z.string().min(1, "State is required"),
-  pincode: z.string().min(6, "Pincode must be at least 6 characters"),
-  phone: z.string().min(10, "Phone number must be at least 10 characters"),
-  label: z.string().nullable().optional(),
+  fullName: z.string().trim().min(1, "Full name is required"),
+  addressLine1: z.string().trim().min(1, "Address line 1 is required"),
+  addressLine2: z.string().trim().nullable().optional(),
+  city: z.string().trim().min(1, "City is required"),
+  state: stateValidation,
+  pincode: pincodeValidation,
+  phone: phoneValidation,
+  label: z.string().trim().nullable().optional(),
   isDefault: z.boolean(),
   createdAt: z.date(),
   updatedAt: z.date(),
@@ -19,14 +86,14 @@ export const AddressSchema = z.object({
 export const AddressTypes = {
   CreateAddress: {
     body: z.object({
-      fullName: z.string().min(1),
-      addressLine1: z.string().min(1),
-      addressLine2: z.string().optional().nullable(),
-      city: z.string().min(1),
-      state: z.string().min(1),
-      pincode: z.string().min(6),
-      phone: z.string().min(10),
-      label: z.string().optional().nullable(),
+      fullName: z.string().trim().min(1, "Full name is required"),
+      addressLine1: z.string().trim().min(1, "Address line 1 is required"),
+      addressLine2: z.string().trim().optional().nullable(),
+      city: z.string().trim().min(1, "City is required"),
+      state: stateValidation,
+      pincode: pincodeValidation,
+      phone: phoneValidation,
+      label: z.string().trim().optional().nullable(),
       isDefault: z.boolean().optional().default(false),
     }),
     params: z.object({}),
@@ -39,14 +106,14 @@ export const AddressTypes = {
   },
   UpdateAddress: {
     body: z.object({
-      fullName: z.string().min(1).optional(),
-      addressLine1: z.string().min(1).optional(),
-      addressLine2: z.string().optional().nullable(),
-      city: z.string().min(1).optional(),
-      state: z.string().min(1).optional(),
-      pincode: z.string().min(6).optional(),
-      phone: z.string().min(10).optional(),
-      label: z.string().optional().nullable(),
+      fullName: z.string().trim().min(1, "Full name is required").optional(),
+      addressLine1: z.string().trim().min(1, "Address line 1 is required").optional(),
+      addressLine2: z.string().trim().optional().nullable(),
+      city: z.string().trim().min(1, "City is required").optional(),
+      state: stateValidation.optional(),
+      pincode: pincodeValidation.optional(),
+      phone: phoneValidation.optional(),
+      label: z.string().trim().optional().nullable(),
       isDefault: z.boolean().optional(),
     }),
     params: z.object({ id: z.string() }),

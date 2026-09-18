@@ -102,6 +102,9 @@ const CartSchema = z.object({
   total: z.number().min(0),
   taxTotal: z.number().min(0).optional(),
   totalWithTax: z.number().min(0).optional(),
+  shippingFee: z.number().min(0).optional(),
+  shippingRequired: z.boolean().optional(),
+  grandTotal: z.number().min(0).optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
