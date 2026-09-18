@@ -69,7 +69,7 @@ export function CartItemCard({
 
         {/* Price */}
         <Text className="mb-2 text-sm font-bold text-primary">
-          {formatRupeesFromPaise(item.unitPrice)}
+          {formatRupeesFromPaise(item.unitPriceWithTax ?? item.unitPrice)}
         </Text>
 
         {/* Quantity Controls */}
