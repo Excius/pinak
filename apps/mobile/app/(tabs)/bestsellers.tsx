@@ -13,6 +13,8 @@ import { useRouter } from "expo-router";
 import { ProductCard } from "@/components/products/ProductCard";
 import { getBestSellers } from "@/services/product.service";
 import { useCart } from "@/hooks/use-cart";
+import { useAuth } from "@/contexts/AuthContext";
+import { useWishlist } from "@/hooks/use-wishlist";
 import { mapProductsToCardItems } from "@/utils/mappers/product.mapper";
 
 const PAGE_SIZE = 8;
@@ -20,6 +22,9 @@ const PAGE_SIZE = 8;
 export default function BestSellersPage() {
   const router = useRouter();
   const { addToCart } = useCart();
+  const { isAuthenticated } = useAuth();
+  const { itemIdsByVariantId, loadingVariantId, toggleWishlist } =
+    useWishlist();
   const [products, setProducts] = useState<any[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -166,6 +171,15 @@ export default function BestSellersPage() {
                   product={item}
                   onPress={() => handleProductPress(item.id)}
                   onAddToCart={() => handleAddToCart(item)}
+                  onWishlistToggle={() => {
+                    if (item.variantId && isAuthenticated) {
+                      void toggleWishlist(item.variantId);
+                    }
+                  }}
+                  isFavorite={Boolean(
+                    item.variantId && itemIdsByVariantId[item.variantId],
+                  )}
+                  isWishlistLoading={loadingVariantId === item.variantId}
                 />
               </View>
             )}
