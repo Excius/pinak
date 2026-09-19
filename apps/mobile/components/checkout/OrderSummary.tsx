@@ -40,7 +40,7 @@ export function OrderSummary({ cart }: OrderSummaryProps) {
                 </Text>
               </View>
               <Text className="text-xs font-semibold text-text-primary">
-                {formatRupeesFromPaise(item.lineTotal)}
+                {formatRupeesFromPaise(item.lineTotalWithTax ?? item.lineTotal)}
               </Text>
             </View>
           );
@@ -58,18 +58,38 @@ export function OrderSummary({ cart }: OrderSummaryProps) {
         </Text>
       </View>
 
-      <View className="mb-3 flex-row justify-between">
+      <View className="mb-2 flex-row justify-between">
+        <Text className="text-xs text-text-secondary">Tax</Text>
+        <Text className="text-xs font-medium text-text-primary">
+          {formatRupeesFromPaise(cart.taxTotal ?? 0)}
+        </Text>
+      </View>
+
+       <View className="mb-3 flex-row justify-between">
         <Text className="text-xs text-text-secondary">Items</Text>
         <Text className="text-xs font-medium text-text-primary">
           {cart.totalQuantity}
         </Text>
       </View>
 
+      {cart.shippingRequired && (
+        <View className="mb-3 flex-row justify-between">
+          <Text className="text-sm text-text-secondary">Shipping</Text>
+          <Text className="text-sm font-semibold text-text-primary">
+            {cart.shippingFee
+              ? formatRupeesFromPaise(cart.shippingFee)
+              : "Free"}
+          </Text>
+        </View>
+      )}
+
+     
+
       {/* Total */}
       <View className="flex-row justify-between">
         <Text className="text-sm font-bold text-text-primary">Total</Text>
         <Text className="text-sm font-bold text-primary">
-          {formatRupeesFromPaise(cart.total)}
+          {formatRupeesFromPaise(cart.grandTotal ?? cart.total)}
         </Text>
       </View>
     </View>

@@ -42,11 +42,19 @@ export function AddressSelector({
       const userAddresses = await addressService.getAddresses();
       setAddresses(userAddresses);
 
-      // If no address is selected and we have addresses, select the default one
-      if (!selectedAddressId && userAddresses.length > 0) {
-        const defaultAddress =
-          userAddresses.find((addr) => addr.isDefault) || userAddresses[0];
-        onAddressSelect(defaultAddress);
+      if (userAddresses.length > 0) {
+        const selectedAddress = selectedAddressId
+          ? userAddresses.find((addr) => addr.id === selectedAddressId)
+          : undefined;
+        const addressToSelect =
+          selectedAddress ||
+          (!selectedAddressId
+            ? userAddresses.find((addr) => addr.isDefault) || userAddresses[0]
+            : undefined);
+
+        if (addressToSelect) {
+          onAddressSelect(addressToSelect);
+        }
       }
     } catch (err: any) {
       const errorMessage = getErrorMessage(err, "Failed to load addresses");
@@ -67,7 +75,10 @@ export function AddressSelector({
   };
 
   const handleAddNewAddress = () => {
-    router.push("/address/new");
+    router.push({
+      pathname: "/address/new",
+      params: { returnTo: "checkout" },
+    });
   };
 
   const handleManageAddresses = () => {
