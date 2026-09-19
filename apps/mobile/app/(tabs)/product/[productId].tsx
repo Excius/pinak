@@ -13,6 +13,7 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
 import { getProductById, getRelatedProducts } from "@/services/product.service";
 import { useCart } from "@/hooks/use-cart";
+import { useWishlist } from "@/hooks/use-wishlist";
 import type { ProductApi, RelatedProductApi } from "@repo/types";
 import { mapProductDetailImage } from "@/utils/mappers/product.mapper";
 import { formatRupeesFromPaise } from "@/utils/currency";
@@ -26,13 +27,18 @@ export default function ProductDetailScreen() {
   const { productId } = useLocalSearchParams<{ productId?: string }>();
   const router = useRouter();
   const { addToCart } = useCart();
+  const {
+    itemIdsByVariantId,
+    itemIdsByProductId,
+    loadingVariantId,
+    toggleWishlist,
+  } = useWishlist();
 
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(
     null,
   );
   const [isPriceBreakdownOpen, setIsPriceBreakdownOpen] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [relatedProducts, setRelatedProducts] = useState<RelatedProduct[]>([]);
   const [isLoadingRelated, setIsLoadingRelated] = useState(false);
@@ -100,6 +106,18 @@ export default function ProductDetailScreen() {
     );
   }, [product, selectedVariantId]);
 
+  const isFavorite = Boolean(
+    (selectedVariantId && itemIdsByVariantId[selectedVariantId]) ||
+    (product?.id && itemIdsByProductId[product.id]),
+  );
+  const isWishlistLoading = loadingVariantId === selectedVariantId;
+
+  const handleWishlistToggle = () => {
+    if (selectedVariantId) {
+      void toggleWishlist(selectedVariantId, product?.id);
+    }
+  };
+
   const primaryImage = useMemo(() => {
     if (!product) {
       return null;
@@ -114,10 +132,12 @@ export default function ProductDetailScreen() {
     selectedVariant && selectedVariant.isActive && selectedVariant.stock > 0,
   );
   const compareAtPrice =
-    (selectedVariant?.compareAtPriceWithTax ?? selectedVariant?.compareAtPrice) &&
-    (selectedVariant?.compareAtPriceWithTax ?? selectedVariant?.compareAtPrice)! >
-      variantPrice
-      ? selectedVariant?.compareAtPriceWithTax ?? selectedVariant?.compareAtPrice
+    (selectedVariant?.compareAtPriceWithTax ??
+      selectedVariant?.compareAtPrice) &&
+    (selectedVariant?.compareAtPriceWithTax ??
+      selectedVariant?.compareAtPrice)! > variantPrice
+      ? (selectedVariant?.compareAtPriceWithTax ??
+        selectedVariant?.compareAtPrice)
       : null;
 
   const discountPercent = compareAtPrice
@@ -200,7 +220,8 @@ export default function ProductDetailScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => setIsFavorite(!isFavorite)}
+            onPress={handleWishlistToggle}
+            disabled={isWishlistLoading}
             className="absolute top-4 right-4 w-10 h-10 rounded-full bg-background/75 items-center justify-center"
           >
             <MaterialCommunityIcons
@@ -360,7 +381,7 @@ export default function ProductDetailScreen() {
               </ScrollView>
             </View>
           ) : null}
-
+          {/* 
           <View className="py-5 border-y border-primary/10">
             <Text className="text-sm font-bold uppercase tracking-widest text-text-primary mb-3">
               Product Insights
@@ -385,7 +406,7 @@ export default function ProductDetailScreen() {
                 </Text>
               </View>
             </View>
-          </View>
+          </View> */}
 
           {product.keyIngredients ? (
             <View className="py-6 border-b border-primary/10">
@@ -468,7 +489,8 @@ export default function ProductDetailScreen() {
         <SafeAreaView edges={["bottom"]}>
           <View className="flex-row gap-3 items-center">
             <TouchableOpacity
-              onPress={() => setIsFavorite(!isFavorite)}
+              onPress={handleWishlistToggle}
+              disabled={isWishlistLoading}
               className="w-14 h-14 border-2 border-primary/30 rounded-xl items-center justify-center"
             >
               <MaterialCommunityIcons

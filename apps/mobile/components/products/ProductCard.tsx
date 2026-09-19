@@ -111,7 +111,10 @@ export function ProductCard({
 
         {/* Wishlist Button */}
         <TouchableOpacity
-          onPress={handleWishlistToggle}
+          onPress={(event) => {
+            event.stopPropagation();
+            handleWishlistToggle();
+          }}
           disabled={isWishlistLoading}
           className="absolute top-3 right-3 w-9 h-9 bg-background/90 backdrop-blur-sm rounded-full justify-center items-center border border-surface-border active:scale-90"
           style={{ opacity: isWishlistLoading ? 0.5 : 1 }}
@@ -125,7 +128,10 @@ export function ProductCard({
 
         {/* Add Button */}
         <TouchableOpacity
-          onPress={onAddToCart}
+          onPress={(event) => {
+            event.stopPropagation();
+            onAddToCart?.();
+          }}
           disabled={!product.canAddToCart}
           className="absolute bottom-3 right-3 w-10 h-10 bg-primary rounded-full justify-center items-center shadow-lg active:scale-90"
           style={{ opacity: product.canAddToCart === false ? 0.5 : 1 }}

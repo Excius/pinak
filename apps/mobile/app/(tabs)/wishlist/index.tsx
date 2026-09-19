@@ -28,9 +28,11 @@ type WishlistItem =
 function WishlistItemCard({
   item,
   onRemove,
+  onOpen,
 }: {
   item: WishlistItem;
   onRemove: (itemId: string) => void;
+  onOpen: (productId: string) => void;
 }) {
   const product = item.productVariant?.product;
   const variant = item.productVariant;
@@ -38,7 +40,11 @@ function WishlistItemCard({
   if (!product || !variant) return null;
 
   return (
-    <View className="flex-row gap-4 bg-surface rounded-xl p-4 mb-3 border border-surface-border">
+    <TouchableOpacity
+      onPress={() => onOpen(product.id)}
+      activeOpacity={0.8}
+      className="flex-row gap-4 bg-surface rounded-xl p-4 mb-3 border border-surface-border"
+    >
       {/* Product Image */}
       {variant.images && variant.images.length > 0 ? (
         <Image
@@ -91,7 +97,10 @@ function WishlistItemCard({
 
           {/* Remove Button */}
           <TouchableOpacity
-            onPress={() => onRemove(item.id)}
+            onPress={(event) => {
+              event.stopPropagation();
+              onRemove(item.id);
+            }}
             className="w-8 h-8 rounded-full bg-error/10 items-center justify-center"
           >
             <MaterialCommunityIcons
@@ -102,7 +111,7 @@ function WishlistItemCard({
           </TouchableOpacity>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -246,7 +255,11 @@ export default function WishlistScreen() {
       <FlatList
         data={items}
         renderItem={({ item }) => (
-          <WishlistItemCard item={item} onRemove={handleRemoveItem} />
+          <WishlistItemCard
+            item={item}
+            onRemove={handleRemoveItem}
+            onOpen={(productId) => router.push(`/(tabs)/product/${productId}`)}
+          />
         )}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{
