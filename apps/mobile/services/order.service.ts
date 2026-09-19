@@ -74,3 +74,13 @@ export async function cancelOrder(orderId: string) {
     );
     return response;
 }
+
+export async function getInvoicePdf(orderId: string) {
+    return apiRequest<ArrayBuffer>('get', `/orders/${orderId}/invoice/pdf`, {
+        responseType: 'arraybuffer',
+    });
+}
+
+export async function getInvoiceHtml(orderId: string) {
+    return apiRequest<string>('get', `/orders/${orderId}/invoice`);
+}
