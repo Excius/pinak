@@ -12,6 +12,7 @@ import { useRouter } from "expo-router";
 import { ProductCard } from "@/components/products/ProductCard";
 import { getBestSellers } from "@/services/product.service";
 import { useCart } from "@/hooks/use-cart";
+import { useWishlist } from "@/hooks/use-wishlist";
 import { mapProductsToCardItems } from "@/utils/mappers/product.mapper";
 
 const PAGE_SIZE = 8;
@@ -19,6 +20,12 @@ const PAGE_SIZE = 8;
 export function BestSellers() {
   const router = useRouter();
   const { addToCart } = useCart();
+  const {
+    itemIdsByVariantId,
+    itemIdsByProductId,
+    loadingVariantId,
+    toggleWishlist,
+  } = useWishlist();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +40,9 @@ export function BestSellers() {
 
       setProducts(mappedProducts);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load best sellers");
+      setError(
+        err instanceof Error ? err.message : "Failed to load best sellers",
+      );
     } finally {
       setLoading(false);
     }
@@ -47,7 +56,10 @@ export function BestSellers() {
     router.push(`/(tabs)/product/${productId}` as never);
   };
 
-  const handleAddToCart = (product: { canAddToCart?: boolean; variantId?: string }) => {
+  const handleAddToCart = (product: {
+    canAddToCart?: boolean;
+    variantId?: string;
+  }) => {
     if (product.canAddToCart && product.variantId) {
       void addToCart(product.variantId, undefined, 1);
     }
@@ -85,6 +97,17 @@ export function BestSellers() {
                   product={product}
                   onPress={() => handleProductPress(product.id)}
                   onAddToCart={() => handleAddToCart(product)}
+                  onWishlistToggle={() => {
+                    if (product.variantId) {
+                      void toggleWishlist(product.variantId, product.id);
+                    }
+                  }}
+                  isFavorite={Boolean(
+                    (product.variantId &&
+                      itemIdsByVariantId[product.variantId]) ||
+                    itemIdsByProductId[product.id],
+                  )}
+                  isWishlistLoading={loadingVariantId === product.variantId}
                 />
               </View>
             ))}
@@ -94,7 +117,11 @@ export function BestSellers() {
               className="ml-1 w-[160px] items-center justify-center rounded-3xl border border-dashed border-primary bg-primary/5 px-4 py-6"
             >
               <View className="mb-3 h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                <MaterialCommunityIcons name="arrow-right" size={22} color="#C9A962" />
+                <MaterialCommunityIcons
+                  name="arrow-right"
+                  size={22}
+                  color="#C9A962"
+                />
               </View>
               <Text className="text-center text-sm font-bold uppercase tracking-[0.18em] text-primary">
                 See more
