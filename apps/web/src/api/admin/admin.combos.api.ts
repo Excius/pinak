@@ -88,7 +88,7 @@ export const updateComboKitStatusAdmin = async (id: string, isActive: boolean) =
   return resp?.data as AdminComboKit
 }
 
-// ── Combo Kit Items CRUD ───────────────────────────────────────────────
+// ── Combo Kit Items CRUD ─────────────────────────────────────────────────────
 
 export const addComboKitItemAdmin = async (
   comboKitId: string,
@@ -111,7 +111,7 @@ export const removeComboKitItemAdmin = async (comboKitId: string, itemId: string
   await axiosInstance.delete(`/combo-kits/${comboKitId}/items/${itemId}`)
 }
 
-// ── Featured Sections ──────────────────────────────────────────────────
+// ── Featured Sections ─────────────────────────────────────────────────────
 
 export interface AdminFeaturedSection {
   id: string
@@ -142,3 +142,14 @@ export const updateFeaturedSectionAdmin = async (id: string, payload: { title?: 
 export const deleteFeaturedSectionAdmin = async (id: string) => {
   await axiosInstance.delete(`/featured-sections/admin/${id}`)
 }
+
+
+export const addProductToFeaturedAdmin = async (sectionId: string, productId: string, displayOrder: number = 0) => {
+  const { data } = await axiosInstance.post('/products/admin/featured/' + sectionId, { productId, displayOrder })
+  return data.data
+}
+
+export const removeProductFromFeaturedAdmin = async (featuredProductId: string) => {
+  await axiosInstance.delete('/products/admin/featured/' + featuredProductId)
+}
+

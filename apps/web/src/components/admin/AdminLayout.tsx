@@ -8,6 +8,7 @@ const AdminLayout = () => {
   const navItems = [
     { label: 'Dashboard', path: '/admin', icon: 'dashboard' },
     { label: 'Products', path: '/admin/products', icon: 'inventory_2' },
+    { label: 'Inventory', path: '/admin/inventory', icon: 'warning_amber' },
     { label: 'Combo Kits', path: '/admin/combos', icon: 'auto_awesome_mosaic' },
     { label: 'Categories', path: '/admin/categories', icon: 'category' },
     { label: 'Brands', path: '/admin/brands', icon: 'branding_watermark' },
@@ -15,6 +16,8 @@ const AdminLayout = () => {
     { label: 'Options', path: '/admin/options', icon: 'tune' },
     { label: 'Featured', path: '/admin/featured', icon: 'star' },
     { label: 'Orders', path: '/admin/orders', icon: 'receipt_long' },
+    { label: 'Coupons', path: '/admin/coupons', icon: 'local_offer' },
+    { label: 'Banners', path: '/admin/dynamic-assets', icon: 'view_carousel' },
     { label: 'Settings', path: '/admin/settings', icon: 'settings' },
   ]
 

@@ -25,6 +25,7 @@ import AdminLayout from './components/admin/AdminLayout'
 import AdminDashboard from './pages/admin/Dashboard'
 import AdminProductList from './pages/admin/products/ProductList'
 import AdminProductForm from './pages/admin/products/ProductForm'
+import AdminInventoryList from './pages/admin/products/InventoryList'
 import AdminCategoryList from './pages/admin/categories/CategoryList'
 import AdminBrandList from './pages/admin/brands/BrandList'
 import AdminComboKitList from './pages/admin/combos/ComboKitList'
@@ -34,6 +35,8 @@ import AdminOrderList from './pages/admin/orders/OrderList'
 import AdminSettings from './pages/admin/settings/SettingsPage'
 import AdminFilterGroupList from './pages/admin/filters/FilterGroupList'
 import AdminOptionList from './pages/admin/options/OptionList'
+import AdminCouponList from './pages/admin/coupons/CouponList'
+import AdminDynamicAssetList from './pages/admin/dynamicAssets/DynamicAssetList'
 
 // Protected route wrapper
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -116,6 +119,7 @@ function AppRoutes() {
       <Route path="/admin" element={<AdminProtectedRoute><AdminLayout /></AdminProtectedRoute>}>
         <Route index element={<AdminDashboard />} />
         <Route path="products" element={<AdminProductList />} />
+        <Route path="inventory" element={<AdminInventoryList />} />
         <Route path="products/new" element={<AdminProductForm />} />
         <Route path="products/:id" element={<AdminProductForm />} />
         <Route path="categories" element={<AdminCategoryList />} />
@@ -127,6 +131,8 @@ function AppRoutes() {
         <Route path="orders" element={<AdminOrderList />} />
         <Route path="filters" element={<AdminFilterGroupList />} />
         <Route path="options" element={<AdminOptionList />} />
+        <Route path="coupons" element={<AdminCouponList />} />
+        <Route path="dynamic-assets" element={<AdminDynamicAssetList />} />
         <Route path="settings" element={<AdminSettings />} />
       </Route>
 
