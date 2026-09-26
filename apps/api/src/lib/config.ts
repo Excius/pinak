@@ -209,6 +209,12 @@ class Config {
    */
   public readonly RAZORPAY_WEBHOOK_SECRET: string;
 
+  /**
+   * Stock reservation expiry in seconds.
+   * Default: 1020 seconds (17 minutes)
+   */
+  public readonly STOCK_RESERVATION_EXPIRE_SECONDS: number;
+
   constructor() {
     this.NODE_ENV = process.env.NODE_ENV || "development";
     this.PORT = parseInt(process.env.PORT || "3000", 10);
@@ -344,9 +350,16 @@ class Config {
     this.RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
 
     if (!process.env.RAZORPAY_WEBHOOK_SECRET) {
-      throw new Error("RAZORPAY_WEBHOOK_SECRET environment variable is required");
+      throw new Error(
+        "RAZORPAY_WEBHOOK_SECRET environment variable is required",
+      );
     }
     this.RAZORPAY_WEBHOOK_SECRET = process.env.RAZORPAY_WEBHOOK_SECRET;
+
+    this.STOCK_RESERVATION_EXPIRE_SECONDS = parseInt(
+      process.env.STOCK_RESERVATION_EXPIRE_SECONDS || "1020",
+      10,
+    ); // Default: 1020 seconds (17 minutes)
   }
 }
 

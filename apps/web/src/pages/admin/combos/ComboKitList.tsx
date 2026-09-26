@@ -6,6 +6,7 @@ import {
   restoreComboKitAdmin
 } from '../../../api/admin/admin.combos.api'
 import type { AdminComboKit } from '../../../api/admin/admin.combos.api'
+import { formatPaise } from '../../../utils/currency'
 
 const ComboKitList = () => {
   const [combos, setCombos] = useState<AdminComboKit[]>([])
@@ -149,7 +150,7 @@ const ComboKitList = () => {
 
                   {/* Price */}
                   <td className="px-6 py-4 text-sm font-medium text-text-main-light">
-                    ₹{combo.price?.toLocaleString('en-IN') || '0'}
+                    {formatPaise(combo.price ?? 0)}
                   </td>
 
                   {/* Strategy */}

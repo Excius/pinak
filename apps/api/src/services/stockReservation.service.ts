@@ -1,6 +1,7 @@
 import { Prisma, PrismaClient } from "../generated/prisma/client.js";
 import { NotFoundError, ValidationError } from "../lib/error.js";
 import redis from "../lib/redis.js";
+import appConfig from "../lib/config.js";
 
 export type ReservationRequirement = {
   productVariantId?: string | null;
@@ -9,7 +10,7 @@ export type ReservationRequirement = {
 };
 
 export class StockReservationService {
-  private readonly reservationDurationMs = 15 * 60 * 1000; // 15 minutes
+  private readonly reservationDurationMs = appConfig.STOCK_RESERVATION_EXPIRE_SECONDS * 1000;
 
   constructor(private prisma: PrismaClient) {}
 
@@ -41,6 +42,11 @@ export class StockReservationService {
       result.push({ comboKitId, quantity, productVariantId: null });
     }
     return result;
+  }
+
+  async isReservationActive(orderId: string): Promise<boolean> {
+    const orderData = await redis.get(`reservations:order:${orderId}`);
+    return !!orderData;
   }
 
   private reservationExpiryDate() {
@@ -250,13 +256,29 @@ export class StockReservationService {
   async confirmReservations(orderId: string, tx?: Prisma.TransactionClient) {
     const db = this.getDb(tx);
     
+    let activeReservations: ReservationRequirement[] = [];
+
     // Fetch active reservations from Redis
     const orderData = await redis.get(`reservations:order:${orderId}`);
-    if (!orderData) {
-      throw new NotFoundError("No active reservations found for this order");
-    }
+    if (orderData) {
+      activeReservations = JSON.parse(orderData) as ReservationRequirement[];
+    } else {
+      // Fallback: If Redis reservation expired (>15 mins), reconstruct requirements from DB order items
+      const orderItems = await db.orderItem.findMany({
+        where: { orderId },
+        select: { productVariantId: true, comboKitId: true, quantity: true },
+      });
 
-    const activeReservations = JSON.parse(orderData) as ReservationRequirement[];
+      if (orderItems.length === 0) {
+        throw new NotFoundError("No active reservations or order items found for this order");
+      }
+
+      activeReservations = orderItems.map((item) => ({
+        productVariantId: item.productVariantId,
+        comboKitId: item.comboKitId,
+        quantity: item.quantity,
+      }));
+    }
 
     const variantDeductions = new Map<string, number>();
 

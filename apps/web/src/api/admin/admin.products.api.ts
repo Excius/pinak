@@ -20,6 +20,7 @@ export interface AdminProductVariant {
   isActive: boolean
   images: AdminProductImage[]
   optionValues: { optionName: string; valueName: string }[]
+  optionValueIds?: string[]
 }
 
 export interface AdminProduct {
@@ -107,9 +108,17 @@ export const setProductCategoriesAdmin = async (productId: string, categoryIds: 
 
 // ── Variant CRUD ───────────────────────────────────────────────────────
 
+export const createProductVariantAdmin = async (
+  productId: string,
+  payload: { sku: string; price: number; stock: number; comparePrice?: number; optionValueIds?: string[] }
+): Promise<AdminProductVariant> => {
+  const { data: resp } = await axiosInstance.post(`/products/admin/${productId}/variants`, payload)
+  return resp?.data as AdminProductVariant
+}
+
 export const updateProductVariantAdmin = async (
   id: string,
-  payload: { sku?: string; price?: number; stock?: number }
+  payload: { sku?: string; price?: number; stock?: number; optionValueIds?: string[] }
 ): Promise<AdminProductVariant> => {
   const { data: resp } = await axiosInstance.put(`/products/admin/variants/${id}`, payload)
   return resp?.data as AdminProductVariant
@@ -144,4 +153,14 @@ export const addRelatedProductAdmin = async (productId: string, relatedProductId
 
 export const removeRelatedProductAdmin = async (productId: string, relatedProductId: string) => {
   await axiosInstance.delete(`/products/admin/${productId}/related/${relatedProductId}`)
+}
+
+export const getOutOfStockProductsAdmin = async (page: number = 1, limit: number = 20) => {
+  const { data } = await axiosInstance.get('/products/admin/stock/out-of-stock', { params: { page, limit } })
+  return data.data
+}
+
+export const getLowStockProductsAdmin = async (page: number = 1, limit: number = 20) => {
+  const { data } = await axiosInstance.get('/products/admin/stock/low-stock', { params: { page, limit } })
+  return data.data
 }

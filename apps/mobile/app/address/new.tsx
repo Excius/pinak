@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -6,7 +6,6 @@ import {
   ScrollView,
   ActivityIndicator,
   TextInput,
-  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
@@ -18,6 +17,9 @@ import {
   type UpdateAddressData,
 } from "@/services/address.service";
 import Toast from "react-native-toast-message";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Controller, useForm } from "react-hook-form";
+import { z } from "zod";
 
 const emptyAddress: CreateAddressData = {
   fullName: "",
@@ -30,16 +32,53 @@ const emptyAddress: CreateAddressData = {
   label: "",
 };
 
+const addressSchema = z.object({
+  fullName: z.string().trim().min(1, "Full name is required"),
+  addressLine1: z.string().trim().min(1, "Address line 1 is required"),
+  addressLine2: z.string(),
+  city: z.string().trim().min(1, "City is required"),
+  state: z.string().trim().min(1, "State is required"),
+  pincode: z.string().regex(/^\d{6}$/, "Pincode must be exactly 6 digits"),
+  phone: z.string().regex(/^\d{10}$/, "Phone number must be exactly 10 digits"),
+  label: z.string(),
+});
+
+type AddressFormValues = z.infer<typeof addressSchema>;
+
 export default function AddressFormScreen() {
   const params = useLocalSearchParams();
   const id = "id" in params ? (params.id as string) : undefined;
+  const returnTo =
+    "returnTo" in params ? (params.returnTo as string) : undefined;
   const isEdit = !!id;
 
-  const [formData, setFormData] = useState<CreateAddressData>(emptyAddress);
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
+  const {
+    control,
+    handleSubmit,
+    reset,
+    setFocus,
+    formState: { errors },
+  } = useForm<AddressFormValues>({
+    defaultValues: emptyAddress,
+    resolver: zodResolver(addressSchema),
+    mode: "onBlur",
+    reValidateMode: "onChange",
+  });
 
   const getErrorMessage = (err: any, fallback: string) => {
+    const validationErrors = err?.response?.data?.errors;
+    if (Array.isArray(validationErrors) && validationErrors.length > 0) {
+      return validationErrors
+        .map((item: { field?: string; message?: string }) =>
+          item.field && item.message
+            ? `${item.field}: ${item.message}`
+            : item.message || String(item),
+        )
+        .join("\n");
+    }
+
     return err?.response?.data?.message || err?.message || fallback;
   };
 
@@ -53,7 +92,7 @@ export default function AddressFormScreen() {
     try {
       setLoading(true);
       const address = await addressService.getAddress(id!);
-      setFormData({
+      reset({
         fullName: address.fullName,
         addressLine1: address.addressLine1,
         addressLine2: address.addressLine2 || "",
@@ -77,78 +116,28 @@ export default function AddressFormScreen() {
     }
   };
 
-  const validateForm = () => {
-    if (!formData.fullName.trim()) {
-      Toast.show({
-        type: "error",
-        text1: "Validation Error",
-        text2: "Full name is required",
-        position: "bottom",
-      });
-      return false;
-    }
-    if (!formData.addressLine1.trim()) {
-      Toast.show({
-        type: "error",
-        text1: "Validation Error",
-        text2: "Address line 1 is required",
-        position: "bottom",
-      });
-      return false;
-    }
-    if (!formData.city.trim()) {
-      Toast.show({
-        type: "error",
-        text1: "Validation Error",
-        text2: "City is required",
-        position: "bottom",
-      });
-      return false;
-    }
-    if (!formData.state.trim()) {
-      Toast.show({
-        type: "error",
-        text1: "Validation Error",
-        text2: "State is required",
-        position: "bottom",
-      });
-      return false;
-    }
-    if (!formData.pincode.trim() || formData.pincode.length < 6) {
-      Toast.show({
-        type: "error",
-        text1: "Validation Error",
-        text2: "Valid pincode is required (at least 6 digits)",
-        position: "bottom",
-      });
-      return false;
-    }
-    if (!formData.phone.trim() || formData.phone.length < 10) {
-      Toast.show({
-        type: "error",
-        text1: "Validation Error",
-        text2: "Valid phone number is required (at least 10 digits)",
-        position: "bottom",
-      });
-      return false;
-    }
-    return true;
-  };
-
-  const handleSave = async () => {
-    if (!validateForm()) return;
-
+  const handleSave = async (formData: AddressFormValues) => {
     try {
       setSaving(true);
 
       const data = {
         ...formData,
-        addressLine2: formData.addressLine2 || undefined,
-        label: formData.label || undefined,
+        fullName: formData.fullName.trim(),
+        addressLine1: formData.addressLine1.trim(),
+        addressLine2: formData.addressLine2.trim() || undefined,
+        city: formData.city.trim(),
+        state: formData.state.trim(),
+        pincode: formData.pincode,
+        phone: formData.phone,
+        label: formData.label?.trim() || undefined,
       };
 
+      let savedAddress: Address;
       if (isEdit && id) {
-        await addressService.updateAddress(id, data as UpdateAddressData);
+        savedAddress = await addressService.updateAddress(
+          id,
+          data as UpdateAddressData,
+        );
         Toast.show({
           type: "success",
           text1: "Success",
@@ -156,7 +145,7 @@ export default function AddressFormScreen() {
           position: "bottom",
         });
       } else {
-        await addressService.createAddress(data);
+        savedAddress = await addressService.createAddress(data);
         Toast.show({
           type: "success",
           text1: "Success",
@@ -165,7 +154,14 @@ export default function AddressFormScreen() {
         });
       }
 
-      router.back();
+      if (!isEdit && returnTo === "checkout") {
+        router.replace({
+          pathname: "/checkout",
+          params: { selectedAddressId: savedAddress.id },
+        });
+      } else {
+        router.back();
+      }
     } catch (err: any) {
       const errorMessage = getErrorMessage(err, "Failed to save address");
       Toast.show({
@@ -179,12 +175,16 @@ export default function AddressFormScreen() {
     }
   };
 
-  const updateField = (field: keyof CreateAddressData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
   const inputClassName =
     "rounded-lg border border-surface-border bg-surface-light px-4 py-3 text-sm text-text-primary";
+
+  const errorClassName =
+    "rounded-lg border border-red-500 bg-surface-light px-4 py-3 text-sm text-text-primary";
+
+  const errorText = (message?: string) =>
+    message ? (
+      <Text className="mt-1 text-xs text-red-500">{message}</Text>
+    ) : null;
 
   if (loading) {
     return (
@@ -221,40 +221,77 @@ export default function AddressFormScreen() {
             <Text className="mb-2 text-sm font-semibold text-text-primary">
               Label (Optional)
             </Text>
-            <TextInput
-              value={formData.label}
-              onChangeText={(text) => updateField("label", text)}
-              placeholder="e.g., Home, Work, Office"
-              placeholderTextColor="#8A8A8A"
-              className={inputClassName}
+            <Controller
+              control={control}
+              name="label"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextInput
+                  value={value}
+                  onChangeText={(text) => onChange(text.replace(/\s+/g, " "))}
+                  onBlur={onBlur}
+                  placeholder="e.g., Home, Work, Office"
+                  placeholderTextColor="#8A8A8A"
+                  className={inputClassName}
+                />
+              )}
             />
           </View>
 
           {/* Full Name */}
           <View className="mb-4">
             <Text className="mb-2 text-sm font-semibold text-text-primary">
-              Full Name *
+              Full Name <Text className="text-red-500">*</Text>
             </Text>
-            <TextInput
-              value={formData.fullName}
-              onChangeText={(text) => updateField("fullName", text)}
-              placeholder="Enter your full name"
-              placeholderTextColor="#8A8A8A"
-              className={inputClassName}
+            <Controller
+              control={control}
+              name="fullName"
+              render={({ field: { onChange, onBlur, value, ref } }) => (
+                <>
+                  <TextInput
+                    ref={ref}
+                    value={value}
+                    onChangeText={(text) =>
+                      onChange(text.replace(/\s+/g, " ").trimStart())
+                    }
+                    onBlur={onBlur}
+                    placeholder="Enter your full name"
+                    placeholderTextColor="#8A8A8A"
+                    className={
+                      errors.fullName ? errorClassName : inputClassName
+                    }
+                  />
+                  {errorText(errors.fullName?.message)}
+                </>
+              )}
             />
           </View>
 
           {/* Address Line 1 */}
           <View className="mb-4">
             <Text className="mb-2 text-sm font-semibold text-text-primary">
-              Address Line 1 *
+              Address Line 1 <Text className="text-red-500">*</Text>
             </Text>
-            <TextInput
-              value={formData.addressLine1}
-              onChangeText={(text) => updateField("addressLine1", text)}
-              placeholder="Street address, P.O. box, company name"
-              placeholderTextColor="#8A8A8A"
-              className={inputClassName}
+            <Controller
+              control={control}
+              name="addressLine1"
+              render={({ field: { onChange, onBlur, value, ref } }) => (
+                <>
+                  <TextInput
+                    ref={ref}
+                    value={value}
+                    onChangeText={(text) =>
+                      onChange(text.replace(/\s+/g, " ").trimStart())
+                    }
+                    onBlur={onBlur}
+                    placeholder="Street address, P.O. box, company name"
+                    placeholderTextColor="#8A8A8A"
+                    className={
+                      errors.addressLine1 ? errorClassName : inputClassName
+                    }
+                  />
+                  {errorText(errors.addressLine1?.message)}
+                </>
+              )}
             />
           </View>
 
@@ -263,12 +300,19 @@ export default function AddressFormScreen() {
             <Text className="mb-2 text-sm font-semibold text-text-primary">
               Address Line 2
             </Text>
-            <TextInput
-              value={formData.addressLine2}
-              onChangeText={(text) => updateField("addressLine2", text)}
-              placeholder="Apartment, suite, unit, building, floor"
-              placeholderTextColor="#8A8A8A"
-              className={inputClassName}
+            <Controller
+              control={control}
+              name="addressLine2"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextInput
+                  value={value}
+                  onChangeText={(text) => onChange(text.replace(/\s+/g, " "))}
+                  onBlur={onBlur}
+                  placeholder="Apartment, suite, unit, building, floor"
+                  placeholderTextColor="#8A8A8A"
+                  className={inputClassName}
+                />
+              )}
             />
           </View>
 
@@ -276,26 +320,52 @@ export default function AddressFormScreen() {
           <View className="mb-4 flex-row gap-3">
             <View className="flex-1">
               <Text className="mb-2 text-sm font-semibold text-text-primary">
-                City *
+                City <Text className="text-red-500">*</Text>
               </Text>
-              <TextInput
-                value={formData.city}
-                onChangeText={(text) => updateField("city", text)}
-                placeholder="Enter city"
-                placeholderTextColor="#8A8A8A"
-                className={inputClassName}
+              <Controller
+                control={control}
+                name="city"
+                render={({ field: { onChange, onBlur, value, ref } }) => (
+                  <>
+                    <TextInput
+                      ref={ref}
+                      value={value}
+                      onChangeText={(text) =>
+                        onChange(text.replace(/\s+/g, " ").trimStart())
+                      }
+                      onBlur={onBlur}
+                      placeholder="Enter city"
+                      placeholderTextColor="#8A8A8A"
+                      className={errors.city ? errorClassName : inputClassName}
+                    />
+                    {errorText(errors.city?.message)}
+                  </>
+                )}
               />
             </View>
             <View className="flex-1">
               <Text className="mb-2 text-sm font-semibold text-text-primary">
-                State *
+                State <Text className="text-red-500">*</Text>
               </Text>
-              <TextInput
-                value={formData.state}
-                onChangeText={(text) => updateField("state", text)}
-                placeholder="Enter state"
-                placeholderTextColor="#8A8A8A"
-                className={inputClassName}
+              <Controller
+                control={control}
+                name="state"
+                render={({ field: { onChange, onBlur, value, ref } }) => (
+                  <>
+                    <TextInput
+                      ref={ref}
+                      value={value}
+                      onChangeText={(text) =>
+                        onChange(text.replace(/\s+/g, " ").trimStart())
+                      }
+                      onBlur={onBlur}
+                      placeholder="Enter state"
+                      placeholderTextColor="#8A8A8A"
+                      className={errors.state ? errorClassName : inputClassName}
+                    />
+                    {errorText(errors.state?.message)}
+                  </>
+                )}
               />
             </View>
           </View>
@@ -304,28 +374,58 @@ export default function AddressFormScreen() {
           <View className="mb-6 flex-row gap-3">
             <View className="flex-1">
               <Text className="mb-2 text-sm font-semibold text-text-primary">
-                Pincode *
+                Pincode <Text className="text-red-500">*</Text>
               </Text>
-              <TextInput
-                value={formData.pincode}
-                onChangeText={(text) => updateField("pincode", text)}
-                placeholder="Enter pincode"
-                placeholderTextColor="#8A8A8A"
-                keyboardType="number-pad"
-                className={inputClassName}
+              <Controller
+                control={control}
+                name="pincode"
+                render={({ field: { onChange, onBlur, value, ref } }) => (
+                  <>
+                    <TextInput
+                      ref={ref}
+                      value={value}
+                      onChangeText={(text) =>
+                        onChange(text.replace(/\D/g, "").slice(0, 6))
+                      }
+                      onBlur={onBlur}
+                      placeholder="Enter pincode"
+                      placeholderTextColor="#8A8A8A"
+                      keyboardType="number-pad"
+                      maxLength={6}
+                      className={
+                        errors.pincode ? errorClassName : inputClassName
+                      }
+                    />
+                    {errorText(errors.pincode?.message)}
+                  </>
+                )}
               />
             </View>
             <View className="flex-1">
               <Text className="mb-2 text-sm font-semibold text-text-primary">
-                Phone *
+                Phone <Text className="text-red-500">*</Text>
               </Text>
-              <TextInput
-                value={formData.phone}
-                onChangeText={(text) => updateField("phone", text)}
-                placeholder="Enter phone number"
-                placeholderTextColor="#8A8A8A"
-                keyboardType="phone-pad"
-                className={inputClassName}
+              <Controller
+                control={control}
+                name="phone"
+                render={({ field: { onChange, onBlur, value, ref } }) => (
+                  <>
+                    <TextInput
+                      ref={ref}
+                      value={value}
+                      onChangeText={(text) =>
+                        onChange(text.replace(/\D/g, "").slice(0, 10))
+                      }
+                      onBlur={onBlur}
+                      placeholder="Enter phone number"
+                      placeholderTextColor="#8A8A8A"
+                      keyboardType="phone-pad"
+                      maxLength={10}
+                      className={errors.phone ? errorClassName : inputClassName}
+                    />
+                    {errorText(errors.phone?.message)}
+                  </>
+                )}
               />
             </View>
           </View>
@@ -335,7 +435,11 @@ export default function AddressFormScreen() {
       {/* Save Button */}
       <View className="border-t border-surface-border px-4 py-4">
         <TouchableOpacity
-          onPress={handleSave}
+          onPress={handleSubmit(handleSave, (formErrors) => {
+            const firstInvalidField = Object.keys(formErrors)[0] as
+              keyof AddressFormValues | undefined;
+            if (firstInvalidField) setFocus(firstInvalidField);
+          })}
           disabled={saving}
           className={`rounded-lg py-4 items-center justify-center ${
             saving ? "bg-surface-light" : "bg-primary"

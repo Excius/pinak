@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getBestsellers, getBestsellerAnalytics } from '../../api/products.api'
 import type { Product, BestsellerAnalytics } from '../../api/products.api'
+import { formatPaise } from '../../utils/currency'
 type Timeframe = 'all_time' | 'month' | 'week'
 
 const AdminDashboard: React.FC = () => {
@@ -40,14 +41,6 @@ const AdminDashboard: React.FC = () => {
     if (product.frontImageUrl) return product.frontImageUrl
     const variant = getFirstVariant(product)
     return variant?.image?.url || ''
-  }
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0
-    }).format(price)
   }
 
   return (
@@ -99,7 +92,7 @@ const AdminDashboard: React.FC = () => {
               <span className="material-icons-outlined">payments</span>
             </div>
           </div>
-          <p className="text-3xl font-display font-bold text-primary price-glow">{analytics ? formatPrice(analytics.grossRevenue) : '-'}</p>
+          <p className="text-3xl font-display font-bold text-primary price-glow">{analytics ? formatPaise(analytics.grossRevenue) : '-'}</p>
         </div>
 
         <div className="bg-background-light p-6 rounded-2xl border border-primary/10 shadow-sm relative overflow-hidden group hover:border-primary/30 transition-all">
@@ -214,7 +207,7 @@ const AdminDashboard: React.FC = () => {
                       <td className="p-4 text-right">
                         <div className="flex flex-col items-end">
                           <span className="font-bold text-primary">
-                            {formatPrice(variant?.priceWithTax ?? variant?.price ?? 0)}
+                            {formatPaise(variant?.priceWithTax ?? variant?.price ?? 0)}
                           </span>
                           <span className="text-[10px] text-text-muted uppercase">incl. tax</span>
                         </div>

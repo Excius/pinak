@@ -8,6 +8,8 @@ export interface ComboKit {
   description?: string
   audience?: string
   price: number
+  taxAmount?: number
+  priceWithTax?: number
   pricingStrategy: string
   discountType?: string
   discountValue?: number

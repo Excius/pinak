@@ -4,6 +4,7 @@ import Layout from '../components/Layout'
 import { Skeleton } from '../components/Skeleton'
 import { getComboKits } from '../api/combos.api'
 import type { ComboKit } from '../api/combos.api'
+import { formatPaise } from '../utils/currency'
 
 const ComboKits: React.FC = () => {
   const navigate = useNavigate()
@@ -25,8 +26,6 @@ const ComboKits: React.FC = () => {
     }
     fetchCombos()
   }, [])
-
-  const formatPrice = (p: number) => `₹${p.toLocaleString('en-IN')}`
 
   return (
     <Layout>
@@ -96,7 +95,7 @@ const ComboKits: React.FC = () => {
                   )}
                   {combo.discountValue && (
                     <div className="absolute top-4 left-4 bg-red-500/90 backdrop-blur px-3 py-1 rounded-full text-white text-xs font-bold animate-soft-pulse shadow-[0_0_10px_rgba(239,68,68,0.3)]">
-                      Save {combo.discountType === 'PERCENTAGE' ? `${combo.discountValue}%` : formatPrice(combo.discountValue)}
+                      Save {combo.discountType === 'PERCENTAGE' ? `${combo.discountValue}%` : formatPaise(combo.discountValue)}
                     </div>
                   )}
                   <div className="absolute top-4 right-4 bg-primary/90 backdrop-blur px-3 py-1 rounded-full text-black text-xs font-bold badge-shimmer">
@@ -113,7 +112,7 @@ const ComboKits: React.FC = () => {
                     <p className="text-sm text-text-muted line-clamp-2">{combo.description}</p>
                   )}
                   <div className="flex items-center justify-between pt-2">
-                    <span className="text-2xl font-bold text-primary price-glow">{formatPrice(combo.price)}</span>
+                    <span className="text-2xl font-bold text-primary price-glow">{formatPaise(combo.price)}</span>
                     <span className="text-xs text-text-muted">
                       {combo.purchasedCount > 0 && `${combo.purchasedCount} sold`}
                     </span>

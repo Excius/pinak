@@ -2,14 +2,13 @@ import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
 import toast from 'react-hot-toast'
+import { formatPaise } from '../utils/currency'
 
 const CartDrawer: React.FC = () => {
   const navigate = useNavigate()
   const { items, itemCount, subtotal, taxTotal, totalWithTax, isOpen, closeCart, updateQuantity, removeItem, clearCart } = useCart()
 
   if (!isOpen) return null
-
-  const formatPrice = (price: number) => `₹${price.toLocaleString('en-IN')}`
 
   const getItemName = (item: typeof items[0]) => {
     if (item.itemType === 'COMBO_KIT' && item.comboKit) return item.comboKit.name
@@ -104,7 +103,7 @@ const CartDrawer: React.FC = () => {
                       <p className="text-[10px] text-primary/60 mt-0.5">Combo Kit</p>
                     )}
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-sm font-bold text-primary">{formatPrice(item.unitPriceWithTax ?? item.unitPrice)}</span>
+                      <span className="text-sm font-bold text-primary">{formatPaise(item.unitPriceWithTax ?? item.unitPrice)}</span>
                       {item.unitPriceWithTax !== undefined && (
                         <span className="text-[10px] text-text-muted">(incl. tax)</span>
                       )}
@@ -152,23 +151,23 @@ const CartDrawer: React.FC = () => {
           <div className="p-6 border-t border-primary/10 space-y-3">
             <div className="flex justify-between items-center text-sm">
               <span className="text-text-muted font-medium">Subtotal (excl. tax)</span>
-              <span className="font-bold text-text-main-light">{formatPrice(subtotal)}</span>
+              <span className="font-bold text-text-main-light">{formatPaise(subtotal)}</span>
             </div>
             {taxTotal !== undefined && (
               <div className="flex justify-between items-center text-sm">
                 <span className="text-text-muted font-medium">Tax</span>
-                <span className="font-bold text-text-main-light">{formatPrice(taxTotal)}</span>
+                <span className="font-bold text-text-main-light">{formatPaise(taxTotal)}</span>
               </div>
             )}
             <div className="flex justify-between items-center pt-2 border-t border-primary/5">
               <span className="text-text-muted font-medium">Total</span>
-              <span className="text-xl font-bold text-primary">{formatPrice(totalWithTax ?? subtotal)}</span>
+              <span className="text-xl font-bold text-primary">{formatPaise(totalWithTax ?? subtotal)}</span>
             </div>
             <button
               className="w-full bg-primary hover:bg-primary-hover text-black py-3.5 rounded-xl font-bold text-sm uppercase tracking-wider transition-all glow-gold cursor-pointer active:scale-[0.98] mt-2"
               onClick={() => { closeCart(); navigate('/checkout') }}
             >
-              Proceed to Checkout — {formatPrice(totalWithTax ?? subtotal)}
+              Proceed to Checkout — {formatPaise(totalWithTax ?? subtotal)}
             </button>
             <button
               className="w-full text-text-muted hover:text-red-400 text-sm font-medium transition-colors cursor-pointer"

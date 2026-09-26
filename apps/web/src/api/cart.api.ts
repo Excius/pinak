@@ -134,8 +134,7 @@ export interface Order {
 // ── Order API ──────────────────────────────────────────────────────────
 
 export const createOrder = async (payload: {
-  shippingAddress: ShippingAddress
-  billingAddress?: ShippingAddress
+  shippingAddressId: string
   couponCode?: string
 }): Promise<{ order: Order; payment: any }> => {
   const { data: resp } = await axiosInstance.post('/orders', payload)
@@ -155,4 +154,22 @@ export const getOrderById = async (orderId: string): Promise<Order> => {
 export const cancelOrder = async (orderId: string): Promise<Order> => {
   const { data: resp } = await axiosInstance.put(`/orders/${orderId}/cancel`)
   return resp?.data as Order
+}
+
+// ── Payment Verification ──────────────────────────────────────────────
+
+export interface VerifyPaymentPayload {
+  razorpay_order_id: string
+  razorpay_payment_id: string
+  razorpay_signature: string
+}
+
+export interface VerifyPaymentResponse {
+  orderId: string
+  status: string
+}
+
+export const verifyPayment = async (payload: VerifyPaymentPayload): Promise<VerifyPaymentResponse> => {
+  const { data: resp } = await axiosInstance.post('/payments/verify', payload)
+  return resp?.data as VerifyPaymentResponse
 }

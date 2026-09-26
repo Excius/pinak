@@ -5,6 +5,7 @@ import {
   createProductAdmin,
   updateProductAdmin,
   updateProductVariantAdmin,
+  createProductVariantAdmin,
   addProductImageAdmin,
   setProductCategoriesAdmin,
   getRelatedProductsAdmin,
@@ -15,6 +16,8 @@ import {
 import type { AdminProduct, AdminProductVariant } from '../../../api/admin/admin.products.api'
 import { getAllCategoriesAdmin, getAllBrandsAdmin } from '../../../api/admin/admin.catalog.api'
 import type { AdminCategory, AdminBrand } from '../../../api/admin/admin.catalog.api'
+import { getOptions, type AdminOption } from '../../../api/admin/admin.options.api'
+import { formatPaise } from '../../../utils/currency'
 
 const ProductForm = () => {
   const { id } = useParams<{ id: string }>()
@@ -25,6 +28,7 @@ const ProductForm = () => {
   const [saving, setSaving] = useState(false)
   const [categories, setCategories] = useState<AdminCategory[]>([])
   const [brands, setBrands] = useState<AdminBrand[]>([])
+  const [options, setOptions] = useState<AdminOption[]>([])
   const [editingVariant, setEditingVariant] = useState<AdminProductVariant | null>(null)
   const [showBrandDropdown, setShowBrandDropdown] = useState(false)
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
@@ -50,14 +54,19 @@ const ProductForm = () => {
   const [relatedSearchResults, setRelatedSearchResults] = useState<AdminProduct[]>([])
   const [isSearchingRelated, setIsSearchingRelated] = useState(false)
 
-  // ── Data Fetching ──────────────────────────────────────────────────
+  // â”€â”€ Data Fetching â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [cats, brs] = await Promise.all([getAllCategoriesAdmin(), getAllBrandsAdmin()])
+        const [cats, brs, opts] = await Promise.all([
+          getAllCategoriesAdmin(), 
+          getAllBrandsAdmin(),
+          getOptions()
+        ])
         setCategories(cats)
         setBrands(brs)
+        setOptions(opts)
 
         if (isEdit && id) {
           const product = await getProductByIdAdmin(id)
@@ -75,7 +84,7 @@ const ProductForm = () => {
     fetchData()
   }, [id, isEdit])
 
-  // ── Handlers ───────────────────────────────────────────────────────
+  // â”€â”€ Handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -100,7 +109,7 @@ const ProductForm = () => {
       const cleanData: Record<string, unknown> = {}
       for (const key of allowedFields) {
         const val = (formData as Record<string, unknown>)[key]
-        // Skip empty strings, null, undefined — backend validates strictly
+        // Skip empty strings, null, undefined â€” backend validates strictly
         if (val !== '' && val !== null && val !== undefined) {
           cleanData[key] = val
         }
@@ -114,7 +123,7 @@ const ProductForm = () => {
 
       if (isEdit && id) {
         await updateProductAdmin(id, cleanData)
-        // Save categories separately — don't let it block the product save
+        // Save categories separately â€” don't let it block the product save
         if (categoryIds.length > 0) {
           try {
             await setProductCategoriesAdmin(id, categoryIds)
@@ -149,21 +158,56 @@ const ProductForm = () => {
     }
   }
 
+  const openEditVariant = (variant: AdminProductVariant | null) => {
+    if (!variant) {
+      setEditingVariant(null)
+      return
+    }
+    
+    // Map option values to IDs based on fetched options
+    let optionValueIds: string[] = []
+    if (variant.optionValues) {
+      optionValueIds = variant.optionValues.map(ov => {
+        const opt = options.find(o => o.name === ov.optionName)
+        const val = opt?.values.find(v => v.value === ov.valueName)
+        return val?.id || ''
+      }).filter(id => id !== '')
+    }
+    
+    setEditingVariant({ ...variant, optionValueIds })
+  }
+
   const handleUpdateVariant = async (variant: AdminProductVariant) => {
     try {
-      const updated = await updateProductVariantAdmin(variant.id, {
-        price: variant.price,
-        stock: variant.stock,
-        sku: variant.sku
-      })
-      // Merge updated fields back into local state
-      setFormData(prev => ({
-        ...prev,
-        variants: prev.variants?.map(v => v.id === variant.id ? { ...v, ...updated } : v)
-      }))
+      if (!variant.id) {
+        // Create new variant
+        if (!id) return; // Need product ID
+        const created = await createProductVariantAdmin(id, {
+          sku: variant.sku,
+          price: variant.price,
+          stock: variant.stock,
+          optionValueIds: variant.optionValueIds
+        })
+        setFormData(prev => ({
+          ...prev,
+          variants: [...(prev.variants || []), created]
+        }))
+      } else {
+        // Update existing variant
+        const updated = await updateProductVariantAdmin(variant.id, {
+          price: variant.price,
+          stock: variant.stock,
+          sku: variant.sku,
+          optionValueIds: variant.optionValueIds
+        })
+        setFormData(prev => ({
+          ...prev,
+          variants: prev.variants?.map(v => v.id === variant.id ? { ...v, ...updated } : v)
+        }))
+      }
       setEditingVariant(null)
     } catch (err) {
-      console.error('Failed to update variant', err)
+      console.error('Failed to save variant', err)
     }
   }
 
@@ -202,7 +246,7 @@ const ProductForm = () => {
     }))
   }
 
-  // ── Related Products Handlers ────────────────────────────────────────
+  // â”€â”€ Related Products Handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(async () => {
@@ -250,7 +294,7 @@ const ProductForm = () => {
     }
   }
 
-  // ── Loading State ──────────────────────────────────────────────────
+  // â”€â”€ Loading State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   if (loading) {
     return (
@@ -263,18 +307,18 @@ const ProductForm = () => {
     )
   }
 
-  // ── Render ─────────────────────────────────────────────────────────
+  // â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   return (
     <div className="space-y-6 animate-fade-in pb-20">
 
-      {/* ── Variant Edit Modal ──────────────────────────────────────── */}
+      {/* â”€â”€ Variant Edit Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {editingVariant && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setEditingVariant(null)} />
           <div className="relative bg-background-light border border-primary/20 rounded-2xl p-8 w-full max-w-md shadow-2xl">
-            <h3 className="text-xl font-display font-bold text-text-main-light mb-6">
-              Edit Variant: {editingVariant.sku}
+            <h3 className="text-lg font-bold text-text-main-light mb-4">
+              {editingVariant.id ? `Edit Variant: ${editingVariant.sku}` : 'Add New Variant'}
             </h3>
             <div className="space-y-4">
               <div className="space-y-2">
@@ -288,12 +332,13 @@ const ProductForm = () => {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-text-muted uppercase">Price (₹)</label>
+                  <label className="text-xs font-bold text-text-muted uppercase">Price (â‚¹)</label>
                   <input
                     type="number"
-                    value={editingVariant.price}
-                    onChange={e => setEditingVariant({ ...editingVariant, price: Number(e.target.value) })}
+                    value={editingVariant.price !== undefined ? editingVariant.price / 100 : ''}
+                    onChange={e => setEditingVariant({ ...editingVariant, price: Math.round(Number(e.target.value) * 100) })}
                     className="w-full bg-background-main border border-primary/20 rounded-xl px-4 py-3 text-text-main-light outline-none focus:border-primary"
+                    placeholder="Enter price in Rupees"
                   />
                 </div>
                 <div className="space-y-2">
@@ -307,29 +352,68 @@ const ProductForm = () => {
                 </div>
               </div>
 
-              {/* Image Upload */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-text-muted uppercase">Variant Images</label>
-                <label className="flex items-center justify-center gap-2 px-4 py-3 bg-background-main border border-dashed border-primary/30 rounded-xl cursor-pointer hover:border-primary transition-all">
-                  <span className="material-icons-outlined text-primary">cloud_upload</span>
-                  <span className="text-sm text-text-muted">Upload Image</span>
-                  <input
-                    type="file"
-                    className="hidden"
-                    accept="image/*"
-                    onChange={e => {
-                      const file = e.target.files?.[0]
-                      if (file) handleImageUpload(editingVariant.id, file)
-                    }}
-                  />
-                </label>
-                {editingVariant.images?.length > 0 && (
-                  <div className="flex gap-2 overflow-x-auto py-2">
-                    {editingVariant.images.map(img => (
-                      <div key={img.id} className="w-14 h-14 rounded-lg border border-primary/10 overflow-hidden shrink-0">
-                        <img src={img.url} className="w-full h-full object-cover" alt="" />
+              {/* Options (Size, Shade, etc) */}
+              {options.length > 0 && (
+                <div className="space-y-4 mt-4">
+                  {options.map(opt => {
+                    const selectedValId = editingVariant.optionValueIds?.find(id => opt.values.some(v => v.id === id)) || ''
+                    return (
+                      <div key={opt.id} className="space-y-2">
+                        <label className="text-xs font-bold text-text-muted uppercase">{opt.name}</label>
+                        <select
+                          value={selectedValId}
+                          onChange={e => {
+                            const newId = e.target.value
+                            const otherIds = (editingVariant.optionValueIds || []).filter(id => !opt.values.some(v => v.id === id))
+                            setEditingVariant({ 
+                              ...editingVariant, 
+                              optionValueIds: newId ? [...otherIds, newId] : otherIds 
+                            })
+                          }}
+                          className="w-full bg-background-main border border-primary/20 rounded-xl px-4 py-3 text-text-main-light outline-none focus:border-primary"
+                        >
+                          <option value="">None / Not Applicable</option>
+                          {opt.values.map(val => (
+                            <option key={val.id} value={val.id}>{val.value}</option>
+                          ))}
+                        </select>
                       </div>
-                    ))}
+                    )
+                  })}
+                </div>
+              )}
+
+              {/* Image Upload */}
+              <div className="space-y-2 mt-4">
+                <label className="text-xs font-bold text-text-muted uppercase">Variant Images</label>
+                {editingVariant.id ? (
+                  <>
+                    <label className="flex items-center justify-center gap-2 px-4 py-3 bg-background-main border border-dashed border-primary/30 rounded-xl cursor-pointer hover:border-primary transition-all">
+                      <span className="material-icons-outlined text-primary">cloud_upload</span>
+                      <span className="text-sm text-text-muted">Upload Image</span>
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={e => {
+                          const file = e.target.files?.[0]
+                          if (file) handleImageUpload(editingVariant.id, file)
+                        }}
+                      />
+                    </label>
+                    {editingVariant.images?.length > 0 && (
+                      <div className="flex gap-2 overflow-x-auto py-2">
+                        {editingVariant.images.map(img => (
+                          <div key={img.id} className="w-14 h-14 rounded-lg border border-primary/10 overflow-hidden shrink-0">
+                            <img src={img.url} className="w-full h-full object-cover" alt="" />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="p-4 bg-background-main rounded-xl border border-primary/10 text-center">
+                    <p className="text-xs text-text-muted">Save this variant first to upload images.</p>
                   </div>
                 )}
               </div>
@@ -353,7 +437,7 @@ const ProductForm = () => {
         </div>
       )}
 
-      {/* ── Save Feedback Banner ────────────────────────────────────── */}
+      {/* â”€â”€ Save Feedback Banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {saveMessage && (
         <div className={`p-4 rounded-xl border text-sm font-medium flex items-center gap-2 ${saveMessage.type === 'success'
             ? 'bg-green-500/10 border-green-500/20 text-green-400'
@@ -366,7 +450,7 @@ const ProductForm = () => {
         </div>
       )}
 
-      {/* ── Header ──────────────────────────────────────────────────── */}
+      {/* â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-display font-bold text-text-main-light">
@@ -391,10 +475,10 @@ const ProductForm = () => {
         </div>
       </div>
 
-      {/* ── Form Grid ───────────────────────────────────────────────── */}
+      {/* â”€â”€ Form Grid â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-        {/* Left Column — Main Info */}
+        {/* Left Column â€” Main Info */}
         <div className="lg:col-span-2 space-y-6">
 
           {/* General Info */}
@@ -483,52 +567,74 @@ const ProductForm = () => {
           </section>
 
           {/* Variants (edit mode only) */}
-          {isEdit && formData.variants && formData.variants.length > 0 && (
+          {isEdit && (
             <section className="bg-background-light rounded-2xl border border-primary/10 p-6">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-sm font-bold tracking-widest text-primary/70 uppercase">Product Variants</h2>
-                <span className="text-xs text-text-muted">{formData.variants.length} variant{formData.variants.length !== 1 ? 's' : ''}</span>
+                <div>
+                  <h2 className="text-sm font-bold tracking-widest text-primary/70 uppercase">Product Variants</h2>
+                  <span className="text-xs text-text-muted">{(formData.variants?.length || 0)} variant{(formData.variants?.length !== 1) ? 's' : ''}</span>
+                </div>
+                <button
+                  onClick={() => openEditVariant({ id: '', sku: '', price: 0, stock: 0, compareAtPrice: null, isActive: true, lowStockThreshold: null, optionValues: [], images: [], optionValueIds: [] })}
+                  className="px-3 py-1.5 bg-primary/10 text-primary text-xs font-bold rounded-lg hover:bg-primary/20 transition-colors"
+                >
+                  + Add Variant
+                </button>
               </div>
 
-              <div className="space-y-3">
-                {formData.variants.map(v => (
-                  <div
-                    key={v.id}
-                    className="p-4 bg-background-main rounded-xl border border-primary/5 flex items-center justify-between group hover:border-primary/30 transition-all"
+              {formData.variants && formData.variants.length > 0 ? (
+                <div className="space-y-3">
+                  {formData.variants.map(v => (
+                    <div
+                      key={v.id}
+                      className="p-4 bg-background-main rounded-xl border border-primary/5 flex items-center justify-between group hover:border-primary/30 transition-all"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-lg bg-background-light flex items-center justify-center border border-primary/10 overflow-hidden">
+                          {v.images?.[0]?.url
+                            ? <img src={v.images[0].url} className="w-full h-full object-cover" alt="" />
+                            : <span className="material-icons-outlined text-text-muted text-sm">image</span>
+                          }
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-text-main-light">{v.sku}</p>
+                          <p className="text-[10px] text-text-muted uppercase tracking-wider">
+                            {v.optionValues?.length > 0
+                              ? v.optionValues.map(ov => `${ov.optionName}: ${ov.valueName}`).join(' / ')
+                              : 'Standard Variant'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-6">
+                        <div className="text-right">
+                          <p className="text-sm font-bold text-primary">{formatPaise(v.price ?? 0)}</p>
+                          <p className="text-[10px] text-text-muted">
+                            Stock: <span className={v.stock < 10 ? 'text-red-400' : 'text-green-400'}>{v.stock}</span>
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => openEditVariant(v)}
+                          className="p-2 text-text-muted hover:text-primary transition-colors cursor-pointer rounded-lg hover:bg-primary/5"
+                        >
+                          <span className="material-icons-outlined text-xl">settings</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-8 text-center bg-background-main border border-primary/10 rounded-xl">
+                  <span className="material-icons-outlined text-text-muted text-4xl mb-2">inventory_2</span>
+                  <p className="text-sm text-text-main-light font-medium">No variants yet</p>
+                  <p className="text-xs text-text-muted mt-1 mb-4">You need at least one variant to sell this product.</p>
+                  <button
+                    onClick={() => openEditVariant({ id: '', sku: '', price: 0, stock: 0, compareAtPrice: null, isActive: true, lowStockThreshold: null, optionValues: [], images: [], optionValueIds: [] })}
+                    className="px-4 py-2 bg-primary text-white text-xs font-bold rounded-lg shadow hover:bg-primary/90 transition-colors"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-lg bg-background-light flex items-center justify-center border border-primary/10 overflow-hidden">
-                        {v.images?.[0]?.url
-                          ? <img src={v.images[0].url} className="w-full h-full object-cover" alt="" />
-                          : <span className="material-icons-outlined text-text-muted text-sm">image</span>
-                        }
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold text-text-main-light">{v.sku}</p>
-                        <p className="text-[10px] text-text-muted uppercase tracking-wider">
-                          {v.optionValues?.length > 0
-                            ? v.optionValues.map(ov => `${ov.optionName}: ${ov.valueName}`).join(' / ')
-                            : 'Standard Variant'}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-6">
-                      <div className="text-right">
-                        <p className="text-sm font-bold text-primary">₹{(v.price ?? 0).toFixed(0)}</p>
-                        <p className="text-[10px] text-text-muted">
-                          Stock: <span className={v.stock < 10 ? 'text-red-400' : 'text-green-400'}>{v.stock}</span>
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => setEditingVariant(v)}
-                        className="p-2 text-text-muted hover:text-primary transition-colors cursor-pointer rounded-lg hover:bg-primary/5"
-                      >
-                        <span className="material-icons-outlined text-xl">settings</span>
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                    Add First Variant
+                  </button>
+                </div>
+              )}
             </section>
           )}
 
@@ -630,7 +736,7 @@ const ProductForm = () => {
           )}
         </div>
 
-        {/* Right Column — Sidebar */}
+        {/* Right Column â€” Sidebar */}
         <div className="space-y-6">
 
           {/* Publishing */}
@@ -651,7 +757,7 @@ const ProductForm = () => {
             </p>
           </section>
 
-          {/* Organization — Categories */}
+          {/* Organization â€” Categories */}
           <section className="bg-background-light rounded-2xl border border-primary/10 p-6 space-y-4">
             <h2 className="text-sm font-bold tracking-widest text-primary/70 uppercase mb-2">Categories</h2>
             <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto pr-2">

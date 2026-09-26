@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { getMyOrders } from '../api/cart.api'
 import type { Order } from '../api/cart.api'
+import { formatPaise } from '../utils/currency'
 
 type StatusFilter = 'ALL' | 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED'
 
@@ -40,7 +41,6 @@ const MyOrders: React.FC = () => {
   useEffect(() => { fetchOrders() }, [fetchOrders])
 
   const filtered = filter === 'ALL' ? orders : orders.filter(o => o.status === filter)
-  const formatPrice = (p: number) => `₹${p.toLocaleString('en-IN')}`
   const formatDate = (d: string) => new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
 
   const filters: StatusFilter[] = ['ALL', 'PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED']
@@ -137,7 +137,7 @@ const MyOrders: React.FC = () => {
 
                     {/* Right: Price + Arrow */}
                     <div className="flex items-center gap-3 sm:gap-4">
-                      <span className="text-lg sm:text-xl font-bold text-primary">{formatPrice(order.totalAmount)}</span>
+                      <span className="text-lg sm:text-xl font-bold text-primary">{formatPaise(order.totalAmount)}</span>
                       <span className="material-icons-outlined text-text-muted group-hover:text-primary transition-colors">chevron_right</span>
                     </div>
                   </div>

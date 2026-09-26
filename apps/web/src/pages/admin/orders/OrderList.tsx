@@ -7,6 +7,7 @@ import {
   hardDeleteOrderAdmin,
 } from '../../../api/admin/admin.orders.api'
 import type { AdminOrder, AdminOrderListParams, OrderStatus, PaymentStatus } from '../../../api/admin/admin.orders.api'
+import { formatPaise } from '../../../utils/currency'
 
 const ORDER_STATUSES: OrderStatus[] = ['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED']
 const PAYMENT_STATUSES: PaymentStatus[] = ['PENDING', 'COMPLETED', 'FAILED']
@@ -38,8 +39,6 @@ const paymentDotColors: Record<PaymentStatus, string> = {
   COMPLETED: 'bg-green-500',
   FAILED: 'bg-red-500',
 }
-
-const formatPrice = (price: number) => `₹${price.toLocaleString('en-IN')}`
 
 const formatDate = (dateStr: string) => {
   const d = new Date(dateStr)
@@ -136,7 +135,7 @@ const AdminOrderList = () => {
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         {[
           { label: 'Total Orders', value: pagination.total, icon: 'receipt_long', color: 'text-primary' },
-          { label: 'Revenue (Paid)', value: formatPrice(totalRevenue), icon: 'payments', color: 'text-green-600' },
+          { label: 'Revenue (Paid)', value: formatPaise(totalRevenue), icon: 'payments', color: 'text-green-600' },
           { label: 'Pending', value: pendingCount, icon: 'hourglass_empty', color: 'text-yellow-600' },
           { label: 'Shipped', value: shippedCount, icon: 'local_shipping', color: 'text-indigo-600' },
         ].map(card => (
@@ -248,7 +247,7 @@ const AdminOrderList = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm font-bold text-text-main-light font-mono">
-                        {formatPrice(order.totalAmount)}
+                        {formatPaise(order.totalAmount)}
                       </td>
                       <td className="px-6 py-4 text-sm text-text-muted">
                         {formatDate(order.createdAt)}
@@ -301,12 +300,12 @@ const AdminOrderList = () => {
                                       <div className="min-w-0">
                                         <p className="text-sm font-bold text-text-main-light truncate">{item.productName}</p>
                                         <p className="text-xs text-text-muted">
-                                          Qty: {item.quantity} × {formatPrice(item.price)}
+                                          Qty: {item.quantity} × {formatPaise(item.price)}
                                           {item.productVariant?.sku && <span className="ml-2 font-mono opacity-60">SKU: {item.productVariant.sku}</span>}
                                         </p>
                                       </div>
                                     </div>
-                                    <p className="text-sm font-bold text-primary font-mono whitespace-nowrap ml-4">{formatPrice(item.lineTotal)}</p>
+                                    <p className="text-sm font-bold text-primary font-mono whitespace-nowrap ml-4">{formatPaise(item.lineTotal)}</p>
                                   </div>
                                 ))}
                               </div>
@@ -314,21 +313,21 @@ const AdminOrderList = () => {
                               {/* Price Breakdown */}
                               <div className="bg-background-light/60 rounded-xl px-4 py-3 border border-primary/5 space-y-1.5">
                                 <div className="flex justify-between text-sm text-text-muted">
-                                  <span>Subtotal</span><span className="font-mono">{formatPrice(order.subtotalAmount)}</span>
+                                  <span>Subtotal</span><span className="font-mono">{formatPaise(order.subtotalAmount)}</span>
                                 </div>
                                 {order.discountAmount > 0 && (
                                   <div className="flex justify-between text-sm text-green-600">
-                                    <span>Discount</span><span className="font-mono">-{formatPrice(order.discountAmount)}</span>
+                                    <span>Discount</span><span className="font-mono">-{formatPaise(order.discountAmount)}</span>
                                   </div>
                                 )}
                                 <div className="flex justify-between text-sm text-text-muted">
-                                  <span>Tax</span><span className="font-mono">{formatPrice(order.taxAmount)}</span>
+                                  <span>Tax</span><span className="font-mono">{formatPaise(order.taxAmount)}</span>
                                 </div>
                                 <div className="flex justify-between text-sm text-text-muted">
-                                  <span>Shipping</span><span className="font-mono">{formatPrice(order.shippingAmount)}</span>
+                                  <span>Shipping</span><span className="font-mono">{formatPaise(order.shippingAmount)}</span>
                                 </div>
                                 <div className="flex justify-between text-sm font-bold text-text-main-light pt-1.5 border-t border-primary/10">
-                                  <span>Total</span><span className="font-mono text-primary">{formatPrice(order.totalAmount)}</span>
+                                  <span>Total</span><span className="font-mono text-primary">{formatPaise(order.totalAmount)}</span>
                                 </div>
                               </div>
                             </div>
