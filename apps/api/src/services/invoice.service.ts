@@ -77,23 +77,36 @@ export class InvoiceService {
     const endYearShort = endYear.toString().slice(-2);
     const prefix = `INV/${startYear}-${endYearShort}/`;
 
-    const latestOrder = await db.order.findFirst({
-      where: { invoiceNumber: { startsWith: prefix } },
-      orderBy: { createdAt: "desc" },
-      select: { invoiceNumber: true },
-    });
+    const [byInvoiceNum, byCreatedAt] = await Promise.all([
+      db.order.findMany({
+        where: { invoiceNumber: { startsWith: prefix } },
+        orderBy: { invoiceNumber: "desc" },
+        take: 20,
+        select: { invoiceNumber: true },
+      }),
+      db.order.findMany({
+        where: { invoiceNumber: { startsWith: prefix } },
+        orderBy: { createdAt: "desc" },
+        take: 20,
+        select: { invoiceNumber: true },
+      }),
+    ]);
 
-    let lastSeq = 0;
-    if (latestOrder?.invoiceNumber) {
-      const parts = latestOrder.invoiceNumber.split("/");
-      const lastSeqStr = parts[parts.length - 1];
-      const parsed = parseInt(lastSeqStr || "0", 10);
-      if (!isNaN(parsed)) {
-        lastSeq = parsed;
+    const recentOrders = [...byInvoiceNum, ...byCreatedAt];
+    let maxSeq = 0;
+
+    for (const order of recentOrders) {
+      if (order.invoiceNumber) {
+        const parts = order.invoiceNumber.split("/");
+        const lastSeqStr = parts[parts.length - 1];
+        const parsed = parseInt(lastSeqStr || "0", 10);
+        if (!isNaN(parsed) && parsed > maxSeq) {
+          maxSeq = parsed;
+        }
       }
     }
 
-    const sequence = (lastSeq + 1).toString().padStart(5, "0");
+    const sequence = (maxSeq + 1).toString().padStart(5, "0");
     return `${prefix}${sequence}`;
   }
 
@@ -115,16 +128,32 @@ export class InvoiceService {
     let invoiceDate = order.invoiceDate;
 
     if (!invoiceNumber || !invoiceDate) {
-      invoiceNumber = await this.generateInvoiceNumber();
-      invoiceDate = new Date();
+      for (let attempt = 0; attempt < 5; attempt++) {
+        try {
+          invoiceNumber = await this.generateInvoiceNumber();
+          invoiceDate = new Date();
 
-      await this.prisma.order.update({
-        where: { id: order.id },
-        data: {
-          invoiceNumber,
-          invoiceDate,
-        },
-      });
+          await this.prisma.order.update({
+            where: { id: order.id },
+            data: {
+              invoiceNumber,
+              invoiceDate,
+            },
+          });
+          break;
+        } catch (err: any) {
+          const isUniqueError =
+            err?.code === "P2002" &&
+            (JSON.stringify(err?.meta ?? "").includes("invoiceNumber") ||
+              String(err?.message ?? "").includes("Order_invoiceNumber_key") ||
+              err?.meta?.modelName === "Order");
+          if (isUniqueError && attempt < 4) {
+            await new Promise((resolve) => setTimeout(resolve, 50 + Math.random() * 100));
+            continue;
+          }
+          throw err;
+        }
+      }
     }
 
     const breakup = (typeof order.getBreakup === "object" && order.getBreakup !== null)
@@ -327,7 +356,7 @@ export class InvoiceService {
         <td class="meta-box">
           <div class="meta-title">Invoice & Order Info</div>
           Invoice No: <strong>${data.invoice.number}</strong><br/>
-          Invoice Date: <strong>${new Date(data.invoice.date).toLocaleDateString("en-IN")}</strong><br/>
+          Invoice Date: <strong>${data.invoice.date ? new Date(data.invoice.date).toLocaleDateString("en-IN") : "N/A"}</strong><br/>
           Order ID: <strong>#${data.invoice.orderId}</strong><br/>
           Order Date: ${new Date(data.invoice.orderDate).toLocaleDateString("en-IN")}<br/>
           Payment Status: <span style="color: #059669; font-weight: bold;">${data.invoice.paymentStatus}</span> (${data.invoice.paymentMethod})
@@ -475,7 +504,7 @@ export class InvoiceService {
       doc.fontSize(10).fillColor("#111827").text("Invoice Details:", 320, y);
       doc.fontSize(9).fillColor("#4b5563")
         .text(`Invoice No: ${data.invoice.number}`, 320, y + 15)
-        .text(`Invoice Date: ${new Date(data.invoice.date).toLocaleDateString("en-IN")}`)
+        .text(`Invoice Date: ${data.invoice.date ? new Date(data.invoice.date).toLocaleDateString("en-IN") : "N/A"}`)
         .text(`Order ID: #${data.invoice.orderId}`)
         .text(`Payment: ${data.invoice.paymentStatus} (${data.invoice.paymentMethod})`);
 
