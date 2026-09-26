@@ -11,6 +11,7 @@ interface RazorpayOptions {
   description?: string
   image?: string
   order_id: string
+  timeout?: number
   handler: (response: RazorpaySuccessResponse) => void
   prefill?: {
     name?: string

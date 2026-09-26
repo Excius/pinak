@@ -666,8 +666,38 @@ export class OrderService {
     throw new ValidationError("Failed to process order due to high concurrency. Please try again.");
   }
 
+  private async checkAndExpireOrderIfNeed(order: {
+    id: string;
+    status: string;
+    paymentStatus: string;
+    getBreakup: Prisma.JsonValue | null;
+  }) {
+    if (order.status === "PENDING" && order.paymentStatus === "PENDING") {
+      const breakup = isRecord(order.getBreakup) ? order.getBreakup : {};
+      const reservationExpiresAtRaw = breakup.reservationExpiresAt;
+      if (typeof reservationExpiresAtRaw === "string") {
+        const expiresAt = new Date(reservationExpiresAtRaw);
+        if (!isNaN(expiresAt.getTime()) && expiresAt < new Date()) {
+          try {
+            await this.stockReservationService.releaseReservations(order.id);
+            await this.orderRepository.updateStatusAndPayment(
+              order.id,
+              "CANCELLED",
+              "FAILED",
+            );
+            order.status = "CANCELLED";
+            order.paymentStatus = "FAILED";
+          } catch {}
+        }
+      }
+    }
+  }
+
   async getUserOrders(userId: string, filters: OrderFilters) {
     const result = await this.orderRepository.findUserOrders(userId, filters);
+    for (const order of result.items) {
+      await this.checkAndExpireOrderIfNeed(order);
+    }
     return {
       items: result.items.map((order) => this.mapOrderSummary(order)),
       pagination: result.pagination,
@@ -682,6 +712,7 @@ export class OrderService {
     if (!order) {
       throw new NotFoundError("Order not found");
     }
+    await this.checkAndExpireOrderIfNeed(order);
     return this.mapOrder(order);
   }
 
@@ -761,6 +792,9 @@ export class OrderService {
   async listOrdersAdmin(filters: AdminOrderFilters) {
     const { items, pagination } =
       await this.orderRepository.findAllOrders(filters);
+    for (const order of items) {
+      await this.checkAndExpireOrderIfNeed(order);
+    }
     return {
       orders: items.map((o) => this.mapOrderAdmin(o)),
       pagination,
@@ -809,6 +843,46 @@ export class OrderService {
         if (order.status === "CANCELLED") {
           throw new ValidationError(
             "Cancelled orders cannot be marked as paid",
+          );
+        }
+
+        const isReserved = await this.stockReservationService.isReservationActive(orderId);
+        if (!isReserved) {
+          let refundIssued = false;
+          if (paymentData.paymentId && this.paymentService.refundPayment) {
+            try {
+              await this.paymentService.refundPayment(
+                paymentData.paymentId,
+                order.totalAmount,
+                "Stock reservation expired",
+              );
+              refundIssued = true;
+            } catch (refundErr) {
+              console.error("Auto-refund error for expired order:", refundErr);
+            }
+          }
+
+          const existingBreakup = isRecord(order.getBreakup) ? order.getBreakup : {};
+          await tx.order.update({
+            where: { id: orderId },
+            data: {
+              status: "CANCELLED",
+              paymentStatus: refundIssued ? "COMPLETED" : "FAILED",
+              getBreakup: {
+                ...existingBreakup,
+                paymentRefund: {
+                  refunded: refundIssued,
+                  reason: "Stock reservation expired",
+                  updatedAt: new Date().toISOString(),
+                },
+              },
+            },
+          });
+
+          throw new ValidationError(
+            refundIssued
+              ? "Stock reservation for this order expired. Your payment has been automatically refunded."
+              : "Stock reservation for this order has expired. Payment cannot be processed.",
           );
         }
 
@@ -916,6 +990,49 @@ export class OrderService {
 
         if (order.status === "CANCELLED") {
           throw new ValidationError("Cancelled orders cannot be marked as paid");
+        }
+
+        const isReserved = await this.stockReservationService.isReservationActive(order.id);
+        if (!isReserved) {
+          let refundIssued = false;
+          if (paymentData.paymentId && this.paymentService.refundPayment) {
+            try {
+              await this.paymentService.refundPayment(
+                paymentData.paymentId,
+                order.totalAmount,
+                "Stock reservation expired",
+              );
+              refundIssued = true;
+            } catch (refundErr) {
+              console.error("Auto-refund error for expired order:", refundErr);
+            }
+          }
+
+          const existingBreakup = isRecord(order.getBreakup) ? order.getBreakup : {};
+          await tx.order.update({
+            where: { id: order.id },
+            data: {
+              gatewayPaymentId: paymentData.paymentId,
+              gatewaySignature: paymentData.signature,
+              paymentMethod: paymentData.method,
+              status: "CANCELLED",
+              paymentStatus: refundIssued ? "COMPLETED" : "FAILED",
+              getBreakup: {
+                ...existingBreakup,
+                paymentRefund: {
+                  refunded: refundIssued,
+                  reason: "Stock reservation expired",
+                  updatedAt: new Date().toISOString(),
+                },
+              },
+            },
+          });
+
+          throw new ValidationError(
+            refundIssued
+              ? "Stock reservation for this order expired. Your payment has been automatically refunded."
+              : "Stock reservation for this order has expired. Payment cannot be processed.",
+          );
         }
 
         await this.stockReservationService.confirmReservations(order.id, tx);
