@@ -68,8 +68,8 @@ function getListDisplayPrice(variants: ProductListItem["variants"]): {
 export function mapProductsToCardItems(products: ProductListItem[]): ProductCardItem[] {
     return products.map((product) => {
         const image =
-            product.frontImageUrl ||
             getPrimaryImageFromVariants(product.variants) ||
+            product.frontImageUrl ||
             PRODUCT_IMAGE_PLACEHOLDER;
 
         const { price, originalPrice } = getListDisplayPrice(product.variants);

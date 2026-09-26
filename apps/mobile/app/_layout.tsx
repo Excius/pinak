@@ -10,6 +10,7 @@ import "../global.css";
 import Toast from "react-native-toast-message";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/hooks/use-cart";
+import { WishlistProvider } from "@/hooks/use-wishlist";
 
 export default function RootLayout() {
   return (
@@ -17,9 +18,11 @@ export default function RootLayout() {
       <GestureHandlerRootView style={{ flex: 1 }}>
         <AuthProvider>
           <CartProvider>
-            <Stack screenOptions={{ headerShown: false }} />
-            <StatusBar style="auto" />
-            <Toast />
+            <WishlistProvider>
+              <Stack screenOptions={{ headerShown: false }} />
+              <StatusBar style="auto" />
+              <Toast />
+            </WishlistProvider>
           </CartProvider>
         </AuthProvider>
       </GestureHandlerRootView>
