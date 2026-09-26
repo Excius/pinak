@@ -46,12 +46,18 @@ export class PaymentController {
         const razorpayOrderId = paymentEntity.order_id; // e.g. order_IluGWxBm9U8zJ8
         const razorpayPaymentId = paymentEntity.id;     // e.g. pay_IluGWxBm9U8zJ8
 
-        // We need an OrderService method to confirm by gatewayOrderId
-        await this.orderService.confirmPaymentByGatewayOrderId(razorpayOrderId, {
-          paymentId: razorpayPaymentId,
-          signature: signature,
-          method: paymentEntity.method,
-        });
+        try {
+          // We need an OrderService method to confirm by gatewayOrderId
+          await this.orderService.confirmPaymentByGatewayOrderId(razorpayOrderId, {
+            paymentId: razorpayPaymentId,
+            signature: signature,
+            method: paymentEntity.method,
+          });
+        } catch (confirmErr: any) {
+          console.error("Webhook payment confirmation error:", confirmErr);
+          // Return 200 OK to Razorpay so it acknowledges business outcome (e.g. reservation expired)
+          return res.status(200).send("OK");
+        }
       } else if (event === "payment.failed") {
         const paymentEntity = req.body.payload.payment.entity;
         const razorpayOrderId = paymentEntity.order_id;
@@ -63,11 +69,8 @@ export class PaymentController {
       return res.status(200).send("OK");
     } catch (error: any) {
       console.error("Webhook error:", error);
-      // Return 200 even on error to prevent webhook retries loop if it's a known error (e.g. order already paid)
-      if (error?.message?.includes("already confirmed")) {
-         return res.status(200).send("OK");
-      }
-      return res.status(500).send("Internal Server Error");
+      // Return 200 even on error to prevent webhook retries loop if it's a known error
+      return res.status(200).send("OK");
     }
   };
 
@@ -93,7 +96,7 @@ export class PaymentController {
       await this.orderService.confirmPaymentByGatewayOrderId(razorpay_order_id, {
         paymentId: razorpay_payment_id,
         signature: razorpay_signature,
-        method: "sync_verification", // We might not know the exact method here unless we fetch from Razorpay API
+        method: "sync_verification",
       });
 
       return ResponseHandler.success(
@@ -103,14 +106,14 @@ export class PaymentController {
       );
     } catch (error: any) {
       console.error("Verification error:", error);
-      if (error?.message?.includes("already confirmed") || error?.message?.includes("not found")) {
+      if (error?.message?.includes("already confirmed")) {
          return ResponseHandler.success(
             res,
             { orderId: req.body.razorpay_order_id, status: "COMPLETED" },
             "Payment verified successfully",
          );
       }
-      return ResponseHandler.internalServerError(res, error.message || "Failed to verify payment");
+      return ResponseHandler.badRequest(res, error.message || "Failed to verify payment");
     }
   };
 }

@@ -23,7 +23,6 @@ export class RazorpayPaymentService implements IPaymentGateway {
   }): Promise<PaymentSession> {
     // Razorpay amount is in paise.
     // Our internal system stores amounts in paise (smallest unit) to avoid floating point errors.
-    // So we can pass it directly without conversion.
     const razorpayOrder = await this.razorpay.orders.create({
       amount: input.amount,
       currency: "INR",
@@ -36,6 +35,7 @@ export class RazorpayPaymentService implements IPaymentGateway {
       amount: razorpayOrder.amount as number,
       currency: razorpayOrder.currency,
       redirectUrl: "", // Frontend will open SDK instead of redirecting
+      timeout: Math.max(1, appConfig.STOCK_RESERVATION_EXPIRE_SECONDS - 120),
     };
   }
 
@@ -68,5 +68,20 @@ export class RazorpayPaymentService implements IPaymentGateway {
       .update(text)
       .digest("hex");
     return expectedSignature === razorpaySignature;
+  }
+
+  /**
+   * Triggers an automatic refund via Razorpay Payments API
+   */
+  async refundPayment(
+    paymentId: string,
+    amount?: number,
+    reason?: string,
+  ): Promise<any> {
+    const refundData: Record<string, unknown> = {};
+    if (amount) refundData.amount = amount;
+    if (reason) refundData.notes = { reason };
+
+    return this.razorpay.payments.refund(paymentId, refundData);
   }
 }

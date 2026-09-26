@@ -5,7 +5,7 @@ import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { getAddresses, createAddress } from '../api/addresses.api'
 import { validateCoupon } from '../api/coupons.api'
-import { createOrder, verifyPayment } from '../api/cart.api'
+import { createOrder, verifyPayment, cancelOrder } from '../api/cart.api'
 import type { Address, CreateAddressPayload } from '../api/addresses.api'
 import type { CouponValidation } from '../api/coupons.api'
 import { formatPaise } from '../utils/currency'
@@ -126,6 +126,8 @@ const Checkout: React.FC = () => {
         return
       }
 
+      let paymentAttemptedOrSuccess = false
+
       const options: RazorpayOptions = {
         key: razorpayKeyId,
         amount: payment.amount,            // Already in paise from backend
@@ -133,7 +135,9 @@ const Checkout: React.FC = () => {
         name: 'Pinak',
         description: 'Order Payment',
         order_id: payment.id,       // Razorpay Order ID e.g. order_Pabc12345
+        timeout: payment.timeout,   // Closes the modal automatically before stock reservation expires
         handler: async function (sdkResponse: any) {
+          paymentAttemptedOrSuccess = true
           console.log("Razorpay SDK Response:", sdkResponse);
           // Step 3: Verify payment synchronously
           try {
@@ -168,8 +172,11 @@ const Checkout: React.FC = () => {
         modal: {
           ondismiss: () => {
             // User closed the modal without paying
+            if (!paymentAttemptedOrSuccess) {
+              cancelOrder(order.id).catch(console.error)
+              setOrderError('Payment was cancelled. Your order has been cancelled.')
+            }
             setPlacing(false)
-            setOrderError('Payment was cancelled. Your order has been saved — you can retry payment.')
           },
           confirm_close: true,
         },
@@ -177,6 +184,8 @@ const Checkout: React.FC = () => {
 
       const rzp = new window.Razorpay(options)
       rzp.on('payment.failed', function (response) {
+        paymentAttemptedOrSuccess = true
+        cancelOrder(order.id).catch(console.error)
         setOrderError('Payment failed: ' + response.error.description)
         toast.error('Payment failed: ' + response.error.description)
         setPlacing(false)

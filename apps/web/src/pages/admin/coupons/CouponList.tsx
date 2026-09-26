@@ -74,8 +74,8 @@ const CouponList: React.FC = () => {
       discountValue: 0,
       minOderValue: '',
       maxDiscountValue: '',
-      validFrom: new Date().toISOString().split('T')[0],
-      validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      validFrom: new Date().toISOString().split('T')[0] as string,
+      validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] as string,
       maxTotalUsers: '',
       maxUsesPerUser: '',
       isActive: true
@@ -91,8 +91,8 @@ const CouponList: React.FC = () => {
       discountValue: coupon.discountValue,
       minOderValue: coupon.minOderValue?.toString() || '',
       maxDiscountValue: coupon.maxDiscountValue?.toString() || '',
-      validFrom: new Date(coupon.validFrom).toISOString().split('T')[0],
-      validUntil: new Date(coupon.validUntil).toISOString().split('T')[0],
+      validFrom: new Date(coupon.validFrom).toISOString().split('T')[0] as string,
+      validUntil: new Date(coupon.validUntil).toISOString().split('T')[0] as string,
       maxTotalUsers: coupon.maxTotalUsers?.toString() || '',
       maxUsesPerUser: coupon.maxUsesPerUser?.toString() || '',
       isActive: coupon.isActive

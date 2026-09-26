@@ -4,6 +4,7 @@ export type PaymentSession = {
   amount: number;
   currency: string;
   redirectUrl: string;
+  timeout?: number;
 };
 
 export type PaymentWebhookPayload = {
@@ -17,4 +18,5 @@ export type PaymentWebhookPayload = {
 export interface IPaymentGateway {
   createPayment(input: { orderId: string; amount: number }): Promise<PaymentSession>;
   verifyPayment(payload: PaymentWebhookPayload): Promise<boolean>;
+  refundPayment?(paymentId: string, amount?: number, reason?: string): Promise<any>;
 }
