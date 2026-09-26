@@ -388,14 +388,11 @@ export class ProductService {
       sanitizedData.optionValues) as unknown;
     const attachOptionValueIds: string[] = [];
 
-    if (
-      Array.isArray(explicitOptionValueIds) &&
-      explicitOptionValueIds.length
-    ) {
+    if (Array.isArray(explicitOptionValueIds)) {
       attachOptionValueIds.push(...(explicitOptionValueIds as string[]));
-      delete sanitizedData.optionValueIds;
-      delete sanitizedData.optionValues;
     }
+    delete sanitizedData.optionValueIds;
+    delete sanitizedData.optionValues;
 
     // Resolve legacy size/shade strings to OptionValue rows (if present)
     if (sanitizedData.size) {
@@ -480,7 +477,7 @@ export class ProductService {
       }
     }
 
-    // Map legacy `size` / `shade` strings into OptionValue connects (append)
+    // Map legacy `size` / `shade` strings and explicit optionValueIds
     const attachOptionValueIds: string[] = [];
     if (sanitizedData.size) {
       const ov = await this.productRepository.findOptionValueByNameAndValue(
@@ -488,7 +485,6 @@ export class ProductService {
         sanitizedData.size as string,
       );
       if (ov) attachOptionValueIds.push(ov.id);
-      delete sanitizedData.size;
     }
     if (sanitizedData.shade) {
       const ov = await this.productRepository.findOptionValueByNameAndValue(
@@ -496,23 +492,28 @@ export class ProductService {
         sanitizedData.shade as string,
       );
       if (ov) attachOptionValueIds.push(ov.id);
-      delete sanitizedData.shade;
     }
 
-    // Map explicit optionValueIds into nested creates (append)
     const explicitOptionValueIds = (sanitizedData.optionValueIds ??
       sanitizedData.optionValues) as unknown;
-    if (
-      Array.isArray(explicitOptionValueIds) &&
-      explicitOptionValueIds.length
-    ) {
+    if (Array.isArray(explicitOptionValueIds)) {
       attachOptionValueIds.push(...(explicitOptionValueIds as string[]));
-      delete sanitizedData.optionValueIds;
-      delete sanitizedData.optionValues;
     }
 
-    if (attachOptionValueIds.length) {
+    const hasOptionValueUpdates =
+      "optionValueIds" in sanitizedData ||
+      "optionValues" in sanitizedData ||
+      "size" in sanitizedData ||
+      "shade" in sanitizedData;
+
+    delete sanitizedData.optionValueIds;
+    delete sanitizedData.optionValues;
+    delete sanitizedData.size;
+    delete sanitizedData.shade;
+
+    if (hasOptionValueUpdates) {
       sanitizedData.optionValues = {
+        deleteMany: {},
         create: attachOptionValueIds.map((ovId) => ({
           optionValue: { connect: { id: ovId } },
         })),
