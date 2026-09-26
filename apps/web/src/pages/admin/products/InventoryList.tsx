@@ -114,7 +114,7 @@ const InventoryList: React.FC = () => {
                         </div>
                         <div>
                           <p className="font-bold text-text-main-light">{product.name}</p>
-                          <p className="text-xs text-text-muted mt-0.5 truncate max-w-[200px]">{product.shortDescription || 'No description'}</p>
+                          <p className="text-xs text-text-muted mt-0.5 truncate max-w-[200px]">{product.description || 'No description'}</p>
                         </div>
                       </div>
                     </td>

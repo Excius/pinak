@@ -338,317 +338,366 @@ export class OrderService {
       billingAddress = shippingAddress;
     }
 
-    return this.prisma.$transaction(
-      async (tx) => {
-        const cart = await this.cartRepository.getCartWithItems(userId, tx);
-        if (cart.items.length === 0) {
-          throw new ValidationError("Cart is empty");
-        }
+    const MAX_RETRIES = 5;
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      try {
+        return await this.prisma.$transaction(
+          async (tx) => {
+            const cart = await this.cartRepository.getCartWithItems(userId, tx);
+            if (cart.items.length === 0) {
+              throw new ValidationError("Cart is empty");
+            }
 
-        const reservationRequirements: Array<{
-          productVariantId?: string | null;
-          comboKitId?: string | null;
-          quantity: number;
-        }> = [];
-        const orderItems: CreateOrderItemInput[] = [];
+            const reservationRequirements: Array<{
+              productVariantId?: string | null;
+              comboKitId?: string | null;
+              quantity: number;
+            }> = [];
+            const orderItems: CreateOrderItemInput[] = [];
 
-        type ParsedCartItem = {
-          item: typeof cart.items[0];
-          lineSubtotal: number;
-          taxRate: number;
-          label: string;
-          itemType: "PRODUCT_VARIANT" | "COMBO_KIT";
-          variant?: any;
-          comboKit?: any;
-          componentSnapshot?: any;
-        };
+            type ParsedCartItem = {
+              item: typeof cart.items[0];
+              lineSubtotal: number;
+              taxRate: number;
+              label: string;
+              itemType: "PRODUCT_VARIANT" | "COMBO_KIT";
+              variant?: any;
+              comboKit?: any;
+              componentSnapshot?: any;
+            };
 
-        const parsedItems: ParsedCartItem[] = [];
-        let subtotalAmount = 0;
-        let shippingRequired = false;
+            const parsedItems: ParsedCartItem[] = [];
+            let subtotalAmount = 0;
+            let shippingRequired = false;
 
-        for (const item of cart.items) {
-          if (item.productVariantId && item.productVariant) {
-            const variant = item.productVariant;
-            const lineSubtotal = variant.price * item.quantity;
-            const taxRate = variant.product.taxClass?.rate ?? 0;
+            for (const item of cart.items) {
+              if (item.productVariantId && item.productVariant) {
+                const variant = item.productVariant;
+                const lineSubtotal = variant.price * item.quantity;
+                const taxRate = variant.product.taxClass?.rate ?? 0;
 
-            subtotalAmount += lineSubtotal;
-            shippingRequired = shippingRequired || variant.product.requiresShipping;
+                subtotalAmount += lineSubtotal;
+                shippingRequired = shippingRequired || variant.product.requiresShipping;
 
-            parsedItems.push({
-              item,
-              lineSubtotal,
-              taxRate,
-              label: variant.product.name,
-              itemType: "PRODUCT_VARIANT",
-              variant,
-            });
+                parsedItems.push({
+                  item,
+                  lineSubtotal,
+                  taxRate,
+                  label: variant.product.name,
+                  itemType: "PRODUCT_VARIANT",
+                  variant,
+                });
 
-            reservationRequirements.push({
-              productVariantId: variant.id,
-              quantity: item.quantity,
-            });
+                reservationRequirements.push({
+                  productVariantId: variant.id,
+                  quantity: item.quantity,
+                });
 
-            continue;
-          }
-
-          if (item.comboKitId && item.comboKit) {
-            const comboKit = item.comboKit;
-            const lineSubtotal = comboKit.price * item.quantity;
-            subtotalAmount += lineSubtotal;
-
-            const maxTaxRate = Math.max(
-              0,
-              ...comboKit.items.map(
-                (comboItem) => comboItem.productVariant?.product?.taxClass?.rate ?? 0
-              )
-            );
-
-            const componentSnapshot = comboKit.items.map((comboItem) => {
-              if (!comboItem.productVariant) {
-                throw new ValidationError("Combo kit contains invalid variant");
+                continue;
               }
 
-              shippingRequired =
-                shippingRequired ||
-                comboItem.productVariant.product.requiresShipping;
+              if (item.comboKitId && item.comboKit) {
+                const comboKit = item.comboKit;
+                const lineSubtotal = comboKit.price * item.quantity;
+                subtotalAmount += lineSubtotal;
 
-              return {
-                comboItemId: comboItem.id,
-                productVariantId: comboItem.productVariantId,
-                quantityPerCombo: comboItem.quantity,
-                sku: comboItem.productVariant.sku,
-              };
-            });
+                const maxTaxRate = Math.max(
+                  0,
+                  ...comboKit.items.map(
+                    (comboItem) => comboItem.productVariant?.product?.taxClass?.rate ?? 0
+                  )
+                );
 
-            parsedItems.push({
-              item,
-              lineSubtotal,
-              taxRate: maxTaxRate,
-              label: comboKit.name,
-              itemType: "COMBO_KIT",
-              comboKit,
-              componentSnapshot,
-            });
+                const componentSnapshot = comboKit.items.map((comboItem) => {
+                  if (!comboItem.productVariant) {
+                    throw new ValidationError("Combo kit contains invalid variant");
+                  }
 
-            reservationRequirements.push({
-              comboKitId: comboKit.id,
-              quantity: item.quantity,
-            });
+                  shippingRequired =
+                    shippingRequired ||
+                    comboItem.productVariant.product.requiresShipping;
 
-            continue;
-          }
+                  return {
+                    comboItemId: comboItem.id,
+                    productVariantId: comboItem.productVariantId,
+                    quantityPerCombo: comboItem.quantity,
+                    sku: comboItem.productVariant.sku,
+                  };
+                });
 
-          throw new ValidationError("Cart contains invalid items");
-        }
+                parsedItems.push({
+                  item,
+                  lineSubtotal,
+                  taxRate: maxTaxRate,
+                  label: comboKit.name,
+                  itemType: "COMBO_KIT",
+                  comboKit,
+                  componentSnapshot,
+                });
 
-        let discountAmount = 0;
-        let couponCode: string | null = null;
+                reservationRequirements.push({
+                  comboKitId: comboKit.id,
+                  quantity: item.quantity,
+                });
 
-        if (input.couponCode) {
-          const couponValidation = await this.couponService.validateCoupon(
-            input.couponCode,
-            userId,
-            subtotalAmount,
-            tx,
-          );
-          discountAmount = couponValidation.discountAmount;
-          couponCode = couponValidation.coupon.code;
-        }
+                continue;
+              }
 
-        // Pro-rata discount allocation across items for GST compliance (CGST Act Sec 15(3))
-        const itemDiscounts: number[] = parsedItems.map(() => 0);
-        if (discountAmount > 0 && subtotalAmount > 0) {
-          let allocatedSum = 0;
-          let maxSubtotalIndex = 0;
-          let maxSubtotalValue = -1;
-
-          parsedItems.forEach((pItem, idx) => {
-            if (pItem.lineSubtotal > maxSubtotalValue) {
-              maxSubtotalValue = pItem.lineSubtotal;
-              maxSubtotalIndex = idx;
+              throw new ValidationError("Cart contains invalid items");
             }
-            const alloc = Math.round((pItem.lineSubtotal / subtotalAmount) * discountAmount);
-            itemDiscounts[idx] = alloc;
-            allocatedSum += alloc;
-          });
 
-          // Adjust any rounding residue (1-2 paise) on the item with highest subtotal
-          const residue = discountAmount - allocatedSum;
-          if (residue !== 0) {
-            itemDiscounts[maxSubtotalIndex] = (itemDiscounts[maxSubtotalIndex] ?? 0) + residue;
-          }
-        }
+            let discountAmount = 0;
+            let couponCode: string | null = null;
 
-        let taxAmount = 0;
-        const taxBreakdown: Array<{
-          label: string;
-          rate: number;
-          taxableValue: number;
-          discountAmount: number;
-          amount: number;
-        }> = [];
+            if (input.couponCode) {
+              const couponValidation = await this.couponService.validateCoupon(
+                input.couponCode,
+                userId,
+                subtotalAmount,
+                tx,
+              );
+              discountAmount = couponValidation.discountAmount;
+              couponCode = couponValidation.coupon.code;
+            }
 
-        parsedItems.forEach((pItem, idx) => {
-          const allocatedDisc = itemDiscounts[idx] ?? 0;
-          const netTaxable = Math.max(0, pItem.lineSubtotal - allocatedDisc);
-          const lineTax = Math.round((netTaxable * pItem.taxRate) / 100);
+            // Pro-rata discount allocation across items for GST compliance (CGST Act Sec 15(3))
+            const itemDiscounts: number[] = parsedItems.map(() => 0);
+            if (discountAmount > 0 && subtotalAmount > 0) {
+              let allocatedSum = 0;
+              let maxSubtotalIndex = 0;
+              let maxSubtotalValue = -1;
 
-          taxAmount += lineTax;
+              parsedItems.forEach((pItem, idx) => {
+                if (pItem.lineSubtotal > maxSubtotalValue) {
+                  maxSubtotalValue = pItem.lineSubtotal;
+                  maxSubtotalIndex = idx;
+                }
+                const alloc = Math.round((pItem.lineSubtotal / subtotalAmount) * discountAmount);
+                itemDiscounts[idx] = alloc;
+                allocatedSum += alloc;
+              });
 
-          taxBreakdown.push({
-            label: pItem.label,
-            rate: pItem.taxRate,
-            taxableValue: netTaxable,
-            discountAmount: allocatedDisc,
-            amount: lineTax,
-          });
+              // Adjust any rounding residue (1-2 paise) on the item with highest subtotal
+              const residue = discountAmount - allocatedSum;
+              if (residue !== 0) {
+                itemDiscounts[maxSubtotalIndex] = (itemDiscounts[maxSubtotalIndex] ?? 0) + residue;
+              }
+            }
 
-          if (pItem.itemType === "PRODUCT_VARIANT") {
-            const variant = pItem.variant;
-            orderItems.push({
-              orderId: "",
-              productId: variant.productId,
-              productVariantId: variant.id,
-              productName: variant.product.name,
-              variantDetails: {
-                itemType: "PRODUCT_VARIANT",
-                sku: variant.sku,
-                ean: variant.ean,
-                tags: variant.tags,
-                optionValues: variant.optionValues.map((entry: any) => ({
-                  optionName: entry.optionValue.option.name,
-                  valueName: entry.optionValue.value,
-                })),
-              },
-              price: variant.price,
-              quantity: pItem.item.quantity,
+            let taxAmount = 0;
+            const taxBreakdown: Array<{
+              label: string;
+              rate: number;
+              taxableValue: number;
+              discountAmount: number;
+              amount: number;
+            }> = [];
+
+            parsedItems.forEach((pItem, idx) => {
+              const allocatedDisc = itemDiscounts[idx] ?? 0;
+              const netTaxable = Math.max(0, pItem.lineSubtotal - allocatedDisc);
+              const lineTax = Math.round((netTaxable * pItem.taxRate) / 100);
+
+              taxAmount += lineTax;
+
+              taxBreakdown.push({
+                label: pItem.label,
+                rate: pItem.taxRate,
+                taxableValue: netTaxable,
+                discountAmount: allocatedDisc,
+                amount: lineTax,
+              });
+
+              if (pItem.itemType === "PRODUCT_VARIANT") {
+                const variant = pItem.variant;
+                orderItems.push({
+                  orderId: "",
+                  productId: variant.productId,
+                  productVariantId: variant.id,
+                  productName: variant.product.name,
+                  variantDetails: {
+                    itemType: "PRODUCT_VARIANT",
+                    sku: variant.sku,
+                    ean: variant.ean,
+                    tags: variant.tags,
+                    optionValues: variant.optionValues.map((entry: any) => ({
+                      optionName: entry.optionValue.option.name,
+                      valueName: entry.optionValue.value,
+                    })),
+                  },
+                  price: variant.price,
+                  quantity: pItem.item.quantity,
+                });
+              } else {
+                const comboKit = pItem.comboKit;
+                orderItems.push({
+                  orderId: "",
+                  comboKitId: comboKit.id,
+                  productName: comboKit.name,
+                  variantDetails: {
+                    itemType: "COMBO_KIT",
+                    slug: comboKit.slug,
+                    components: pItem.componentSnapshot,
+                  },
+                  price: comboKit.price,
+                  quantity: pItem.item.quantity,
+                });
+              }
             });
-          } else {
-            const comboKit = pItem.comboKit;
-            orderItems.push({
-              orderId: "",
-              comboKitId: comboKit.id,
-              productName: comboKit.name,
-              variantDetails: {
-                itemType: "COMBO_KIT",
-                slug: comboKit.slug,
-                components: pItem.componentSnapshot,
+
+            // If shipping is required, charge 10000 paise (₹100)
+            const shippingAmount = shippingRequired ? 10000 : 0;
+            const netSubtotal = Math.max(0, subtotalAmount - discountAmount);
+            const totalAmount = Math.max(0, netSubtotal + taxAmount + shippingAmount);
+
+            const gstPercentage =
+              netSubtotal > 0
+                ? Number(((taxAmount / netSubtotal) * 100).toFixed(2))
+                : 0;
+
+            const invoiceNumber = this.invoiceService
+              ? await this.invoiceService.generateInvoiceNumber(tx)
+              : undefined;
+            const invoiceDate = invoiceNumber ? new Date() : undefined;
+
+            const order = await this.orderRepository.create(
+              {
+                user: { connect: { id: userId } },
+                status: "PENDING",
+                paymentStatus: "PENDING",
+                subtotalAmount,
+                taxAmount,
+                discountAmount,
+                shippingAmount,
+                totalAmount,
+                gstPercentage,
+                couponcode: couponCode,
+                couponDiscount: discountAmount,
+                invoiceNumber,
+                invoiceDate,
+                getBreakup: {
+                  taxBreakdown,
+                  shippingAddress,
+                  billingAddress,
+                },
               },
-              price: comboKit.price,
-              quantity: pItem.item.quantity,
+              tx,
+            );
+
+            const reservation =
+              await this.stockReservationService.createReservations(
+                order.id,
+                reservationRequirements,
+                tx,
+              );
+
+            const orderItemPayload = orderItems.map((item) => ({
+              ...item,
+              orderId: order.id,
+            }));
+            await this.orderRepository.createItems(orderItemPayload, tx);
+
+            if (couponCode) {
+              await this.couponService.applyCoupon(
+                order.id,
+                couponCode,
+                userId,
+                subtotalAmount,
+                tx,
+              );
+            }
+
+            await tx.order.update({
+              where: { id: order.id },
+              data: {
+                getBreakup: {
+                  taxBreakdown,
+                  shippingAddress,
+                  billingAddress,
+                  reservationExpiresAt: reservation.expiresAt.toISOString(),
+                },
+              },
             });
-          }
-        });
 
-        // If shipping is required, charge 10000 paise (₹100)
-        const shippingAmount = shippingRequired ? 10000 : 0;
-        const netSubtotal = Math.max(0, subtotalAmount - discountAmount);
-        const totalAmount = Math.max(0, netSubtotal + taxAmount + shippingAmount);
+            const finalOrder = await this.orderRepository.findByIdWithItems(
+              order.id,
+              tx,
+            );
+            if (!finalOrder) {
+              throw new NotFoundError("Order not found after creation");
+            }
 
-        const gstPercentage =
-          netSubtotal > 0
-            ? Number(((taxAmount / netSubtotal) * 100).toFixed(2))
-            : 0;
+            const payment = await this.paymentService.createPayment({
+              orderId: finalOrder.id,
+              amount: finalOrder.totalAmount,
+            });
 
-        const invoiceNumber = this.invoiceService
-          ? await this.invoiceService.generateInvoiceNumber(tx)
-          : undefined;
-        const invoiceDate = invoiceNumber ? new Date() : undefined;
+            // Store the Razorpay order ID
+            await tx.order.update({
+              where: { id: finalOrder.id },
+              data: { gatewayOrderId: payment.id },
+            });
 
-        const order = await this.orderRepository.create(
-          {
-            user: { connect: { id: userId } },
-            status: "PENDING",
-            paymentStatus: "PENDING",
-            subtotalAmount,
-            taxAmount,
-            discountAmount,
-            shippingAmount,
-            totalAmount,
-            gstPercentage,
-            couponcode: couponCode,
-            couponDiscount: discountAmount,
-            invoiceNumber,
-            invoiceDate,
-            getBreakup: {
-              taxBreakdown,
-              shippingAddress,
-              billingAddress,
-            },
+            await this.cartRepository.clearCartByUser(userId, tx);
+
+            return {
+              order: this.mapOrder(finalOrder),
+              payment,
+            };
           },
-          tx,
+          { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
         );
+      } catch (error: any) {
+        const isUniqueInvoiceError =
+          error?.code === "P2002" &&
+          (JSON.stringify(error?.meta ?? "").includes("invoiceNumber") ||
+            String(error?.message ?? "").includes("Order_invoiceNumber_key") ||
+            error?.meta?.modelName === "Order");
+        const isSerializationError = error?.code === "P2034";
 
-        const reservation =
-          await this.stockReservationService.createReservations(
-            order.id,
-            reservationRequirements,
-            tx,
-          );
-
-        const orderItemPayload = orderItems.map((item) => ({
-          ...item,
-          orderId: order.id,
-        }));
-        await this.orderRepository.createItems(orderItemPayload, tx);
-
-        if (couponCode) {
-          await this.couponService.applyCoupon(
-            order.id,
-            couponCode,
-            userId,
-            subtotalAmount,
-            tx,
-          );
+        if ((isUniqueInvoiceError || isSerializationError) && attempt < MAX_RETRIES - 1) {
+          await new Promise((resolve) => setTimeout(resolve, 50 + Math.random() * 100));
+          continue;
         }
 
-        await tx.order.update({
-          where: { id: order.id },
-          data: {
-            getBreakup: {
-              taxBreakdown,
-              shippingAddress,
-              billingAddress,
-              reservationExpiresAt: reservation.expiresAt.toISOString(),
-            },
-          },
-        });
+        throw error;
+      }
+    }
+    throw new ValidationError("Failed to process order due to high concurrency. Please try again.");
+  }
 
-        const finalOrder = await this.orderRepository.findByIdWithItems(
-          order.id,
-          tx,
-        );
-        if (!finalOrder) {
-          throw new NotFoundError("Order not found after creation");
+  private async checkAndExpireOrderIfNeed(order: {
+    id: string;
+    status: string;
+    paymentStatus: string;
+    getBreakup: Prisma.JsonValue | null;
+  }) {
+    if (order.status === "PENDING" && order.paymentStatus === "PENDING") {
+      const breakup = isRecord(order.getBreakup) ? order.getBreakup : {};
+      const reservationExpiresAtRaw = breakup.reservationExpiresAt;
+      if (typeof reservationExpiresAtRaw === "string") {
+        const expiresAt = new Date(reservationExpiresAtRaw);
+        if (!isNaN(expiresAt.getTime()) && expiresAt < new Date()) {
+          try {
+            await this.stockReservationService.releaseReservations(order.id);
+            await this.orderRepository.updateStatusAndPayment(
+              order.id,
+              "CANCELLED",
+              "FAILED",
+            );
+            order.status = "CANCELLED";
+            order.paymentStatus = "FAILED";
+          } catch {}
         }
-
-        const payment = await this.paymentService.createPayment({
-          orderId: finalOrder.id,
-          amount: finalOrder.totalAmount,
-        });
-
-        // Store the Razorpay order ID
-        await tx.order.update({
-          where: { id: finalOrder.id },
-          data: { gatewayOrderId: payment.id },
-        });
-
-        await this.cartRepository.clearCartByUser(userId, tx);
-
-        return {
-          order: this.mapOrder(finalOrder),
-          payment,
-          
-        };
-      },
-      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
-    );
+      }
+    }
   }
 
   async getUserOrders(userId: string, filters: OrderFilters) {
     const result = await this.orderRepository.findUserOrders(userId, filters);
+    for (const order of result.items) {
+      await this.checkAndExpireOrderIfNeed(order);
+    }
     return {
       items: result.items.map((order) => this.mapOrderSummary(order)),
       pagination: result.pagination,
@@ -663,6 +712,7 @@ export class OrderService {
     if (!order) {
       throw new NotFoundError("Order not found");
     }
+    await this.checkAndExpireOrderIfNeed(order);
     return this.mapOrder(order);
   }
 
@@ -742,6 +792,9 @@ export class OrderService {
   async listOrdersAdmin(filters: AdminOrderFilters) {
     const { items, pagination } =
       await this.orderRepository.findAllOrders(filters);
+    for (const order of items) {
+      await this.checkAndExpireOrderIfNeed(order);
+    }
     return {
       orders: items.map((o) => this.mapOrderAdmin(o)),
       pagination,
@@ -790,6 +843,46 @@ export class OrderService {
         if (order.status === "CANCELLED") {
           throw new ValidationError(
             "Cancelled orders cannot be marked as paid",
+          );
+        }
+
+        const isReserved = await this.stockReservationService.isReservationActive(orderId);
+        if (!isReserved) {
+          let refundIssued = false;
+          if (paymentData.paymentId && this.paymentService.refundPayment) {
+            try {
+              await this.paymentService.refundPayment(
+                paymentData.paymentId,
+                order.totalAmount,
+                "Stock reservation expired",
+              );
+              refundIssued = true;
+            } catch (refundErr) {
+              console.error("Auto-refund error for expired order:", refundErr);
+            }
+          }
+
+          const existingBreakup = isRecord(order.getBreakup) ? order.getBreakup : {};
+          await tx.order.update({
+            where: { id: orderId },
+            data: {
+              status: "CANCELLED",
+              paymentStatus: refundIssued ? "COMPLETED" : "FAILED",
+              getBreakup: {
+                ...existingBreakup,
+                paymentRefund: {
+                  refunded: refundIssued,
+                  reason: "Stock reservation expired",
+                  updatedAt: new Date().toISOString(),
+                },
+              },
+            },
+          });
+
+          throw new ValidationError(
+            refundIssued
+              ? "Stock reservation for this order expired. Your payment has been automatically refunded."
+              : "Stock reservation for this order has expired. Payment cannot be processed.",
           );
         }
 
@@ -897,6 +990,49 @@ export class OrderService {
 
         if (order.status === "CANCELLED") {
           throw new ValidationError("Cancelled orders cannot be marked as paid");
+        }
+
+        const isReserved = await this.stockReservationService.isReservationActive(order.id);
+        if (!isReserved) {
+          let refundIssued = false;
+          if (paymentData.paymentId && this.paymentService.refundPayment) {
+            try {
+              await this.paymentService.refundPayment(
+                paymentData.paymentId,
+                order.totalAmount,
+                "Stock reservation expired",
+              );
+              refundIssued = true;
+            } catch (refundErr) {
+              console.error("Auto-refund error for expired order:", refundErr);
+            }
+          }
+
+          const existingBreakup = isRecord(order.getBreakup) ? order.getBreakup : {};
+          await tx.order.update({
+            where: { id: order.id },
+            data: {
+              gatewayPaymentId: paymentData.paymentId,
+              gatewaySignature: paymentData.signature,
+              paymentMethod: paymentData.method,
+              status: "CANCELLED",
+              paymentStatus: refundIssued ? "COMPLETED" : "FAILED",
+              getBreakup: {
+                ...existingBreakup,
+                paymentRefund: {
+                  refunded: refundIssued,
+                  reason: "Stock reservation expired",
+                  updatedAt: new Date().toISOString(),
+                },
+              },
+            },
+          });
+
+          throw new ValidationError(
+            refundIssued
+              ? "Stock reservation for this order expired. Your payment has been automatically refunded."
+              : "Stock reservation for this order has expired. Payment cannot be processed.",
+          );
         }
 
         await this.stockReservationService.confirmReservations(order.id, tx);
