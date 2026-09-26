@@ -17,7 +17,6 @@ import type { AdminProduct, AdminProductVariant } from '../../../api/admin/admin
 import { getAllCategoriesAdmin, getAllBrandsAdmin } from '../../../api/admin/admin.catalog.api'
 import type { AdminCategory, AdminBrand } from '../../../api/admin/admin.catalog.api'
 import { getOptions, type AdminOption } from '../../../api/admin/admin.options.api'
-import { getFilterGroups, type AdminFilterGroup } from '../../../api/admin/admin.filters.api'
 import { formatPaise } from '../../../utils/currency'
 
 const ProductForm = () => {
@@ -30,7 +29,6 @@ const ProductForm = () => {
   const [categories, setCategories] = useState<AdminCategory[]>([])
   const [brands, setBrands] = useState<AdminBrand[]>([])
   const [options, setOptions] = useState<AdminOption[]>([])
-  const [filterGroups, setFilterGroups] = useState<AdminFilterGroup[]>([])
   const [editingVariant, setEditingVariant] = useState<AdminProductVariant | null>(null)
   const [showBrandDropdown, setShowBrandDropdown] = useState(false)
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
@@ -61,16 +59,14 @@ const ProductForm = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [cats, brs, opts, fgs] = await Promise.all([
+        const [cats, brs, opts] = await Promise.all([
           getAllCategoriesAdmin(), 
           getAllBrandsAdmin(),
-          getOptions(),
-          getFilterGroups()
+          getOptions()
         ])
         setCategories(cats)
         setBrands(brs)
         setOptions(opts)
-        setFilterGroups(fgs)
 
         if (isEdit && id) {
           const product = await getProductByIdAdmin(id)
