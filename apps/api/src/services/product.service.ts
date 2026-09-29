@@ -227,29 +227,35 @@ export class ProductService {
     if (sanitizedData.description) {
       sanitizedData.description = (sanitizedData.description as string).trim();
     }
-    if (sanitizedData.brand && typeof sanitizedData.brand === "string") {
-      sanitizedData.brand = await this.resolveBrandInput(
-        (sanitizedData.brand as string).trim(),
-      );
-    }
-
-    // Validate category exists
-    if (sanitizedData.categoryId) {
-      const categoryExists = await this.validateCategoryExists(
-        sanitizedData.categoryId,
-      );
-      if (!categoryExists) {
-        throw new ValidationError("Invalid category ID");
+    if (typeof sanitizedData.brand === "string") {
+      const brandStr = sanitizedData.brand.trim();
+      if (brandStr !== "") {
+        sanitizedData.brand = await this.resolveBrandInput(brandStr);
+      } else {
+        delete sanitizedData.brand;
       }
     }
 
-    // Transform categoryId to proper Prisma structure (many-to-many)
-    if (sanitizedData.categoryId) {
-      sanitizedData.categories = {
-        create: [{ category: { connect: { id: sanitizedData.categoryId } } }],
-      } as unknown as Prisma.ProductCreateInput["categories"];
+    // Validate and transform categoryId to proper Prisma structure (many-to-many)
+    if ("categoryId" in sanitizedData) {
+      const catId = sanitizedData.categoryId;
+      if (typeof catId === "string" && catId.trim() !== "") {
+        const categoryExists = await this.validateCategoryExists(catId.trim());
+        if (!categoryExists) {
+          throw new ValidationError("Invalid category ID");
+        }
+        sanitizedData.categories = {
+          create: [{ category: { connect: { id: catId.trim() } } }],
+        } as unknown as Prisma.ProductCreateInput["categories"];
+      }
       delete sanitizedData.categoryId;
     }
+
+    // Clean up variant-only or extra DTO keys if present
+    delete sanitizedData.optionValueIds;
+    delete sanitizedData.optionValues;
+    delete sanitizedData.size;
+    delete sanitizedData.shade;
 
     // Set default values
     sanitizedData.isActive = sanitizedData.isActive ?? true;
@@ -300,38 +306,43 @@ export class ProductService {
     if (sanitizedData.description) {
       sanitizedData.description = (sanitizedData.description as string).trim();
     }
-    if (sanitizedData.brand && typeof sanitizedData.brand === "string") {
-      sanitizedData.brand = await this.resolveBrandInput(
-        (sanitizedData.brand as string).trim(),
-      );
-    }
-
-    // Validate category exists if being updated
-    if (sanitizedData.categoryId) {
-      const categoryExists = await this.validateCategoryExists(
-        sanitizedData.categoryId,
-      );
-      if (!categoryExists) {
-        throw new ValidationError("Invalid category ID");
+    if (typeof sanitizedData.brand === "string") {
+      const brandStr = sanitizedData.brand.trim();
+      if (brandStr !== "") {
+        sanitizedData.brand = await this.resolveBrandInput(brandStr);
+      } else {
+        delete sanitizedData.brand;
       }
     }
 
-    // Transform categoryId to proper Prisma structure (many-to-many)
+    // Validate and transform categoryId to proper Prisma structure (many-to-many)
     // Use connectOrCreate so re-sending the same categoryId on update is idempotent.
-    if (sanitizedData.categoryId) {
+    if ("categoryId" in sanitizedData) {
       const catId = sanitizedData.categoryId;
-      sanitizedData.categories = {
-        connectOrCreate: [
-          {
-            where: {
-              productId_categoryId: { productId: id, categoryId: catId },
+      if (typeof catId === "string" && catId.trim() !== "") {
+        const categoryExists = await this.validateCategoryExists(catId.trim());
+        if (!categoryExists) {
+          throw new ValidationError("Invalid category ID");
+        }
+        sanitizedData.categories = {
+          connectOrCreate: [
+            {
+              where: {
+                productId_categoryId: { productId: id, categoryId: catId.trim() },
+              },
+              create: { category: { connect: { id: catId.trim() } } },
             },
-            create: { category: { connect: { id: catId } } },
-          },
-        ],
-      } as unknown as Prisma.ProductUpdateInput["categories"];
+          ],
+        } as unknown as Prisma.ProductUpdateInput["categories"];
+      }
       delete sanitizedData.categoryId;
     }
+
+    // Clean up variant-only or extra DTO keys if present
+    delete sanitizedData.optionValueIds;
+    delete sanitizedData.optionValues;
+    delete sanitizedData.size;
+    delete sanitizedData.shade;
 
     try {
       return await this.productRepository.updateProduct(
