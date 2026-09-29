@@ -227,29 +227,35 @@ export class ProductService {
     if (sanitizedData.description) {
       sanitizedData.description = (sanitizedData.description as string).trim();
     }
-    if (sanitizedData.brand && typeof sanitizedData.brand === "string") {
-      sanitizedData.brand = await this.resolveBrandInput(
-        (sanitizedData.brand as string).trim(),
-      );
-    }
-
-    // Validate category exists
-    if (sanitizedData.categoryId) {
-      const categoryExists = await this.validateCategoryExists(
-        sanitizedData.categoryId,
-      );
-      if (!categoryExists) {
-        throw new ValidationError("Invalid category ID");
+    if (typeof sanitizedData.brand === "string") {
+      const brandStr = sanitizedData.brand.trim();
+      if (brandStr !== "") {
+        sanitizedData.brand = await this.resolveBrandInput(brandStr);
+      } else {
+        delete sanitizedData.brand;
       }
     }
 
-    // Transform categoryId to proper Prisma structure (many-to-many)
-    if (sanitizedData.categoryId) {
-      sanitizedData.categories = {
-        create: [{ category: { connect: { id: sanitizedData.categoryId } } }],
-      } as unknown as Prisma.ProductCreateInput["categories"];
+    // Validate and transform categoryId to proper Prisma structure (many-to-many)
+    if ("categoryId" in sanitizedData) {
+      const catId = sanitizedData.categoryId;
+      if (typeof catId === "string" && catId.trim() !== "") {
+        const categoryExists = await this.validateCategoryExists(catId.trim());
+        if (!categoryExists) {
+          throw new ValidationError("Invalid category ID");
+        }
+        sanitizedData.categories = {
+          create: [{ category: { connect: { id: catId.trim() } } }],
+        } as unknown as Prisma.ProductCreateInput["categories"];
+      }
       delete sanitizedData.categoryId;
     }
+
+    // Clean up variant-only or extra DTO keys if present
+    delete sanitizedData.optionValueIds;
+    delete sanitizedData.optionValues;
+    delete sanitizedData.size;
+    delete sanitizedData.shade;
 
     // Set default values
     sanitizedData.isActive = sanitizedData.isActive ?? true;
@@ -300,38 +306,43 @@ export class ProductService {
     if (sanitizedData.description) {
       sanitizedData.description = (sanitizedData.description as string).trim();
     }
-    if (sanitizedData.brand && typeof sanitizedData.brand === "string") {
-      sanitizedData.brand = await this.resolveBrandInput(
-        (sanitizedData.brand as string).trim(),
-      );
-    }
-
-    // Validate category exists if being updated
-    if (sanitizedData.categoryId) {
-      const categoryExists = await this.validateCategoryExists(
-        sanitizedData.categoryId,
-      );
-      if (!categoryExists) {
-        throw new ValidationError("Invalid category ID");
+    if (typeof sanitizedData.brand === "string") {
+      const brandStr = sanitizedData.brand.trim();
+      if (brandStr !== "") {
+        sanitizedData.brand = await this.resolveBrandInput(brandStr);
+      } else {
+        delete sanitizedData.brand;
       }
     }
 
-    // Transform categoryId to proper Prisma structure (many-to-many)
+    // Validate and transform categoryId to proper Prisma structure (many-to-many)
     // Use connectOrCreate so re-sending the same categoryId on update is idempotent.
-    if (sanitizedData.categoryId) {
+    if ("categoryId" in sanitizedData) {
       const catId = sanitizedData.categoryId;
-      sanitizedData.categories = {
-        connectOrCreate: [
-          {
-            where: {
-              productId_categoryId: { productId: id, categoryId: catId },
+      if (typeof catId === "string" && catId.trim() !== "") {
+        const categoryExists = await this.validateCategoryExists(catId.trim());
+        if (!categoryExists) {
+          throw new ValidationError("Invalid category ID");
+        }
+        sanitizedData.categories = {
+          connectOrCreate: [
+            {
+              where: {
+                productId_categoryId: { productId: id, categoryId: catId.trim() },
+              },
+              create: { category: { connect: { id: catId.trim() } } },
             },
-            create: { category: { connect: { id: catId } } },
-          },
-        ],
-      } as unknown as Prisma.ProductUpdateInput["categories"];
+          ],
+        } as unknown as Prisma.ProductUpdateInput["categories"];
+      }
       delete sanitizedData.categoryId;
     }
+
+    // Clean up variant-only or extra DTO keys if present
+    delete sanitizedData.optionValueIds;
+    delete sanitizedData.optionValues;
+    delete sanitizedData.size;
+    delete sanitizedData.shade;
 
     try {
       return await this.productRepository.updateProduct(
@@ -388,14 +399,11 @@ export class ProductService {
       sanitizedData.optionValues) as unknown;
     const attachOptionValueIds: string[] = [];
 
-    if (
-      Array.isArray(explicitOptionValueIds) &&
-      explicitOptionValueIds.length
-    ) {
+    if (Array.isArray(explicitOptionValueIds)) {
       attachOptionValueIds.push(...(explicitOptionValueIds as string[]));
-      delete sanitizedData.optionValueIds;
-      delete sanitizedData.optionValues;
     }
+    delete sanitizedData.optionValueIds;
+    delete sanitizedData.optionValues;
 
     // Resolve legacy size/shade strings to OptionValue rows (if present)
     if (sanitizedData.size) {
@@ -480,7 +488,7 @@ export class ProductService {
       }
     }
 
-    // Map legacy `size` / `shade` strings into OptionValue connects (append)
+    // Map legacy `size` / `shade` strings and explicit optionValueIds
     const attachOptionValueIds: string[] = [];
     if (sanitizedData.size) {
       const ov = await this.productRepository.findOptionValueByNameAndValue(
@@ -488,7 +496,6 @@ export class ProductService {
         sanitizedData.size as string,
       );
       if (ov) attachOptionValueIds.push(ov.id);
-      delete sanitizedData.size;
     }
     if (sanitizedData.shade) {
       const ov = await this.productRepository.findOptionValueByNameAndValue(
@@ -496,23 +503,28 @@ export class ProductService {
         sanitizedData.shade as string,
       );
       if (ov) attachOptionValueIds.push(ov.id);
-      delete sanitizedData.shade;
     }
 
-    // Map explicit optionValueIds into nested creates (append)
     const explicitOptionValueIds = (sanitizedData.optionValueIds ??
       sanitizedData.optionValues) as unknown;
-    if (
-      Array.isArray(explicitOptionValueIds) &&
-      explicitOptionValueIds.length
-    ) {
+    if (Array.isArray(explicitOptionValueIds)) {
       attachOptionValueIds.push(...(explicitOptionValueIds as string[]));
-      delete sanitizedData.optionValueIds;
-      delete sanitizedData.optionValues;
     }
 
-    if (attachOptionValueIds.length) {
+    const hasOptionValueUpdates =
+      "optionValueIds" in sanitizedData ||
+      "optionValues" in sanitizedData ||
+      "size" in sanitizedData ||
+      "shade" in sanitizedData;
+
+    delete sanitizedData.optionValueIds;
+    delete sanitizedData.optionValues;
+    delete sanitizedData.size;
+    delete sanitizedData.shade;
+
+    if (hasOptionValueUpdates) {
       sanitizedData.optionValues = {
+        deleteMany: {},
         create: attachOptionValueIds.map((ovId) => ({
           optionValue: { connect: { id: ovId } },
         })),
