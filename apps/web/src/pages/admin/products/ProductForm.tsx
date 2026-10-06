@@ -6,6 +6,7 @@ import {
   updateProductAdmin,
   updateProductVariantAdmin,
   createProductVariantAdmin,
+  deleteProductVariantAdmin,
   addProductImageAdmin,
   deleteProductImageAdmin,
   setPrimaryImageAdmin,
@@ -213,6 +214,20 @@ const ProductForm = () => {
     }
   }
 
+  const handleDeleteVariant = async (variantId: string) => {
+    if (!window.confirm('Are you sure you want to delete this variant?')) return
+    try {
+      await deleteProductVariantAdmin(variantId)
+      setFormData(prev => ({
+        ...prev,
+        variants: prev.variants?.filter(v => v.id !== variantId)
+      }))
+    } catch (err) {
+      console.error('Failed to delete variant', err)
+      setSaveMessage({ type: 'error', text: 'Failed to delete variant.' })
+    }
+  }
+
   const handleImageUpload = async (variantId: string, file: File) => {
     const data = new FormData()
     data.append('image', file)
@@ -349,7 +364,7 @@ const ProductForm = () => {
 
       {/* â”€â”€ Variant Edit Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {editingVariant && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setEditingVariant(null)} />
           <div className="relative bg-background-light border border-primary/20 rounded-2xl p-8 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl">
             <h3 className="text-lg font-bold text-text-main-light mb-4">
@@ -672,12 +687,22 @@ const ProductForm = () => {
                             Stock: <span className={v.stock < 10 ? 'text-red-400' : 'text-green-400'}>{v.stock}</span>
                           </p>
                         </div>
-                        <button
-                          onClick={() => openEditVariant(v)}
-                          className="p-2 text-text-muted hover:text-primary transition-colors cursor-pointer rounded-lg hover:bg-primary/5"
-                        >
-                          <span className="material-icons-outlined text-xl">settings</span>
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => openEditVariant(v)}
+                            className="p-2 text-text-muted hover:text-primary transition-colors cursor-pointer rounded-lg hover:bg-primary/5"
+                            title="Edit Variant"
+                          >
+                            <span className="material-icons-outlined text-xl">settings</span>
+                          </button>
+                          <button
+                            onClick={() => handleDeleteVariant(v.id)}
+                            className="p-2 text-text-muted hover:text-red-500 transition-colors cursor-pointer rounded-lg hover:bg-red-500/5"
+                            title="Delete Variant"
+                          >
+                            <span className="material-icons-outlined text-xl">delete</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}
