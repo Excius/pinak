@@ -139,6 +139,11 @@ export const deleteProductImageAdmin = async (imageId: string) => {
   await axiosInstance.delete(`/products/admin/images/${imageId}`)
 }
 
+export const setPrimaryImageAdmin = async (imageId: string) => {
+  const { data: resp } = await axiosInstance.patch(`/products/admin/images/${imageId}/primary`)
+  return resp?.data
+}
+
 // ── Related Products ───────────────────────────────────────────────────
 
 export const getRelatedProductsAdmin = async (productId: string) => {

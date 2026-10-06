@@ -7,6 +7,8 @@ import {
   updateProductVariantAdmin,
   createProductVariantAdmin,
   addProductImageAdmin,
+  deleteProductImageAdmin,
+  setPrimaryImageAdmin,
   setProductCategoriesAdmin,
   getRelatedProductsAdmin,
   addRelatedProductAdmin,
@@ -233,6 +235,39 @@ const ProductForm = () => {
     }
   }
 
+  const handleDeleteImage = async (imageId: string, variantId: string) => {
+    if (!window.confirm('Are you sure you want to delete this image?')) return
+    try {
+      await deleteProductImageAdmin(imageId)
+      if (id) {
+        const product = await getProductByIdAdmin(id)
+        setFormData(product)
+        if (editingVariant?.id === variantId) {
+          const refreshedVariant = product.variants?.find(v => v.id === variantId)
+          if (refreshedVariant) setEditingVariant(refreshedVariant)
+        }
+      }
+    } catch (err) {
+      console.error('Image delete failed', err)
+    }
+  }
+
+  const handleSetPrimaryImage = async (imageId: string, variantId: string) => {
+    try {
+      await setPrimaryImageAdmin(imageId)
+      if (id) {
+        const product = await getProductByIdAdmin(id)
+        setFormData(product)
+        if (editingVariant?.id === variantId) {
+          const refreshedVariant = product.variants?.find(v => v.id === variantId)
+          if (refreshedVariant) setEditingVariant(refreshedVariant)
+        }
+      }
+    } catch (err) {
+      console.error('Set primary image failed', err)
+    }
+  }
+
   // Helper: extract category ID from either API shape { categoryId, category } or flat { id }
   const getCatId = (c: any): string => c.categoryId || c.category?.id || c.id || ''
 
@@ -316,7 +351,7 @@ const ProductForm = () => {
       {editingVariant && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setEditingVariant(null)} />
-          <div className="relative bg-background-light border border-primary/20 rounded-2xl p-8 w-full max-w-md shadow-2xl">
+          <div className="relative bg-background-light border border-primary/20 rounded-2xl p-8 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl">
             <h3 className="text-lg font-bold text-text-main-light mb-4">
               {editingVariant.id ? `Edit Variant: ${editingVariant.sku}` : 'Add New Variant'}
             </h3>
@@ -402,10 +437,35 @@ const ProductForm = () => {
                       />
                     </label>
                     {editingVariant.images?.length > 0 && (
-                      <div className="flex gap-2 overflow-x-auto py-2">
+                      <div className="grid grid-cols-3 gap-3 py-2">
                         {editingVariant.images.map(img => (
-                          <div key={img.id} className="w-14 h-14 rounded-lg border border-primary/10 overflow-hidden shrink-0">
-                            <img src={img.url} className="w-full h-full object-cover" alt="" />
+                          <div key={img.id} className={`relative group rounded-xl border-2 overflow-hidden ${img.isPrimary ? 'border-primary shadow-[0_0_8px_rgba(212,175,55,0.3)]' : 'border-primary/10'}`}>
+                            <div className="w-full aspect-square">
+                              <img src={img.url} className="w-full h-full object-cover" alt="" />
+                            </div>
+                            {img.isPrimary && (
+                              <div className="absolute top-1.5 left-1.5 bg-primary text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider">
+                                Primary
+                              </div>
+                            )}
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                              {!img.isPrimary && (
+                                <button
+                                  onClick={() => handleSetPrimaryImage(img.id, editingVariant.id)}
+                                  className="p-1.5 bg-primary/90 text-white rounded-lg hover:bg-primary transition-colors"
+                                  title="Set as primary image"
+                                >
+                                  <span className="material-icons-outlined text-sm">star</span>
+                                </button>
+                              )}
+                              <button
+                                onClick={() => handleDeleteImage(img.id, editingVariant.id)}
+                                className="p-1.5 bg-red-500/90 text-white rounded-lg hover:bg-red-500 transition-colors"
+                                title="Delete image"
+                              >
+                                <span className="material-icons-outlined text-sm">delete</span>
+                              </button>
+                            </div>
                           </div>
                         ))}
                       </div>
