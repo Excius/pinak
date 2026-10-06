@@ -124,6 +124,10 @@ export const updateProductVariantAdmin = async (
   return resp?.data as AdminProductVariant
 }
 
+export const deleteProductVariantAdmin = async (id: string) => {
+  await axiosInstance.delete(`/products/admin/variants/${id}`)
+}
+
 // ── Image Management ───────────────────────────────────────────────────
 
 export const addProductImageAdmin = async (variantId: string, formData: FormData) => {
