@@ -1,22 +1,27 @@
 info:
   name: Add Category Image
   type: http
-  seq: 1
+  seq: 2
 
 http:
   method: POST
   url: "{{baseUrl}}/api/v1/categories/admin/{{categoryId}}/images"
-  headers:
-    - name: Content-Type
-      value: application/json
   body:
-    type: json
-    data: |-
-      {
-        "url": "https://example.com/images/categories/sample.jpg",
-        "altText": "Sample category image",
-        "isPrimary": false
-      }
+    type: multipart-form
+    data:
+      - name: image
+        type: file
+        value:
+          - /path/to/category-image.jpg
+        contentType: image/jpeg
+      - name: altText
+        type: text
+        value: Sample category image
+        contentType: text/plain
+      - name: isPrimary
+        type: text
+        value: "false"
+        contentType: text/plain
   auth: inherit
 
 runtime:
@@ -35,4 +40,8 @@ settings:
   maxRedirects: 5
   forwardAuthorizationHeader: true
 
-docs: "Add an image to a category (admin only). Body: `url`, optional `altText`, optional `isPrimary`."
+docs: |-
+  Schema: CategoryAdminTypes.AddCategoryImage
+  Params: categoryId
+  Query: none
+  Body: image (file, required), altText (optional), isPrimary (optional boolean string)

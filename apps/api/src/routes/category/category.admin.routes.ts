@@ -1,4 +1,5 @@
 import type { Router } from "express";
+import multer from "multer";
 import { CategoryTypes, CategoryAdminTypes } from "@repo/types";
 import { validateMultiple } from "../../lib/validation.js";
 import type { CategoryRouteDeps } from "./category.route.js";
@@ -7,6 +8,10 @@ export const registerCategoryAdminRoutes = (
   router: Router,
   { categoryController, authMiddleware, rateLimiter }: CategoryRouteDeps,
 ) => {
+  const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 10 * 1024 * 1024 },
+  }); // 10MB
   // Admin read endpoints (full content)
   router.get(
     "/admin",
@@ -94,9 +99,10 @@ export const registerCategoryAdminRoutes = (
   router.post(
     "/admin/:categoryId/images",
     rateLimiter,
-    validateMultiple(CategoryAdminTypes.AddCategoryImage),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    upload.single("image"),
+    validateMultiple(CategoryAdminTypes.AddCategoryImage),
     categoryController.addCategoryImage,
   );
 
@@ -112,27 +118,9 @@ export const registerCategoryAdminRoutes = (
   router.delete(
     "/admin/images/:id",
     rateLimiter,
-    validateMultiple(CategoryAdminTypes.SoftDeleteCategoryImage),
+    validateMultiple(CategoryAdminTypes.DeleteCategoryImage),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
-    categoryController.softDeleteImage,
-  );
-
-  router.patch(
-    "/admin/images/:id/restore",
-    rateLimiter,
-    validateMultiple(CategoryAdminTypes.RestoreCategoryImage),
-    authMiddleware.authenticate,
-    authMiddleware.requireModeratorOrAdmin,
-    categoryController.restoreImage,
-  );
-
-  router.delete(
-    "/admin/images/:id/hard",
-    rateLimiter,
-    validateMultiple(CategoryAdminTypes.HardDeleteCategoryImage),
-    authMiddleware.authenticate,
-    authMiddleware.requireAdmin,
-    categoryController.hardDeleteImage,
+    categoryController.deleteImage,
   );
 };

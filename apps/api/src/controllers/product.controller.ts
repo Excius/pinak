@@ -440,17 +440,14 @@ export class ProductController {
     ResponseHandler.success(res, {}, "Product variant restored successfully");
   };
 
-  softDeleteImage = async (req: Request, res: Response) => {
+  deleteImage = async (req: Request, res: Response) => {
     const { id } = req.params;
-    await this.productService.softDeleteImage(id as string);
+    await this.productService.deleteImage(id as string);
     ResponseHandler.success(res, {}, "Image deleted successfully");
   };
 
-  restoreImage = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    await this.productService.restoreImage(id as string);
-    ResponseHandler.success(res, {}, "Image restored successfully");
-  };
+  softDeleteImage = this.deleteImage;
+  hardDeleteImage = this.deleteImage;
 
   addProductToFeatured = async (req: Request, res: Response) => {
     const { sectionId } = req.params;
@@ -537,11 +534,6 @@ export class ProductController {
     );
   };
 
-  hardDeleteImage = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    await this.productService.hardDeleteImage(id as string);
-    ResponseHandler.success(res, {}, "Image permanently deleted successfully");
-  };
 
   // TODO: Implement bulk product operations
   // - Bulk create products

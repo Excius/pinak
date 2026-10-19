@@ -2,6 +2,9 @@ import { CategoryRepository } from "../repositories/category.repository.js";
 import { ValidationError, NotFoundError } from "../lib/error.js";
 import { isPrismaP2002 } from "../lib/prisma-errors.js";
 import { Prisma } from "../generated/prisma/client.js";
+import { uploadBuffer, deleteObject, extractS3KeyFromUrl } from "../lib/s3.js";
+import appConfig from "../lib/config.js";
+import logger from "../lib/logger.js";
 
 function generateSlug(name: string): string {
   return name
@@ -211,39 +214,76 @@ export class CategoryService {
       );
     }
 
+    // Clean up category images in S3
+    if (appConfig.S3_ENABLED) {
+      try {
+        const images = await this.categoryRepository.getAllImages(id);
+        if (images && images.length > 0) {
+          for (const img of images) {
+            if (img.url) {
+              const key = extractS3KeyFromUrl(img.url);
+              if (key) await deleteObject(key);
+            }
+          }
+        }
+      } catch (err) {
+        logger.warn({ id, err }, "Failed to clean up S3 objects for category images during deletion");
+      }
+    }
+
     return this.categoryRepository.delete(id);
   }
 
   // Image management for categories
   async addCategoryImage(
     categoryId: string,
-    data: Prisma.CategoryImageCreateInput,
+    data: Partial<Prisma.CategoryImageCreateInput>,
+    fileBuffer?: Buffer,
+    contentType?: string,
   ) {
     const category = await this.categoryRepository.getById(categoryId);
     if (!category) {
       throw new ValidationError("Category not found");
     }
 
-    const sanitizedData = { ...data } as Prisma.CategoryImageCreateInput;
-
-    if (sanitizedData.url) {
-      try {
-        new URL(sanitizedData.url as string);
-      } catch {
-        throw new ValidationError("Invalid image URL format");
-      }
+    if (!fileBuffer) {
+      throw new ValidationError("Image file is required");
     }
 
-    if (sanitizedData.altText) {
-      sanitizedData.altText = (sanitizedData.altText as string).trim();
+    if (!appConfig.S3_ENABLED) {
+      throw new ValidationError("S3 is not enabled on the server");
     }
 
-    // Ensure the category relation is set for nested create
-    sanitizedData.category = { connect: { id: categoryId } };
+    let ext = "bin";
+    if (contentType) {
+      if (contentType.includes("jpeg") || contentType.includes("jpg")) ext = "jpg";
+      else if (contentType.includes("png")) ext = "png";
+      else if (contentType.includes("webp")) ext = "webp";
+      else if (contentType.includes("gif")) ext = "gif";
+      else if (contentType.includes("svg")) ext = "svg";
+    }
+
+    const rand = Math.random().toString(36).slice(2, 8);
+    const timestamp = Date.now();
+    const key = `categories/${categoryId}/${timestamp}-${rand}.${ext}`;
+
+    const publicUrl = await uploadBuffer(
+      fileBuffer,
+      key,
+      contentType,
+      true,
+    );
+
+    const sanitizedData: Prisma.CategoryImageCreateInput = {
+      url: publicUrl,
+      altText: data.altText ? (data.altText as string).trim() : null,
+      isPrimary: data.isPrimary !== undefined ? Boolean(data.isPrimary) : false,
+      category: { connect: { id: categoryId } },
+    };
 
     return this.categoryRepository.addCategoryImage(
       categoryId,
-      sanitizedData as Prisma.CategoryImageCreateInput,
+      sanitizedData,
     );
   }
 
@@ -268,21 +308,24 @@ export class CategoryService {
     return this.categoryRepository.getAllImages(categoryId);
   }
 
-  async softDeleteImage(id: string) {
+  async deleteImage(id: string) {
     const image = await this.categoryRepository.getCategoryImageById(id);
     if (!image) throw new NotFoundError("Image not found");
-    return this.categoryRepository.softDeleteImage(id);
-  }
 
-  async restoreImage(id: string) {
-    const image = await this.categoryRepository.getCategoryImageById(id);
-    if (!image) throw new NotFoundError("Image not found");
-    return this.categoryRepository.restoreImage(id);
-  }
+    if (image.url && appConfig.S3_ENABLED) {
+      try {
+        const key = extractS3KeyFromUrl(image.url);
+        if (key) {
+          await deleteObject(key);
+        }
+      } catch (err) {
+        logger.warn({ id, err }, "Failed to delete S3 object for category image");
+      }
+    }
 
-  async hardDeleteImage(id: string) {
-    const image = await this.categoryRepository.getCategoryImageById(id);
-    if (!image) throw new NotFoundError("Image not found");
     return this.categoryRepository.hardDeleteImage(id);
   }
+
+  softDeleteImage = this.deleteImage;
+  hardDeleteImage = this.deleteImage;
 }

@@ -1,5 +1,5 @@
 import { ProductRepository } from "../repositories/product.repository.js";
-import { deleteObject, uploadBuffer } from "../lib/s3.js";
+import { deleteObject, uploadBuffer, extractS3KeyFromUrl } from "../lib/s3.js";
 import appConfig from "../lib/config.js";
 import { ProductPaginationOptions } from "../types/pagination.types.js";
 import { Prisma } from "../generated/prisma/client.js";
@@ -676,7 +676,7 @@ export class ProductService {
 
       // Try to delete old S3 object if the URL maps to our bucket
       try {
-        const oldKey = this.extractS3KeyFromUrl(image.url);
+        const oldKey = extractS3KeyFromUrl(image.url);
         if (oldKey) {
           await deleteObject(oldKey);
         }
@@ -775,17 +775,25 @@ export class ProductService {
     return this.productRepository.getAllVariantImages(variantId);
   }
 
-  async softDeleteImage(id: string) {
+  async deleteImage(id: string) {
     const image = await this.productRepository.getProductImageById(id);
     if (!image) throw new NotFoundError("Image not found");
-    return this.productRepository.softDeleteImage(id);
+
+    if (image.url && appConfig.S3_ENABLED) {
+      try {
+        const key = extractS3KeyFromUrl(image.url);
+        if (key) {
+          await deleteObject(key);
+        }
+      } catch (err) {
+        logger.warn({ id, err }, "Failed to delete S3 object for image");
+      }
+    }
+
+    return this.productRepository.hardDeleteImage(id);
   }
 
-  async restoreImage(id: string) {
-    const image = await this.productRepository.getProductImageById(id);
-    if (!image) throw new NotFoundError("Image not found");
-    return this.productRepository.restoreImage(id);
-  }
+  softDeleteImage = this.deleteImage;
 
   async addProductToFeatured(sectionId: string, productId: string) {
     // Business logic validation
@@ -959,27 +967,7 @@ export class ProductService {
     return this.productRepository.hardDeleteProductVariant(id);
   }
 
-  async hardDeleteImage(id: string) {
-    // Attempt to delete object from S3 if it belongs to our bucket
-    const image = await this.productRepository.getProductImageById(id);
-    if (!image) {
-      throw new ValidationError("Image not found");
-    }
-
-    if (appConfig.S3_ENABLED && image.url) {
-      try {
-        const key = this.extractS3KeyFromUrl(image.url);
-        if (key) {
-          await deleteObject(key);
-        }
-      } catch (err) {
-        // Log and continue to remove DB record anyway
-        logger.warn({ id, err }, "Failed to delete S3 object for image");
-      }
-    }
-
-    return this.productRepository.hardDeleteImage(id);
-  }
+  hardDeleteImage = this.deleteImage;
 
   // Helper methods for business logic
   private generateSlug(name: string): string {
@@ -998,43 +986,6 @@ export class ProductService {
       .replace(/[^\w-]/g, "") // Remove special characters except hyphens
       .replace(/-+/g, "-") // Replace multiple hyphens with single
       .replace(/^-+|-+$/g, ""); // Remove leading/trailing hyphens
-  }
-
-  /**
-   * Try to extract the S3 object key from a public S3 URL that our helper produces.
-   * Returns null when it cannot determine a key for deletion.
-   */
-  private extractS3KeyFromUrl(urlStr: string): string | null {
-    try {
-      const u = new URL(urlStr);
-
-      // No custom endpoint — handle AWS standard public URLs
-      // 1) virtual-hosted-style: https://{bucket}.s3.amazonaws.com/{key} or https://{bucket}.s3.{region}.amazonaws.com/{key}
-      const host = u.hostname;
-      const path = u.pathname.replace(/^\//, "");
-
-      if (host === `${appConfig.S3_BUCKET}.s3.amazonaws.com`) {
-        return decodeURIComponent(path);
-      }
-      if (host.endsWith(`.s3.amazonaws.com`)) {
-        // may be {bucket}.s3.amazonaws.com
-        const parts = host.split(".");
-        const bucketPart = parts[0];
-        if (bucketPart === appConfig.S3_BUCKET) return decodeURIComponent(path);
-      }
-
-      // 2) path-style: https://s3.{region}.amazonaws.com/{bucket}/{key}
-      const bucket = appConfig.S3_BUCKET;
-      if (!bucket) return null;
-
-      if (host.startsWith("s3.") && path.startsWith(`${bucket}/`)) {
-        return decodeURIComponent(path.slice(bucket.length + 1));
-      }
-
-      return null;
-    } catch {
-      return null;
-    }
   }
 
   private async validateCategoryExists(categoryId: string): Promise<boolean> {

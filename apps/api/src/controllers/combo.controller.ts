@@ -396,9 +396,16 @@ export class ComboController {
 
   addComboKitImage = async (req: Request, res: Response) => {
     const { comboKitId } = req.params;
+    const file = req.file;
+    if (!file) {
+      return ResponseHandler.badRequest(res, "Image file is required");
+    }
+
     const image = await this.comboService.addComboKitImage(
       comboKitId as string,
       req.body,
+      file.buffer,
+      file.mimetype,
     );
     ResponseHandler.created(res, image, "Combo kit image added successfully");
   };
@@ -409,21 +416,12 @@ export class ComboController {
     ResponseHandler.success(res, image, "Primary image set successfully");
   };
 
-  softDeleteImage = async (req: Request, res: Response) => {
+  deleteImage = async (req: Request, res: Response) => {
     const { id } = req.params;
-    await this.comboService.softDeleteImage(id as string);
-    ResponseHandler.success(res, {}, "Image soft deleted successfully");
+    await this.comboService.deleteImage(id as string);
+    ResponseHandler.success(res, {}, "Combo kit image deleted successfully");
   };
 
-  restoreImage = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    await this.comboService.restoreImage(id as string);
-    ResponseHandler.success(res, {}, "Image restored successfully");
-  };
-
-  hardDeleteImage = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    await this.comboService.hardDeleteImage(id as string);
-    ResponseHandler.success(res, {}, "Image hard deleted successfully");
-  };
+  softDeleteImage = this.deleteImage;
+  hardDeleteImage = this.deleteImage;
 }

@@ -2,10 +2,11 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   getComboKitByIdAdmin, createComboKitAdmin, updateComboKitAdmin,
-  addComboKitItemAdmin, removeComboKitItemAdmin, updateComboKitItemAdmin
+  addComboKitItemAdmin, removeComboKitItemAdmin, updateComboKitItemAdmin,
+  addComboKitImageAdmin, getAllComboKitImagesAdmin, setPrimaryComboKitImageAdmin, deleteComboKitImageAdmin
 } from '../../../api/admin/admin.combos.api'
 import { getAllProductsAdmin } from '../../../api/admin/admin.products.api'
-import type { AdminComboKit, ComboKitItem } from '../../../api/admin/admin.combos.api'
+import type { AdminComboKit, ComboKitItem, AdminComboKitImage } from '../../../api/admin/admin.combos.api'
 import type { AdminProduct } from '../../../api/admin/admin.products.api'
 import { formatPaise } from '../../../utils/currency'
 
@@ -33,12 +34,19 @@ const ComboKitForm = () => {
     metaTitle: '', metaDescription: ''
   })
 
+  const [images, setImages] = useState<AdminComboKitImage[]>([])
+  const [uploadingImage, setUploadingImage] = useState(false)
+
   useEffect(() => {
     if (isEdit && id) {
       getComboKitByIdAdmin(id)
         .then(data => setForm(data))
         .catch(err => console.error('Failed to load combo kit', err))
         .finally(() => setLoading(false))
+
+      getAllComboKitImagesAdmin(id)
+        .then(data => setImages(data))
+        .catch(err => console.error('Failed to load combo kit images', err))
     }
   }, [id, isEdit])
 
@@ -113,6 +121,43 @@ const ComboKitForm = () => {
     }
   }
 
+  // --- Image management (S3 Upload) ---
+  const handleImageUpload = async (file: File) => {
+    if (!id) return
+    const data = new FormData()
+    data.append('image', file)
+    data.append('isPrimary', images.length === 0 ? 'true' : 'false')
+    setUploadingImage(true)
+    try {
+      const newImg = await addComboKitImageAdmin(id, data)
+      setImages(prev => [...prev, newImg])
+      setMsg({ type: 'success', text: 'Image uploaded successfully to S3!' })
+    } catch (err: any) {
+      setMsg({ type: 'error', text: err?.response?.data?.message || 'Failed to upload image' })
+    } finally {
+      setUploadingImage(false)
+    }
+  }
+
+  const handleSetPrimaryImage = async (imgId: string) => {
+    try {
+      await setPrimaryComboKitImageAdmin(imgId)
+      setImages(prev => prev.map(img => ({ ...img, isPrimary: img.id === imgId })))
+    } catch (err: any) {
+      setMsg({ type: 'error', text: err?.response?.data?.message || 'Failed to set primary image' })
+    }
+  }
+
+  const handleDeleteImage = async (imgId: string) => {
+    try {
+      await deleteComboKitImageAdmin(imgId)
+      setImages(prev => prev.filter(img => img.id !== imgId))
+      setMsg({ type: 'success', text: 'Image removed' })
+    } catch (err: any) {
+      setMsg({ type: 'error', text: err?.response?.data?.message || 'Failed to delete image' })
+    }
+  }
+
   const filteredProducts = products.filter(p =>
     p.name.toLowerCase().includes(pickerSearch.toLowerCase()) ||
     p.variants?.some(v => v.sku.toLowerCase().includes(pickerSearch.toLowerCase()))
@@ -172,7 +217,73 @@ const ComboKitForm = () => {
               <textarea value={form.description || ''} onChange={e => set('description', e.target.value)} rows={3}
                 className="w-full bg-background-main border border-primary/20 rounded-xl px-4 py-3 text-text-main-light focus:border-primary/50 outline-none transition-all resize-y" />
             </div>
-            <Field label="Image URL" name="imageUrl" value={form.imageUrl || ''} onChange={v => set('imageUrl', v)} placeholder="https://example.com/image.jpg" />
+            {/* Combo Kit Images (S3 Direct Upload) */}
+            <div className="space-y-3 pt-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-text-muted uppercase">Combo Kit Images</label>
+                {isEdit && (
+                  <label className="bg-primary/10 text-primary hover:bg-primary/20 px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer">
+                    <span className="material-icons-outlined text-sm">cloud_upload</span>
+                    {uploadingImage ? 'Uploading to S3...' : 'Upload Image'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      disabled={uploadingImage}
+                      onChange={e => {
+                        const file = e.target.files?.[0]
+                        if (file) handleImageUpload(file)
+                        e.target.value = ''
+                      }}
+                      className="hidden"
+                    />
+                  </label>
+                )}
+              </div>
+
+              {!isEdit ? (
+                <p className="text-xs text-text-muted bg-background-main/50 p-3 rounded-xl border border-primary/10">
+                  Save combo kit first to upload and manage its images in S3.
+                </p>
+              ) : images.length === 0 ? (
+                <div className="text-center py-6 border-2 border-dashed border-primary/20 rounded-xl bg-background-main/30">
+                  <span className="material-icons-outlined text-2xl text-primary/30 mb-1 block">image</span>
+                  <p className="text-xs text-text-muted">No images uploaded to S3 yet.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {images.map(img => (
+                    <div key={img.id} className={`group relative rounded-xl border overflow-hidden bg-background-main aspect-square flex items-center justify-center ${img.isPrimary ? 'border-primary ring-1 ring-primary' : 'border-primary/10'}`}>
+                      <img src={img.url} alt={img.altText || form.name || 'Combo kit image'} className="w-full h-full object-cover" />
+                      {img.isPrimary && (
+                        <span className="absolute top-1.5 left-1.5 bg-primary text-black text-[10px] font-bold px-1.5 py-0.5 rounded shadow">
+                          Primary
+                        </span>
+                      )}
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                        {!img.isPrimary && (
+                          <button
+                            type="button"
+                            onClick={() => handleSetPrimaryImage(img.id)}
+                            title="Set as primary"
+                            className="w-7 h-7 rounded-full bg-primary/20 text-primary hover:bg-primary hover:text-black flex items-center justify-center transition-all cursor-pointer"
+                          >
+                            <span className="material-icons-outlined text-sm">star</span>
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteImage(img.id)}
+                          title="Delete image"
+                          className="w-7 h-7 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white flex items-center justify-center transition-all cursor-pointer"
+                        >
+                          <span className="material-icons-outlined text-sm">delete</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </section>
 
           {/* Bundle Items (edit only) */}

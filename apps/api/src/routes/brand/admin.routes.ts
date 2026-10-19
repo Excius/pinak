@@ -1,4 +1,5 @@
 import type { Router } from "express";
+import multer from "multer";
 import { BrandAdminTypes, BrandTypes } from "@repo/types";
 import { validateMultiple } from "../../lib/validation.js";
 import type { BrandRouteDeps } from "./index.js";
@@ -7,6 +8,11 @@ export const registerBrandAdminRoutes = (
   router: Router,
   { brandController, authMiddleware, rateLimiter }: BrandRouteDeps,
 ) => {
+  const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 10 * 1024 * 1024 },
+  }); // 10MB
+
   router.get(
     "/admin",
     rateLimiter,
@@ -37,18 +43,20 @@ export const registerBrandAdminRoutes = (
   router.post(
     "/admin",
     rateLimiter,
-    validateMultiple(BrandTypes.CreateBrand),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    upload.single("logo"),
+    validateMultiple(BrandTypes.CreateBrand),
     brandController.create,
   );
 
   router.put(
     "/admin/:id",
     rateLimiter,
-    validateMultiple(BrandTypes.UpdateBrand),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    upload.single("logo"),
+    validateMultiple(BrandTypes.UpdateBrand),
     brandController.update,
   );
 

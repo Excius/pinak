@@ -1,4 +1,5 @@
 import type { Router } from "express";
+import multer from "multer";
 import { ComboKitTypes, ComboKitAdminTypes } from "@repo/types";
 import { validateMultiple } from "../../lib/validation.js";
 import type { ComboRouteDeps } from "./index.js";
@@ -7,6 +8,10 @@ export const registerComboAdminRoutes = (
   router: Router,
   { comboController, authMiddleware, rateLimiter }: ComboRouteDeps,
 ) => {
+  const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 10 * 1024 * 1024 },
+  }); // 10MB
   // Admin read endpoints (full payloads)
   router.get(
     "/admin/all",
@@ -193,9 +198,10 @@ export const registerComboAdminRoutes = (
   router.post(
     "/admin/:comboKitId/images",
     rateLimiter,
-    validateMultiple(ComboKitAdminTypes.AddComboKitImage),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    upload.single("image"),
+    validateMultiple(ComboKitAdminTypes.AddComboKitImage),
     comboController.addComboKitImage,
   );
 
@@ -211,27 +217,9 @@ export const registerComboAdminRoutes = (
   router.delete(
     "/admin/images/:id",
     rateLimiter,
-    validateMultiple(ComboKitAdminTypes.SoftDeleteComboKitImage),
+    validateMultiple(ComboKitAdminTypes.DeleteComboKitImage),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
-    comboController.softDeleteImage,
-  );
-
-  router.patch(
-    "/admin/images/:id/restore",
-    rateLimiter,
-    validateMultiple(ComboKitAdminTypes.RestoreComboKitImage),
-    authMiddleware.authenticate,
-    authMiddleware.requireModeratorOrAdmin,
-    comboController.restoreImage,
-  );
-
-  router.delete(
-    "/admin/images/:id/hard",
-    rateLimiter,
-    validateMultiple(ComboKitAdminTypes.HardDeleteComboKitImage),
-    authMiddleware.authenticate,
-    authMiddleware.requireAdmin,
-    comboController.hardDeleteImage,
+    comboController.deleteImage,
   );
 };

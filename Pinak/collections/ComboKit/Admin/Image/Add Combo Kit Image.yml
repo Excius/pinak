@@ -6,17 +6,22 @@ info:
 http:
   method: POST
   url: "{{baseUrl}}/api/v1/combo-kits/admin/{{comboKitId}}/images"
-  headers:
-    - name: Content-Type
-      value: application/json
   body:
-    type: json
-    data: |-
-      {
-        "url": "https://example.com/images/combos/sample.jpg",
-        "altText": "Sample combo kit image",
-        "isPrimary": false
-      }
+    type: multipart-form
+    data:
+      - name: image
+        type: file
+        value:
+          - /path/to/combo-image.jpg
+        contentType: image/jpeg
+      - name: altText
+        type: text
+        value: Sample combo kit image
+        contentType: text/plain
+      - name: isPrimary
+        type: text
+        value: "false"
+        contentType: text/plain
   auth: inherit
 
 runtime:
@@ -35,4 +40,8 @@ settings:
   maxRedirects: 5
   forwardAuthorizationHeader: true
 
-docs: "Add an image to a combo kit (admin only). Body: `url`, optional `altText`, optional `isPrimary`."
+docs: |-
+  Schema: ComboKitAdminTypes.AddComboKitImage
+  Params: comboKitId
+  Query: none
+  Body: image (file, required), altText (optional), isPrimary (optional boolean string)

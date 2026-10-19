@@ -619,9 +619,15 @@ export const ComboKitAdminTypes = {
 
   AddComboKitImage: {
     body: z.object({
-      url: z.string().min(1).url(),
       altText: z.string().optional(),
-      isPrimary: z.coerce.boolean().optional(),
+      isPrimary: z.preprocess((val) => {
+        if (typeof val === "string") {
+          const v = val.toLowerCase();
+          if (v === "true") return true;
+          if (v === "false") return false;
+        }
+        return val;
+      }, z.boolean()).optional(),
     }),
     params: z.object({ comboKitId: z.string().min(1) }),
     query: z.object({}),
@@ -640,6 +646,17 @@ export const ComboKitAdminTypes = {
       message: z.string(),
       success: z.boolean(),
       data: z.object({ id: z.string(), isPrimary: z.boolean() }),
+    }),
+  },
+
+  DeleteComboKitImage: {
+    body: z.object({}),
+    params: z.object({ id: z.string() }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({}),
     }),
   },
 

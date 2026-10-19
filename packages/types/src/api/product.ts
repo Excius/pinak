@@ -855,6 +855,19 @@ export const ProductTypes = {
     }),
   },
 
+  DeleteImage: {
+    body: z.object({}),
+    params: z.object({
+      id: z.string(),
+    }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({}),
+    }),
+  },
+
   SoftDeleteImage: {
     body: z.object({}),
     params: z.object({

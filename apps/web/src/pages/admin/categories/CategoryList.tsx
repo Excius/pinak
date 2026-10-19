@@ -3,9 +3,13 @@ import {
   getAllCategoriesAdmin,
   createCategoryAdmin,
   updateCategoryAdmin,
-  deleteCategoryAdmin
+  deleteCategoryAdmin,
+  getAllCategoryImagesAdmin,
+  addCategoryImageAdmin,
+  setPrimaryCategoryImageAdmin,
+  deleteCategoryImageAdmin
 } from '../../../api/admin/admin.catalog.api'
-import type { AdminCategory } from '../../../api/admin/admin.catalog.api'
+import type { AdminCategory, AdminCategoryImage } from '../../../api/admin/admin.catalog.api'
 
 interface CategoryFormData {
   name: string
@@ -23,6 +27,8 @@ const CategoryList = () => {
   const [form, setForm] = useState<CategoryFormData>(emptyForm)
   const [saving, setSaving] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [images, setImages] = useState<AdminCategoryImage[]>([])
+  const [uploadingImage, setUploadingImage] = useState(false)
 
   const fetchCategories = async () => {
     try {
@@ -40,13 +46,60 @@ const CategoryList = () => {
   const openCreate = () => {
     setEditing(null)
     setForm(emptyForm)
+    setImages([])
     setShowModal(true)
   }
 
-  const openEdit = (cat: AdminCategory) => {
+  const openEdit = async (cat: AdminCategory) => {
     setEditing(cat)
     setForm({ name: cat.name, slug: cat.slug, parentId: cat.parentId || '' })
     setShowModal(true)
+    try {
+      const imgs = await getAllCategoryImagesAdmin(cat.id)
+      setImages(imgs)
+    } catch (err) {
+      console.error('Failed to fetch category images', err)
+      setImages([])
+    }
+  }
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !editing) return
+    const data = new FormData()
+    data.append('image', file)
+    data.append('isPrimary', images.length === 0 ? 'true' : 'false')
+    setUploadingImage(true)
+    try {
+      const newImg = await addCategoryImageAdmin(editing.id, data)
+      setImages(prev => [...prev, newImg])
+      await fetchCategories()
+    } catch (err) {
+      console.error('Failed to upload category image', err)
+    } finally {
+      setUploadingImage(false)
+      e.target.value = ''
+    }
+  }
+
+  const handleSetPrimaryImage = async (imgId: string) => {
+    try {
+      await setPrimaryCategoryImageAdmin(imgId)
+      setImages(prev => prev.map(img => ({ ...img, isPrimary: img.id === imgId })))
+      await fetchCategories()
+    } catch (err) {
+      console.error('Failed to set primary image', err)
+    }
+  }
+
+  const handleDeleteImage = async (imgId: string) => {
+    try {
+      await deleteCategoryImageAdmin(imgId)
+      setImages(prev => prev.filter(img => img.id !== imgId))
+      await fetchCategories()
+    } catch (err) {
+      console.error('Failed to delete image', err)
+    }
   }
 
   const handleSave = async () => {
@@ -101,7 +154,7 @@ const CategoryList = () => {
       {showModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowModal(false)} />
-          <div className="relative bg-background-light border border-primary/20 rounded-2xl p-8 w-full max-w-md shadow-2xl">
+          <div className="relative bg-background-light border border-primary/20 rounded-2xl p-8 w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
             <h3 className="text-xl font-display font-bold text-text-main-light mb-6">
               {editing ? 'Edit Category' : 'New Category'}
             </h3>
@@ -139,6 +192,72 @@ const CategoryList = () => {
                     ))
                   }
                 </select>
+              </div>
+
+              {/* Category Images (S3 Upload) */}
+              <div className="space-y-3 pt-3 border-t border-primary/10">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-text-muted uppercase">
+                    Category Images ({images.length})
+                  </label>
+                  {editing && (
+                    <label className={`cursor-pointer bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${uploadingImage ? 'opacity-50 pointer-events-none' : ''}`}>
+                      <span className="material-icons-outlined text-sm">{uploadingImage ? 'hourglass_top' : 'cloud_upload'}</span>
+                      {uploadingImage ? 'Uploading...' : 'Upload Image'}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        disabled={uploadingImage}
+                        onChange={handleImageUpload}
+                      />
+                    </label>
+                  )}
+                </div>
+
+                {!editing ? (
+                  <p className="text-xs text-text-muted bg-background-main/50 p-3 rounded-xl border border-primary/10">
+                    Save category first to upload and manage its images in S3.
+                  </p>
+                ) : images.length === 0 ? (
+                  <div className="text-center py-6 border-2 border-dashed border-primary/20 rounded-xl bg-background-main/30">
+                    <span className="material-icons-outlined text-2xl text-primary/30 mb-1 block">image</span>
+                    <p className="text-xs text-text-muted">No images uploaded to S3 yet.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5 max-h-48 overflow-y-auto p-1">
+                    {images.map(img => (
+                      <div key={img.id} className={`group relative rounded-xl border overflow-hidden bg-background-main aspect-square flex items-center justify-center ${img.isPrimary ? 'border-primary ring-1 ring-primary' : 'border-primary/10'}`}>
+                        <img src={img.url} alt={img.altText || form.name || 'Category image'} className="w-full h-full object-cover" />
+                        {img.isPrimary && (
+                          <span className="absolute top-1 left-1 bg-primary text-black text-[9px] font-bold px-1.5 py-0.5 rounded shadow">
+                            Primary
+                          </span>
+                        )}
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
+                          {!img.isPrimary && (
+                            <button
+                              type="button"
+                              onClick={() => handleSetPrimaryImage(img.id)}
+                              title="Set as primary"
+                              className="w-6 h-6 rounded-full bg-primary/20 text-primary hover:bg-primary hover:text-black flex items-center justify-center transition-all cursor-pointer"
+                            >
+                              <span className="material-icons-outlined text-xs">star</span>
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteImage(img.id)}
+                            title="Delete image"
+                            className="w-6 h-6 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white flex items-center justify-center transition-all cursor-pointer"
+                          >
+                            <span className="material-icons-outlined text-xs">delete</span>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="flex gap-3 mt-6">
                 <button
@@ -223,7 +342,20 @@ const CategoryList = () => {
             {categories.map(cat => (
               <tr key={cat.id} className="border-b border-primary/5 hover:bg-primary/[0.02] transition-colors">
                 <td className="px-6 py-4">
-                  <p className="text-sm font-bold text-text-main-light">{cat.name}</p>
+                  <div className="flex items-center gap-3">
+                    {cat.categoryImages && cat.categoryImages.length > 0 ? (
+                      <img
+                        src={cat.categoryImages.find(i => i.isPrimary)?.url || cat.categoryImages[0]?.url}
+                        alt={cat.name}
+                        className="w-9 h-9 rounded-lg object-cover border border-primary/20 shrink-0"
+                      />
+                    ) : (
+                      <div className="w-9 h-9 rounded-lg bg-background-main border border-primary/10 flex items-center justify-center text-text-muted/40 shrink-0">
+                        <span className="material-icons-outlined text-base">category</span>
+                      </div>
+                    )}
+                    <p className="text-sm font-bold text-text-main-light">{cat.name}</p>
+                  </div>
                 </td>
                 <td className="px-6 py-4">
                   <span className="text-xs text-text-muted font-mono bg-background-main px-2 py-1 rounded">{cat.slug}</span>

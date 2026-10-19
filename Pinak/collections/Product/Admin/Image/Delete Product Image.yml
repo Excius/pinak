@@ -1,17 +1,14 @@
 info:
-  name: Hard Delete Image (Admin Only)
+  name: Delete Product Image
   type: http
-  seq: 7
+  seq: 5
 
 http:
   method: DELETE
-  url: "{{baseUrl}}/api/v1/products/admin/images/{{id}}/hard"
+  url: "{{baseUrl}}/api/v1/products/admin/images/{{id}}"
   headers:
     - name: Content-Type
       value: application/json
-  body:
-    type: json
-    data: "{}"
   auth: inherit
 
 runtime:
@@ -19,9 +16,9 @@ runtime:
     - name: baseUrl
       value: http://localhost:3000
     - name: authToken
-      value: your-admin-jwt-token-here
+      value: your-moderator-or-admin-jwt-token-here
     - name: id
-      value: cmnjf3f5w0000zimzoid3u625
+      value: your-image-id-here
 
 settings:
   encodeUrl: true
@@ -31,7 +28,8 @@ settings:
   forwardAuthorizationHeader: true
 
 docs: |-
-  Route uses ProductTypes.HardDeleteProduct schema
+  Delete a product variant image (deletes image from S3 and database).
+  Route uses ProductTypes.DeleteImage schema
   Params: id
   Query: none
-  Body: {}
+  Body: none
