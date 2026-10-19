@@ -146,6 +146,9 @@ export class ProductService {
         optionValues: {
           include: { optionValue: { include: { option: true } } },
         },
+        product: {
+          include: { taxClass: true },
+        },
       },
     });
   }
@@ -158,7 +161,9 @@ export class ProductService {
         optionValues: {
           include: { optionValue: { include: { option: true } } },
         },
-        product: true,
+        product: {
+          include: { taxClass: true },
+        },
       },
     });
   }
@@ -443,6 +448,18 @@ export class ProductService {
       throw new ValidationError("Price must be greater than 0");
     }
 
+    // Validate sellingPrice
+    if (sanitizedData.sellingPrice !== undefined && sanitizedData.sellingPrice !== null) {
+      const sp = sanitizedData.sellingPrice as number;
+      if (sp < 0) {
+        throw new ValidationError("Selling price cannot be negative");
+      }
+      const basePrice = (sanitizedData.price as number) ?? 0;
+      if (sp > basePrice) {
+        throw new ValidationError("Selling price cannot be greater than the main price");
+      }
+    }
+
     // Validate stock (cannot be negative)
     if (sanitizedData.stock && (sanitizedData.stock as number) < 0) {
       throw new ValidationError("Stock cannot be negative");
@@ -541,6 +558,33 @@ export class ProductService {
     // Validate price (must be positive)
     if (sanitizedData.price && (sanitizedData.price as number) <= 0) {
       throw new ValidationError("Price must be greater than 0");
+    }
+
+    // Validate sellingPrice
+    if (sanitizedData.sellingPrice !== undefined && sanitizedData.sellingPrice !== null) {
+      const sp = sanitizedData.sellingPrice as number;
+      if (sp < 0) {
+        throw new ValidationError("Selling price cannot be negative");
+      }
+      const effectiveBasePrice =
+        (sanitizedData.price as number) ?? existingVariant.price;
+      if (sp > effectiveBasePrice) {
+        throw new ValidationError(
+          "Selling price cannot be greater than the main price",
+        );
+      }
+    } else if (
+      sanitizedData.sellingPrice === undefined &&
+      sanitizedData.price !== undefined &&
+      existingVariant.sellingPrice !== null &&
+      existingVariant.sellingPrice !== undefined
+    ) {
+      const newBasePrice = sanitizedData.price as number;
+      if (existingVariant.sellingPrice > newBasePrice) {
+        throw new ValidationError(
+          "Existing selling price cannot be greater than the new main price",
+        );
+      }
     }
 
     // Validate stock (cannot be negative)

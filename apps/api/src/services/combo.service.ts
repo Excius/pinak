@@ -730,11 +730,19 @@ export class ComboService {
         throw new ValidationError("quantity must be an integer >= 1");
       }
 
-      const originalPrice = item.originalPrice ?? variant.price;
+      const effectiveSellingPrice = variant.sellingPrice ?? variant.price;
+      const originalPrice = item.originalPrice ?? effectiveSellingPrice;
       const discountedPrice = item.discountedPrice;
 
       if (originalPrice < 0) {
         throw new ValidationError("originalPrice cannot be negative");
+      }
+
+      // Legal Metrology compliance: Cannot price an item higher than its main price (MRP)
+      if (originalPrice > variant.price) {
+        throw new ValidationError(
+          `originalPrice (${originalPrice}) cannot be greater than the product's main price (${variant.price})`,
+        );
       }
 
       if (discountedPrice !== undefined && discountedPrice < 0) {

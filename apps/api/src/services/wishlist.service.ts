@@ -8,17 +8,24 @@ export class WishlistService {
     if (!variant) return null;
     const taxRate = variant.product?.taxClass?.rate ?? 0;
     const price = variant.price;
+    const sellingPrice = variant.sellingPrice != null ? variant.sellingPrice : null;
+    const effectivePrice = sellingPrice ?? price;
     const comparePrice = variant.comparePrice ?? variant.compareAtPrice ?? null;
-    const taxAmount = Math.round((price * taxRate) / 100);
-    const priceWithTax = price + taxAmount;
+    const taxAmount = Math.round((effectivePrice * taxRate) / 100);
+    const priceWithTax = price + Math.round((price * taxRate) / 100);
+    const sellingPriceWithTax = sellingPrice != null
+      ? sellingPrice + taxAmount
+      : null;
     const comparePriceWithTax = comparePrice != null
       ? comparePrice + Math.round((comparePrice * taxRate) / 100)
       : null;
 
     return {
       ...variant,
+      sellingPrice,
       taxAmount,
       priceWithTax,
+      sellingPriceWithTax,
       comparePriceWithTax,
     };
   }

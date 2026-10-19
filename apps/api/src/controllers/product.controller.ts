@@ -345,9 +345,11 @@ export class ProductController {
       productId as string,
       data,
     );
+    const enriched = await this.productService.getVariantByIdAdmin(variant.id);
+    const responseData = enriched ? toAdminVariant(enriched) : variant;
     ResponseHandler.success(
       res,
-      variant,
+      responseData,
       "Product variant created successfully",
     );
   };
@@ -359,9 +361,11 @@ export class ProductController {
       id as string,
       data,
     );
+    const enriched = await this.productService.getVariantByIdAdmin(variant.id);
+    const responseData = enriched ? toAdminVariant(enriched) : variant;
     ResponseHandler.success(
       res,
-      variant,
+      responseData,
       "Product variant updated successfully",
     );
   };

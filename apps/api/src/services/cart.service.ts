@@ -14,6 +14,10 @@ export type CartItemResponse = {
   quantity: number;
   unitPrice: number;
   unitPriceWithTax?: number;
+  price?: number;
+  priceWithTax?: number;
+  sellingPrice?: number | null;
+  sellingPriceWithTax?: number | null;
   taxAmount?: number;
   lineTotal: number;
   lineTotalWithTax?: number;
@@ -24,8 +28,10 @@ export type CartItemResponse = {
     id: string;
     sku: string;
     price: number;
+    sellingPrice?: number | null;
     taxAmount?: number;
     priceWithTax?: number;
+    sellingPriceWithTax?: number | null;
     isActive: boolean;
     image: {
       id: string;
@@ -75,8 +81,10 @@ export type CartItemResponse = {
         id: string;
         sku: string;
         price: number;
+        sellingPrice?: number | null;
         taxAmount?: number;
         priceWithTax?: number;
+        sellingPriceWithTax?: number | null;
         image: {
           id: string;
           url: string;
@@ -173,9 +181,16 @@ export class CartService {
             );
 
           const taxRate = item.productVariant.product.taxClass?.rate ?? 0;
-          const unitPrice = item.productVariant.price;
+          const mainPrice = item.productVariant.price;
+          const sellingPrice =
+            item.productVariant.sellingPrice != null
+              ? item.productVariant.sellingPrice
+              : null;
+          const unitPrice = sellingPrice ?? mainPrice;
           const variantTaxAmount = Math.round((unitPrice * taxRate) / 100);
           const unitPriceWithTax = unitPrice + variantTaxAmount;
+          const mainPriceWithTax =
+            mainPrice + Math.round((mainPrice * taxRate) / 100);
           const lineTotal = unitPrice * item.quantity;
           const lineTotalWithTax = unitPriceWithTax * item.quantity;
 
@@ -185,6 +200,10 @@ export class CartService {
             quantity: item.quantity,
             unitPrice,
             unitPriceWithTax,
+            price: mainPrice,
+            priceWithTax: mainPriceWithTax,
+            sellingPrice,
+            sellingPriceWithTax: sellingPrice != null ? unitPriceWithTax : null,
             taxAmount: variantTaxAmount * item.quantity,
             lineTotal,
             lineTotalWithTax,
@@ -194,9 +213,11 @@ export class CartService {
             productVariant: {
               id: item.productVariant.id,
               sku: item.productVariant.sku,
-              price: item.productVariant.price,
+              price: mainPrice,
+              sellingPrice,
               taxAmount: variantTaxAmount,
-              priceWithTax: unitPriceWithTax,
+              priceWithTax: mainPriceWithTax,
+              sellingPriceWithTax: sellingPrice != null ? unitPriceWithTax : null,
               isActive: item.productVariant.isActive,
               image: this.mapVariantImage(item.productVariant.images),
               optionValues: this.mapVariantOptionValues(
@@ -247,7 +268,20 @@ export class CartService {
 
           const mappedComboItems = item.comboKit.items.map((comboItem) => {
             const componentVariant = comboItem.productVariant;
-            const baseVal = comboItem.discountedPrice ?? comboItem.originalPrice ?? componentVariant?.price ?? 0;
+            const compMainPrice = componentVariant?.price ?? 0;
+            const compSellingPrice =
+              componentVariant?.sellingPrice != null
+                ? componentVariant.sellingPrice
+                : null;
+            const compTaxRate =
+              componentVariant?.product?.taxClass?.rate ?? 0;
+            const compPriceWithTax =
+              compMainPrice + Math.round((compMainPrice * compTaxRate) / 100);
+            const compSellingPriceWithTax =
+              compSellingPrice != null
+                ? compSellingPrice +
+                  Math.round((compSellingPrice * compTaxRate) / 100)
+                : null;
 
             return {
               id: comboItem.id,
@@ -259,9 +293,11 @@ export class CartService {
                 ? {
                     id: componentVariant.id,
                     sku: componentVariant.sku,
-                    price: baseVal,
+                    price: compMainPrice,
+                    sellingPrice: compSellingPrice,
                     taxAmount: 0,
-                    priceWithTax: baseVal,
+                    priceWithTax: compPriceWithTax,
+                    sellingPriceWithTax: compSellingPriceWithTax,
                     image: this.mapVariantImage(componentVariant.images),
                   }
                 : null,
@@ -277,6 +313,10 @@ export class CartService {
             quantity: item.quantity,
             unitPrice,
             unitPriceWithTax,
+            price: unitPrice,
+            priceWithTax: unitPriceWithTax,
+            sellingPrice: null,
+            sellingPriceWithTax: null,
             taxAmount: comboItemTaxTotal,
             lineTotal,
             lineTotalWithTax,

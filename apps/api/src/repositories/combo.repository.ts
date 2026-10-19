@@ -400,6 +400,7 @@ export class ComboRepository {
       select: {
         id: true,
         price: true,
+        sellingPrice: true,
       },
     });
   }
