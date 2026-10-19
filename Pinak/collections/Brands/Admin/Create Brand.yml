@@ -6,18 +6,26 @@ info:
 http:
   method: POST
   url: "{{baseUrl}}/api/v1/brands/admin"
-  headers:
-    - name: Content-Type
-      value: application/json
   body:
-    type: json
-    data: |-
-      {
-        "name": "Nivea",
-        "slug": "nivea",
-        "logoUrl": "https://example.com/logo.png",
-        "isActive": true
-      }
+    type: multipart-form
+    data:
+      - name: name
+        type: text
+        value: Nivea
+        contentType: text/plain
+      - name: slug
+        type: text
+        value: nivea
+        contentType: text/plain
+      - name: logo
+        type: file
+        value:
+          - /path/to/logo.png
+        contentType: image/png
+      - name: isActive
+        type: text
+        value: "true"
+        contentType: text/plain
   auth: inherit
 
 runtime:
@@ -38,4 +46,4 @@ docs: |-
   Schema: BrandTypes.CreateBrand
   Params: none
   Query: none
-  Body: name(required), slug, logoUrl, isActive
+  Body: name (required), slug, logo (file), isActive

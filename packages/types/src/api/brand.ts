@@ -58,9 +58,11 @@ export const BrandTypes = {
         .min(1, { message: "Brand name is required" }),
       slug: z.string("slug must be a string").optional(),
       logoUrl: z
-        .string("logoUrl must be a string")
+        .string()
         .url({ message: "logoUrl must be a valid URL" })
-        .optional(),
+        .or(z.literal(""))
+        .optional()
+        .nullable(),
       isActive: z.coerce.boolean().optional(),
     }),
     params: z.object({}),
@@ -76,7 +78,12 @@ export const BrandTypes = {
     body: z.object({
       name: z.string().optional(),
       slug: z.string().optional(),
-      logoUrl: z.string().url().optional(),
+      logoUrl: z
+        .string()
+        .url({ message: "logoUrl must be a valid URL" })
+        .or(z.literal(""))
+        .optional()
+        .nullable(),
       isActive: z.coerce.boolean().optional(),
     }),
     params: z.object({ id: z.string() }),

@@ -1,4 +1,5 @@
 import type { Router } from "express";
+import multer from "multer";
 import { FeaturedSectionTypes, FeaturedSectionAdminTypes } from "@repo/types";
 import { validateMultiple } from "../../lib/validation.js";
 import type { FeaturedSectionRouteDeps } from "./index.js";
@@ -7,6 +8,10 @@ export const registerFeaturedSectionAdminRoutes = (
   router: Router,
   { controller, authMiddleware, rateLimiter }: FeaturedSectionRouteDeps,
 ) => {
+  const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 10 * 1024 * 1024 },
+  }); // 10MB
   router.get(
     "/admin/all",
     rateLimiter,
@@ -83,9 +88,10 @@ export const registerFeaturedSectionAdminRoutes = (
   router.post(
     "/admin/:sectionId/images",
     rateLimiter,
-    validateMultiple(FeaturedSectionAdminTypes.AddFeaturedSectionImage),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    upload.single("image"),
+    validateMultiple(FeaturedSectionAdminTypes.AddFeaturedSectionImage),
     controller.addFeaturedSectionImage,
   );
 
@@ -101,27 +107,9 @@ export const registerFeaturedSectionAdminRoutes = (
   router.delete(
     "/admin/images/:id",
     rateLimiter,
-    validateMultiple(FeaturedSectionAdminTypes.SoftDeleteFeaturedSectionImage),
+    validateMultiple(FeaturedSectionAdminTypes.DeleteFeaturedSectionImage),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
-    controller.softDeleteImage,
-  );
-
-  router.patch(
-    "/admin/images/:id/restore",
-    rateLimiter,
-    validateMultiple(FeaturedSectionAdminTypes.RestoreFeaturedSectionImage),
-    authMiddleware.authenticate,
-    authMiddleware.requireModeratorOrAdmin,
-    controller.restoreImage,
-  );
-
-  router.delete(
-    "/admin/images/:id/hard",
-    rateLimiter,
-    validateMultiple(FeaturedSectionAdminTypes.HardDeleteFeaturedSectionImage),
-    authMiddleware.authenticate,
-    authMiddleware.requireAdmin,
-    controller.hardDeleteImage,
+    controller.deleteImage,
   );
 };

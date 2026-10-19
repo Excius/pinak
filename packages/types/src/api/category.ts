@@ -226,9 +226,15 @@ export const CategoryAdminTypes = {
 
   AddCategoryImage: {
     body: z.object({
-      url: z.string().min(1).url(),
       altText: z.string().optional(),
-      isPrimary: z.coerce.boolean().optional(),
+      isPrimary: z.preprocess((val) => {
+        if (typeof val === "string") {
+          const v = val.toLowerCase();
+          if (v === "true") return true;
+          if (v === "false") return false;
+        }
+        return val;
+      }, z.boolean()).optional(),
     }),
     params: z.object({ categoryId: z.string().min(1) }),
     query: z.object({}),
@@ -247,6 +253,17 @@ export const CategoryAdminTypes = {
       message: z.string(),
       success: z.boolean(),
       data: z.object({ id: z.string(), isPrimary: z.boolean() }),
+    }),
+  },
+
+  DeleteCategoryImage: {
+    body: z.object({}),
+    params: z.object({ id: z.string() }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({}),
     }),
   },
 

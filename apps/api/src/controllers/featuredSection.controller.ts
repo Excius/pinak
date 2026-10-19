@@ -117,9 +117,16 @@ export class FeaturedSectionController {
 
   addFeaturedSectionImage = async (req: Request, res: Response) => {
     const { sectionId } = req.params;
+    const file = req.file;
+    if (!file) {
+      return ResponseHandler.badRequest(res, "Image file is required");
+    }
+
     const image = await this.service.addFeaturedSectionImage(
       sectionId as string,
       req.body,
+      file.buffer,
+      file.mimetype,
     );
     ResponseHandler.created(res, image, "Featured section image added successfully");
   };
@@ -130,21 +137,12 @@ export class FeaturedSectionController {
     ResponseHandler.success(res, image, "Primary image set successfully");
   };
 
-  softDeleteImage = async (req: Request, res: Response) => {
+  deleteImage = async (req: Request, res: Response) => {
     const { id } = req.params;
-    await this.service.softDeleteImage(id as string);
-    ResponseHandler.success(res, {}, "Image soft deleted successfully");
+    await this.service.deleteImage(id as string);
+    ResponseHandler.success(res, {}, "Featured section image deleted successfully");
   };
 
-  restoreImage = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    await this.service.restoreImage(id as string);
-    ResponseHandler.success(res, {}, "Image restored successfully");
-  };
-
-  hardDeleteImage = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    await this.service.hardDeleteImage(id as string);
-    ResponseHandler.success(res, {}, "Image hard deleted successfully");
-  };
+  softDeleteImage = this.deleteImage;
+  hardDeleteImage = this.deleteImage;
 }

@@ -22,6 +22,8 @@ const BrandList = () => {
   const [editing, setEditing] = useState<AdminBrand | null>(null)
   const [showModal, setShowModal] = useState(false)
   const [form, setForm] = useState<BrandFormData>(emptyForm)
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
 
@@ -41,6 +43,8 @@ const BrandList = () => {
   const openCreate = () => {
     setEditing(null)
     setForm(emptyForm)
+    setLogoFile(null)
+    setPreviewUrl(null)
     setShowModal(true)
   }
 
@@ -52,25 +56,43 @@ const BrandList = () => {
       logoUrl: brand.logoUrl || '',
       isActive: brand.isActive
     })
+    setLogoFile(null)
+    setPreviewUrl(brand.logoUrl || null)
     setShowModal(true)
+  }
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setLogoFile(file)
+      setPreviewUrl(URL.createObjectURL(file))
+    }
   }
 
   const handleSave = async () => {
     if (!form.name.trim()) return
     setSaving(true)
     try {
-      const payload: Record<string, unknown> = { name: form.name, isActive: form.isActive }
-      if (form.slug.trim()) payload.slug = form.slug
-      if (form.logoUrl.trim()) payload.logoUrl = form.logoUrl
+      const formData = new FormData()
+      formData.append('name', form.name)
+      formData.append('isActive', String(form.isActive))
+      if (form.slug.trim()) formData.append('slug', form.slug)
+      if (logoFile) {
+        formData.append('logo', logoFile)
+      } else if (form.logoUrl.trim()) {
+        formData.append('logoUrl', form.logoUrl)
+      }
 
       if (editing) {
-        await updateBrandAdmin(editing.id, payload as any)
+        await updateBrandAdmin(editing.id, formData)
       } else {
-        await createBrandAdmin(payload as any)
+        await createBrandAdmin(formData)
       }
       setShowModal(false)
       setForm(emptyForm)
       setEditing(null)
+      setLogoFile(null)
+      setPreviewUrl(null)
       await fetchBrands()
     } catch (err) {
       console.error('Failed to save brand', err)
@@ -131,18 +153,36 @@ const BrandList = () => {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-bold text-text-muted uppercase">Logo URL</label>
-                <input
-                  value={form.logoUrl}
-                  onChange={e => setForm(prev => ({ ...prev, logoUrl: e.target.value }))}
-                  placeholder="https://example.com/logo.png"
-                  className="w-full bg-background-main border border-primary/20 rounded-xl px-4 py-3 text-text-main-light outline-none focus:border-primary"
-                />
-                {form.logoUrl && (
-                  <div className="w-16 h-16 rounded-lg border border-primary/10 overflow-hidden bg-background-main flex items-center justify-center mt-2">
-                    <img src={form.logoUrl} className="max-w-full max-h-full object-contain" alt="Logo preview" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                <label className="text-xs font-bold text-text-muted uppercase">Brand Logo (S3 Upload)</label>
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-xl border border-primary/20 overflow-hidden bg-background-main flex items-center justify-center shrink-0">
+                    {previewUrl ? (
+                      <img
+                        src={previewUrl}
+                        className="max-w-full max-h-full object-contain"
+                        alt="Logo preview"
+                        onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+                      />
+                    ) : (
+                      <span className="material-icons-outlined text-2xl text-text-muted/30">image</span>
+                    )}
                   </div>
-                )}
+                  <div className="flex-1">
+                    <label className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-xl text-xs font-bold cursor-pointer transition-colors">
+                      <span className="material-icons-outlined text-base">cloud_upload</span>
+                      {logoFile ? 'Change File' : 'Upload Logo to S3'}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleLogoChange}
+                      />
+                    </label>
+                    {logoFile && (
+                      <p className="text-xs text-text-muted mt-1 truncate max-w-[200px]">{logoFile.name}</p>
+                    )}
+                  </div>
+                </div>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-text-main-light">Active</span>

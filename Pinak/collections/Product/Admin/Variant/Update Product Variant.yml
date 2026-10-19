@@ -15,7 +15,8 @@ http:
       {
         "sku": "SERUM-30ML-V2",
         "ean": "1234567890124",
-        "price": 849,
+        "price": 999,
+        "sellingPrice": 849,
         "comparePrice": 999,
         "stock": 30,
         "weightGrams": 125,

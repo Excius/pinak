@@ -36,8 +36,10 @@ const PublicProductVariantSchema = z.object({
   sku: z.string(),
   tags: z.array(z.string()),
   price: z.number(),
+  sellingPrice: z.number().nullable().optional(),
   taxAmount: z.number().optional(),
   priceWithTax: z.number().optional(),
+  sellingPriceWithTax: z.number().nullable().optional(),
   compareAtPrice: z.number().nullable().optional(),
   compareAtPriceWithTax: z.number().nullable().optional(),
   stock: z.number(),
@@ -114,8 +116,10 @@ const PublicVariantRouteSchema = z.object({
   sku: z.string(),
   tags: z.array(z.string()),
   price: z.number(),
+  sellingPrice: z.number().nullable().optional(),
   taxAmount: z.number().optional(),
   priceWithTax: z.number().optional(),
+  sellingPriceWithTax: z.number().nullable().optional(),
   compareAtPrice: z.number().nullable().optional(),
   compareAtPriceWithTax: z.number().nullable().optional(),
   stock: z.number(),
@@ -363,8 +367,10 @@ export const ProductTypes = {
         ean: z.string().nullable(),
         tags: z.array(z.string()).default([]),
         price: z.number(),
+        sellingPrice: z.number().nullable().optional(),
         taxAmount: z.number().optional(),
         priceWithTax: z.number().optional(),
+        sellingPriceWithTax: z.number().nullable().optional(),
         comparePrice: z.number().nullable().optional(),
         comparePriceWithTax: z.number().nullable().optional(),
         stock: z.number(),
@@ -491,8 +497,10 @@ export const ProductTypes = {
                 id: z.string(),
                 sku: z.string(),
                 price: z.number(),
+                sellingPrice: z.number().nullable().optional(),
                 taxAmount: z.number().optional(),
                 priceWithTax: z.number().optional(),
+                sellingPriceWithTax: z.number().nullable().optional(),
                 comparePrice: z.number().nullable(),
                 comparePriceWithTax: z.number().nullable().optional(),
                 ean: z.string().nullable(),
@@ -674,8 +682,13 @@ export const ProductTypes = {
         .min(1, { message: "SKU is required" })
         .max(100, { message: "SKU must be at most 100 characters" }),
       ean: z.string().optional(),
-      // price stored in paise (smallest currency unit)
+      // price stored in paise (smallest currency unit) - Main Price / MRP
       price: z.coerce.number().min(0, { message: "price must be >= 0" }),
+      sellingPrice: z.coerce
+        .number()
+        .min(0, { message: "sellingPrice must be >= 0" })
+        .optional()
+        .nullable(),
       comparePrice: z.coerce
         .number()
         .min(0, { message: "comparePrice must be >= 0" })
@@ -706,7 +719,12 @@ export const ProductTypes = {
         sku: z.string(),
         ean: z.string().nullable(),
         price: z.number(),
+        priceWithTax: z.number().optional(),
+        sellingPrice: z.number().nullable().optional(),
+        sellingPriceWithTax: z.number().nullable().optional(),
+        taxAmount: z.number().optional(),
         comparePrice: z.number().nullable(),
+        comparePriceWithTax: z.number().nullable().optional(),
         stock: z.number(),
         weightGrams: z.number().nullable(),
         tags: z.array(z.string()),
@@ -729,6 +747,11 @@ export const ProductTypes = {
         .number()
         .min(0, { message: "price must be >= 0" })
         .optional(),
+      sellingPrice: z.coerce
+        .number()
+        .min(0, { message: "sellingPrice must be >= 0" })
+        .optional()
+        .nullable(),
       comparePrice: z.coerce
         .number()
         .min(0, { message: "comparePrice must be >= 0" })
@@ -760,7 +783,12 @@ export const ProductTypes = {
         sku: z.string(),
         ean: z.string().nullable(),
         price: z.number(),
+        priceWithTax: z.number().optional(),
+        sellingPrice: z.number().nullable().optional(),
+        sellingPriceWithTax: z.number().nullable().optional(),
+        taxAmount: z.number().optional(),
         comparePrice: z.number().nullable(),
+        comparePriceWithTax: z.number().nullable().optional(),
         stock: z.number(),
         weightGrams: z.number().nullable(),
         tags: z.array(z.string()),
@@ -852,6 +880,19 @@ export const ProductTypes = {
         id: z.string(),
         isPrimary: z.boolean(),
       }),
+    }),
+  },
+
+  DeleteImage: {
+    body: z.object({}),
+    params: z.object({
+      id: z.string(),
+    }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({}),
     }),
   },
 

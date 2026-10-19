@@ -1,6 +1,8 @@
 import { Prisma } from "../generated/prisma/client.js";
 import { ValidationError, NotFoundError } from "../lib/error.js";
 import logger from "../lib/logger.js";
+import { uploadBuffer, deleteObject, extractS3KeyFromUrl } from "../lib/s3.js";
+import appConfig from "../lib/config.js";
 import {
   ComboRepository,
   ComboKitListFilters,
@@ -728,11 +730,19 @@ export class ComboService {
         throw new ValidationError("quantity must be an integer >= 1");
       }
 
-      const originalPrice = item.originalPrice ?? variant.price;
+      const effectiveSellingPrice = variant.sellingPrice ?? variant.price;
+      const originalPrice = item.originalPrice ?? effectiveSellingPrice;
       const discountedPrice = item.discountedPrice;
 
       if (originalPrice < 0) {
         throw new ValidationError("originalPrice cannot be negative");
+      }
+
+      // Legal Metrology compliance: Cannot price an item higher than its main price (MRP)
+      if (originalPrice > variant.price) {
+        throw new ValidationError(
+          `originalPrice (${originalPrice}) cannot be greater than the product's main price (${variant.price})`,
+        );
       }
 
       if (discountedPrice !== undefined && discountedPrice < 0) {
@@ -844,32 +854,53 @@ export class ComboService {
   // Image management for ComboKits
   async addComboKitImage(
     comboKitId: string,
-    data: Prisma.ComboKitImageCreateInput,
+    data: Partial<Prisma.ComboKitImageCreateInput>,
+    fileBuffer?: Buffer,
+    contentType?: string,
   ) {
     const comboKit = await this.comboRepository.getComboKitById(comboKitId);
     if (!comboKit) {
       throw new ValidationError("ComboKit not found");
     }
 
-    const sanitizedData = { ...data } as Prisma.ComboKitImageCreateInput;
-
-    if (sanitizedData.url) {
-      try {
-        new URL(sanitizedData.url as string);
-      } catch {
-        throw new ValidationError("Invalid image URL format");
-      }
+    if (!fileBuffer) {
+      throw new ValidationError("Image file is required");
     }
 
-    if (sanitizedData.altText) {
-      sanitizedData.altText = (sanitizedData.altText as string).trim();
+    if (!appConfig.S3_ENABLED) {
+      throw new ValidationError("S3 is not enabled on the server");
     }
 
-    sanitizedData.comboKit = { connect: { id: comboKitId } };
+    let ext = "bin";
+    if (contentType) {
+      if (contentType.includes("jpeg") || contentType.includes("jpg")) ext = "jpg";
+      else if (contentType.includes("png")) ext = "png";
+      else if (contentType.includes("webp")) ext = "webp";
+      else if (contentType.includes("gif")) ext = "gif";
+      else if (contentType.includes("svg")) ext = "svg";
+    }
+
+    const rand = Math.random().toString(36).slice(2, 8);
+    const timestamp = Date.now();
+    const key = `combos/${comboKitId}/${timestamp}-${rand}.${ext}`;
+
+    const publicUrl = await uploadBuffer(
+      fileBuffer,
+      key,
+      contentType,
+      true,
+    );
+
+    const sanitizedData: Prisma.ComboKitImageCreateInput = {
+      url: publicUrl,
+      altText: data.altText ? (data.altText as string).trim() : null,
+      isPrimary: data.isPrimary !== undefined ? Boolean(data.isPrimary) : false,
+      comboKit: { connect: { id: comboKitId } },
+    };
 
     return this.comboRepository.addComboKitImage(
       comboKitId,
-      sanitizedData as Prisma.ComboKitImageCreateInput,
+      sanitizedData,
     );
   }
 
@@ -894,21 +925,24 @@ export class ComboService {
     return this.comboRepository.getAllImages(comboKitId);
   }
 
-  async softDeleteImage(id: string) {
+  async deleteImage(id: string) {
     const image = await this.comboRepository.getComboKitImageById(id);
     if (!image) throw new NotFoundError("Image not found");
-    return this.comboRepository.softDeleteImage(id);
-  }
 
-  async restoreImage(id: string) {
-    const image = await this.comboRepository.getComboKitImageById(id);
-    if (!image) throw new NotFoundError("Image not found");
-    return this.comboRepository.restoreImage(id);
-  }
+    if (image.url && appConfig.S3_ENABLED) {
+      try {
+        const key = extractS3KeyFromUrl(image.url);
+        if (key) {
+          await deleteObject(key);
+        }
+      } catch (err) {
+        logger.warn({ id, err }, "Failed to delete S3 object for combo kit image");
+      }
+    }
 
-  async hardDeleteImage(id: string) {
-    const image = await this.comboRepository.getComboKitImageById(id);
-    if (!image) throw new NotFoundError("Image not found");
     return this.comboRepository.hardDeleteImage(id);
   }
+
+  softDeleteImage = this.deleteImage;
+  hardDeleteImage = this.deleteImage;
 }

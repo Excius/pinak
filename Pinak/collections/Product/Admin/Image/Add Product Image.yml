@@ -31,7 +31,7 @@ runtime:
     - name: authToken
       value: your-moderator-or-admin-jwt-token-here
     - name: variantId
-      value: cmobesyal00430emzj2a7mk4g
+      value: cmtxf4rii0047qkmzs7sb1bqu
 
 settings:
   encodeUrl: true

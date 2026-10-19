@@ -111,6 +111,41 @@ export const removeComboKitItemAdmin = async (comboKitId: string, itemId: string
   await axiosInstance.delete(`/combo-kits/${comboKitId}/items/${itemId}`)
 }
 
+// ── Combo Kit Images CRUD ─────────────────────────────────────────────────
+
+export interface AdminComboKitImage {
+  id: string
+  comboKitId: string
+  url: string
+  altText: string | null
+  isPrimary: boolean
+  sortOrder: number
+  createdAt: string
+  updatedAt: string
+}
+
+export const getAllComboKitImagesAdmin = async (comboKitId: string): Promise<AdminComboKitImage[]> => {
+  const { data: resp } = await axiosInstance.get(`/combo-kits/admin/${comboKitId}/images`)
+  return resp?.data || []
+}
+
+export const addComboKitImageAdmin = async (comboKitId: string, formData: FormData): Promise<AdminComboKitImage> => {
+  const { data: resp } = await axiosInstance.post(`/combo-kits/admin/${comboKitId}/images`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  return resp?.data
+}
+
+export const setPrimaryComboKitImageAdmin = async (imageId: string) => {
+  const { data: resp } = await axiosInstance.patch(`/combo-kits/admin/images/${imageId}/primary`)
+  return resp?.data
+}
+
+export const deleteComboKitImageAdmin = async (imageId: string) => {
+  const { data: resp } = await axiosInstance.delete(`/combo-kits/admin/images/${imageId}`)
+  return resp?.data
+}
+
 // ── Featured Sections ─────────────────────────────────────────────────────
 
 export interface AdminFeaturedSection {
@@ -121,6 +156,13 @@ export interface AdminFeaturedSection {
   productCount?: number
   createdAt?: string
   updatedAt?: string
+  featuredSectionImages?: Array<{
+    id?: string
+    url: string
+    altText?: string | null
+    isPrimary?: boolean
+    sortOrder?: number
+  }>
 }
 
 export const getAllFeaturedSectionsAdmin = async (): Promise<AdminFeaturedSection[]> => {
@@ -151,5 +193,40 @@ export const addProductToFeaturedAdmin = async (sectionId: string, productId: st
 
 export const removeProductFromFeaturedAdmin = async (featuredProductId: string) => {
   await axiosInstance.delete('/products/admin/featured/' + featuredProductId)
+}
+
+// ── Featured Section Images CRUD ──────────────────────────────────────────
+
+export interface AdminFeaturedSectionImage {
+  id: string
+  featuredSectionId: string
+  url: string
+  altText: string | null
+  isPrimary: boolean
+  sortOrder: number
+  createdAt: string
+  updatedAt: string
+}
+
+export const getAllFeaturedSectionImagesAdmin = async (sectionId: string): Promise<AdminFeaturedSectionImage[]> => {
+  const { data: resp } = await axiosInstance.get(`/featured-sections/admin/${sectionId}/images`)
+  return resp?.data || []
+}
+
+export const addFeaturedSectionImageAdmin = async (sectionId: string, formData: FormData): Promise<AdminFeaturedSectionImage> => {
+  const { data: resp } = await axiosInstance.post(`/featured-sections/admin/${sectionId}/images`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  return resp?.data
+}
+
+export const setPrimaryFeaturedSectionImageAdmin = async (imageId: string) => {
+  const { data: resp } = await axiosInstance.patch(`/featured-sections/admin/images/${imageId}/primary`)
+  return resp?.data
+}
+
+export const deleteFeaturedSectionImageAdmin = async (imageId: string) => {
+  const { data: resp } = await axiosInstance.delete(`/featured-sections/admin/images/${imageId}`)
+  return resp?.data
 }
 

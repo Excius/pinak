@@ -94,7 +94,12 @@ export class BrandController {
 
   create = async (req: Request, res: Response) => {
     const data = req.body;
-    const brand = await this.brandService.createBrand(data);
+    const file = req.file;
+    const brand = await this.brandService.createBrand(
+      data,
+      file?.buffer,
+      file?.mimetype,
+    );
     ResponseHandler.success(
       res,
       toAdminBrand(brand),
@@ -105,7 +110,13 @@ export class BrandController {
   update = async (req: Request, res: Response) => {
     const { id } = req.params;
     const data = req.body;
-    const brand = await this.brandService.updateBrand(id as string, data);
+    const file = req.file;
+    const brand = await this.brandService.updateBrand(
+      id as string,
+      data,
+      file?.buffer,
+      file?.mimetype,
+    );
     ResponseHandler.success(
       res,
       toAdminBrand(brand),

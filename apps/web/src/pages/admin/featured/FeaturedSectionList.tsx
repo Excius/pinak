@@ -3,9 +3,13 @@ import {
   getAllFeaturedSectionsAdmin,
   createFeaturedSectionAdmin,
   updateFeaturedSectionAdmin,
-  deleteFeaturedSectionAdmin
+  deleteFeaturedSectionAdmin,
+  getAllFeaturedSectionImagesAdmin,
+  addFeaturedSectionImageAdmin,
+  setPrimaryFeaturedSectionImageAdmin,
+  deleteFeaturedSectionImageAdmin
 } from '../../../api/admin/admin.combos.api'
-import type { AdminFeaturedSection } from '../../../api/admin/admin.combos.api'
+import type { AdminFeaturedSection, AdminFeaturedSectionImage } from '../../../api/admin/admin.combos.api'
 
 const sectionTypes = ['EXPERT_PICKS', 'HOMEPAGE_HERO', 'DEALS'] as const
 
@@ -29,6 +33,8 @@ const FeaturedSectionList = () => {
   const [showModal, setShowModal] = useState(false)
   const [editing, setEditing] = useState<AdminFeaturedSection | null>(null)
   const [form, setForm] = useState<FormData>(emptyForm)
+  const [images, setImages] = useState<AdminFeaturedSectionImage[]>([])
+  const [uploadingImage, setUploadingImage] = useState(false)
   const [saving, setSaving] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
 
@@ -48,13 +54,60 @@ const FeaturedSectionList = () => {
   const openCreate = () => {
     setEditing(null)
     setForm(emptyForm)
+    setImages([])
     setShowModal(true)
   }
 
-  const openEdit = (section: AdminFeaturedSection) => {
+  const openEdit = async (section: AdminFeaturedSection) => {
     setEditing(section)
     setForm({ title: section.title, type: section.type, priority: section.priority })
     setShowModal(true)
+    try {
+      const imgs = await getAllFeaturedSectionImagesAdmin(section.id)
+      setImages(imgs)
+    } catch (err) {
+      console.error('Failed to fetch section images', err)
+      setImages([])
+    }
+  }
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !editing) return
+    const data = new FormData()
+    data.append('image', file)
+    data.append('isPrimary', images.length === 0 ? 'true' : 'false')
+    setUploadingImage(true)
+    try {
+      const newImg = await addFeaturedSectionImageAdmin(editing.id, data)
+      setImages(prev => [...prev, newImg])
+      await fetchSections()
+    } catch (err) {
+      console.error('Failed to upload image', err)
+    } finally {
+      setUploadingImage(false)
+      e.target.value = ''
+    }
+  }
+
+  const handleSetPrimaryImage = async (imgId: string) => {
+    try {
+      await setPrimaryFeaturedSectionImageAdmin(imgId)
+      setImages(prev => prev.map(img => ({ ...img, isPrimary: img.id === imgId })))
+      await fetchSections()
+    } catch (err) {
+      console.error('Failed to set primary image', err)
+    }
+  }
+
+  const handleDeleteImage = async (imgId: string) => {
+    try {
+      await deleteFeaturedSectionImageAdmin(imgId)
+      setImages(prev => prev.filter(img => img.id !== imgId))
+      await fetchSections()
+    } catch (err) {
+      console.error('Failed to delete image', err)
+    }
   }
 
   const handleSave = async () => {
@@ -106,7 +159,7 @@ const FeaturedSectionList = () => {
       {showModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowModal(false)} />
-          <div className="relative bg-background-light border border-primary/20 rounded-2xl p-8 w-full max-w-md shadow-2xl">
+          <div className="relative bg-background-light border border-primary/20 rounded-2xl p-8 w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
             <h3 className="text-xl font-display font-bold text-text-main-light mb-6">
               {editing ? 'Edit Section' : 'New Featured Section'}
             </h3>
@@ -151,6 +204,72 @@ const FeaturedSectionList = () => {
                   onChange={e => setForm(prev => ({ ...prev, priority: Number(e.target.value) }))}
                   className="w-full bg-background-main border border-primary/20 rounded-xl px-4 py-3 text-text-main-light outline-none focus:border-primary"
                 />
+              </div>
+
+              {/* Featured Section Images (S3 Upload) */}
+              <div className="space-y-3 pt-3 border-t border-primary/10">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-text-muted uppercase">
+                    Section Images ({images.length})
+                  </label>
+                  {editing && (
+                    <label className={`cursor-pointer bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${uploadingImage ? 'opacity-50 pointer-events-none' : ''}`}>
+                      <span className="material-icons-outlined text-sm">{uploadingImage ? 'hourglass_top' : 'cloud_upload'}</span>
+                      {uploadingImage ? 'Uploading...' : 'Upload Image'}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        disabled={uploadingImage}
+                        onChange={handleImageUpload}
+                      />
+                    </label>
+                  )}
+                </div>
+
+                {!editing ? (
+                  <p className="text-xs text-text-muted bg-background-main/50 p-3 rounded-xl border border-primary/10">
+                    Save section first to upload and manage its banner images in S3.
+                  </p>
+                ) : images.length === 0 ? (
+                  <div className="text-center py-6 border-2 border-dashed border-primary/20 rounded-xl bg-background-main/30">
+                    <span className="material-icons-outlined text-2xl text-primary/30 mb-1 block">image</span>
+                    <p className="text-xs text-text-muted">No images uploaded to S3 yet.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5 max-h-48 overflow-y-auto p-1">
+                    {images.map(img => (
+                      <div key={img.id} className={`group relative rounded-xl border overflow-hidden bg-background-main aspect-square flex items-center justify-center ${img.isPrimary ? 'border-primary ring-1 ring-primary' : 'border-primary/10'}`}>
+                        <img src={img.url} alt={img.altText || form.title || 'Section image'} className="w-full h-full object-cover" />
+                        {img.isPrimary && (
+                          <span className="absolute top-1 left-1 bg-primary text-black text-[9px] font-bold px-1.5 py-0.5 rounded shadow">
+                            Primary
+                          </span>
+                        )}
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
+                          {!img.isPrimary && (
+                            <button
+                              type="button"
+                              onClick={() => handleSetPrimaryImage(img.id)}
+                              title="Set as primary"
+                              className="w-6 h-6 rounded-full bg-primary/20 text-primary hover:bg-primary hover:text-black flex items-center justify-center transition-all cursor-pointer"
+                            >
+                              <span className="material-icons-outlined text-xs">star</span>
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteImage(img.id)}
+                            title="Delete image"
+                            className="w-6 h-6 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white flex items-center justify-center transition-all cursor-pointer"
+                          >
+                            <span className="material-icons-outlined text-xs">delete</span>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="flex gap-3 mt-6">
                 <button
@@ -220,6 +339,16 @@ const FeaturedSectionList = () => {
                   key={section.id}
                   className="bg-background-light rounded-2xl border border-primary/10 p-6 hover:border-primary/30 transition-all group"
                 >
+                  {section.featuredSectionImages && section.featuredSectionImages.length > 0 && (
+                    <div className="w-full h-28 rounded-xl overflow-hidden mb-4 border border-primary/10 bg-background-main">
+                      <img
+                        src={section.featuredSectionImages.find(i => i.isPrimary)?.url || section.featuredSectionImages[0]?.url}
+                        alt={section.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+
                   <div className="flex items-start justify-between mb-4">
                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center border ${meta.color}`}>
                       <span className="material-icons-outlined text-2xl">{meta.icon}</span>
