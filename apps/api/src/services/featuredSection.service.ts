@@ -1,6 +1,9 @@
 import type { Prisma } from "../generated/prisma/client.js";
 import type { FeaturedType } from "../generated/prisma/enums.js";
 import { ValidationError, NotFoundError } from "../lib/error.js";
+import { uploadBuffer, deleteObject, extractS3KeyFromUrl } from "../lib/s3.js";
+import appConfig from "../lib/config.js";
+import logger from "../lib/logger.js";
 import {
   FeaturedSectionRepository,
   type FeaturedSectionWithCount,
@@ -99,32 +102,53 @@ export class FeaturedSectionService {
   // Image management for FeaturedSections
   async addFeaturedSectionImage(
     featuredSectionId: string,
-    data: Prisma.FeaturedSectionImageCreateInput,
+    data: Partial<Prisma.FeaturedSectionImageCreateInput>,
+    fileBuffer?: Buffer,
+    contentType?: string,
   ) {
     const section = await this.repository.getById(featuredSectionId);
     if (!section) {
       throw new ValidationError("Featured section not found");
     }
 
-    const sanitizedData = { ...data } as Prisma.FeaturedSectionImageCreateInput;
-
-    if (sanitizedData.url) {
-      try {
-        new URL(sanitizedData.url as string);
-      } catch {
-        throw new ValidationError("Invalid image URL format");
-      }
+    if (!fileBuffer) {
+      throw new ValidationError("Image file is required");
     }
 
-    if (sanitizedData.altText) {
-      sanitizedData.altText = (sanitizedData.altText as string).trim();
+    if (!appConfig.S3_ENABLED) {
+      throw new ValidationError("S3 is not enabled on the server");
     }
 
-    sanitizedData.featuredSection = { connect: { id: featuredSectionId } };
+    let ext = "bin";
+    if (contentType) {
+      if (contentType.includes("jpeg") || contentType.includes("jpg")) ext = "jpg";
+      else if (contentType.includes("png")) ext = "png";
+      else if (contentType.includes("webp")) ext = "webp";
+      else if (contentType.includes("gif")) ext = "gif";
+      else if (contentType.includes("svg")) ext = "svg";
+    }
+
+    const rand = Math.random().toString(36).slice(2, 8);
+    const timestamp = Date.now();
+    const key = `featured-sections/${featuredSectionId}/${timestamp}-${rand}.${ext}`;
+
+    const publicUrl = await uploadBuffer(
+      fileBuffer,
+      key,
+      contentType,
+      true,
+    );
+
+    const sanitizedData: Prisma.FeaturedSectionImageCreateInput = {
+      url: publicUrl,
+      altText: data.altText ? (data.altText as string).trim() : null,
+      isPrimary: data.isPrimary !== undefined ? Boolean(data.isPrimary) : false,
+      featuredSection: { connect: { id: featuredSectionId } },
+    };
 
     return this.repository.addFeaturedSectionImage(
       featuredSectionId,
-      sanitizedData as Prisma.FeaturedSectionImageCreateInput,
+      sanitizedData,
     );
   }
 
@@ -149,21 +173,24 @@ export class FeaturedSectionService {
     return this.repository.getAllImages(featuredSectionId);
   }
 
-  async softDeleteImage(id: string) {
+  async deleteImage(id: string) {
     const image = await this.repository.getFeaturedSectionImageById(id);
     if (!image) throw new NotFoundError("Image not found");
-    return this.repository.softDeleteImage(id);
-  }
 
-  async restoreImage(id: string) {
-    const image = await this.repository.getFeaturedSectionImageById(id);
-    if (!image) throw new NotFoundError("Image not found");
-    return this.repository.restoreImage(id);
-  }
+    if (image.url && appConfig.S3_ENABLED) {
+      try {
+        const key = extractS3KeyFromUrl(image.url);
+        if (key) {
+          await deleteObject(key);
+        }
+      } catch (err) {
+        logger.warn({ id, err }, "Failed to delete S3 object for featured section image");
+      }
+    }
 
-  async hardDeleteImage(id: string) {
-    const image = await this.repository.getFeaturedSectionImageById(id);
-    if (!image) throw new NotFoundError("Image not found");
     return this.repository.hardDeleteImage(id);
   }
+
+  softDeleteImage = this.deleteImage;
+  hardDeleteImage = this.deleteImage;
 }

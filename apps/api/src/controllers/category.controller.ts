@@ -122,10 +122,17 @@ export class CategoryController {
   addCategoryImage = async (req: Request, res: Response) => {
     const { categoryId } = req.params;
     const data = req.body;
+    const file = req.file;
+
+    if (!file) {
+      return ResponseHandler.badRequest(res, "Image file is required");
+    }
 
     const image = await this.categoryService.addCategoryImage(
       categoryId as string,
       data,
+      file.buffer,
+      file.mimetype,
     );
     ResponseHandler.success(res, image, "Category image added successfully");
   };
@@ -136,25 +143,12 @@ export class CategoryController {
     ResponseHandler.success(res, image, "Primary image set successfully");
   };
 
-  softDeleteImage = async (req: Request, res: Response) => {
+  deleteImage = async (req: Request, res: Response) => {
     const { id } = req.params;
-    await this.categoryService.softDeleteImage(id as string);
-    ResponseHandler.success(res, {}, "Image deleted successfully");
+    await this.categoryService.deleteImage(id as string);
+    ResponseHandler.success(res, {}, "Category image deleted successfully");
   };
 
-  restoreImage = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    await this.categoryService.restoreImage(id as string);
-    ResponseHandler.success(res, {}, "Image restored successfully");
-  };
-
-  hardDeleteImage = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    await this.categoryService.hardDeleteImage(id as string);
-    ResponseHandler.success(
-      res,
-      {},
-      "Image permanently deleted successfully",
-    );
-  };
+  softDeleteImage = this.deleteImage;
+  hardDeleteImage = this.deleteImage;
 }

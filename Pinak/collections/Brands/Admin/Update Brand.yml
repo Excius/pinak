@@ -6,18 +6,26 @@ info:
 http:
   method: PUT
   url: "{{baseUrl}}/api/v1/brands/admin/{{brandId}}"
-  headers:
-    - name: Content-Type
-      value: application/json
   body:
-    type: json
-    data: |-
-      {
-        "name": "Nivea Updated",
-        "slug": "nivea-updated",
-        "logoUrl": "https://example.com/logo-updated.png",
-        "isActive": false
-      }
+    type: multipart-form
+    data:
+      - name: name
+        type: text
+        value: Nivea Updated
+        contentType: text/plain
+      - name: slug
+        type: text
+        value: nivea-updated
+        contentType: text/plain
+      - name: logo
+        type: file
+        value:
+          - /path/to/logo-updated.png
+        contentType: image/png
+      - name: isActive
+        type: text
+        value: "false"
+        contentType: text/plain
   auth: inherit
 
 runtime:
@@ -40,4 +48,4 @@ docs: |-
   Schema: BrandTypes.UpdateBrand
   Params: brandId
   Query: none
-  Body: name, slug, logoUrl, isActive
+  Body: name, slug, logo (file), isActive

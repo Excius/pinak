@@ -120,10 +120,39 @@ export function getPublicUrl(key: string) {
   return `https://${appConfig.S3_BUCKET}.s3.${appConfig.S3_REGION}.amazonaws.com/${encodedKey}`;
 }
 
+export function extractS3KeyFromUrl(urlString: string): string | null {
+  try {
+    const u = new URL(urlString);
+    const host = u.hostname;
+    const path = u.pathname.replace(/^\//, "");
+
+    const bucket = appConfig.S3_BUCKET;
+    if (!bucket) return null;
+
+    if (
+      host === `${bucket}.s3.amazonaws.com` ||
+      host === `${bucket}.s3.${appConfig.S3_REGION}.amazonaws.com`
+    ) {
+      return decodeURIComponent(path);
+    }
+    if (host.endsWith(`.s3.amazonaws.com`)) {
+      const parts = host.split(".");
+      if (parts[0] === bucket) return decodeURIComponent(path);
+    }
+    if (host.startsWith("s3.") && path.startsWith(`${bucket}/`)) {
+      return decodeURIComponent(path.slice(bucket.length + 1));
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export default {
   getSignedUploadUrl,
   uploadBuffer,
   getSignedGetUrl,
   deleteObject,
   getPublicUrl,
+  extractS3KeyFromUrl,
 };

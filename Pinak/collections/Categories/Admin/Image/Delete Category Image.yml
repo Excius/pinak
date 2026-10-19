@@ -1,11 +1,11 @@
 info:
-  name: Restore Combo Kit Image
+  name: Delete Category Image
   type: http
-  seq: 5
+  seq: 4
 
 http:
-  method: PATCH
-  url: "{{baseUrl}}/api/v1/combo-kits/admin/images/{{id}}/restore"
+  method: DELETE
+  url: "{{baseUrl}}/api/v1/categories/admin/images/{{id}}"
   headers:
     - name: Content-Type
       value: application/json
@@ -16,7 +16,7 @@ runtime:
     - name: baseUrl
       value: http://localhost:3000
     - name: id
-      value: cmtjwhovr005es3mz936mzegu
+      value: your-image-id-here
     - name: authToken
       value: your-jwt-token-here
 
@@ -27,4 +27,9 @@ settings:
   maxRedirects: 5
   forwardAuthorizationHeader: true
 
-docs: Restore a soft-deleted combo kit image (admin only).
+docs: |-
+  Delete a category image (deletes image from S3 and database).
+  Schema: CategoryAdminTypes.DeleteCategoryImage
+  Params: id
+  Query: none
+  Body: none

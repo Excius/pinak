@@ -53,27 +53,9 @@ export const registerProductAdminImageRoutes = (
   router.delete(
     "/admin/images/:id",
     rateLimiter,
-    validateMultiple(ProductTypes.SoftDeleteImage),
+    validateMultiple(ProductTypes.DeleteImage),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
-    productController.softDeleteImage,
-  );
-
-  router.patch(
-    "/admin/images/:id/restore",
-    rateLimiter,
-    validateMultiple(ProductTypes.RestoreImage),
-    authMiddleware.authenticate,
-    authMiddleware.requireModeratorOrAdmin,
-    productController.restoreImage,
-  );
-
-  router.delete(
-    "/admin/images/:id/hard",
-    rateLimiter,
-    validateMultiple(ProductTypes.HardDeleteImage),
-    authMiddleware.authenticate,
-    authMiddleware.requireAdmin,
-    productController.hardDeleteImage,
+    productController.deleteImage,
   );
 };

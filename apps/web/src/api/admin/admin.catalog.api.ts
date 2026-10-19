@@ -10,6 +10,13 @@ export interface AdminCategory {
   createdAt?: string
   updatedAt?: string
   children?: AdminCategory[]
+  categoryImages?: Array<{
+    id?: string
+    url: string
+    altText?: string | null
+    isPrimary?: boolean
+    sortOrder?: number
+  }>
 }
 
 export interface AdminBrand {
@@ -44,6 +51,39 @@ export const deleteCategoryAdmin = async (id: string) => {
   await axiosInstance.delete(`/categories/admin/${id}`)
 }
 
+export interface AdminCategoryImage {
+  id: string
+  categoryId: string
+  url: string
+  altText: string | null
+  isPrimary: boolean
+  sortOrder: number
+  createdAt: string
+  updatedAt: string
+}
+
+export const getAllCategoryImagesAdmin = async (categoryId: string): Promise<AdminCategoryImage[]> => {
+  const { data: resp } = await axiosInstance.get(`/categories/admin/${categoryId}/images`)
+  return resp?.data || []
+}
+
+export const addCategoryImageAdmin = async (categoryId: string, formData: FormData): Promise<AdminCategoryImage> => {
+  const { data: resp } = await axiosInstance.post(`/categories/admin/${categoryId}/images`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  return resp?.data
+}
+
+export const setPrimaryCategoryImageAdmin = async (imageId: string) => {
+  const { data: resp } = await axiosInstance.patch(`/categories/admin/images/${imageId}/primary`)
+  return resp?.data
+}
+
+export const deleteCategoryImageAdmin = async (imageId: string) => {
+  const { data: resp } = await axiosInstance.delete(`/categories/admin/images/${imageId}`)
+  return resp?.data
+}
+
 // ── Brands ─────────────────────────────────────────────────────────────
 
 export const getAllBrandsAdmin = async (): Promise<AdminBrand[]> => {
@@ -52,13 +92,19 @@ export const getAllBrandsAdmin = async (): Promise<AdminBrand[]> => {
   return Array.isArray(result) ? result : (result?.items || [])
 }
 
-export const createBrandAdmin = async (payload: { name: string; slug?: string; logoUrl?: string; isActive?: boolean }): Promise<AdminBrand> => {
-  const { data: resp } = await axiosInstance.post('/brands/admin', payload)
+export const createBrandAdmin = async (payload: FormData | { name: string; slug?: string; logoUrl?: string; isActive?: boolean }): Promise<AdminBrand> => {
+  const isForm = typeof FormData !== 'undefined' && payload instanceof FormData
+  const { data: resp } = await axiosInstance.post('/brands/admin', payload, isForm ? {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  } : undefined)
   return resp?.data as AdminBrand
 }
 
-export const updateBrandAdmin = async (id: string, payload: { name?: string; slug?: string; logoUrl?: string; isActive?: boolean }): Promise<AdminBrand> => {
-  const { data: resp } = await axiosInstance.put(`/brands/admin/${id}`, payload)
+export const updateBrandAdmin = async (id: string, payload: FormData | { name?: string; slug?: string; logoUrl?: string; isActive?: boolean }): Promise<AdminBrand> => {
+  const isForm = typeof FormData !== 'undefined' && payload instanceof FormData
+  const { data: resp } = await axiosInstance.put(`/brands/admin/${id}`, payload, isForm ? {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  } : undefined)
   return resp?.data as AdminBrand
 }
 

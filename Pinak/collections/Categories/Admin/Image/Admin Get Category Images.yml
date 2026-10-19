@@ -1,7 +1,7 @@
 info:
   name: Admin Get Category Images
   type: http
-  seq: 10
+  seq: 1
 
 http:
   method: GET

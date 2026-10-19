@@ -64,9 +64,14 @@ export const toPublicProduct = (product: ProductWithRelations) => {
     // Variants - lean version
     variants: product.variants?.map((v: any) => {
       const price = v.price;
+      const sellingPrice = v.sellingPrice != null ? v.sellingPrice : null;
+      const effectivePrice = sellingPrice ?? price;
       const compareAtPrice = v.compareAtPrice ?? v.comparePrice ?? null;
-      const taxAmount = Math.round((price * taxRate) / 100);
-      const priceWithTax = price + taxAmount;
+      const taxAmount = Math.round((effectivePrice * taxRate) / 100);
+      const priceWithTax = price + Math.round((price * taxRate) / 100);
+      const sellingPriceWithTax = sellingPrice != null
+        ? sellingPrice + taxAmount
+        : null;
       const compareAtPriceWithTax = compareAtPrice != null
         ? compareAtPrice + Math.round((compareAtPrice * taxRate) / 100)
         : null;
@@ -76,8 +81,10 @@ export const toPublicProduct = (product: ProductWithRelations) => {
         sku: v.sku,
         tags: Array.isArray(v.tags) ? v.tags : [],
         price: v.price,
+        sellingPrice,
         taxAmount,
         priceWithTax,
+        sellingPriceWithTax,
         compareAtPrice: v.compareAtPrice,
         compareAtPriceWithTax,
         stock: v.stock,
@@ -193,9 +200,14 @@ export const toAdminProduct = (product: ProductWithRelations) => {
     // Full variants with all fields
     variants: product.variants?.map((v: any) => {
       const price = v.price;
+      const sellingPrice = v.sellingPrice != null ? v.sellingPrice : null;
+      const effectivePrice = sellingPrice ?? price;
       const comparePrice = v.comparePrice ?? v.compareAtPrice ?? null;
-      const taxAmount = Math.round((price * taxRate) / 100);
-      const priceWithTax = price + taxAmount;
+      const taxAmount = Math.round((effectivePrice * taxRate) / 100);
+      const priceWithTax = price + Math.round((price * taxRate) / 100);
+      const sellingPriceWithTax = sellingPrice != null
+        ? sellingPrice + taxAmount
+        : null;
       const comparePriceWithTax = comparePrice != null
         ? comparePrice + Math.round((comparePrice * taxRate) / 100)
         : null;
@@ -205,8 +217,10 @@ export const toAdminProduct = (product: ProductWithRelations) => {
         productId: v.productId,
         sku: v.sku,
         price: v.price,
+        sellingPrice,
         taxAmount,
         priceWithTax,
+        sellingPriceWithTax,
         compareAtPrice: v.compareAtPrice,
         comparePrice: v.comparePrice,
         comparePriceWithTax,
@@ -260,9 +274,14 @@ export const toPublicVariant = (variant: any) => {
 
   const taxRate = variant.product?.taxClass?.rate ?? 0;
   const price = variant.price;
+  const sellingPrice = variant.sellingPrice != null ? variant.sellingPrice : null;
+  const effectivePrice = sellingPrice ?? price;
   const compareAtPrice = variant.compareAtPrice ?? variant.comparePrice ?? null;
-  const taxAmount = Math.round((price * taxRate) / 100);
-  const priceWithTax = price + taxAmount;
+  const taxAmount = Math.round((effectivePrice * taxRate) / 100);
+  const priceWithTax = price + Math.round((price * taxRate) / 100);
+  const sellingPriceWithTax = sellingPrice != null
+    ? sellingPrice + taxAmount
+    : null;
   const compareAtPriceWithTax = compareAtPrice != null
     ? compareAtPrice + Math.round((compareAtPrice * taxRate) / 100)
     : null;
@@ -272,8 +291,10 @@ export const toPublicVariant = (variant: any) => {
     sku: variant.sku,
     tags: Array.isArray(variant.tags) ? variant.tags : [],
     price: variant.price,
+    sellingPrice,
     taxAmount,
     priceWithTax,
+    sellingPriceWithTax,
     compareAtPrice: variant.compareAtPrice,
     compareAtPriceWithTax,
     stock: variant.stock,
@@ -305,9 +326,14 @@ export const toAdminVariant = (variant: any) => {
 
   const taxRate = variant.product?.taxClass?.rate ?? 0;
   const price = variant.price;
+  const sellingPrice = variant.sellingPrice != null ? variant.sellingPrice : null;
+  const effectivePrice = sellingPrice ?? price;
   const comparePrice = variant.comparePrice ?? variant.compareAtPrice ?? null;
-  const taxAmount = Math.round((price * taxRate) / 100);
-  const priceWithTax = price + taxAmount;
+  const taxAmount = Math.round((effectivePrice * taxRate) / 100);
+  const priceWithTax = price + Math.round((price * taxRate) / 100);
+  const sellingPriceWithTax = sellingPrice != null
+    ? sellingPrice + taxAmount
+    : null;
   const comparePriceWithTax = comparePrice != null
     ? comparePrice + Math.round((comparePrice * taxRate) / 100)
     : null;
@@ -315,8 +341,10 @@ export const toAdminVariant = (variant: any) => {
   return {
     // All fields
     ...variant,
+    sellingPrice,
     taxAmount,
     priceWithTax,
+    sellingPriceWithTax,
     comparePriceWithTax,
     
     // Ensure timestamps are included

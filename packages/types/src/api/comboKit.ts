@@ -32,8 +32,10 @@ const publicComboKitVariantSchema = z.object({
   id: z.string(),
   sku: z.string(),
   price: z.number(),
+  sellingPrice: z.number().nullable().optional(),
   taxAmount: z.number().optional(),
   priceWithTax: z.number().optional(),
+  sellingPriceWithTax: z.number().nullable().optional(),
   comparePriceWithTax: z.number().nullable().optional(),
   stock: z.number(),
   imageUrl: z.string().nullable(),
@@ -46,7 +48,9 @@ const publicComboKitItemSchema = z.object({
   quantity: z.number(),
   sortOrder: z.number(),
   originalPrice: z.number().nullable().optional(),
+  originalPriceWithTax: z.number().nullable().optional(),
   discountedPrice: z.number().nullable().optional(),
+  discountedPriceWithTax: z.number().nullable().optional(),
   isRequired: z.boolean(),
   productVariant: publicComboKitVariantSchema.nullable().optional(),
 });
@@ -157,7 +161,9 @@ const adminComboKitItemSchema = z.object({
   quantity: z.number(),
   sortOrder: z.number(),
   originalPrice: z.number().nullable().optional(),
+  originalPriceWithTax: z.number().nullable().optional(),
   discountedPrice: z.number().nullable().optional(),
+  discountedPriceWithTax: z.number().nullable().optional(),
   isRequired: z.boolean(),
   createdAt: z.date().optional(),
   updatedAt: z.date().optional(),
@@ -619,9 +625,15 @@ export const ComboKitAdminTypes = {
 
   AddComboKitImage: {
     body: z.object({
-      url: z.string().min(1).url(),
       altText: z.string().optional(),
-      isPrimary: z.coerce.boolean().optional(),
+      isPrimary: z.preprocess((val) => {
+        if (typeof val === "string") {
+          const v = val.toLowerCase();
+          if (v === "true") return true;
+          if (v === "false") return false;
+        }
+        return val;
+      }, z.boolean()).optional(),
     }),
     params: z.object({ comboKitId: z.string().min(1) }),
     query: z.object({}),
@@ -640,6 +652,17 @@ export const ComboKitAdminTypes = {
       message: z.string(),
       success: z.boolean(),
       data: z.object({ id: z.string(), isPrimary: z.boolean() }),
+    }),
+  },
+
+  DeleteComboKitImage: {
+    body: z.object({}),
+    params: z.object({ id: z.string() }),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({}),
     }),
   },
 

@@ -240,6 +240,7 @@ model ProductVariant {
   tags String[] @default([])
 
   price        Int
+  sellingPrice Int?
   comparePrice Int?
   stock        Int  @default(0)
 

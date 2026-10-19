@@ -41,6 +41,10 @@ type OrderItemResponse = {
   productName: string;
   variantDetails: Record<string, unknown> | null;
   price: number;
+  basePrice?: number;
+  priceWithTax?: number;
+  sellingPrice?: number | null;
+  sellingPriceWithTax?: number | null;
   quantity: number;
   lineTotal: number;
   createdAt: Date;
@@ -173,6 +177,32 @@ export class OrderService {
     const variantDetails = isRecord(item.variantDetails)
       ? item.variantDetails
       : null;
+    const basePrice =
+      variantDetails && typeof variantDetails.price === "number"
+        ? (variantDetails.price as number)
+        : item.price;
+    const sellingPrice =
+      variantDetails && "sellingPrice" in variantDetails
+        ? (variantDetails.sellingPrice as number | null)
+        : null;
+
+    const taxRate =
+      variantDetails && typeof variantDetails.taxRate === "number"
+        ? (variantDetails.taxRate as number)
+        : 0;
+
+    const priceWithTax =
+      variantDetails && typeof variantDetails.priceWithTax === "number"
+        ? (variantDetails.priceWithTax as number)
+        : basePrice + Math.round((basePrice * taxRate) / 100);
+
+    const sellingPriceWithTax =
+      variantDetails && typeof variantDetails.sellingPriceWithTax === "number"
+        ? (variantDetails.sellingPriceWithTax as number)
+        : sellingPrice != null
+          ? sellingPrice + Math.round((sellingPrice * taxRate) / 100)
+          : null;
+
     return {
       id: item.id,
       productId: item.productId,
@@ -181,6 +211,10 @@ export class OrderService {
       productName: item.productName,
       variantDetails,
       price: item.price,
+      basePrice,
+      priceWithTax,
+      sellingPrice,
+      sellingPriceWithTax,
       quantity: item.quantity,
       lineTotal: item.price * item.quantity,
       createdAt: item.createdAt,
@@ -373,7 +407,8 @@ export class OrderService {
             for (const item of cart.items) {
               if (item.productVariantId && item.productVariant) {
                 const variant = item.productVariant;
-                const lineSubtotal = variant.price * item.quantity;
+                const effectivePrice = variant.sellingPrice ?? variant.price;
+                const lineSubtotal = effectivePrice * item.quantity;
                 const taxRate = variant.product.taxClass?.rate ?? 0;
 
                 subtotalAmount += lineSubtotal;
@@ -510,6 +545,13 @@ export class OrderService {
 
               if (pItem.itemType === "PRODUCT_VARIANT") {
                 const variant = pItem.variant;
+                const effectivePrice = variant.sellingPrice ?? variant.price;
+                const taxRate = variant.product?.taxClass?.rate ?? 0;
+                const priceWithTax = variant.price + Math.round((variant.price * taxRate) / 100);
+                const sellingPriceWithTax = variant.sellingPrice != null
+                  ? variant.sellingPrice + Math.round((variant.sellingPrice * taxRate) / 100)
+                  : null;
+
                 orderItems.push({
                   orderId: "",
                   productId: variant.productId,
@@ -520,16 +562,25 @@ export class OrderService {
                     sku: variant.sku,
                     ean: variant.ean,
                     tags: variant.tags,
+                    price: variant.price,
+                    basePrice: variant.price,
+                    priceWithTax,
+                    sellingPrice: variant.sellingPrice ?? null,
+                    sellingPriceWithTax,
+                    taxRate,
                     optionValues: variant.optionValues.map((entry: any) => ({
                       optionName: entry.optionValue.option.name,
                       valueName: entry.optionValue.value,
                     })),
                   },
-                  price: variant.price,
+                  price: effectivePrice,
                   quantity: pItem.item.quantity,
                 });
               } else {
                 const comboKit = pItem.comboKit;
+                const maxTaxRate = pItem.taxRate;
+                const comboPriceWithTax = comboKit.price + Math.round((comboKit.price * maxTaxRate) / 100);
+
                 orderItems.push({
                   orderId: "",
                   comboKitId: comboKit.id,
@@ -537,6 +588,12 @@ export class OrderService {
                   variantDetails: {
                     itemType: "COMBO_KIT",
                     slug: comboKit.slug,
+                    price: comboKit.price,
+                    basePrice: comboKit.price,
+                    priceWithTax: comboPriceWithTax,
+                    sellingPrice: null,
+                    sellingPriceWithTax: null,
+                    taxRate: maxTaxRate,
                     components: pItem.componentSnapshot,
                   },
                   price: comboKit.price,
