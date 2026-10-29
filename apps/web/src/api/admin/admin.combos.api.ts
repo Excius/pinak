@@ -24,6 +24,18 @@ export interface ComboKitItem {
   } | null
 }
 
+export interface AdminComboKitImage {
+  id: string
+  comboKitId: string
+  url: string
+  altText: string | null
+  isPrimary: boolean
+  sortOrder: number
+  isDeleted?: boolean
+  createdAt?: string
+  updatedAt?: string
+}
+
 export interface AdminComboKit {
   id: string
   name: string
@@ -36,6 +48,7 @@ export interface AdminComboKit {
   discountValue: number | null
   tags: string[]
   imageUrl: string | null
+  images?: AdminComboKitImage[]
   viewCount: number
   purchasedCount: number
   isActive: boolean
@@ -111,28 +124,18 @@ export const removeComboKitItemAdmin = async (comboKitId: string, itemId: string
   await axiosInstance.delete(`/combo-kits/${comboKitId}/items/${itemId}`)
 }
 
-// ── Combo Kit Images CRUD ─────────────────────────────────────────────────
+// ── Combo Kit Images ───────────────────────────────────────────────────
 
-export interface AdminComboKitImage {
-  id: string
-  comboKitId: string
-  url: string
-  altText: string | null
-  isPrimary: boolean
-  sortOrder: number
-  createdAt: string
-  updatedAt: string
-}
-
-export const getAllComboKitImagesAdmin = async (comboKitId: string): Promise<AdminComboKitImage[]> => {
+export const getComboKitImagesAdmin = async (comboKitId: string): Promise<AdminComboKitImage[]> => {
   const { data: resp } = await axiosInstance.get(`/combo-kits/admin/${comboKitId}/images`)
   return resp?.data || []
 }
 
-export const addComboKitImageAdmin = async (comboKitId: string, formData: FormData): Promise<AdminComboKitImage> => {
-  const { data: resp } = await axiosInstance.post(`/combo-kits/admin/${comboKitId}/images`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  })
+export const addComboKitImageAdmin = async (
+  comboKitId: string,
+  payload: { url: string; altText?: string; isPrimary?: boolean }
+): Promise<AdminComboKitImage> => {
+  const { data: resp } = await axiosInstance.post(`/combo-kits/admin/${comboKitId}/images`, payload)
   return resp?.data
 }
 
@@ -142,8 +145,7 @@ export const setPrimaryComboKitImageAdmin = async (imageId: string) => {
 }
 
 export const deleteComboKitImageAdmin = async (imageId: string) => {
-  const { data: resp } = await axiosInstance.delete(`/combo-kits/admin/images/${imageId}`)
-  return resp?.data
+  await axiosInstance.delete(`/combo-kits/admin/images/${imageId}`)
 }
 
 // ── Featured Sections ─────────────────────────────────────────────────────

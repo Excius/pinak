@@ -2,6 +2,14 @@ import axiosInstance from '../axiosInstance'
 
 // ── Types ──────────────────────────────────────────────────────────────
 
+export interface AdminCategoryImage {
+  id: string
+  url: string
+  altText: string | null
+  isPrimary: boolean
+  displayOrder: number
+}
+
 export interface AdminCategory {
   id: string
   name: string
@@ -10,13 +18,7 @@ export interface AdminCategory {
   createdAt?: string
   updatedAt?: string
   children?: AdminCategory[]
-  categoryImages?: Array<{
-    id?: string
-    url: string
-    altText?: string | null
-    isPrimary?: boolean
-    sortOrder?: number
-  }>
+  images?: AdminCategoryImage[]
 }
 
 export interface AdminBrand {
@@ -32,9 +34,13 @@ export interface AdminBrand {
 // ── Categories ─────────────────────────────────────────────────────────
 
 export const getAllCategoriesAdmin = async (): Promise<AdminCategory[]> => {
-  const { data: resp } = await axiosInstance.get('/categories')
+  const { data: resp } = await axiosInstance.get('/categories/admin')
   const result = resp?.data
-  return Array.isArray(result) ? result : (result?.items || [])
+  const items = Array.isArray(result) ? result : (result?.items || [])
+  return items.map((cat: any) => ({
+    ...cat,
+    images: cat.categoryImages || cat.images || []
+  }))
 }
 
 export const createCategoryAdmin = async (payload: { name: string; slug?: string; parentId?: string }): Promise<AdminCategory> => {
@@ -51,36 +57,17 @@ export const deleteCategoryAdmin = async (id: string) => {
   await axiosInstance.delete(`/categories/admin/${id}`)
 }
 
-export interface AdminCategoryImage {
-  id: string
-  categoryId: string
-  url: string
-  altText: string | null
-  isPrimary: boolean
-  sortOrder: number
-  createdAt: string
-  updatedAt: string
-}
-
-export const getAllCategoryImagesAdmin = async (categoryId: string): Promise<AdminCategoryImage[]> => {
-  const { data: resp } = await axiosInstance.get(`/categories/admin/${categoryId}/images`)
-  return resp?.data || []
-}
-
-export const addCategoryImageAdmin = async (categoryId: string, formData: FormData): Promise<AdminCategoryImage> => {
-  const { data: resp } = await axiosInstance.post(`/categories/admin/${categoryId}/images`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  })
-  return resp?.data
-}
-
-export const setPrimaryCategoryImageAdmin = async (imageId: string) => {
-  const { data: resp } = await axiosInstance.patch(`/categories/admin/images/${imageId}/primary`)
+export const addCategoryImageAdmin = async (categoryId: string, payload: { url: string; altText?: string; isPrimary?: boolean }) => {
+  const { data: resp } = await axiosInstance.post(`/categories/admin/${categoryId}/images`, payload)
   return resp?.data
 }
 
 export const deleteCategoryImageAdmin = async (imageId: string) => {
-  const { data: resp } = await axiosInstance.delete(`/categories/admin/images/${imageId}`)
+  await axiosInstance.delete(`/categories/admin/images/${imageId}`)
+}
+
+export const setPrimaryCategoryImageAdmin = async (imageId: string) => {
+  const { data: resp } = await axiosInstance.patch(`/categories/admin/images/${imageId}/primary`)
   return resp?.data
 }
 

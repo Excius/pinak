@@ -127,11 +127,21 @@ const ComboKitList = () => {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-lg bg-background-main border border-primary/10 overflow-hidden shrink-0 flex items-center justify-center">
-                        {combo.imageUrl ? (
-                          <img src={combo.imageUrl} alt={combo.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <span className="material-icons-outlined text-text-muted">auto_awesome_mosaic</span>
-                        )}
+                        {(() => {
+                          const displayImg = combo.images?.find(img => img.isPrimary)?.url || combo.images?.[0]?.url || combo.imageUrl
+                          return displayImg ? (
+                            <img
+                              src={displayImg}
+                              alt={combo.name}
+                              className="w-full h-full object-cover"
+                              onError={e => {
+                                (e.target as HTMLImageElement).src = 'https://placehold.co/100x100?text=No+Image'
+                              }}
+                            />
+                          ) : (
+                            <span className="material-icons-outlined text-text-muted">auto_awesome_mosaic</span>
+                          )
+                        })()}
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm font-bold text-text-main-light truncate">{combo.name}</p>
