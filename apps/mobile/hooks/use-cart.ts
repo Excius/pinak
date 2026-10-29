@@ -9,6 +9,11 @@ export interface CartItem {
     quantity: number;
     unitPrice: number;
     unitPriceWithTax?: number;
+    price?: number;
+    priceWithTax?: number;
+    sellingPrice?: number | null;
+    sellingPriceWithTax?: number | null;
+    taxAmount?: number;
     lineTotal: number;
     lineTotalWithTax?: number;
     availableStock: number;
@@ -18,6 +23,10 @@ export interface CartItem {
         id: string;
         sku: string;
         price: number;
+        priceWithTax?: number;
+        sellingPrice?: number | null;
+        sellingPriceWithTax?: number | null;
+        taxAmount?: number;
         isActive: boolean;
         image?: {
             id: string;
@@ -185,6 +194,9 @@ function useCartState(): UseCartReturn {
                         ...item,
                         quantity,
                         lineTotal: item.unitPrice * quantity,
+                        lineTotalWithTax: item.unitPriceWithTax != null
+                            ? item.unitPriceWithTax * quantity
+                            : item.lineTotalWithTax,
                     }
                     : item,
             ),
