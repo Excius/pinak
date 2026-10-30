@@ -1,0 +1,30 @@
+info:
+  name: Get Page by Slug
+  type: http
+  seq: 2
+
+http:
+  method: GET
+  url: "{{baseUrl}}/api/v1/pages/privacy-policy"
+  headers:
+    - name: Content-Type
+      value: application/json
+  params: []
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Schema: PageTypes.GetPageBySlug
+  Path param: slug (e.g. privacy-policy, terms-and-conditions, about-us)
+  Returns full page including markdown/HTML content.

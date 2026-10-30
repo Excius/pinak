@@ -32,6 +32,9 @@ export { AddressTypes, INDIAN_STATES_AND_CODES, INDIAN_STATE_NAMES } from "./api
 export { BestSellerTypes } from "./api/bestseller.js";
 export { DynamicAssetTypes } from "./api/dynamicAsset.js";
 export { DynamicAssetAdminTypes } from "./api/dynamicAsset.js";
+export { StoreTypes, StoreAdminTypes } from "./api/store.js";
+export { PageTypes, PageAdminTypes } from "./api/page.js";
+export { SettingTypes, SettingAdminTypes } from "./api/setting.js";
 
 // Namespaced exports avoid collisions for generic type names
 // like BodyTypes / ParamsTypes across different API modules.
@@ -59,3 +62,6 @@ export * as OrderApi from "./api/order.js";
 export * as AddressApi from "./api/address.js";
 export * as BestSellerApi from "./api/bestseller.js";
 export * as DynamicAssetApi from "./api/dynamicAsset.js";
+export * as StoreApi from "./api/store.js";
+export * as PageApi from "./api/page.js";
+export * as SettingApi from "./api/setting.js";

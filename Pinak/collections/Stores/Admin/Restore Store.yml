@@ -1,0 +1,39 @@
+info:
+  name: Restore Store
+  type: http
+  seq: 6
+
+http:
+  method: PATCH
+  url: "{{baseUrl}}/api/v1/stores/admin/:id/restore"
+  headers:
+    - name: Content-Type
+      value: application/json
+    - name: Authorization
+      value: "Bearer {{authToken}}"
+  params:
+    - name: id
+      value: store-id-here
+      type: path
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: authToken
+      value: your-admin-jwt-token-here
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Restores a soft-deleted store (isDeleted: false, isActive: true).
+  Schema: StoreAdminTypes.RestoreStore
+  Params: id
+  Query: none
+  Body: none

@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, ScrollView } from "react-native";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { formatRupeesFromPaise } from "@/utils/currency";
+import { getActivePriceWithTax } from "@/utils/pricing";
 
 interface OrderDetailItem {
   id: string;
@@ -172,11 +173,26 @@ export function OrderDetailsCard({
                     {item.productName}
                   </Text>
                   <Text className="mt-1 text-xs text-text-secondary">
-                    Qty: {item.quantity} × {formatRupeesFromPaise(item.price)}
+                    Qty: {item.quantity} ×{" "}
+                    {formatRupeesFromPaise(
+                      getActivePriceWithTax({
+                        price: item.basePrice ?? item.price,
+                        priceWithTax: item.priceWithTax,
+                        sellingPrice: item.sellingPrice,
+                        sellingPriceWithTax: item.sellingPriceWithTax,
+                      }),
+                    )}
                   </Text>
                 </View>
                 <Text className="ml-2 text-sm font-bold text-text-primary">
-                  {formatRupeesFromPaise(item.lineTotal)}
+                  {formatRupeesFromPaise(
+                    getActivePriceWithTax({
+                      price: item.basePrice ?? item.price,
+                      priceWithTax: item.priceWithTax,
+                      sellingPrice: item.sellingPrice,
+                      sellingPriceWithTax: item.sellingPriceWithTax,
+                    }) * item.quantity,
+                  )}
                 </Text>
               </View>
               {index < items.length - 1 && (

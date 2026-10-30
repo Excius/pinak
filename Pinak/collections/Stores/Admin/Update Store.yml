@@ -1,0 +1,46 @@
+info:
+  name: Update Store
+  type: http
+  seq: 4
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/api/v1/stores/admin/:id"
+  headers:
+    - name: Content-Type
+      value: application/json
+    - name: Authorization
+      value: "Bearer {{authToken}}"
+  params:
+    - name: id
+      value: store-id-here
+      type: path
+  body:
+    type: json
+    data: |-
+      {
+        "name": "Pinak Flagship Bandra (Updated)",
+        "phone": "+91 9876543211",
+        "isActive": true
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: authToken
+      value: your-admin-jwt-token-here
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Schema: StoreAdminTypes.UpdateStore
+  Params: id
+  Query: none
+  Body: name, address, city, state, zipCode, phone, latitude, longitude, isActive (all optional)

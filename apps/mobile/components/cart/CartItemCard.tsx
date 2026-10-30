@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, Image } from "react-native";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { CartItem } from "@/hooks/use-cart";
 import { formatRupeesFromPaise } from "@/utils/currency";
+import { getOriginalPriceWithTax } from "@/utils/pricing";
 
 interface CartItemCardProps {
   item: CartItem;
@@ -68,9 +69,27 @@ export function CartItemCard({
         )}
 
         {/* Price */}
-        <Text className="mb-2 text-sm font-bold text-primary">
-          {formatRupeesFromPaise(item.unitPriceWithTax ?? item.unitPrice)}
-        </Text>
+        <View className="mb-2 flex-row items-center gap-2">
+          <Text className="text-sm font-bold text-primary">
+            {formatRupeesFromPaise(item.unitPriceWithTax ?? item.unitPrice)}
+          </Text>
+          {item.sellingPrice != null &&
+          (item.priceWithTax != null || item.price != null) ? (
+            <Text className="text-xs text-text-muted line-through">
+              {formatRupeesFromPaise(
+                getOriginalPriceWithTax({
+                  price:
+                    item.price ??
+                    item.productVariant?.price ??
+                    item.comboKit?.price ??
+                    item.unitPrice,
+                  priceWithTax:
+                    item.priceWithTax ?? item.productVariant?.priceWithTax,
+                }),
+              )}
+            </Text>
+          ) : null}
+        </View>
 
         {/* Quantity Controls */}
         <View className="flex-row items-center gap-2">

@@ -1,0 +1,41 @@
+info:
+  name: Create Page
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/v1/pages/admin"
+  headers:
+    - name: Content-Type
+      value: application/json
+    - name: Authorization
+      value: "Bearer {{token}}"
+  body:
+    type: json
+    data: |-
+      {
+        "title": "Privacy Policy",
+        "slug": "privacy-policy",
+        "content": "# Privacy Policy\n\nYour privacy is very important to us at Pinak...",
+        "metaTitle": "Privacy Policy | Pinak",
+        "metaDescription": "Learn how Pinak collects and protects your data.",
+        "isActive": true
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Schema: PageAdminTypes.CreatePage
+  Requires Moderator or Admin role.

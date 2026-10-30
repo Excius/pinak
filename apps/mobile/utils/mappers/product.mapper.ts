@@ -1,10 +1,10 @@
 import type { ProductApi } from "@repo/types";
+import { getActivePriceWithTax, getOriginalPriceWithTax } from "@/utils/pricing";
 
 type ProductListItem =
     ProductApi.ResponseTypes["GetProductsWithCategory"]["data"]["items"][number];
 type ProductListVariant = ProductListItem["variants"][number] & {
     priceWithTax?: number;
-    compareAtPriceWithTax?: number | null;
 };
 
 type ProductDetail = ProductApi.ResponseTypes["GetProductById"]["data"];
@@ -48,7 +48,7 @@ function getListDisplayPrice(variants: ProductListItem["variants"]): {
         (variant) => variant as ProductListVariant,
     );
     const sortedByPrice = [...displayVariants].sort(
-        (a, b) => (a.priceWithTax ?? a.price) - (b.priceWithTax ?? b.price),
+        (a, b) => getActivePriceWithTax(a) - getActivePriceWithTax(b),
     );
     const preferredVariant = sortedByPrice[0];
 
@@ -56,11 +56,10 @@ function getListDisplayPrice(variants: ProductListItem["variants"]): {
         return { price: 0 };
     }
 
-    const price = preferredVariant.priceWithTax ?? preferredVariant.price;
-    const compareAtPrice =
-        preferredVariant.compareAtPriceWithTax ?? preferredVariant.compareAtPrice;
+    const price = getActivePriceWithTax(preferredVariant);
+    const compareAtPrice = getOriginalPriceWithTax(preferredVariant);
 
-    return compareAtPrice && compareAtPrice > price
+    return preferredVariant.sellingPrice != null && compareAtPrice > price
         ? { price, originalPrice: compareAtPrice }
         : { price };
 }

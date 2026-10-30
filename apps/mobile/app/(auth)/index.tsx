@@ -1,5 +1,5 @@
 import { View, Text, ScrollView, Pressable, Image } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
+// import { MaterialIcons } from "@expo/vector-icons";
 import { Svg, Path } from "react-native-svg";
 import { useState } from "react";
 import { useRouter } from "expo-router";
@@ -8,10 +8,11 @@ import * as Linking from "expo-linking";
 import { getGoogleOauthUrlService } from "@/services/auth.service";
 import { toastError } from "@/libs/toast";
 
-WebBrowser.maybeCompleteAuthSession();
+
 
 import SignInForm from "@/components/auth/SigninForm";
 import SignUpForm from "@/components/auth/SignUpForm";
+WebBrowser.maybeCompleteAuthSession();
 
 export default function AuthScreen() {
   const [isLogin, setIsLogin] = useState(true);

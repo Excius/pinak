@@ -73,7 +73,7 @@ const OrderBaseSchema = z.object({
   updatedAt: z.date(),
 });
 
-const OrderSummarySchema = OrderBaseSchema.extend({
+export const OrderSummarySchema = OrderBaseSchema.extend({
   totalItems: z.number().int().min(0),
 });
 
