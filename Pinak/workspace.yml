@@ -48,6 +48,8 @@ collections:
     path: "collections/RelatedProducts"
   - name: "DynamicAssets"
     path: "collections/DynamicAssets"
+  - name: "Stores"
+    path: "collections/Stores"
 
 specs:
 

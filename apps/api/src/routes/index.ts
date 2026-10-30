@@ -16,6 +16,7 @@ import orderRoutes from "./order/index.js";
 import paymentRoutes from "./payment/index.js";
 import addressRoutes from "./address/index.js";
 import dynamicAssetRoutes from "./dynamicAsset/index.js";
+import storeRoutes from "./store/index.js";
 
 const router = Router();
 
@@ -37,5 +38,6 @@ router.use("/webhooks", paymentRoutes);
 router.use("/payments", paymentRoutes);
 router.use("/addresses", addressRoutes);
 router.use("/dynamic-assets", dynamicAssetRoutes);
+router.use("/stores", storeRoutes);
 
 export default router;

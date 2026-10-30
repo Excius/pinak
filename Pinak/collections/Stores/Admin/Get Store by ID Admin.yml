@@ -1,0 +1,38 @@
+info:
+  name: Get Store by ID (Admin)
+  type: http
+  seq: 2
+
+http:
+  method: GET
+  url: "{{baseUrl}}/api/v1/stores/admin/:id"
+  headers:
+    - name: Content-Type
+      value: application/json
+    - name: Authorization
+      value: "Bearer {{authToken}}"
+  params:
+    - name: id
+      value: store-id-here
+      type: path
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: authToken
+      value: your-admin-jwt-token-here
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Schema: StoreAdminTypes.GetStoreById
+  Params: id
+  Query: none
+  Body: none
