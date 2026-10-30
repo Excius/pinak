@@ -1,0 +1,39 @@
+info:
+  name: Batch Update Settings Admin
+  type: http
+  seq: 2
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/api/v1/settings/admin"
+  headers:
+    - name: Content-Type
+      value: application/json
+    - name: Authorization
+      value: "Bearer {{token}}"
+  body:
+    type: json
+    data: |-
+      {
+        "WHATSAPP_NUMBER": "+919876543210",
+        "WHATSAPP_DEFAULT_MESSAGE": "Hello Pinak! I need help with an order.",
+        "SUPPORT_EMAIL": "support@pinak.com",
+        "SUPPORT_PHONE": "+919876543210"
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Schema: SettingAdminTypes.UpdateSettings
+  Batch updates/upserts key-value pairs.

@@ -17,6 +17,8 @@ import paymentRoutes from "./payment/index.js";
 import addressRoutes from "./address/index.js";
 import dynamicAssetRoutes from "./dynamicAsset/index.js";
 import storeRoutes from "./store/index.js";
+import pageRoutes from "./page/index.js";
+import settingRoutes from "./setting/index.js";
 
 const router = Router();
 
@@ -39,5 +41,7 @@ router.use("/payments", paymentRoutes);
 router.use("/addresses", addressRoutes);
 router.use("/dynamic-assets", dynamicAssetRoutes);
 router.use("/stores", storeRoutes);
+router.use("/pages", pageRoutes);
+router.use("/settings", settingRoutes);
 
 export default router;
