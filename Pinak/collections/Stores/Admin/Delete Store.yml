@@ -1,0 +1,39 @@
+info:
+  name: Delete Store
+  type: http
+  seq: 5
+
+http:
+  method: DELETE
+  url: "{{baseUrl}}/api/v1/stores/admin/:id"
+  headers:
+    - name: Content-Type
+      value: application/json
+    - name: Authorization
+      value: "Bearer {{authToken}}"
+  params:
+    - name: id
+      value: store-id-here
+      type: path
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: authToken
+      value: your-admin-jwt-token-here
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Soft-deletes a store (isDeleted: true, isActive: false).
+  Schema: StoreAdminTypes.DeleteStore
+  Params: id
+  Query: none
+  Body: none

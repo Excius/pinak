@@ -1,0 +1,48 @@
+info:
+  name: Create Store
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/v1/stores/admin"
+  headers:
+    - name: Content-Type
+      value: application/json
+    - name: Authorization
+      value: "Bearer {{authToken}}"
+  body:
+    type: json
+    data: |-
+      {
+        "name": "Pinak Flagship Bandra",
+        "address": "Shop 12, Ground Floor, Linking Road",
+        "city": "Mumbai",
+        "state": "Maharashtra",
+        "zipCode": "400050",
+        "phone": "+91 9876543210",
+        "latitude": 19.0596,
+        "longitude": 72.8295,
+        "isActive": true
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+    - name: authToken
+      value: your-admin-jwt-token-here
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Schema: StoreAdminTypes.CreateStore
+  Params: none
+  Query: none
+  Body: name, address, city, state, zipCode, phone, latitude, longitude, isActive

@@ -1,0 +1,44 @@
+info:
+  name: Find Nearby Stores (Geo-location)
+  type: http
+  seq: 2
+
+http:
+  method: GET
+  url: "{{baseUrl}}/api/v1/stores?latitude=19.0760&longitude=72.8777&radius=50&limit=10"
+  headers:
+    - name: Content-Type
+      value: application/json
+  params:
+    - name: latitude
+      value: "19.0760"
+      type: query
+    - name: longitude
+      value: "72.8777"
+      type: query
+    - name: radius
+      value: "50"
+      type: query
+    - name: limit
+      value: "10"
+      type: query
+  auth: inherit
+
+runtime:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Finds nearest stores within a radius (in km) sorted by distance.
+  Schema: StoreTypes.ListStores
+  Params: none
+  Query: latitude, longitude, radius, page, limit
+  Body: none
