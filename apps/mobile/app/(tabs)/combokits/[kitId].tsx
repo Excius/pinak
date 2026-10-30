@@ -75,18 +75,28 @@ function ComboKitItemCard({ item }: { item: ComboKitItem }) {
             <Text className="text-xs font-bold text-text-secondary">
               Qty: {item.quantity}x
             </Text>
-            {item.discountedPrice && (
+            {item.discountedPrice != null || item.productVariant ? (
               <View className="flex-row items-center gap-1">
                 <Text className="text-xs font-bold text-primary">
-                  {formatRupeesFromPaise(item.discountedPrice)}
+                  {formatRupeesFromPaise(
+                    item.discountedPriceWithTax ??
+                      item.productVariant?.sellingPriceWithTax ??
+                      item.productVariant?.priceWithTax ??
+                      item.discountedPrice ??
+                      item.productVariant?.sellingPrice ??
+                      item.productVariant?.price ??
+                      0,
+                  )}
                 </Text>
-                {item.originalPrice && (
+                {item.originalPrice != null && item.discountedPrice != null && (
                   <Text className="text-[0.65rem] text-text-muted line-through">
-                    {formatRupeesFromPaise(item.originalPrice)}
+                    {formatRupeesFromPaise(
+                      item.originalPriceWithTax ?? item.originalPrice,
+                    )}
                   </Text>
                 )}
               </View>
-            )}
+            ) : null}
           </View>
         </View>
 
@@ -169,6 +179,9 @@ export default function ComboKitDetailScreen() {
     return { discountPercent: 0, savingsAmount: 0 };
   }, [kit]);
 
+  const kitImageUrl =
+    kit?.images.find((image) => image.isPrimary)?.url ?? kit?.images[0]?.url;
+
   // Loading state
   if (isLoading) {
     return (
@@ -221,9 +234,9 @@ export default function ComboKitDetailScreen() {
         </View>
 
         {/* Kit Image */}
-        {kit.imageUrl ? (
+        {kitImageUrl ? (
           <Image
-            source={{ uri: kit.imageUrl }}
+            source={{ uri: kitImageUrl }}
             className="w-full aspect-square"
             resizeMode="cover"
           />
@@ -288,8 +301,8 @@ export default function ComboKitDetailScreen() {
             {pricingMetrics.savingsAmount > 0 && (
               <View className="mt-3 pt-3 border-t border-surface-border">
                 <Text className="text-xs text-text-secondary">
-                  You save {formatRupeesFromPaise(pricingMetrics.savingsAmount)} with
-                  this bundle
+                  You save {formatRupeesFromPaise(pricingMetrics.savingsAmount)}{" "}
+                  with this bundle
                 </Text>
               </View>
             )}

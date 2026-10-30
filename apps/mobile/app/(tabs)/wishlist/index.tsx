@@ -17,6 +17,10 @@ import {
 } from "@/services/wishlist.service";
 import type { WishlistApi } from "@repo/types";
 import { formatRupeesFromPaise } from "@/utils/currency";
+import {
+  getActivePriceWithTax,
+  getOriginalPriceWithTax,
+} from "@/utils/pricing";
 
 type WishlistItem =
   WishlistApi.ResponseTypes["GetWishlist"]["data"]["items"][number];
@@ -83,9 +87,16 @@ function WishlistItemCard({
         {/* Price and Stock */}
         <View className="flex-row items-center justify-between">
           <View>
-            <Text className="text-base font-bold text-primary">
-              {formatRupeesFromPaise(variant.price)}
-            </Text>
+            <View className="flex-row items-center gap-2">
+              <Text className="text-base font-bold text-primary">
+                {formatRupeesFromPaise(getActivePriceWithTax(variant))}
+              </Text>
+              {variant.sellingPrice != null ? (
+                <Text className="text-xs text-text-muted line-through">
+                  {formatRupeesFromPaise(getOriginalPriceWithTax(variant))}
+                </Text>
+              ) : null}
+            </View>
             <Text
               className={`text-xs font-semibold ${
                 item.inStock ? "text-success" : "text-error"

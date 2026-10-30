@@ -17,6 +17,12 @@ import { useWishlist } from "@/hooks/use-wishlist";
 import type { ProductApi, RelatedProductApi } from "@repo/types";
 import { mapProductDetailImage } from "@/utils/mappers/product.mapper";
 import { formatRupeesFromPaise } from "@/utils/currency";
+import {
+  getActivePrice,
+  getActivePriceWithTax,
+  getDiscountPercent,
+  getOriginalPriceWithTax,
+} from "@/utils/pricing";
 
 type ProductDetail = ProductApi.ResponseTypes["GetProductById"]["data"];
 type ProductVariant = ProductDetail["variants"][number];
@@ -125,23 +131,22 @@ export default function ProductDetailScreen() {
     return mapProductDetailImage(product, selectedVariant);
   }, [product, selectedVariant]);
 
-  const baseVariantPrice = selectedVariant?.price || 0;
+  const baseVariantPrice = selectedVariant
+    ? getActivePrice(selectedVariant)
+    : 0;
   const variantTax = selectedVariant?.taxAmount ?? 0;
-  const variantPrice = selectedVariant?.priceWithTax ?? baseVariantPrice;
+  const variantPrice = selectedVariant
+    ? getActivePriceWithTax(selectedVariant)
+    : 0;
   const canAddToCart = Boolean(
     selectedVariant && selectedVariant.isActive && selectedVariant.stock > 0,
   );
   const compareAtPrice =
-    (selectedVariant?.compareAtPriceWithTax ??
-      selectedVariant?.compareAtPrice) &&
-    (selectedVariant?.compareAtPriceWithTax ??
-      selectedVariant?.compareAtPrice)! > variantPrice
-      ? (selectedVariant?.compareAtPriceWithTax ??
-        selectedVariant?.compareAtPrice)
+    selectedVariant && selectedVariant.sellingPrice != null
+      ? getOriginalPriceWithTax(selectedVariant)
       : null;
-
-  const discountPercent = compareAtPrice
-    ? Math.round(((compareAtPrice - variantPrice) / compareAtPrice) * 100)
+  const discountPercent = selectedVariant
+    ? getDiscountPercent(selectedVariant)
     : 0;
 
   const categoryLabel = product?.categories[0]?.name || "Product";
@@ -363,7 +368,7 @@ export default function ProductDetailScreen() {
                           numberOfLines={1}
                         >
                           {formatRupeesFromPaise(
-                            variant.priceWithTax ?? variant.price,
+                            getActivePriceWithTax(variant),
                           )}
                         </Text>
                         <Text
