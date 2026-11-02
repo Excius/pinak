@@ -13,8 +13,9 @@ http:
     type: json
     data: |-
       {
-        "value": "50ml",
-        "sortOrder": 1
+        "value": "Rose Nude",
+        "sortOrder": 1,
+        "swatchColorHex": "#C96C7D"
       }
   auth: inherit
 

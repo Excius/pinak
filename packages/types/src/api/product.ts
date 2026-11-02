@@ -48,8 +48,11 @@ const PublicProductVariantSchema = z.object({
   image: PublicProductImageSchema.nullable(),
   optionValues: z.array(
     z.object({
+      optionId: z.string().optional(),
+      optionValueId: z.string().optional(),
       optionName: z.string(),
       valueName: z.string(),
+      swatchColorHex: z.string().nullable().optional(),
     }),
   ),
 });
@@ -128,8 +131,11 @@ const PublicVariantRouteSchema = z.object({
   images: z.array(PublicVariantRouteImageSchema),
   optionValues: z.array(
     z.object({
+      optionId: z.string().optional(),
+      optionValueId: z.string().optional(),
       optionName: z.string(),
       valueName: z.string(),
+      swatchColorHex: z.string().nullable().optional(),
     }),
   ),
 });
@@ -402,6 +408,7 @@ export const ProductTypes = {
               optionId: z.string(),
               value: z.string(),
               sortOrder: z.number(),
+              swatchColorHex: z.string().nullable().optional(),
               createdAt: z.date(),
               updatedAt: z.date(),
               option: z.object({
