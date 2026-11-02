@@ -1,9 +1,12 @@
 import { z } from "zod";
 
+export const HexColorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{8})$/;
+
 const PublicOptionValueSchema = z.object({
   id: z.string(),
   value: z.string(),
   sortOrder: z.number().int(),
+  swatchColorHex: z.string().nullable().optional(),
 });
 
 const PublicOptionSchema = z.object({
@@ -95,6 +98,14 @@ export const OptionTypes = {
         .string("Option value must be a string")
         .min(1, { message: "Option value is required" }),
       sortOrder: z.coerce.number().optional(),
+      swatchColorHex: z
+        .string()
+        .regex(
+          HexColorRegex,
+          "Invalid hex color format (e.g. #RRGGBB or #RRGGBBAA)",
+        )
+        .nullable()
+        .optional(),
     }),
     params: z.object({
       optionId: z
@@ -113,6 +124,14 @@ export const OptionTypes = {
     body: z.object({
       value: z.string().min(1).optional(),
       sortOrder: z.coerce.number().optional(),
+      swatchColorHex: z
+        .string()
+        .regex(
+          HexColorRegex,
+          "Invalid hex color format (e.g. #RRGGBB or #RRGGBBAA)",
+        )
+        .nullable()
+        .optional(),
     }),
     params: z.object({ id: z.string() }),
     query: z.object({}),

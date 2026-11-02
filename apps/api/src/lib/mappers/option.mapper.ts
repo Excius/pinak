@@ -3,6 +3,7 @@ export type OptionValueRecord = {
   optionId?: string;
   value: string;
   sortOrder: number;
+  swatchColorHex?: string | null;
   createdAt?: Date;
   updatedAt?: Date;
 };
@@ -20,6 +21,7 @@ export type PublicOptionValue = {
   id: string;
   value: string;
   sortOrder: number;
+  swatchColorHex?: string | null;
 };
 
 export type PublicOption = {
@@ -34,6 +36,7 @@ export type AdminOptionValue = {
   optionId?: string;
   value: string;
   sortOrder: number;
+  swatchColorHex?: string | null;
   createdAt?: Date;
   updatedAt?: Date;
 };
@@ -51,6 +54,7 @@ export const toPublicOptionValue = (value: OptionValueRecord): PublicOptionValue
   id: value.id,
   value: value.value,
   sortOrder: value.sortOrder,
+  swatchColorHex: value.swatchColorHex ?? null,
 });
 
 export const toPublicOption = (option: OptionRecord): PublicOption => ({
@@ -68,6 +72,7 @@ export const toAdminOptionValue = (value: OptionValueRecord): AdminOptionValue =
   ...(value.optionId !== undefined && { optionId: value.optionId }),
   value: value.value,
   sortOrder: value.sortOrder,
+  swatchColorHex: value.swatchColorHex ?? null,
   ...(value.createdAt !== undefined && { createdAt: value.createdAt }),
   ...(value.updatedAt !== undefined && { updatedAt: value.updatedAt }),
 });

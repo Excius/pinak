@@ -96,8 +96,11 @@ export const toPublicProduct = (product: ProductWithRelations) => {
         
         // Option values
         optionValues: v.optionValues?.map((ov: any) => ({
+          optionId: ov.optionValue?.optionId,
+          optionValueId: ov.optionValue?.id,
           optionName: ov.optionValue?.option?.name,
           valueName: ov.optionValue?.value,
+          swatchColorHex: ov.optionValue?.swatchColorHex ?? null,
         })).filter((ov: any) => ov.optionName && ov.valueName) || [],
       };
     }) || [],
@@ -312,8 +315,11 @@ export const toPublicVariant = (variant: any) => {
     
     // Option values
     optionValues: variant.optionValues?.map((ov: any) => ({
+      optionId: ov.optionValue?.optionId,
+      optionValueId: ov.optionValue?.id,
       optionName: ov.optionValue?.option?.name,
       valueName: ov.optionValue?.value,
+      swatchColorHex: ov.optionValue?.swatchColorHex ?? null,
     })).filter((ov: any) => ov.optionName && ov.valueName) || [],
   };
 };
