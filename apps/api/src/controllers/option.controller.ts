@@ -77,7 +77,11 @@ export class OptionController {
 
   createValue = async (req: Request, res: Response) => {
     const { optionId } = req.params;
-    const data = req.body as { value: string; sortOrder?: number };
+    const data = req.body as {
+      value: string;
+      sortOrder?: number;
+      swatchColorHex?: string | null;
+    };
     const v = await this.optionService.createOptionValue(
       optionId as string,
       data,
