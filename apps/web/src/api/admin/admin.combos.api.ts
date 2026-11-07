@@ -133,9 +133,20 @@ export const getComboKitImagesAdmin = async (comboKitId: string): Promise<AdminC
 
 export const addComboKitImageAdmin = async (
   comboKitId: string,
-  payload: { url: string; altText?: string; isPrimary?: boolean }
+  payload: FormData | { file: File; altText?: string; isPrimary?: boolean }
 ): Promise<AdminComboKitImage> => {
-  const { data: resp } = await axiosInstance.post(`/combo-kits/admin/${comboKitId}/images`, payload)
+  let body: FormData
+  if (typeof FormData !== 'undefined' && payload instanceof FormData) {
+    body = payload
+  } else {
+    body = new FormData()
+    body.append('image', payload.file)
+    if (payload.altText) body.append('altText', payload.altText)
+    if (payload.isPrimary !== undefined) body.append('isPrimary', String(payload.isPrimary))
+  }
+  const { data: resp } = await axiosInstance.post(`/combo-kits/admin/${comboKitId}/images`, body, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
   return resp?.data
 }
 
@@ -158,13 +169,8 @@ export interface AdminFeaturedSection {
   productCount?: number
   createdAt?: string
   updatedAt?: string
-  featuredSectionImages?: Array<{
-    id?: string
-    url: string
-    altText?: string | null
-    isPrimary?: boolean
-    sortOrder?: number
-  }>
+  images?: AdminFeaturedSectionImage[]
+  featuredSectionImages?: AdminFeaturedSectionImage[]
 }
 
 export const getAllFeaturedSectionsAdmin = async (): Promise<AdminFeaturedSection[]> => {

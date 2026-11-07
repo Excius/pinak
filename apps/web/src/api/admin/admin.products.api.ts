@@ -63,10 +63,21 @@ export const getAllProductsAdmin = async (params?: AdminProductListParams) => {
   const { data: resp } = await axiosInstance.get('/products/admin/all', { params })
   return {
     items: (resp?.data?.items || []) as AdminProduct[],
-    total: resp?.data?.total || 0,
-    page: resp?.data?.page || 1,
-    limit: resp?.data?.limit || 10,
-    totalPages: resp?.data?.totalPages || 1
+    total: resp?.data?.pagination?.total ?? resp?.data?.total ?? 0,
+    page: resp?.data?.pagination?.page ?? resp?.data?.page ?? 1,
+    limit: resp?.data?.pagination?.limit ?? resp?.data?.limit ?? 10,
+    totalPages: resp?.data?.pagination?.totalPages ?? resp?.data?.totalPages ?? 1
+  }
+}
+
+export const getDeletedProductsAdmin = async (params?: AdminProductListParams) => {
+  const { data: resp } = await axiosInstance.get('/products/admin/deleted', { params })
+  return {
+    items: (resp?.data?.items || []) as AdminProduct[],
+    total: resp?.data?.pagination?.total ?? resp?.data?.total ?? 0,
+    page: resp?.data?.pagination?.page ?? resp?.data?.page ?? 1,
+    limit: resp?.data?.pagination?.limit ?? resp?.data?.limit ?? 10,
+    totalPages: resp?.data?.pagination?.totalPages ?? resp?.data?.totalPages ?? 1
   }
 }
 
@@ -100,6 +111,10 @@ export const restoreProductAdmin = async (id: string) => {
   await axiosInstance.patch(`/products/admin/${id}/restore`)
 }
 
+export const hardDeleteProductAdmin = async (id: string) => {
+  await axiosInstance.delete(`/products/admin/${id}/hard`)
+}
+
 // ── Product ↔ Category junction ────────────────────────────────────────
 
 export const setProductCategoriesAdmin = async (productId: string, categoryIds: string[]) => {
@@ -126,6 +141,14 @@ export const updateProductVariantAdmin = async (
 
 export const deleteProductVariantAdmin = async (id: string) => {
   await axiosInstance.delete(`/products/admin/variants/${id}`)
+}
+
+export const restoreProductVariantAdmin = async (id: string) => {
+  await axiosInstance.patch(`/products/admin/variants/${id}/restore`)
+}
+
+export const hardDeleteProductVariantAdmin = async (id: string) => {
+  await axiosInstance.delete(`/products/admin/variants/${id}/hard`)
 }
 
 // ── Image Management ───────────────────────────────────────────────────

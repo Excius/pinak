@@ -6,7 +6,7 @@ import {
   addComboKitImageAdmin, setPrimaryComboKitImageAdmin, deleteComboKitImageAdmin
 } from '../../../api/admin/admin.combos.api'
 import { getAllProductsAdmin } from '../../../api/admin/admin.products.api'
-import type { AdminComboKit, ComboKitItem, AdminComboKitImage } from '../../../api/admin/admin.combos.api'
+import type { AdminComboKit, ComboKitItem } from '../../../api/admin/admin.combos.api'
 import type { AdminProduct } from '../../../api/admin/admin.products.api'
 import { formatPaise } from '../../../utils/currency'
 
@@ -27,9 +27,9 @@ const ComboKitForm = () => {
   const [pickerLoading, setPickerLoading] = useState(false)
 
   // Image management state
-  const [imageUrlInput, setImageUrlInput] = useState('')
-  const [imageAltInput, setImageAltInput] = useState('')
-  const [addingImage, setAddingImage] = useState(false)
+  const [uploadingImage, setUploadingImage] = useState(false)
+
+
   const [imageError, setImageError] = useState<string | null>(null)
 
   const [form, setForm] = useState<Partial<AdminComboKit>>({
@@ -40,8 +40,6 @@ const ComboKitForm = () => {
     metaTitle: '', metaDescription: ''
   })
 
-  const [images, setImages] = useState<AdminComboKitImage[]>([])
-  const [uploadingImage, setUploadingImage] = useState(false)
 
   useEffect(() => {
     if (isEdit && id) {
@@ -50,44 +48,32 @@ const ComboKitForm = () => {
         .catch(err => console.error('Failed to load combo kit', err))
         .finally(() => setLoading(false))
 
-      getAllComboKitImagesAdmin(id)
-        .then(data => setImages(data))
-        .catch(err => console.error('Failed to load combo kit images', err))
     }
   }, [id, isEdit])
 
   const set = (name: string, value: unknown) => setForm(p => ({ ...p, [name]: value }))
 
-  const handleAddImage = async () => {
+  const handleImageUpload = async (file: File) => {
     if (!id) return
-    const trimmedUrl = imageUrlInput.trim()
-    if (!trimmedUrl) return
-    try {
-      new URL(trimmedUrl)
-    } catch {
-      setImageError('Please enter a valid URL (e.g. https://example.com/image.jpg)')
-      return
-    }
-
-    setAddingImage(true)
+    setUploadingImage(true)
     setImageError(null)
     try {
       const isFirst = !form.images || form.images.length === 0
-      await addComboKitImageAdmin(id, {
-        url: trimmedUrl,
-        altText: imageAltInput.trim() || undefined,
-        isPrimary: isFirst
-      })
-      setImageUrlInput('')
-      setImageAltInput('')
+      const formData = new FormData()
+      formData.append('image', file)
+      if (isFirst) {
+        formData.append('isPrimary', 'true')
+      }
+      await addComboKitImageAdmin(id, formData)
       const refreshed = await getComboKitByIdAdmin(id)
       setForm(refreshed)
-      setMsg({ type: 'success', text: 'Image added successfully!' })
-    } catch (err: any) {
-      console.error('Failed to add combo kit image', err)
-      setImageError(err?.response?.data?.message || 'Failed to add image. Ensure the URL is valid.')
+      setMsg({ type: 'success', text: 'Image uploaded successfully!' })
+    } catch (err: unknown) {
+      console.error('Failed to upload combo kit image', err)
+      const errorMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to upload image. Please try again.'
+      setImageError(errorMsg)
     } finally {
-      setAddingImage(false)
+      setUploadingImage(false)
     }
   }
 
@@ -186,23 +172,6 @@ const ComboKitForm = () => {
     }
   }
 
-  // --- Image management (S3 Upload) ---
-  const handleImageUpload = async (file: File) => {
-    if (!id) return
-    const data = new FormData()
-    data.append('image', file)
-    data.append('isPrimary', images.length === 0 ? 'true' : 'false')
-    setUploadingImage(true)
-    try {
-      const newImg = await addComboKitImageAdmin(id, data)
-      setImages(prev => [...prev, newImg])
-      setMsg({ type: 'success', text: 'Image uploaded successfully to S3!' })
-    } catch (err: any) {
-      setMsg({ type: 'error', text: err?.response?.data?.message || 'Failed to upload image' })
-    } finally {
-      setUploadingImage(false)
-    }
-  }
 
 
  
@@ -293,47 +262,42 @@ const ComboKitForm = () => {
 
             {isEdit && id ? (
               <>
-                <div className="space-y-2 bg-background-main p-4 rounded-xl border border-primary/10">
-                  <div className="flex gap-2">
-                    <input
-                      value={imageUrlInput}
-                      onChange={e => {
-                        setImageUrlInput(e.target.value)
-                        if (imageError) setImageError(null)
-                      }}
-                      onKeyDown={e => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault()
-                          handleAddImage()
-                        }
-                      }}
-                      placeholder="Image URL (https://...)"
-                      className="flex-1 bg-background-light border border-primary/20 rounded-xl px-4 py-2.5 text-sm text-text-main-light outline-none focus:border-primary"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleAddImage}
-                      disabled={addingImage || !imageUrlInput.trim()}
-                      className="px-5 py-2.5 bg-primary text-black text-xs font-bold rounded-xl hover:bg-primary/90 transition-all disabled:opacity-50 shrink-0 flex items-center gap-1.5 cursor-pointer shadow-[0_0_10px_rgba(212,175,55,0.2)]"
-                    >
-                      {addingImage ? (
-                        <span className="material-icons-outlined text-sm animate-spin">refresh</span>
-                      ) : (
-                        <span className="material-icons-outlined text-sm">add</span>
-                      )}
-                      Add Image
-                    </button>
-                  </div>
-                  <input
-                    value={imageAltInput}
-                    onChange={e => setImageAltInput(e.target.value)}
-                    placeholder="Alt text / description (optional)"
-                    className="w-full bg-background-light border border-primary/20 rounded-xl px-4 py-2 text-xs text-text-main-light outline-none focus:border-primary"
-                  />
-                  {imageError && (
-                    <p className="text-xs text-red-400">{imageError}</p>
+                <label className="flex flex-col items-center justify-center gap-2 p-5 bg-background-main border-2 border-dashed border-primary/20 rounded-xl cursor-pointer hover:border-primary/60 hover:bg-primary/[0.02] transition-all group">
+                  {uploadingImage ? (
+                    <div className="flex items-center gap-2 text-primary text-sm font-medium">
+                      <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                      <span>Uploading image...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <span className="material-icons-outlined text-primary text-xl">cloud_upload</span>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-sm font-medium text-text-main-light">Click to upload combo kit image</p>
+                        <p className="text-xs text-text-muted mt-0.5">Supports PNG, JPG, WebP up to 10MB</p>
+                      </div>
+                    </>
                   )}
-                </div>
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept="image/*"
+                    disabled={uploadingImage}
+                    onChange={e => {
+                      const file = e.target.files?.[0]
+                      if (file) handleImageUpload(file)
+                      e.target.value = ''
+                    }}
+                  />
+                </label>
+
+                {imageError && (
+                  <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-xs text-red-400 flex items-center gap-2">
+                    <span className="material-icons-outlined text-base">error_outline</span>
+                    <span>{imageError}</span>
+                  </div>
+                )}
 
                 {form.images && form.images.length > 0 ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 pt-2">
@@ -522,7 +486,7 @@ const ComboKitForm = () => {
 
       {/* Variant Picker Modal */}
       {showPicker && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowPicker(false)} />
           <div className="relative bg-background-light border border-primary/20 rounded-2xl w-full max-w-xl shadow-2xl max-h-[80vh] flex flex-col">
             <div className="p-6 border-b border-primary/10">

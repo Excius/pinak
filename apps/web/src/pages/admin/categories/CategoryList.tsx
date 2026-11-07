@@ -8,8 +8,7 @@ import {
   deleteCategoryImageAdmin,
   setPrimaryCategoryImageAdmin
 } from '../../../api/admin/admin.catalog.api'
-import type { AdminCategory, AdminCategoryImage } from '../../../api/admin/admin.catalog.api'
-import type { AdminCategory, AdminCategoryImage } from '../../../api/admin/admin.catalog.api'
+import type { AdminCategory } from '../../../api/admin/admin.catalog.api'
 
 interface CategoryFormData {
   name: string
@@ -27,9 +26,9 @@ const CategoryList = () => {
   const [form, setForm] = useState<CategoryFormData>(emptyForm)
   const [saving, setSaving] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
-  const [imageUrlInput, setImageUrlInput] = useState('')
-  const [imageAltInput, setImageAltInput] = useState('')
-  const [addingImage, setAddingImage] = useState(false)
+  const [uploadingImage, setUploadingImage] = useState(false)
+
+
   const [imageError, setImageError] = useState<string | null>(null)
 
   const fetchCategories = async () => {
@@ -43,84 +42,41 @@ const CategoryList = () => {
     }
   }
 
-  useEffect(() => { fetchCategories() }, [])
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void fetchCategories()
+  }, [])
 
   const openCreate = () => {
     setEditing(null)
     setForm(emptyForm)
-    setImageUrlInput('')
-    setImageAltInput('')
+
+
     setImageError(null)
     setShowModal(true)
   }
 
-  const openEdit = async (cat: AdminCategory) => {
+  const openEdit = (cat: AdminCategory) => {
     setEditing(cat)
     setForm({ name: cat.name, slug: cat.slug, parentId: cat.parentId || '' })
-    setImageUrlInput('')
-    setImageAltInput('')
+
+
     setImageError(null)
     setShowModal(true)
-    try {
-      const imgs = await getAllCategoryImagesAdmin(cat.id)
-      setImages(imgs)
-    } catch (err) {
-      console.error('Failed to fetch category images', err)
-      setImages([])
-    }
-  }
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file || !editing) return
-    const data = new FormData()
-    data.append('image', file)
-    data.append('isPrimary', images.length === 0 ? 'true' : 'false')
-    setUploadingImage(true)
-    try {
-      const newImg = await addCategoryImageAdmin(editing.id, data)
-      setImages(prev => [...prev, newImg])
-      await fetchCategories()
-    } catch (err) {
-      console.error('Failed to upload category image', err)
-    } finally {
-      setUploadingImage(false)
-      e.target.value = ''
-    }
-  }
-
-  const handleSetPrimaryImage = async (imgId: string) => {
-    try {
-      await setPrimaryCategoryImageAdmin(imgId)
-      setImages(prev => prev.map(img => ({ ...img, isPrimary: img.id === imgId })))
-      await fetchCategories()
-    } catch (err) {
-      console.error('Failed to set primary image', err)
-    }
-  }
-
-  const handleDeleteImage = async (imgId: string) => {
-    try {
-      await deleteCategoryImageAdmin(imgId)
-      setImages(prev => prev.filter(img => img.id !== imgId))
-      await fetchCategories()
-    } catch (err) {
-      console.error('Failed to delete image', err)
-    }
   }
 
   const handleSave = async () => {
     if (!form.name.trim()) return
     setSaving(true)
     try {
-      const payload: Record<string, unknown> = { name: form.name }
-      if (form.slug.trim()) payload.slug = form.slug
+      const payload: { name: string; slug?: string; parentId?: string } = { name: form.name.trim() }
+      if (form.slug.trim()) payload.slug = form.slug.trim()
       if (form.parentId.trim()) payload.parentId = form.parentId
 
       if (editing) {
-        await updateCategoryAdmin(editing.id, payload as any)
+        await updateCategoryAdmin(editing.id, payload)
       } else {
-        await createCategoryAdmin(payload as any)
+        await createCategoryAdmin(payload)
       }
       setShowModal(false)
       setForm(emptyForm)
@@ -143,39 +99,27 @@ const CategoryList = () => {
     }
   }
 
-  const handleAddImage = async (categoryId: string) => {
-    const trimmedUrl = imageUrlInput.trim()
-    if (!trimmedUrl) return
-    try {
-      new URL(trimmedUrl)
-    } catch {
-      setImageError('Please enter a valid URL (e.g. https://example.com/image.jpg)')
-      return
-    }
-
-    setAddingImage(true)
+  const handleImageUpload = async (categoryId: string, file: File) => {
+    setUploadingImage(true)
     setImageError(null)
     try {
       const isFirst = !editing?.images || editing.images.length === 0
-      await addCategoryImageAdmin(categoryId, {
-        url: trimmedUrl,
-        altText: imageAltInput.trim() || undefined,
-        isPrimary: isFirst
-      })
-      setImageUrlInput('')
-      setImageAltInput('')
+      const formData = new FormData()
+      formData.append('image', file)
+      formData.append('isPrimary', isFirst ? 'true' : 'false')
+      await addCategoryImageAdmin(categoryId, formData)
       await fetchCategories()
-      // Update editing state to show new images immediately
       if (editing?.id === categoryId) {
         const updatedCats = await getAllCategoriesAdmin()
         const updatedCat = updatedCats.find(c => c.id === categoryId)
         if (updatedCat) setEditing(updatedCat)
       }
-    } catch (err: any) {
-      console.error('Category image add failed', err)
-      setImageError(err?.response?.data?.message || 'Failed to add image. Ensure the URL is valid.')
+    } catch (err: unknown) {
+      console.error('Category image upload failed', err)
+      const errorMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to upload image. Please try again.'
+      setImageError(errorMsg)
     } finally {
-      setAddingImage(false)
+      setUploadingImage(false)
     }
   }
 
@@ -271,47 +215,42 @@ const CategoryList = () => {
                 <label className="text-xs font-bold text-text-muted uppercase">Category Images</label>
                 {editing ? (
                   <>
-                    <div className="space-y-2">
-                      <div className="flex gap-2">
-                        <input
-                          value={imageUrlInput}
-                          onChange={e => {
-                            setImageUrlInput(e.target.value)
-                            if (imageError) setImageError(null)
-                          }}
-                          onKeyDown={e => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault()
-                              handleAddImage(editing.id)
-                            }
-                          }}
-                          placeholder="Image URL (https://...)"
-                          className="flex-1 bg-background-main border border-primary/20 rounded-xl px-4 py-2.5 text-sm text-text-main-light outline-none focus:border-primary"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => handleAddImage(editing.id)}
-                          disabled={addingImage || !imageUrlInput.trim()}
-                          className="px-4 py-2.5 bg-primary text-white text-xs font-bold rounded-xl hover:bg-primary/90 transition-all disabled:opacity-50 shrink-0 flex items-center gap-1 cursor-pointer"
-                        >
-                          {addingImage ? (
-                            <span className="material-icons-outlined text-sm animate-spin">refresh</span>
-                          ) : (
-                            <span className="material-icons-outlined text-sm">add</span>
-                          )}
-                          Add
-                        </button>
-                      </div>
-                      <input
-                        value={imageAltInput}
-                        onChange={e => setImageAltInput(e.target.value)}
-                        placeholder="Alt text (optional)"
-                        className="w-full bg-background-main border border-primary/20 rounded-xl px-4 py-2 text-xs text-text-main-light outline-none focus:border-primary"
-                      />
-                      {imageError && (
-                        <p className="text-xs text-red-400">{imageError}</p>
+                    <label className="flex flex-col items-center justify-center gap-2 p-5 bg-background-main border-2 border-dashed border-primary/20 rounded-xl cursor-pointer hover:border-primary/60 hover:bg-primary/[0.02] transition-all group">
+                      {uploadingImage ? (
+                        <div className="flex items-center gap-2 text-primary text-sm font-medium">
+                          <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                          <span>Uploading image...</span>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <span className="material-icons-outlined text-primary text-xl">cloud_upload</span>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm font-medium text-text-main-light">Click to upload category image</p>
+                            <p className="text-xs text-text-muted mt-0.5">Supports PNG, JPG, WebP up to 10MB</p>
+                          </div>
+                        </>
                       )}
-                    </div>
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        disabled={uploadingImage}
+                        onChange={e => {
+                          const file = e.target.files?.[0]
+                          if (file && editing.id) handleImageUpload(editing.id, file)
+                          e.target.value = ''
+                        }}
+                      />
+                    </label>
+
+                    {imageError && (
+                      <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-xs text-red-400 flex items-center gap-2">
+                        <span className="material-icons-outlined text-base">error_outline</span>
+                        <span>{imageError}</span>
+                      </div>
+                    )}
 
                     {editing.images && editing.images.length > 0 && (
                       <div className="grid grid-cols-3 gap-3 py-2">
@@ -357,7 +296,7 @@ const CategoryList = () => {
                   </>
                 ) : (
                   <div className="p-4 bg-background-main rounded-xl border border-primary/10 text-center">
-                    <p className="text-xs text-text-muted">Save this category first to add images.</p>
+                    <p className="text-xs text-text-muted">Save this category first to upload images.</p>
                   </div>
                 )}
               </div>

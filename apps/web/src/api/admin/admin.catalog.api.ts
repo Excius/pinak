@@ -57,8 +57,24 @@ export const deleteCategoryAdmin = async (id: string) => {
   await axiosInstance.delete(`/categories/admin/${id}`)
 }
 
-export const addCategoryImageAdmin = async (categoryId: string, payload: { url: string; altText?: string; isPrimary?: boolean }) => {
-  const { data: resp } = await axiosInstance.post(`/categories/admin/${categoryId}/images`, payload)
+export const getCategoryImagesAdmin = async (categoryId: string): Promise<AdminCategoryImage[]> => {
+  const { data: resp } = await axiosInstance.get(`/categories/admin/${categoryId}/images`)
+  return resp?.data || []
+}
+
+export const addCategoryImageAdmin = async (categoryId: string, payload: FormData | { file: File; altText?: string; isPrimary?: boolean }) => {
+  let body: FormData
+  if (typeof FormData !== 'undefined' && payload instanceof FormData) {
+    body = payload
+  } else {
+    body = new FormData()
+    body.append('image', payload.file)
+    if (payload.altText) body.append('altText', payload.altText)
+    if (payload.isPrimary !== undefined) body.append('isPrimary', String(payload.isPrimary))
+  }
+  const { data: resp } = await axiosInstance.post(`/categories/admin/${categoryId}/images`, body, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
   return resp?.data
 }
 
