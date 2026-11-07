@@ -107,6 +107,8 @@ const CategoryPage: React.FC = () => {
                     imageUrl={getProductImage(product)}
                     price={variant?.price}
                     priceWithTax={variant?.priceWithTax}
+                    sellingPrice={variant?.sellingPrice}
+                    sellingPriceWithTax={variant?.sellingPriceWithTax}
                     comparePrice={variant?.compareAtPrice ?? undefined}
                     compareAtPriceWithTax={variant?.compareAtPriceWithTax ?? undefined}
                     variantId={variant?.id}

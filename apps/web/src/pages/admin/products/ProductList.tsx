@@ -404,9 +404,24 @@ const AdminProductList = () => {
                       </td>
                     )}
                     <td className="px-6 py-4 text-sm font-medium text-text-main-light">
-                      {product.variants && product.variants.length > 0
-                        ? formatPaise(Math.min(...product.variants.map((v: any) => v.price ?? Infinity)))
-                        : '--'}
+                      {product.variants && product.variants.length > 0 ? (
+                        (() => {
+                          const minVariant = product.variants.reduce((prev: any, curr: any) => {
+                            const prevEff = prev.sellingPrice ?? prev.price ?? Infinity
+                            const currEff = curr.sellingPrice ?? curr.price ?? Infinity
+                            return currEff < prevEff ? curr : prev
+                          }, product.variants[0])
+                          const isDiscounted = minVariant.sellingPrice != null
+                          return isDiscounted ? (
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-bold text-primary">{formatPaise(minVariant.sellingPrice)}</span>
+                              <span className="text-xs text-text-muted line-through">{formatPaise(minVariant.price ?? 0)}</span>
+                            </div>
+                          ) : (
+                            <span>{formatPaise(minVariant.price ?? 0)}</span>
+                          )
+                        })()
+                      ) : '--'}
                     </td>
                     <td className="px-6 py-4 text-right">
                       {tab === 'active' ? (

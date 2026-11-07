@@ -409,7 +409,14 @@ const Checkout: React.FC = () => {
                             {getItemVariant(item) && <p className="text-[11px] text-text-muted mt-0.5">{getItemVariant(item)}</p>}
                             <div className="flex items-center justify-between mt-1">
                               <span className="text-xs text-text-muted">Qty: {item.quantity}</span>
-                              <span className="text-sm font-bold text-primary">{formatPaise(item.lineTotal)}</span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-bold text-primary">{formatPaise(item.lineTotal)}</span>
+                                {item.price && item.sellingPrice != null && (
+                                  <span className="text-xs text-text-muted line-through">
+                                    {formatPaise(item.price * item.quantity)}
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </div>

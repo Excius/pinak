@@ -146,13 +146,18 @@ const ProductDetail: React.FC = () => {
     }
   }
 
-  const displayPrice = selectedVariant?.priceWithTax ?? selectedVariant?.price
+  const isDiscounted = selectedVariant?.sellingPrice != null
+  const displayPrice = isDiscounted
+    ? (selectedVariant.sellingPriceWithTax ?? selectedVariant.sellingPrice)
+    : (selectedVariant?.priceWithTax ?? selectedVariant?.price)
+  const originalMRP = selectedVariant?.priceWithTax ?? selectedVariant?.price
   const displayComparePrice = selectedVariant?.compareAtPriceWithTax ?? selectedVariant?.compareAtPrice
 
-  const discount =
-    displayComparePrice && displayPrice && displayComparePrice > displayPrice
+  const discount = isDiscounted && selectedVariant?.price
+    ? Math.round(((selectedVariant.price - selectedVariant.sellingPrice!) / selectedVariant.price) * 100)
+    : (displayComparePrice && displayPrice && displayComparePrice > displayPrice
       ? Math.round(((displayComparePrice - displayPrice) / displayComparePrice) * 100)
-      : null
+      : null)
 
   const allImages: string[] = []
   if (product?.frontImageUrl) allImages.push(product.frontImageUrl)
@@ -269,10 +274,16 @@ const ProductDetail: React.FC = () => {
                   <span className="text-3xl font-bold text-primary price-glow">
                     {formatPaise(displayPrice!)}
                   </span>
-                  {displayComparePrice && displayComparePrice > displayPrice! && (
+                  {isDiscounted && originalMRP != null && originalMRP > (displayPrice || 0) ? (
                     <span className="text-lg text-text-muted line-through">
-                      {formatPaise(displayComparePrice)}
+                      {formatPaise(originalMRP)}
                     </span>
+                  ) : (
+                    displayComparePrice && displayComparePrice > displayPrice! && (
+                      <span className="text-lg text-text-muted line-through">
+                        {formatPaise(displayComparePrice)}
+                      </span>
+                    )
                   )}
                   {discount && (
                     <span className="px-3 py-1 rounded-full bg-red-500/20 text-red-400 text-sm font-bold">
@@ -467,6 +478,8 @@ const ProductDetail: React.FC = () => {
                     imageUrl={rel.frontImageUrl || bestVariant?.image?.url || ''}
                     price={bestVariant?.price}
                     priceWithTax={bestVariant?.priceWithTax}
+                    sellingPrice={bestVariant?.sellingPrice}
+                    sellingPriceWithTax={bestVariant?.sellingPriceWithTax}
                     comparePrice={bestVariant?.compareAtPrice ?? undefined}
                     compareAtPriceWithTax={bestVariant?.compareAtPriceWithTax ?? undefined}
                     category={rel.categories?.[0]?.name || ''}

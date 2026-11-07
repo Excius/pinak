@@ -29,8 +29,10 @@ export interface ComboKitItem {
   productVariantId: string
   quantity: number
   sortOrder: number
-  originalPrice?: number
-  discountedPrice?: number
+  originalPrice?: number | null
+  originalPriceWithTax?: number | null
+  discountedPrice?: number | null
+  discountedPriceWithTax?: number | null
   isRequired: boolean
   productVariant?: {
     id: string
@@ -39,6 +41,8 @@ export interface ComboKitItem {
     price: number
     taxAmount?: number
     priceWithTax?: number
+    sellingPrice?: number | null
+    sellingPriceWithTax?: number | null
     comparePrice?: number
     comparePriceWithTax?: number | null
     stock: number

@@ -13,6 +13,10 @@ export interface AdminOrderItem {
   productName: string
   variantDetails: any
   price: number
+  basePrice?: number
+  priceWithTax?: number
+  sellingPrice?: number | null
+  sellingPriceWithTax?: number | null
   quantity: number
   lineTotal: number
   product?: {
@@ -24,6 +28,9 @@ export interface AdminOrderItem {
     id: string
     sku: string
     price: number
+    priceWithTax?: number
+    sellingPrice?: number | null
+    sellingPriceWithTax?: number | null
     images?: { id: string; url: string; altText: string | null; isPrimary: boolean }[]
     optionValues?: { optionValue: { value: string; option: { name: string } } }[]
   } | null

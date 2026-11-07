@@ -68,9 +68,10 @@ export const addCategoryImageAdmin = async (categoryId: string, payload: FormDat
     body = payload
   } else {
     body = new FormData()
-    body.append('image', payload.file)
-    if (payload.altText) body.append('altText', payload.altText)
-    if (payload.isPrimary !== undefined) body.append('isPrimary', String(payload.isPrimary))
+    const p = payload as { file: File; altText?: string; isPrimary?: boolean }
+    body.append('image', p.file)
+    if (p.altText) body.append('altText', p.altText)
+    if (p.isPrimary !== undefined) body.append('isPrimary', String(p.isPrimary))
   }
   const { data: resp } = await axiosInstance.post(`/categories/admin/${categoryId}/images`, body, {
     headers: { 'Content-Type': 'multipart/form-data' }

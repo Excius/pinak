@@ -102,8 +102,13 @@ const CartDrawer: React.FC = () => {
                     {item.itemType === 'COMBO_KIT' && (
                       <p className="text-[10px] text-primary/60 mt-0.5">Combo Kit</p>
                     )}
-                    <div className="flex items-center gap-2 mt-1">
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
                       <span className="text-sm font-bold text-primary">{formatPaise(item.unitPriceWithTax ?? item.unitPrice)}</span>
+                      {((item.sellingPrice != null || item.productVariant?.sellingPrice != null) && (item.priceWithTax ?? item.price ?? item.productVariant?.priceWithTax ?? item.productVariant?.price)) ? (
+                        <span className="text-xs text-text-muted line-through">
+                          {formatPaise((item.priceWithTax ?? item.price ?? item.productVariant?.priceWithTax ?? item.productVariant?.price)!)}
+                        </span>
+                      ) : null}
                       {item.unitPriceWithTax !== undefined && (
                         <span className="text-[10px] text-text-muted">(incl. tax)</span>
                       )}

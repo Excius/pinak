@@ -14,7 +14,12 @@ export interface AdminProductVariant {
   id: string
   sku: string
   price: number
+  priceWithTax?: number
+  sellingPrice?: number | null
+  sellingPriceWithTax?: number | null
+  taxAmount?: number
   compareAtPrice: number | null
+  compareAtPriceWithTax?: number | null
   stock: number
   lowStockThreshold: number | null
   isActive: boolean
@@ -125,7 +130,7 @@ export const setProductCategoriesAdmin = async (productId: string, categoryIds: 
 
 export const createProductVariantAdmin = async (
   productId: string,
-  payload: { sku: string; price: number; stock: number; comparePrice?: number; optionValueIds?: string[] }
+  payload: { sku: string; price: number; sellingPrice?: number | null; stock: number; comparePrice?: number; optionValueIds?: string[] }
 ): Promise<AdminProductVariant> => {
   const { data: resp } = await axiosInstance.post(`/products/admin/${productId}/variants`, payload)
   return resp?.data as AdminProductVariant
@@ -133,7 +138,7 @@ export const createProductVariantAdmin = async (
 
 export const updateProductVariantAdmin = async (
   id: string,
-  payload: { sku?: string; price?: number; stock?: number; optionValueIds?: string[] }
+  payload: { sku?: string; price?: number; sellingPrice?: number | null; stock?: number; optionValueIds?: string[] }
 ): Promise<AdminProductVariant> => {
   const { data: resp } = await axiosInstance.put(`/products/admin/variants/${id}`, payload)
   return resp?.data as AdminProductVariant

@@ -8,12 +8,17 @@ export interface ComboKitItem {
   quantity: number
   sortOrder: number
   originalPrice: number | null
+  originalPriceWithTax?: number | null
   discountedPrice: number | null
+  discountedPriceWithTax?: number | null
   isRequired: boolean
   productVariant?: {
     id: string
     sku: string
     price: number
+    priceWithTax?: number
+    sellingPrice?: number | null
+    sellingPriceWithTax?: number | null
     stock: number
     imageUrl: string | null
     product?: {
@@ -140,9 +145,10 @@ export const addComboKitImageAdmin = async (
     body = payload
   } else {
     body = new FormData()
-    body.append('image', payload.file)
-    if (payload.altText) body.append('altText', payload.altText)
-    if (payload.isPrimary !== undefined) body.append('isPrimary', String(payload.isPrimary))
+    const p = payload as { file: File; altText?: string; isPrimary?: boolean }
+    body.append('image', p.file)
+    if (p.altText) body.append('altText', p.altText)
+    if (p.isPrimary !== undefined) body.append('isPrimary', String(p.isPrimary))
   }
   const { data: resp } = await axiosInstance.post(`/combo-kits/admin/${comboKitId}/images`, body, {
     headers: { 'Content-Type': 'multipart/form-data' }

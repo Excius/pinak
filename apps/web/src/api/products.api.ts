@@ -44,6 +44,8 @@ export interface ProductVariant {
   price: number
   taxAmount?: number
   priceWithTax?: number
+  sellingPrice?: number | null
+  sellingPriceWithTax?: number | null
   compareAtPrice?: number
   compareAtPriceWithTax?: number | null
   stock: number
@@ -72,6 +74,8 @@ export interface VariantDetail {
   price: number
   taxAmount?: number
   priceWithTax?: number
+  sellingPrice?: number | null
+  sellingPriceWithTax?: number | null
   compareAtPrice?: number
   compareAtPriceWithTax?: number | null
   stock: number

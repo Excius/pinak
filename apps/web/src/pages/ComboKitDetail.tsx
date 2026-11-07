@@ -48,7 +48,7 @@ const ComboKitDetail: React.FC = () => {
   }
 
   const totalOriginalPrice = items.reduce((acc, item) => {
-    return acc + (item.originalPrice || item.productVariant?.priceWithTax || item.productVariant?.price || 0) * item.quantity
+    return acc + (item.originalPriceWithTax || item.originalPrice || item.productVariant?.priceWithTax || item.productVariant?.price || 0) * item.quantity
   }, 0)
 
   const savings = totalOriginalPrice > 0 && combo ? totalOriginalPrice - combo.price : 0
@@ -195,11 +195,16 @@ const ComboKitDetail: React.FC = () => {
                             </div>
                           </div>
                           <div className="text-right">
-                            {item.discountedPrice != null && (
-                              <p className="text-sm font-bold text-primary">{formatPaise(item.discountedPrice)}</p>
+                            {(item.discountedPriceWithTax != null || item.discountedPrice != null) && (
+                              <p className="text-sm font-bold text-primary">
+                                {formatPaise((item.discountedPriceWithTax ?? item.discountedPrice)!)}
+                              </p>
                             )}
-                            {item.originalPrice != null && item.discountedPrice != null && item.originalPrice > item.discountedPrice && (
-                              <p className="text-xs text-text-muted line-through">{formatPaise(item.originalPrice)}</p>
+                            {(item.originalPriceWithTax != null || item.originalPrice != null) &&
+                              (item.originalPriceWithTax ?? item.originalPrice)! > (item.discountedPriceWithTax ?? item.discountedPrice ?? 0) && (
+                              <p className="text-xs text-text-muted line-through">
+                                {formatPaise((item.originalPriceWithTax ?? item.originalPrice)!)}
+                              </p>
                             )}
                           </div>
                         </div>
