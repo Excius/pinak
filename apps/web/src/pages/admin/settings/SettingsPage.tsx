@@ -1,16 +1,36 @@
 import { useState, useEffect } from 'react'
 import {
-  getAllTaxClasses, createTaxClass, updateTaxClass, deleteTaxClass,
-  getAllWeightClasses, createWeightClass, updateWeightClass, deleteWeightClass,
-  getAllLengthClasses, createLengthClass, updateLengthClass, deleteLengthClass
+  getAllTaxClasses,
+  createTaxClass,
+  updateTaxClass,
+  deleteTaxClass,
+  getAllWeightClasses,
+  createWeightClass,
+  updateWeightClass,
+  deleteWeightClass,
+  getAllLengthClasses,
+  createLengthClass,
+  updateLengthClass,
+  deleteLengthClass,
+  listAdminSettings,
+  updateAdminSettings,
+  type TaxClass,
+  type WeightClass,
+  type LengthClass,
 } from '../../../api/admin/admin.settings.api'
-import type { TaxClass, WeightClass, LengthClass } from '../../../api/admin/admin.settings.api'
+import toast from 'react-hot-toast'
 
-type Tab = 'tax' | 'weight' | 'length'
+type Tab = 'tax' | 'weight' | 'length' | 'contact'
 
 // Generic editable table section
 function ConfigTable<T extends { id: string }>({
-  title, icon, items, columns, onAdd, onEdit, onDelete
+  title,
+  icon,
+  items,
+  columns,
+  onAdd,
+  onEdit,
+  onDelete,
 }: {
   title: string
   icon: string
@@ -29,7 +49,9 @@ function ConfigTable<T extends { id: string }>({
   const openAdd = () => {
     setEditingId(null)
     const empty: Record<string, string> = {}
-    columns.forEach(c => { empty[c.key as string] = '' })
+    columns.forEach((c) => {
+      empty[c.key as string] = ''
+    })
     setForm(empty)
     setShowForm(true)
   }
@@ -37,7 +59,9 @@ function ConfigTable<T extends { id: string }>({
   const openEdit = (item: T) => {
     setEditingId(item.id)
     const data: Record<string, string> = {}
-    columns.forEach(c => { data[c.key as string] = String((item as any)[c.key] ?? '') })
+    columns.forEach((c) => {
+      data[c.key as string] = String((item as any)[c.key] ?? '')
+    })
     setForm(data)
     setShowForm(true)
   }
@@ -83,13 +107,17 @@ function ConfigTable<T extends { id: string }>({
       {showForm && (
         <div className="p-4 bg-background-main/50 border-b border-primary/10">
           <div className="flex items-end gap-3">
-            {columns.map(col => (
+            {columns.map((col) => (
               <div key={col.key as string} className="flex-1 space-y-1">
-                <label className="text-[10px] font-bold text-text-muted uppercase">{col.label}</label>
+                <label className="text-[10px] font-bold text-text-muted uppercase">
+                  {col.label}
+                </label>
                 <input
                   type={col.type === 'number' ? 'number' : 'text'}
                   value={form[col.key as string] || ''}
-                  onChange={e => setForm(prev => ({ ...prev, [col.key as string]: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, [col.key as string]: e.target.value }))
+                  }
                   className="w-full bg-background-main border border-primary/20 rounded-lg px-3 py-2 text-sm text-text-main-light outline-none focus:border-primary"
                 />
               </div>
@@ -116,14 +144,30 @@ function ConfigTable<T extends { id: string }>({
       {/* Delete Confirmation */}
       {deleteConfirm && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setDeleteConfirm(null)} />
+          <div
+            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            onClick={() => setDeleteConfirm(null)}
+          />
           <div className="relative bg-background-light border border-red-500/20 rounded-2xl p-8 w-full max-w-sm shadow-2xl text-center">
             <span className="material-icons-outlined text-4xl text-red-500 mb-4">warning</span>
             <h3 className="text-lg font-display font-bold text-text-main-light mb-2">Delete Entry?</h3>
             <p className="text-sm text-text-muted mb-6">This action cannot be undone.</p>
             <div className="flex gap-3">
-              <button onClick={() => setDeleteConfirm(null)} className="flex-1 px-5 py-2.5 rounded-xl font-bold text-sm border border-primary/20 text-text-muted hover:bg-primary/5">Cancel</button>
-              <button onClick={async () => { await onDelete(deleteConfirm); setDeleteConfirm(null) }} className="flex-1 bg-red-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-red-700">Delete</button>
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="flex-1 px-5 py-2.5 rounded-xl font-bold text-sm border border-primary/20 text-text-muted hover:bg-primary/5"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  await onDelete(deleteConfirm)
+                  setDeleteConfirm(null)
+                }}
+                className="flex-1 bg-red-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-red-700"
+              >
+                Delete
+              </button>
             </div>
           </div>
         </div>
@@ -133,19 +177,36 @@ function ConfigTable<T extends { id: string }>({
       <table className="w-full">
         <thead>
           <tr className="border-b border-primary/5 bg-background-main/30">
-            {columns.map(col => (
-              <th key={col.key as string} className="text-left px-5 py-3 text-[10px] font-bold text-text-muted uppercase tracking-wider">{col.label}</th>
+            {columns.map((col) => (
+              <th
+                key={col.key as string}
+                className="text-left px-5 py-3 text-[10px] font-bold text-text-muted uppercase tracking-wider"
+              >
+                {col.label}
+              </th>
             ))}
-            <th className="text-right px-5 py-3 text-[10px] font-bold text-text-muted uppercase tracking-wider">Actions</th>
+            <th className="text-right px-5 py-3 text-[10px] font-bold text-text-muted uppercase tracking-wider">
+              Actions
+            </th>
           </tr>
         </thead>
         <tbody>
           {items.length === 0 && (
-            <tr><td colSpan={columns.length + 1} className="px-5 py-8 text-center text-text-muted text-sm">No entries yet.</td></tr>
+            <tr>
+              <td
+                colSpan={columns.length + 1}
+                className="px-5 py-8 text-center text-text-muted text-sm"
+              >
+                No entries yet.
+              </td>
+            </tr>
           )}
-          {items.map(item => (
-            <tr key={item.id} className="border-b border-primary/5 hover:bg-primary/[0.02] transition-colors">
-              {columns.map(col => (
+          {items.map((item) => (
+            <tr
+              key={item.id}
+              className="border-b border-primary/5 hover:bg-primary/[0.02] transition-colors"
+            >
+              {columns.map((col) => (
                 <td key={col.key as string} className="px-5 py-3 text-sm text-text-main-light">
                   {col.type === 'number' ? (
                     <span className="font-mono text-primary">{String((item as any)[col.key])}</span>
@@ -156,10 +217,16 @@ function ConfigTable<T extends { id: string }>({
               ))}
               <td className="px-5 py-3 text-right">
                 <div className="flex items-center justify-end gap-1">
-                  <button onClick={() => openEdit(item)} className="p-1.5 text-text-muted hover:text-primary transition-colors rounded hover:bg-primary/5">
+                  <button
+                    onClick={() => openEdit(item)}
+                    className="p-1.5 text-text-muted hover:text-primary transition-colors rounded hover:bg-primary/5"
+                  >
                     <span className="material-icons-outlined text-base">edit</span>
                   </button>
-                  <button onClick={() => setDeleteConfirm(item.id)} className="p-1.5 text-text-muted hover:text-red-500 transition-colors rounded hover:bg-red-500/5">
+                  <button
+                    onClick={() => setDeleteConfirm(item.id)}
+                    className="p-1.5 text-text-muted hover:text-red-500 transition-colors rounded hover:bg-red-500/5"
+                  >
                     <span className="material-icons-outlined text-base">delete</span>
                   </button>
                 </div>
@@ -168,6 +235,167 @@ function ConfigTable<T extends { id: string }>({
           ))}
         </tbody>
       </table>
+    </div>
+  )
+}
+
+// Contact & WhatsApp tab component
+function ContactSettingsTab() {
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [form, setForm] = useState({
+    WHATSAPP_NUMBER: '',
+    WHATSAPP_DEFAULT_MESSAGE: '',
+    SUPPORT_EMAIL: '',
+    SUPPORT_PHONE: '',
+  })
+
+  useEffect(() => {
+    listAdminSettings('contact')
+      .then((items) => {
+        const map: Record<string, string> = {}
+        items.forEach((item) => {
+          map[item.key] = item.value
+        })
+        setForm({
+          WHATSAPP_NUMBER: map['WHATSAPP_NUMBER'] || '+919876543210',
+          WHATSAPP_DEFAULT_MESSAGE:
+            map['WHATSAPP_DEFAULT_MESSAGE'] ||
+            'Hello! I would like to know more about Pinak products.',
+          SUPPORT_EMAIL: map['SUPPORT_EMAIL'] || 'support@pinak.com',
+          SUPPORT_PHONE: map['SUPPORT_PHONE'] || '+919876543210',
+        })
+      })
+      .catch((err) => {
+        console.error('Failed to load contact settings', err)
+        toast.error('Failed to load contact settings')
+      })
+      .finally(() => setLoading(false))
+  }, [])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSaving(true)
+    try {
+      await updateAdminSettings({
+        WHATSAPP_NUMBER: form.WHATSAPP_NUMBER,
+        WHATSAPP_DEFAULT_MESSAGE: form.WHATSAPP_DEFAULT_MESSAGE,
+        SUPPORT_EMAIL: form.SUPPORT_EMAIL,
+        SUPPORT_PHONE: form.SUPPORT_PHONE,
+      })
+      toast.success('Contact settings updated successfully')
+    } catch (err: any) {
+      console.error('Failed to update contact settings', err)
+      toast.error(err.response?.data?.message || 'Failed to update contact settings')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="p-8 text-center text-text-muted flex items-center justify-center gap-3">
+        <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+        <span>Loading contact settings...</span>
+      </div>
+    )
+  }
+
+  return (
+    <div className="bg-background-light rounded-2xl border border-primary/10 overflow-hidden shadow-sm">
+      <div className="p-6 border-b border-primary/10 flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-[#25D366]/10 flex items-center justify-center text-[#25D366]">
+          <span className="material-icons-outlined text-2xl">chat</span>
+        </div>
+        <div>
+          <h3 className="text-base font-display font-bold text-text-main-light">
+            WhatsApp & Customer Support Contacts
+          </h3>
+          <p className="text-xs text-text-muted">
+            Configure dynamic WhatsApp floating widget, default greeting text, and support desk contacts.
+          </p>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-text-muted flex items-center gap-1.5">
+              <span className="text-[#25D366] font-bold">●</span> WhatsApp Number (with country code)
+            </label>
+            <input
+              type="text"
+              required
+              value={form.WHATSAPP_NUMBER}
+              onChange={(e) => setForm((prev) => ({ ...prev, WHATSAPP_NUMBER: e.target.value }))}
+              placeholder="+919876543210"
+              className="w-full bg-background-main border border-primary/20 rounded-xl px-4 py-2.5 text-sm text-text-main-light outline-none focus:border-primary font-mono"
+            />
+            <p className="text-[11px] text-text-muted">
+              Used by customer floating WhatsApp button for one-click chat.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-text-muted">
+              Customer Support Phone
+            </label>
+            <input
+              type="text"
+              required
+              value={form.SUPPORT_PHONE}
+              onChange={(e) => setForm((prev) => ({ ...prev, SUPPORT_PHONE: e.target.value }))}
+              placeholder="+919876543210"
+              className="w-full bg-background-main border border-primary/20 rounded-xl px-4 py-2.5 text-sm text-text-main-light outline-none focus:border-primary font-mono"
+            />
+            <p className="text-[11px] text-text-muted">Direct voice call number shown in footer/support.</p>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-xs font-bold uppercase tracking-wider text-text-muted">
+            Default WhatsApp Greeting Message
+          </label>
+          <textarea
+            rows={3}
+            value={form.WHATSAPP_DEFAULT_MESSAGE}
+            onChange={(e) =>
+              setForm((prev) => ({ ...prev, WHATSAPP_DEFAULT_MESSAGE: e.target.value }))
+            }
+            placeholder="Hello! I would like to know more about Pinak products."
+            className="w-full bg-background-main border border-primary/20 rounded-xl p-3.5 text-sm text-text-main-light outline-none focus:border-primary resize-y"
+          />
+          <p className="text-[11px] text-text-muted">
+            Pre-fills customer WhatsApp text box when they click the widget.
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-xs font-bold uppercase tracking-wider text-text-muted">
+            Customer Support Email
+          </label>
+          <input
+            type="email"
+            required
+            value={form.SUPPORT_EMAIL}
+            onChange={(e) => setForm((prev) => ({ ...prev, SUPPORT_EMAIL: e.target.value }))}
+            placeholder="support@pinak.com"
+            className="w-full bg-background-main border border-primary/20 rounded-xl px-4 py-2.5 text-sm text-text-main-light outline-none focus:border-primary"
+          />
+          <p className="text-[11px] text-text-muted">Official email address for customer inquiries.</p>
+        </div>
+
+        <div className="pt-4 border-t border-primary/10 flex justify-end">
+          <button
+            type="submit"
+            disabled={saving}
+            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gold-gradient text-background-main font-bold text-sm hover:brightness-110 shadow-lg shadow-primary/20 transition-all disabled:opacity-50 cursor-pointer"
+          >
+            <span className="material-icons-outlined text-base">save</span>
+            {saving ? 'Saving...' : 'Save Contact Settings'}
+          </button>
+        </div>
+      </form>
     </div>
   )
 }
@@ -184,7 +412,7 @@ const SettingsPage = () => {
       const [tc, wc, lc] = await Promise.all([
         getAllTaxClasses(),
         getAllWeightClasses(),
-        getAllLengthClasses()
+        getAllLengthClasses(),
       ])
       setTaxClasses(tc)
       setWeightClasses(wc)
@@ -196,12 +424,15 @@ const SettingsPage = () => {
     }
   }
 
-  useEffect(() => { fetchAll() }, [])
+  useEffect(() => {
+    fetchAll()
+  }, [])
 
-  const tabs: { key: Tab; label: string; icon: string; count: number }[] = [
+  const tabs: { key: Tab; label: string; icon: string; count?: number }[] = [
     { key: 'tax', label: 'Tax Classes', icon: 'receipt_long', count: taxClasses.length },
     { key: 'weight', label: 'Weight Classes', icon: 'scale', count: weightClasses.length },
     { key: 'length', label: 'Length Classes', icon: 'straighten', count: lengthClasses.length },
+    { key: 'contact', label: 'WhatsApp & Contacts', icon: 'support_agent' },
   ]
 
   if (loading) {
@@ -219,24 +450,26 @@ const SettingsPage = () => {
     <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-2xl font-display font-bold text-text-main-light">Store Settings</h1>
-        <p className="text-sm text-text-muted mt-1">Configure tax rates, weight units, and length units for your catalog.</p>
+        <p className="text-sm text-text-muted mt-1">
+          Configure tax rates, measurement units, and customer contact endpoints.
+        </p>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2">
-        {tabs.map(t => (
+      <div className="flex flex-wrap gap-2">
+        {tabs.map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${
               tab === t.key
-                ? 'bg-primary/10 text-primary border border-primary/20'
+                ? 'bg-primary/10 text-primary border border-primary/20 shadow-sm'
                 : 'text-text-muted hover:bg-background-main border border-transparent'
             }`}
           >
             <span className="material-icons-outlined text-lg">{t.icon}</span>
             {t.label}
-            <span className="text-[10px] ml-1 opacity-60">({t.count})</span>
+            {t.count !== undefined && <span className="text-[10px] ml-1 opacity-60">({t.count})</span>}
           </button>
         ))}
       </div>
@@ -249,11 +482,20 @@ const SettingsPage = () => {
           items={taxClasses}
           columns={[
             { key: 'name', label: 'Name' },
-            { key: 'rate', label: 'Rate (%)', type: 'number' }
+            { key: 'rate', label: 'Rate (%)', type: 'number' },
           ]}
-          onAdd={async (data) => { await createTaxClass({ name: data.name ?? '', rate: Number(data.rate) }); await fetchAll() }}
-          onEdit={async (id, data) => { await updateTaxClass(id, { name: data.name ?? '', rate: Number(data.rate) }); await fetchAll() }}
-          onDelete={async (id) => { await deleteTaxClass(id); await fetchAll() }}
+          onAdd={async (data) => {
+            await createTaxClass({ name: data.name ?? '', rate: Number(data.rate) })
+            await fetchAll()
+          }}
+          onEdit={async (id, data) => {
+            await updateTaxClass(id, { name: data.name ?? '', rate: Number(data.rate) })
+            await fetchAll()
+          }}
+          onDelete={async (id) => {
+            await deleteTaxClass(id)
+            await fetchAll()
+          }}
         />
       )}
 
@@ -264,11 +506,20 @@ const SettingsPage = () => {
           items={weightClasses}
           columns={[
             { key: 'name', label: 'Name' },
-            { key: 'unit', label: 'Unit (e.g. kg, g, lb)' }
+            { key: 'unit', label: 'Unit (e.g. kg, g, lb)' },
           ]}
-          onAdd={async (data) => { await createWeightClass({ name: data.name ?? '', unit: data.unit ?? '' }); await fetchAll() }}
-          onEdit={async (id, data) => { await updateWeightClass(id, { name: data.name ?? '', unit: data.unit ?? '' }); await fetchAll() }}
-          onDelete={async (id) => { await deleteWeightClass(id); await fetchAll() }}
+          onAdd={async (data) => {
+            await createWeightClass({ name: data.name ?? '', unit: data.unit ?? '' })
+            await fetchAll()
+          }}
+          onEdit={async (id, data) => {
+            await updateWeightClass(id, { name: data.name ?? '', unit: data.unit ?? '' })
+            await fetchAll()
+          }}
+          onDelete={async (id) => {
+            await deleteWeightClass(id)
+            await fetchAll()
+          }}
         />
       )}
 
@@ -279,13 +530,24 @@ const SettingsPage = () => {
           items={lengthClasses}
           columns={[
             { key: 'name', label: 'Name' },
-            { key: 'unit', label: 'Unit (e.g. cm, m, in)' }
+            { key: 'unit', label: 'Unit (e.g. cm, m, in)' },
           ]}
-          onAdd={async (data) => { await createLengthClass({ name: data.name ?? '', unit: data.unit ?? '' }); await fetchAll() }}
-          onEdit={async (id, data) => { await updateLengthClass(id, { name: data.name ?? '', unit: data.unit ?? '' }); await fetchAll() }}
-          onDelete={async (id) => { await deleteLengthClass(id); await fetchAll() }}
+          onAdd={async (data) => {
+            await createLengthClass({ name: data.name ?? '', unit: data.unit ?? '' })
+            await fetchAll()
+          }}
+          onEdit={async (id, data) => {
+            await updateLengthClass(id, { name: data.name ?? '', unit: data.unit ?? '' })
+            await fetchAll()
+          }}
+          onDelete={async (id) => {
+            await deleteLengthClass(id)
+            await fetchAll()
+          }}
         />
       )}
+
+      {tab === 'contact' && <ContactSettingsTab />}
     </div>
   )
 }
