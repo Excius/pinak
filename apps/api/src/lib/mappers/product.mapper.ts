@@ -38,6 +38,13 @@ export const toPublicProduct = (product: ProductWithRelations) => {
     seoKeyword: product.seoKeyword,
     keyIngredients: product.keyIngredients,
     frontImageUrl: product.frontImageUrl,
+    weightGrams: product.weightGrams ?? null,
+    weightClass: product.weightClass
+      ? {
+          name: product.weightClass.name,
+          unit: product.weightClass.unit,
+        }
+      : null,
     tags: product.tags,
     isActive: product.isActive,
     
@@ -89,6 +96,7 @@ export const toPublicProduct = (product: ProductWithRelations) => {
         compareAtPriceWithTax,
         stock: v.stock,
         lowStockThreshold: v.lowStockThreshold,
+        weightGrams: v.weightGrams ?? null,
         isActive: v.isActive,
         
         // Primary image only (lean fields)

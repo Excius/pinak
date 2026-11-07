@@ -5,9 +5,13 @@ import {
   ScrollView,
   Image,
   Dimensions,
+  ActivityIndicator,
 } from "react-native";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
+import { getFeaturedSections } from "@/services/featuredSection.service";
+import type { FeaturedSectionApi } from "@repo/types";
 
 interface HeroItem {
   id: string;
@@ -19,42 +23,67 @@ interface HeroItem {
   image: string;
 }
 
-const HERO_ITEMS: HeroItem[] = [
-  {
-    id: "1",
-    badge: "The Royal Collection",
-    title: "Bridal Kit",
-    description: "Complete radiance for your special day.",
-    buttonText: "Shop The Kit",
-    buttonStyle: "primary",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuAEb2pQStV0ALPl6ZWPfTmzXrt4P5tjrZ9OkvxNC3vTupem8OoVyZmvGsSn94VYu677wqDLv7d6k--BOscMyxpr7n62IQXIEzwv54WIbv45W8MQu_A74A52S9muKOoShuUZ2tdsniJFXv9FpywVCmct_2V9BaNPOiqo1PdrTvMwnsQ_9qkU0Op-0U89GeSz55s-8WDxKaok6ou2-E0U2rr93nKG9YIREfxyFj-P1qH4P0XGZpOERjKPIRm4f5QGAZ3WQRTXJtaSWRk",
-  },
-  {
-    id: "2",
-    badge: "Limited Edition",
-    title: "Lipstick Combo",
-    description: "3 Shades of elegance in one box.",
-    buttonText: "View Shades",
-    buttonStyle: "secondary",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuBYR9Cx_ccB8jdclpNBxxOtIRFyqNyChvbBQenV4AYrcC67ro5J2mcJKciz2zTWeT4eg-R0Rugix6wdRfp2sZE_FDtJRtyk0-PhWk_7d3Mcey_F5IiNVDtYoTZCsFhpTXCL5-5W9H7_-S2xnMxCQSFfdvQCW_fAoJfRTHCMKUtCUMWj0dcVmUEEHiLS2d_oH6W8WkV53V0HdwRUknnAI6gCSnYC6bMmu4DOtQ8--HBgJwyjkYk3tCBxudM0Mah5XoinGzLDdV6pQEk",
-  },
-];
+type FeaturedSection =
+  FeaturedSectionApi.ResponseTypes["ListFeaturedSections"]["data"][number];
 
 const screenWidth = Dimensions.get("window").width;
 
 export function HeroCarousel() {
+  const router = useRouter();
+  const [heroItems, setHeroItems] = useState<HeroItem[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
   const scrollViewRef = useRef<ScrollView>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  useEffect(() => {
+    const loadHeroSections = async () => {
+      try {
+        const response = await getFeaturedSections();
+        const items = (response.data as FeaturedSection[])
+          .filter((section) => section.type === "HOMEPAGE_HERO")
+          .sort((a, b) => a.priority - b.priority)
+          .reduce<HeroItem[]>(
+          (heroSections, section) => {
+            const image =
+              section.images.find((item) => item.isPrimary) ?? section.images[0];
+
+            if (!image) return heroSections;
+
+            heroSections.push({
+              id: section.id,
+              badge: "Featured Collection",
+              title: section.title,
+              description: "Discover our latest curated beauty edit.",
+              buttonText: "Shop Collection",
+              buttonStyle: "primary",
+              image: image.url,
+            });
+            return heroSections;
+          },
+            [],
+          );
+
+        setHeroItems(items);
+      } catch (error) {
+        console.error("Failed to load homepage hero sections:", error);
+        setHeroItems([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void loadHeroSections();
+  }, []);
+
   // Auto-scroll effect - only when screen is focused
   useFocusEffect(
-    useRef(() => {
+    useCallback(() => {
+      if (heroItems.length === 0) return undefined;
+
       intervalRef.current = setInterval(() => {
         setActiveIndex((prevIndex) => {
-          const nextIndex = (prevIndex + 1) % HERO_ITEMS.length;
+          const nextIndex = (prevIndex + 1) % heroItems.length;
           scrollViewRef.current?.scrollTo({
             x: nextIndex * screenWidth,
             animated: true,
@@ -68,14 +97,28 @@ export function HeroCarousel() {
           clearInterval(intervalRef.current);
         }
       };
-    }).current,
+    }, [heroItems.length]),
   );
 
   const handleScroll = (event: any) => {
     const contentOffsetX = event.nativeEvent.contentOffset.x;
     const index = Math.round(contentOffsetX / screenWidth);
-    setActiveIndex(index % HERO_ITEMS.length);
+    if (heroItems.length > 0) {
+      setActiveIndex(index % heroItems.length);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <View className="h-80 items-center justify-center">
+        <ActivityIndicator size="small" color="#C9A962" />
+      </View>
+    );
+  }
+
+  if (heroItems.length === 0) {
+    return null;
+  }
 
   return (
     <View className="relative mt-4">
@@ -89,7 +132,7 @@ export function HeroCarousel() {
         onScroll={handleScroll}
         scrollEnabled={true}
       >
-        {HERO_ITEMS.map((item) => (
+        {heroItems.map((item) => (
           <View
             key={item.id}
             style={{ width: screenWidth }}
@@ -113,6 +156,7 @@ export function HeroCarousel() {
                   {item.description}
                 </Text>
                 <TouchableOpacity
+                  onPress={() => router.push(`/sections/${item.id}` as never)}
                   className={`w-full rounded-full py-3 ${
                     item.buttonStyle === "primary"
                       ? "bg-primary"
@@ -137,7 +181,7 @@ export function HeroCarousel() {
 
       {/* Carousel Indicators */}
       <View className="flex-row justify-center space-x-2 mt-4 gap-2">
-        {HERO_ITEMS.map((_, index) => (
+        {heroItems.map((_, index) => (
           <View
             key={index}
             className={`h-2 w-2 rounded-full transition-colors ${

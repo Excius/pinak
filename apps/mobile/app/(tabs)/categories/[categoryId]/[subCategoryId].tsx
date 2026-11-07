@@ -5,9 +5,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { ProductPage } from "@/components/products/ProductPage";
 
 export default function SubCategoryProductScreen() {
-  const { subCategoryId, subCategoryName } = useLocalSearchParams<{
+  const { subCategoryId, subCategoryName, brand } = useLocalSearchParams<{
     subCategoryId?: string;
     subCategoryName?: string;
+    brand?: string;
   }>();
 
   return (
@@ -16,6 +17,7 @@ export default function SubCategoryProductScreen() {
         <ProductPage
           categoryId={String(subCategoryId || "")}
           categoryName={subCategoryName ? String(subCategoryName) : undefined}
+          brand={brand ? String(brand) : undefined}
         />
       </ScrollView>
     </SafeAreaView>

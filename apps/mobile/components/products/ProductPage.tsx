@@ -1,14 +1,20 @@
-import { View, Text } from "react-native";
+import { useState } from "react";
+import { View, Text, TouchableOpacity } from "react-native";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { FilterModal } from "@/components/filters/FilterModal";
 import { ProductGrid } from "./ProductGrid";
 
 interface ProductPageProps {
   categoryId?: string | null;
   categoryName?: string;
+  brand?: string;
 }
 
-export function ProductPage({ categoryId, categoryName }: ProductPageProps) {
+export function ProductPage({ categoryId, categoryName, brand }: ProductPageProps) {
   const resolvedCategoryId = categoryId || "";
   const title = categoryName ? `${categoryName} Collection` : "Products";
+  const [isFilterVisible, setIsFilterVisible] = useState(false);
+  const [filterValueIds, setFilterValueIds] = useState<string[]>([]);
 
   return (
     <View className="flex-1 bg-background">
@@ -22,27 +28,42 @@ export function ProductPage({ categoryId, categoryName }: ProductPageProps) {
         </Text>
       </View>
 
-      {/* Filter/Sort Bar */}
-      <View className="flex-row gap-3 px-6 py-2 mb-4">
-        <View className="px-4 py-2 bg-surface border border-primary/20 rounded-full justify-center items-center">
+      {/* Filter Bar */}
+      <View className="mb-4 flex-row items-center justify-between px-6 py-2">
+        <TouchableOpacity
+          onPress={() => setIsFilterVisible(true)}
+          className="flex-row items-center gap-2 rounded-xl border border-primary/30 bg-surface px-4 py-3"
+        >
+          <MaterialCommunityIcons name="filter-variant" size={15} color="#C9A962" />
           <Text className="text-xs font-bold uppercase tracking-wider text-text-primary">
-            Filter
+            {filterValueIds.length > 0
+              ? `${filterValueIds.length} filters applied`
+              : "Filter products"}
           </Text>
-        </View>
-        <View className="px-4 py-2 bg-surface border border-primary/20 rounded-full justify-center items-center">
-          <Text className="text-xs font-bold uppercase tracking-wider text-text-primary">
-            Sort By
-          </Text>
-        </View>
-        <View className="px-4 py-2 bg-surface border border-primary/20 rounded-full justify-center items-center">
-          <Text className="text-xs font-bold uppercase tracking-wider text-text-primary">
-            Price
-          </Text>
-        </View>
+        </TouchableOpacity>
+        {filterValueIds.length > 0 && (
+          <TouchableOpacity onPress={() => setFilterValueIds([])}>
+            <Text className="text-xs font-bold uppercase tracking-wider text-primary">
+              Clear
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Product Grid */}
-      <ProductGrid categoryId={resolvedCategoryId} />
+      <ProductGrid
+        categoryId={resolvedCategoryId}
+        brand={brand}
+        filterValueIds={filterValueIds}
+      />
+
+      <FilterModal
+        isVisible={isFilterVisible}
+        onClose={() => setIsFilterVisible(false)}
+        onApplyFilters={setFilterValueIds}
+        categoryId={resolvedCategoryId}
+        brand={brand}
+      />
     </View>
   );
 }

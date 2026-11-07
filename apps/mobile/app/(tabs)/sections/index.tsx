@@ -60,7 +60,7 @@ function SectionCard({
         <View className="flex-1">
           <View className="flex-row items-center gap-2 mb-2">
             <MaterialCommunityIcons
-              name={config.icon}
+              name={config.icon as any}
               size={20}
               color={config.color}
             />
@@ -128,7 +128,7 @@ export default function FeaturedSectionsScreen() {
 
   // Handle section press
   const handleSectionPress = (sectionId: string) => {
-    router.push(`/sections/${sectionId}`);
+    router.push(`/sections/${sectionId}` as never);
   };
 
   // Loading state
