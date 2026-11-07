@@ -20,7 +20,19 @@ const ProductDetail: React.FC = () => {
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([])
   const [selectedVariant, setSelectedVariant] = useState<VariantDetail | null>(null)
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({})
-  const [availableOptions, setAvailableOptions] = useState<{ optionName: string; values: string[] }[]>([])
+  interface OptionValueItem {
+  valueName: string
+  swatchColorHex?: string | null
+  optionValueId?: string
+}
+
+interface OptionGroupItem {
+  optionName: string
+  isColor: boolean
+  values: OptionValueItem[]
+}
+
+  const [availableOptions, setAvailableOptions] = useState<OptionGroupItem[]>([])
   const [selectedImage, setSelectedImage] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -69,22 +81,35 @@ const ProductDetail: React.FC = () => {
             setSelectedImage(prod.frontImageUrl || '')
           }
 
-          // Build available options groups
-          const optionsMap = new Map<string, Set<string>>()
+          // Build available options groups with dynamic swatches
+          const optionsMap = new Map<string, Map<string, OptionValueItem>>()
           varList.forEach(v => {
             if (v.isActive) {
               v.optionValues?.forEach(ov => {
                 if (!optionsMap.has(ov.optionName)) {
-                  optionsMap.set(ov.optionName, new Set())
+                  optionsMap.set(ov.optionName, new Map())
                 }
-                optionsMap.get(ov.optionName)?.add(ov.valueName)
+                const valGroup = optionsMap.get(ov.optionName)!
+                if (!valGroup.has(ov.valueName)) {
+                  valGroup.set(ov.valueName, {
+                    valueName: ov.valueName,
+                    swatchColorHex: ov.swatchColorHex || null,
+                    optionValueId: ov.optionValueId,
+                  })
+                }
               })
             }
           })
-          const optsArray = Array.from(optionsMap.entries()).map(([optionName, valSet]) => ({
-            optionName,
-            values: Array.from(valSet)
-          }))
+
+          const optsArray: OptionGroupItem[] = Array.from(optionsMap.entries()).map(([optionName, valMap]) => {
+            const values = Array.from(valMap.values())
+            const isColor = /color|shade/i.test(optionName) || values.some(v => !!v.swatchColorHex)
+            return {
+              optionName,
+              isColor,
+              values,
+            }
+          })
           setAvailableOptions(optsArray)
         }
       } catch (err: any) {
@@ -322,24 +347,60 @@ const ProductDetail: React.FC = () => {
               <div className="space-y-5">
                 {availableOptions.map((optGroup) => (
                   <div key={optGroup.optionName} className="space-y-3">
-                    <label className="text-xs font-bold tracking-widest text-primary/70 uppercase">
-                      Select {optGroup.optionName}
-                    </label>
-                    <div className="flex flex-wrap gap-3">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold tracking-widest text-primary/70 uppercase">
+                        Select {optGroup.optionName}
+                      </label>
+                      {selectedOptions[optGroup.optionName] && (
+                        <span className="text-xs text-text-main-light font-medium flex items-center gap-1.5">
+                          {selectedOptions[optGroup.optionName]}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex flex-wrap gap-2.5">
                       {optGroup.values.map((val) => {
-                        const isSelected = selectedOptions[optGroup.optionName] === val
-                        // Determine if this specific value is out of stock in the CURRENT context of other selected options
-                        // (Optional advanced check: for now, we just let them click it and see if the resulting variant is Out Of Stock)
+                        const isSelected = selectedOptions[optGroup.optionName] === val.valueName
+
+                        // If it's a color or has swatchColorHex, render dynamic swatch button
+                        if (val.swatchColorHex || optGroup.isColor) {
+                          const hex = val.swatchColorHex || '#8B8B8B'
+                          return (
+                            <button
+                              key={val.valueName}
+                              type="button"
+                              onClick={() => handleOptionSelect(optGroup.optionName, val.valueName)}
+                              title={val.valueName}
+                              className={`group relative flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium border transition-all cursor-pointer ${
+                                isSelected
+                                  ? 'border-primary bg-primary/15 text-primary shadow-[0_0_12px_rgba(212,175,55,0.3)] ring-1 ring-primary/40'
+                                  : 'border-primary/20 text-text-muted hover:border-primary/50 hover:text-text-main-light hover:bg-white/[0.02]'
+                              }`}
+                            >
+                              <span
+                                className={`w-4 h-4 rounded-full border shadow-sm transition-transform group-hover:scale-110 ${
+                                  isSelected ? 'ring-2 ring-primary ring-offset-1 ring-offset-background-main border-white/60' : 'border-white/20'
+                                }`}
+                                style={{ backgroundColor: hex }}
+                              />
+                              <span className="font-medium">{val.valueName}</span>
+                            </button>
+                          )
+                        }
+
+                        // Regular size / text pill
                         return (
                           <button
-                            key={val}
-                            className={`px-4 py-2.5 rounded-xl text-sm font-medium border transition-all cursor-pointer ${isSelected
-                              ? 'border-primary bg-primary/10 text-primary shadow-[0_0_10px_rgba(212,175,55,0.2)]'
-                              : 'border-primary/20 text-text-muted hover:border-primary/40 hover:text-primary'
-                              }`}
-                            onClick={() => handleOptionSelect(optGroup.optionName, val)}
+                            key={val.valueName}
+                            type="button"
+                            className={`px-4 py-2.5 rounded-xl text-sm font-medium border transition-all cursor-pointer ${
+                              isSelected
+                                ? 'border-primary bg-primary/10 text-primary shadow-[0_0_10px_rgba(212,175,55,0.2)]'
+                                : 'border-primary/20 text-text-muted hover:border-primary/40 hover:text-primary'
+                            }`}
+                            onClick={() => handleOptionSelect(optGroup.optionName, val.valueName)}
                           >
-                            {val}
+                            {val.valueName}
                           </button>
                         )
                       })}

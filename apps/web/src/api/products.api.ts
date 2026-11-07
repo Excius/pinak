@@ -53,8 +53,11 @@ export interface ProductVariant {
   isActive: boolean
   image?: ProductImage | null
   optionValues?: Array<{
+    optionId?: string
+    optionValueId?: string
     optionName: string
     valueName: string
+    swatchColorHex?: string | null
   }>
 }
 
@@ -83,10 +86,13 @@ export interface VariantDetail {
   isActive: boolean
   images?: ProductImage[]
   optionValues?: Array<{
+    optionId?: string
+    optionValueId?: string
     optionName: string
     optionSlug?: string
     valueName: string
     valueSlug?: string
+    swatchColorHex?: string | null
   }>
 }
 

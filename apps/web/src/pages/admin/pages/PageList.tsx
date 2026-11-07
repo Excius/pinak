@@ -9,6 +9,7 @@ import {
   type CreatePagePayload,
 } from '../../../api/admin/admin.pages.api'
 import MarkdownRenderer from '../../../components/MarkdownRenderer'
+import RichTextEditor from '../../../components/admin/RichTextEditor'
 import toast from 'react-hot-toast'
 
 type TabType = 'active' | 'trash'
@@ -89,7 +90,7 @@ const PageList = () => {
     setForm({
       title: '',
       slug: '',
-      content: '# Title\n\nWrite your page content here...',
+      content: '<h1>Page Title</h1><p>Welcome to this page. You can easily edit this text, use headings, bullet lists, or bold key words using the toolbar above.</p>',
       metaTitle: '',
       metaDescription: '',
       isActive: true,
@@ -386,14 +387,14 @@ const PageList = () => {
             className="absolute inset-0 bg-black/80 backdrop-blur-sm"
             onClick={() => setShowModal(false)}
           />
-          <div className="relative bg-background-light border border-primary/20 rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+          <div className="relative bg-background-light border border-primary/20 rounded-3xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
             <div className="p-6 border-b border-primary/10 flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-display font-bold text-text-main-light">
                   {editingPage ? 'Edit Content Page' : 'Create New Page'}
                 </h3>
                 <p className="text-xs text-text-muted mt-0.5">
-                  Publish markdown or HTML content for legal, policy, and informational pages.
+                  Publish legal, policy, and informational pages with visual formatting tools.
                 </p>
               </div>
               <button
@@ -422,7 +423,7 @@ const PageList = () => {
                         slug: editingPage ? prev.slug : generateSlug(newTitle),
                       }))
                     }}
-                    placeholder="e.g. Privacy Policy"
+                    placeholder="e.g. Terms & Conditions"
                     className="w-full bg-background-main border border-primary/20 rounded-xl px-4 py-2.5 text-sm text-text-main-light outline-none focus:border-primary"
                   />
                 </div>
@@ -438,7 +439,7 @@ const PageList = () => {
                     onChange={(e) =>
                       setForm((prev) => ({ ...prev, slug: generateSlug(e.target.value) }))
                     }
-                    placeholder="e.g. privacy-policy"
+                    placeholder="e.g. terms-and-conditions"
                     className="w-full bg-background-main border border-primary/20 rounded-xl px-4 py-2.5 text-sm font-mono text-primary outline-none focus:border-primary"
                   />
                 </div>
@@ -453,7 +454,7 @@ const PageList = () => {
                     type="text"
                     value={form.metaTitle || ''}
                     onChange={(e) => setForm((prev) => ({ ...prev, metaTitle: e.target.value }))}
-                    placeholder="e.g. Privacy Policy | Pinak Beauty"
+                    placeholder="e.g. Terms & Conditions | Pinak Beauty"
                     className="w-full bg-background-main border border-primary/20 rounded-xl px-4 py-2.5 text-sm text-text-main-light outline-none focus:border-primary"
                   />
                 </div>
@@ -474,12 +475,17 @@ const PageList = () => {
                 </div>
               </div>
 
-              {/* Content Editor with Preview */}
+              {/* Rich Visual Editor with Live Preview */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold uppercase tracking-wider text-text-muted">
-                    Page Content (Markdown / HTML) *
-                  </label>
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-text-muted flex items-center gap-1.5">
+                      <span className="text-primary font-bold">●</span> Page Content (Rich Visual Editor) *
+                    </label>
+                    <p className="text-[11px] text-text-muted mt-0.5">
+                      Format your text visually with headings, bold, italics, lists, and links. No markdown knowledge needed.
+                    </p>
+                  </div>
                   <div className="flex gap-1 bg-background-main p-1 rounded-xl border border-primary/10">
                     <button
                       type="button"
@@ -490,7 +496,7 @@ const PageList = () => {
                           : 'text-text-muted hover:text-text-main-light'
                       }`}
                     >
-                      Write
+                      Editor
                     </button>
                     <button
                       type="button"
@@ -501,23 +507,28 @@ const PageList = () => {
                           : 'text-text-muted hover:text-text-main-light'
                       }`}
                     >
-                      Preview
+                      Live Preview
                     </button>
                   </div>
                 </div>
 
                 {activeEditorTab === 'write' ? (
-                  <textarea
-                    rows={12}
-                    required
+                  <RichTextEditor
                     value={form.content}
-                    onChange={(e) => setForm((prev) => ({ ...prev, content: e.target.value }))}
-                    placeholder="Write markdown (# Heading, **bold**, etc.) or HTML..."
-                    className="w-full bg-background-main border border-primary/20 rounded-2xl p-4 text-sm font-mono text-text-main-light outline-none focus:border-primary resize-y"
+                    onChange={(newContent) =>
+                      setForm((prev) => ({ ...prev, content: newContent }))
+                    }
+                    placeholder="Start typing your page content here..."
                   />
                 ) : (
-                  <div className="bg-background-main border border-primary/20 rounded-2xl p-6 min-h-[300px] max-h-[400px] overflow-y-auto">
-                    <MarkdownRenderer content={form.content || '*No content to preview*'} />
+                  <div className="bg-background-main border border-primary/20 rounded-2xl p-6 min-h-[340px] max-h-[500px] overflow-y-auto">
+                    <div className="mb-4 pb-3 border-b border-primary/10 flex items-center justify-between text-xs text-text-muted">
+                      <span className="font-semibold text-primary">Previewing Public Layout</span>
+                      <span className="text-[10px] bg-primary/10 px-2 py-0.5 rounded text-primary">
+                        /pages/{form.slug || 'slug'}
+                      </span>
+                    </div>
+                    <MarkdownRenderer content={form.content || '<p><em>No content to preview yet.</em></p>'} />
                   </div>
                 )}
               </div>
