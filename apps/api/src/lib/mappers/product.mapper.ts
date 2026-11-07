@@ -19,12 +19,12 @@ export const toPublicProduct = (product: ProductWithRelations) => {
   const toLeanImage = (img: any) =>
     img
       ? {
-          id: img.id,
-          url: img.url,
-          altText: img.altText,
-          isPrimary: img.isPrimary,
-          sortOrder: img.sortOrder,
-        }
+        id: img.id,
+        url: img.url,
+        altText: img.altText,
+        isPrimary: img.isPrimary,
+        sortOrder: img.sortOrder,
+      }
       : null;
 
   return {
@@ -41,13 +41,13 @@ export const toPublicProduct = (product: ProductWithRelations) => {
     weightGrams: product.weightGrams ?? null,
     weightClass: product.weightClass
       ? {
-          name: product.weightClass.name,
-          unit: product.weightClass.unit,
-        }
+        name: product.weightClass.name,
+        unit: product.weightClass.unit,
+      }
       : null,
     tags: product.tags,
     isActive: product.isActive,
-    
+
     // Brand - minimal data
     brand: product.brand ? {
       name: product.brand.name,
@@ -98,10 +98,10 @@ export const toPublicProduct = (product: ProductWithRelations) => {
         lowStockThreshold: v.lowStockThreshold,
         weightGrams: v.weightGrams ?? null,
         isActive: v.isActive,
-        
+
         // Primary image only (lean fields)
         image: toLeanImage(v.images?.find((img: any) => img.isPrimary) || v.images?.[0] || null),
-        
+
         // Option values
         optionValues: v.optionValues?.map((ov: any) => ({
           optionName: ov.optionValue?.option?.name,
@@ -155,7 +155,7 @@ export const toAdminProduct = (product: ProductWithRelations) => {
     frontImageUrl: product.frontImageUrl,
     tags: product.tags,
     isActive: product.isActive,
-    
+
     // ADMIN-ONLY fields
     createdAt: product.createdAt,
     updatedAt: product.updatedAt,
@@ -239,13 +239,13 @@ export const toAdminProduct = (product: ProductWithRelations) => {
         isDeleted: v.isDeleted,
         sortOrder: v.sortOrder,
         tags: v.tags,
-        
+
         // All images
         images: v.images || [],
-        
+
         // All option values
         optionValues: v.optionValues || [],
-        
+
         // Timestamps
         createdAt: v.createdAt,
         updatedAt: v.updatedAt,
@@ -308,7 +308,7 @@ export const toPublicVariant = (variant: any) => {
     stock: variant.stock,
     lowStockThreshold: variant.lowStockThreshold,
     isActive: variant.isActive,
-    
+
     // Images - public URLs only
     images: variant.images?.filter((img: any) => !img.isDeleted).map((img: any) => ({
       id: img.id,
@@ -317,7 +317,7 @@ export const toPublicVariant = (variant: any) => {
       isPrimary: img.isPrimary,
       sortOrder: img.sortOrder,
     })) || [],
-    
+
     // Option values
     optionValues: variant.optionValues?.map((ov: any) => ({
       optionName: ov.optionValue?.option?.name,
@@ -354,7 +354,7 @@ export const toAdminVariant = (variant: any) => {
     priceWithTax,
     sellingPriceWithTax,
     comparePriceWithTax,
-    
+
     // Ensure timestamps are included
     createdAt: variant.createdAt,
     updatedAt: variant.updatedAt,

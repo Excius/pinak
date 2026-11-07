@@ -172,7 +172,10 @@ export function FilterModal({
             <ScrollView
               className="border-y border-surface-border"
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 24, paddingVertical: 20 }}
+              contentContainerStyle={{
+                paddingHorizontal: 24,
+                paddingVertical: 20,
+              }}
             >
               <View>
                 {groups.map((group) => (

@@ -113,7 +113,7 @@ export default function CategoryProductScreen() {
         categoryId: parentCategoryId,
         subCategoryId,
         subCategoryName,
-          ...(brand ? { brand: String(brand) } : {}),
+        ...(brand ? { brand: String(brand) } : {}),
       },
     });
   };

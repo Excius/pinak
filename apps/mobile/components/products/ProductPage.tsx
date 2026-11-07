@@ -10,7 +10,11 @@ interface ProductPageProps {
   brand?: string;
 }
 
-export function ProductPage({ categoryId, categoryName, brand }: ProductPageProps) {
+export function ProductPage({
+  categoryId,
+  categoryName,
+  brand,
+}: ProductPageProps) {
   const resolvedCategoryId = categoryId || "";
   const title = categoryName ? `${categoryName} Collection` : "Products";
   const [isFilterVisible, setIsFilterVisible] = useState(false);
@@ -34,7 +38,11 @@ export function ProductPage({ categoryId, categoryName, brand }: ProductPageProp
           onPress={() => setIsFilterVisible(true)}
           className="flex-row items-center gap-2 rounded-xl border border-primary/30 bg-surface px-4 py-3"
         >
-          <MaterialCommunityIcons name="filter-variant" size={15} color="#C9A962" />
+          <MaterialCommunityIcons
+            name="filter-variant"
+            size={15}
+            color="#C9A962"
+          />
           <Text className="text-xs font-bold uppercase tracking-wider text-text-primary">
             {filterValueIds.length > 0
               ? `${filterValueIds.length} filters applied`

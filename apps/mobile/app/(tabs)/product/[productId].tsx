@@ -700,7 +700,6 @@ export default function ProductDetailScreen() {
                 opacity: !canAddToCart ? 0.5 : 1,
               }}
             >
-             
               <Text className="font-bold text-primary text-sm">Buy Now</Text>
             </TouchableOpacity>
 

@@ -84,15 +84,15 @@ export function ShopByNeed() {
           slug: string;
           children?: CategoryNode[];
         };
-        const categories = (response.data as CategoryNode[]).flatMap((category) => [
-          category,
-          ...(category.children ?? []),
-        ]);
+        const categories = (response.data as CategoryNode[]).flatMap(
+          (category) => [category, ...(category.children ?? [])],
+        );
         const matches: Record<string, string> = {};
 
         for (const need of NEEDS) {
           const match = categories.find((category) => {
-            const searchable = `${category.name} ${category.slug}`.toLowerCase();
+            const searchable =
+              `${category.name} ${category.slug}`.toLowerCase();
             return need.aliases.some((alias) => searchable.includes(alias));
           });
           if (match) matches[need.id] = match.id;

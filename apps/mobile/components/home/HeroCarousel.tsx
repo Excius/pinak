@@ -43,10 +43,10 @@ export function HeroCarousel() {
         const items = (response.data as FeaturedSection[])
           .filter((section) => section.type === "HOMEPAGE_HERO")
           .sort((a, b) => a.priority - b.priority)
-          .reduce<HeroItem[]>(
-          (heroSections, section) => {
+          .reduce<HeroItem[]>((heroSections, section) => {
             const image =
-              section.images.find((item) => item.isPrimary) ?? section.images[0];
+              section.images.find((item) => item.isPrimary) ??
+              section.images[0];
 
             if (!image) return heroSections;
 
@@ -60,9 +60,7 @@ export function HeroCarousel() {
               image: image.url,
             });
             return heroSections;
-          },
-            [],
-          );
+          }, []);
 
         setHeroItems(items);
       } catch (error) {

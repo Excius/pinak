@@ -43,11 +43,11 @@ export function CategoryList() {
     selectCategory(categoryId);
     router.push({
       pathname: "/categories/[categoryId]",
-        params: {
-          categoryId,
-          categoryName,
-          ...(brand ? { brand: String(brand) } : {}),
-        },
+      params: {
+        categoryId,
+        categoryName,
+        ...(brand ? { brand: String(brand) } : {}),
+      },
     });
   };
 

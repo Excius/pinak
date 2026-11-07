@@ -89,7 +89,9 @@ export default function FeaturedSectionDetailScreen() {
 
       {error ? (
         <View className="flex-1 items-center justify-center px-6">
-          <Text className="text-center text-sm text-text-secondary">{error}</Text>
+          <Text className="text-center text-sm text-text-secondary">
+            {error}
+          </Text>
         </View>
       ) : products.length === 0 ? (
         <View className="flex-1 items-center justify-center px-6">
@@ -107,7 +109,9 @@ export default function FeaturedSectionDetailScreen() {
             <View className="w-1/2 p-2">
               <ProductCard
                 product={item}
-                onPress={() => router.push(`/(tabs)/product/${item.id}` as never)}
+                onPress={() =>
+                  router.push(`/(tabs)/product/${item.id}` as never)
+                }
                 onAddToCart={() => {
                   if (item.canAddToCart && item.variantId) {
                     void addToCart(item.variantId, undefined, 1);
@@ -120,7 +124,7 @@ export default function FeaturedSectionDetailScreen() {
                 }}
                 isFavorite={Boolean(
                   (item.variantId && itemIdsByVariantId[item.variantId]) ||
-                    itemIdsByProductId[item.id],
+                  itemIdsByProductId[item.id],
                 )}
                 isWishlistLoading={loadingVariantId === item.variantId}
               />
