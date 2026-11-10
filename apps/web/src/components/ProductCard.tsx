@@ -10,6 +10,8 @@ interface ProductCardProps {
   imageUrl?: string
   price?: number
   priceWithTax?: number
+  sellingPrice?: number | null
+  sellingPriceWithTax?: number | null
   comparePrice?: number
   compareAtPriceWithTax?: number | null
   category?: string
@@ -25,24 +27,30 @@ const ProductCard: React.FC<ProductCardProps> = ({
   imageUrl,
   price,
   priceWithTax,
+  sellingPrice,
+  sellingPriceWithTax,
   comparePrice,
   compareAtPriceWithTax,
   category,
   badge,
   rating,
   variantId,
-  variantLabel: _variantLabel,
 }) => {
   const navigate = useNavigate()
   const { addItem } = useCart()
 
-  const displayPrice = priceWithTax ?? price
+  const isDiscounted = sellingPrice != null
+  const displayPrice = isDiscounted
+    ? (sellingPriceWithTax ?? sellingPrice)
+    : (priceWithTax ?? price)
+  const originalMRP = priceWithTax ?? price
   const displayComparePrice = compareAtPriceWithTax ?? comparePrice
 
-  const discount =
-    displayComparePrice && displayPrice && displayComparePrice > displayPrice
+  const discount = isDiscounted && price
+    ? Math.round(((price - sellingPrice!) / price) * 100)
+    : (displayComparePrice && displayPrice && displayComparePrice > displayPrice
       ? Math.round(((displayComparePrice - displayPrice) / displayComparePrice) * 100)
-      : null
+      : null)
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -129,10 +137,16 @@ const ProductCard: React.FC<ProductCardProps> = ({
               <span className="text-[10px] text-text-muted">(incl. tax)</span>
             </div>
           )}
-          {displayComparePrice && displayComparePrice > (displayPrice || 0) && (
+          {isDiscounted && originalMRP != null && originalMRP > (displayPrice || 0) ? (
             <span className="text-xs sm:text-sm text-text-muted line-through mb-4">
-              {formatPaise(displayComparePrice)}
+              {formatPaise(originalMRP)}
             </span>
+          ) : (
+            displayComparePrice && displayComparePrice > (displayPrice || 0) && (
+              <span className="text-xs sm:text-sm text-text-muted line-through mb-4">
+                {formatPaise(displayComparePrice)}
+              </span>
+            )
           )}
         </div>
         {rating != null && <div className="flex text-primary text-xs self-start">{renderStars(rating)}</div>}

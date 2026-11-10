@@ -44,6 +44,8 @@ export interface ProductVariant {
   price: number
   taxAmount?: number
   priceWithTax?: number
+  sellingPrice?: number | null
+  sellingPriceWithTax?: number | null
   compareAtPrice?: number
   compareAtPriceWithTax?: number | null
   stock: number
@@ -51,8 +53,11 @@ export interface ProductVariant {
   isActive: boolean
   image?: ProductImage | null
   optionValues?: Array<{
+    optionId?: string
+    optionValueId?: string
     optionName: string
     valueName: string
+    swatchColorHex?: string | null
   }>
 }
 
@@ -72,6 +77,8 @@ export interface VariantDetail {
   price: number
   taxAmount?: number
   priceWithTax?: number
+  sellingPrice?: number | null
+  sellingPriceWithTax?: number | null
   compareAtPrice?: number
   compareAtPriceWithTax?: number | null
   stock: number
@@ -79,10 +86,13 @@ export interface VariantDetail {
   isActive: boolean
   images?: ProductImage[]
   optionValues?: Array<{
+    optionId?: string
+    optionValueId?: string
     optionName: string
     optionSlug?: string
     valueName: string
     valueSlug?: string
+    swatchColorHex?: string | null
   }>
 }
 

@@ -301,6 +301,9 @@ const AdminOrderList = () => {
                                         <p className="text-sm font-bold text-text-main-light truncate">{item.productName}</p>
                                         <p className="text-xs text-text-muted">
                                           Qty: {item.quantity} × {formatPaise(item.price)}
+                                          {item.basePrice && item.basePrice > item.price && (
+                                            <span className="line-through ml-1.5 opacity-70">{formatPaise(item.priceWithTax ?? item.basePrice)}</span>
+                                          )}
                                           {item.productVariant?.sku && <span className="ml-2 font-mono opacity-60">SKU: {item.productVariant.sku}</span>}
                                         </p>
                                       </div>

@@ -10,6 +10,8 @@ export interface WishlistItem {
     price: number
     taxAmount?: number
     priceWithTax?: number
+    sellingPrice?: number | null
+    sellingPriceWithTax?: number | null
     comparePrice?: number
     comparePriceWithTax?: number | null
     stock: number

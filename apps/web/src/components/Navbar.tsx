@@ -25,6 +25,7 @@ const Navbar: React.FC = () => {
     { label: 'Shop', href: '/shop' },
     { label: 'Combos', href: '/combo-kits' },
     { label: 'Wishlist', href: '/wishlist' },
+    { label: 'Stores', href: '/stores' },
   ]
 
   const isActive = (path: string) => location.pathname === path
@@ -159,7 +160,7 @@ const Navbar: React.FC = () => {
                   }}
                 >
                   <span className="material-icons-outlined text-lg">
-                    {link.label === 'Shop' ? 'storefront' : link.label === 'Combos' ? 'redeem' : 'favorite_border'}
+                    {link.label === 'Shop' ? 'storefront' : link.label === 'Combos' ? 'redeem' : link.label === 'Stores' ? 'location_on' : 'favorite_border'}
                   </span>
                   {link.label}
                 </a>

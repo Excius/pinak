@@ -39,12 +39,16 @@ export class OptionRepository {
   }
 
   // OptionValue helpers
-  createOptionValue(optionId: string, data: { value: string; sortOrder?: number }) {
+  createOptionValue(
+    optionId: string,
+    data: { value: string; sortOrder?: number; swatchColorHex?: string | null },
+  ) {
     return this.prisma.optionValue.create({
       data: {
         optionId,
         value: data.value,
         sortOrder: data.sortOrder ?? 0,
+        swatchColorHex: data.swatchColorHex ?? null,
       },
     });
   }

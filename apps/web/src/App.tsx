@@ -37,6 +37,11 @@ import AdminFilterGroupList from './pages/admin/filters/FilterGroupList'
 import AdminOptionList from './pages/admin/options/OptionList'
 import AdminCouponList from './pages/admin/coupons/CouponList'
 import AdminDynamicAssetList from './pages/admin/dynamicAssets/DynamicAssetList'
+import StoreLocator from './pages/StoreLocator'
+import AdminStoreList from './pages/admin/stores/StoreList'
+import StaticPage from './pages/StaticPage'
+import AdminPageList from './pages/admin/pages/PageList'
+import WhatsAppWidget from './components/WhatsAppWidget'
 
 // Protected route wrapper
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -106,6 +111,15 @@ function AppRoutes() {
       <Route path="/combo-kits" element={<ComboKits />} />
       <Route path="/combo-kits/:slug" element={<ComboKitDetail />} />
       <Route path="/search" element={<SearchResults />} />
+      <Route path="/stores" element={<StoreLocator />} />
+
+      {/* Static / Legal Content Pages */}
+      <Route path="/pages/:slug" element={<StaticPage />} />
+      <Route path="/privacy-policy" element={<StaticPage defaultSlug="privacy-policy" />} />
+      <Route path="/terms-and-conditions" element={<StaticPage defaultSlug="terms-and-conditions" />} />
+      <Route path="/about-us" element={<StaticPage defaultSlug="about-us" />} />
+      <Route path="/shipping-policy" element={<StaticPage defaultSlug="shipping-policy" />} />
+      <Route path="/return-refund-policy" element={<StaticPage defaultSlug="return-refund-policy" />} />
 
       {/* Protected routes */}
       <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
@@ -133,6 +147,8 @@ function AppRoutes() {
         <Route path="options" element={<AdminOptionList />} />
         <Route path="coupons" element={<AdminCouponList />} />
         <Route path="dynamic-assets" element={<AdminDynamicAssetList />} />
+        <Route path="stores" element={<AdminStoreList />} />
+        <Route path="pages" element={<AdminPageList />} />
         <Route path="settings" element={<AdminSettings />} />
       </Route>
 
@@ -159,6 +175,7 @@ function App() {
             }} 
           />
           <AppRoutes />
+          <WhatsAppWidget />
         </CartProvider>
       </AuthProvider>
     </BrowserRouter>

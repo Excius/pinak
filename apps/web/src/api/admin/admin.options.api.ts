@@ -4,9 +4,10 @@ import axiosInstance from '../axiosInstance'
 
 export interface AdminOptionValue {
   id: string
+  optionId?: string
   value: string
   sortOrder: number
-  optionId: string
+  swatchColorHex?: string | null
 }
 
 export interface AdminOption {
@@ -46,12 +47,30 @@ export const deleteOption = async (id: string): Promise<void> => {
 
 // ── Option Value CRUD ──────────────────────────────────────────────────
 
-export const createOptionValue = async (optionId: string, payload: { value: string; sortOrder?: number }): Promise<AdminOptionValue> => {
+export interface CreateOptionValuePayload {
+  value: string
+  sortOrder?: number
+  swatchColorHex?: string | null
+}
+
+export interface UpdateOptionValuePayload {
+  value?: string
+  sortOrder?: number
+  swatchColorHex?: string | null
+}
+
+export const createOptionValue = async (
+  optionId: string,
+  payload: CreateOptionValuePayload,
+): Promise<AdminOptionValue> => {
   const { data } = await axiosInstance.post(`/options/${optionId}/values`, payload)
   return data.data || data
 }
 
-export const updateOptionValue = async (valueId: string, payload: { value?: string; sortOrder?: number }): Promise<AdminOptionValue> => {
+export const updateOptionValue = async (
+  valueId: string,
+  payload: UpdateOptionValuePayload,
+): Promise<AdminOptionValue> => {
   const { data } = await axiosInstance.put(`/options/values/${valueId}`, payload)
   return data.data || data
 }

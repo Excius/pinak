@@ -167,19 +167,33 @@ const Wishlist: React.FC = () => {
                     </p>
                   )}
                   <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      {variant && (
-                        <span className="font-bold text-lg text-primary">
-                          {formatPaise(variant.priceWithTax ?? variant.price)}
-                        </span>
-                      )}
-                      {(variant?.comparePriceWithTax ?? variant?.comparePrice) && 
-                       (variant.comparePriceWithTax ?? variant.comparePrice)! > (variant.priceWithTax ?? variant.price) && (
-                        <span className="text-sm text-text-muted line-through">
-                          {formatPaise((variant.comparePriceWithTax ?? variant.comparePrice)!)}
-                        </span>
-                      )}
-                    </div>
+                    {variant && (
+                      variant.sellingPrice != null ? (
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-bold text-lg text-primary">
+                            {formatPaise(variant.sellingPriceWithTax ?? variant.sellingPrice)}
+                          </span>
+                          <span className="text-sm text-text-muted line-through">
+                            {formatPaise(variant.priceWithTax ?? variant.price)}
+                          </span>
+                          <span className="text-xs font-semibold text-green-400 bg-green-500/10 px-1.5 py-0.5 rounded">
+                            {Math.round(((variant.price - variant.sellingPrice) / variant.price) * 100)}% OFF
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-bold text-lg text-primary">
+                            {formatPaise(variant.priceWithTax ?? variant.price)}
+                          </span>
+                          {(variant?.comparePriceWithTax ?? variant?.comparePrice) && 
+                           (variant.comparePriceWithTax ?? variant.comparePrice)! > (variant.priceWithTax ?? variant.price) && (
+                            <span className="text-sm text-text-muted line-through">
+                              {formatPaise((variant.comparePriceWithTax ?? variant.comparePrice)!)}
+                            </span>
+                          )}
+                        </div>
+                      )
+                    )}
                   </div>
                   <button
                     className="w-full py-2.5 rounded-xl border border-primary/30 text-primary hover:bg-primary hover:text-black text-sm font-semibold transition-all cursor-pointer active:scale-95"

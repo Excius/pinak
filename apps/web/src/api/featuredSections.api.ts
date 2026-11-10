@@ -17,6 +17,10 @@ export interface FeaturedSection {
       variants?: Array<{
         id: string
         price: number
+        priceWithTax?: number
+        sellingPrice?: number | null
+        sellingPriceWithTax?: number | null
+        taxAmount?: number
         comparePrice?: number
         images?: Array<{ url: string; altText?: string }>
       }>

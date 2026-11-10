@@ -14,7 +14,12 @@ export interface AdminProductVariant {
   id: string
   sku: string
   price: number
+  priceWithTax?: number
+  sellingPrice?: number | null
+  sellingPriceWithTax?: number | null
+  taxAmount?: number
   compareAtPrice: number | null
+  compareAtPriceWithTax?: number | null
   stock: number
   lowStockThreshold: number | null
   isActive: boolean
@@ -63,10 +68,21 @@ export const getAllProductsAdmin = async (params?: AdminProductListParams) => {
   const { data: resp } = await axiosInstance.get('/products/admin/all', { params })
   return {
     items: (resp?.data?.items || []) as AdminProduct[],
-    total: resp?.data?.total || 0,
-    page: resp?.data?.page || 1,
-    limit: resp?.data?.limit || 10,
-    totalPages: resp?.data?.totalPages || 1
+    total: resp?.data?.pagination?.total ?? resp?.data?.total ?? 0,
+    page: resp?.data?.pagination?.page ?? resp?.data?.page ?? 1,
+    limit: resp?.data?.pagination?.limit ?? resp?.data?.limit ?? 10,
+    totalPages: resp?.data?.pagination?.totalPages ?? resp?.data?.totalPages ?? 1
+  }
+}
+
+export const getDeletedProductsAdmin = async (params?: AdminProductListParams) => {
+  const { data: resp } = await axiosInstance.get('/products/admin/deleted', { params })
+  return {
+    items: (resp?.data?.items || []) as AdminProduct[],
+    total: resp?.data?.pagination?.total ?? resp?.data?.total ?? 0,
+    page: resp?.data?.pagination?.page ?? resp?.data?.page ?? 1,
+    limit: resp?.data?.pagination?.limit ?? resp?.data?.limit ?? 10,
+    totalPages: resp?.data?.pagination?.totalPages ?? resp?.data?.totalPages ?? 1
   }
 }
 
@@ -100,6 +116,10 @@ export const restoreProductAdmin = async (id: string) => {
   await axiosInstance.patch(`/products/admin/${id}/restore`)
 }
 
+export const hardDeleteProductAdmin = async (id: string) => {
+  await axiosInstance.delete(`/products/admin/${id}/hard`)
+}
+
 // ── Product ↔ Category junction ────────────────────────────────────────
 
 export const setProductCategoriesAdmin = async (productId: string, categoryIds: string[]) => {
@@ -110,7 +130,7 @@ export const setProductCategoriesAdmin = async (productId: string, categoryIds: 
 
 export const createProductVariantAdmin = async (
   productId: string,
-  payload: { sku: string; price: number; stock: number; comparePrice?: number; optionValueIds?: string[] }
+  payload: { sku: string; price: number; sellingPrice?: number | null; stock: number; comparePrice?: number; optionValueIds?: string[] }
 ): Promise<AdminProductVariant> => {
   const { data: resp } = await axiosInstance.post(`/products/admin/${productId}/variants`, payload)
   return resp?.data as AdminProductVariant
@@ -118,10 +138,22 @@ export const createProductVariantAdmin = async (
 
 export const updateProductVariantAdmin = async (
   id: string,
-  payload: { sku?: string; price?: number; stock?: number; optionValueIds?: string[] }
+  payload: { sku?: string; price?: number; sellingPrice?: number | null; stock?: number; optionValueIds?: string[] }
 ): Promise<AdminProductVariant> => {
   const { data: resp } = await axiosInstance.put(`/products/admin/variants/${id}`, payload)
   return resp?.data as AdminProductVariant
+}
+
+export const deleteProductVariantAdmin = async (id: string) => {
+  await axiosInstance.delete(`/products/admin/variants/${id}`)
+}
+
+export const restoreProductVariantAdmin = async (id: string) => {
+  await axiosInstance.patch(`/products/admin/variants/${id}/restore`)
+}
+
+export const hardDeleteProductVariantAdmin = async (id: string) => {
+  await axiosInstance.delete(`/products/admin/variants/${id}/hard`)
 }
 
 // ── Image Management ───────────────────────────────────────────────────
@@ -137,6 +169,11 @@ export const addProductImageAdmin = async (variantId: string, formData: FormData
 
 export const deleteProductImageAdmin = async (imageId: string) => {
   await axiosInstance.delete(`/products/admin/images/${imageId}`)
+}
+
+export const setPrimaryImageAdmin = async (imageId: string) => {
+  const { data: resp } = await axiosInstance.patch(`/products/admin/images/${imageId}/primary`)
+  return resp?.data
 }
 
 // ── Related Products ───────────────────────────────────────────────────
