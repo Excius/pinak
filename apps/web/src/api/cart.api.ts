@@ -166,7 +166,7 @@ export interface Order {
   id: string;
   userId: string;
   status: "PENDING" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED";
-  paymentStatus: "PENDING" | "COMPLETED" | "FAILED";
+  paymentStatus: "PENDING" | "COMPLETED" | "FAILED" | "REFUNDING" | "REFUNDED" | "REFUND_FAILED";
   subtotalAmount: number;
   taxAmount: number;
   discountAmount: number;

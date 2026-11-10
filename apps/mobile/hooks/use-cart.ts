@@ -102,6 +102,7 @@ interface UseCartReturn {
   cart: Cart | null;
   loading: boolean;
   isAddingToCart: boolean;
+  addingItemKey: string | null;
   error: string | null;
   itemCount: number;
   fetchCart: () => Promise<void>;
@@ -123,6 +124,7 @@ function useCartState(): UseCartReturn {
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [addingItemKey, setAddingItemKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(
     null,
@@ -147,42 +149,39 @@ function useCartState(): UseCartReturn {
     setAppliedCoupon(null);
   }, []);
 
-  const applyCoupon = useCallback(
-    async (code: string) => {
-      const trimmedCode = code.trim();
-      const currentCart = cartRef.current;
-      if (!trimmedCode || !currentCart) return false;
+  const applyCoupon = useCallback(async (code: string) => {
+    const trimmedCode = code.trim();
+    const currentCart = cartRef.current;
+    if (!trimmedCode || !currentCart) return false;
 
-      setApplyingCoupon(true);
-      try {
-        const response = await couponService.validateCoupon(
-          trimmedCode,
-          currentCart.subtotal,
-        );
-        setAppliedCoupon(response.data);
-        Toast.show({
-          type: "success",
-          text1: "Coupon applied",
-          text2: `${response.data.coupon.code} saved ${formatRupeesFromPaise(response.data.discountAmount)}`,
-          position: "bottom",
-        });
-        return true;
-      } catch (err: any) {
-        const errorMessage = getErrorMessage(err, "Unable to apply coupon");
-        setAppliedCoupon(null);
-        Toast.show({
-          type: "error",
-          text1: "Invalid coupon",
-          text2: errorMessage,
-          position: "bottom",
-        });
-        return false;
-      } finally {
-        setApplyingCoupon(false);
-      }
-    },
-    [],
-  );
+    setApplyingCoupon(true);
+    try {
+      const response = await couponService.validateCoupon(
+        trimmedCode,
+        currentCart.subtotal,
+      );
+      setAppliedCoupon(response.data);
+      Toast.show({
+        type: "success",
+        text1: "Coupon applied",
+        text2: `${response.data.coupon.code} saved ${formatRupeesFromPaise(response.data.discountAmount)}`,
+        position: "bottom",
+      });
+      return true;
+    } catch (err: any) {
+      const errorMessage = getErrorMessage(err, "Unable to apply coupon");
+      setAppliedCoupon(null);
+      Toast.show({
+        type: "error",
+        text1: "Invalid coupon",
+        text2: errorMessage,
+        position: "bottom",
+      });
+      return false;
+    } finally {
+      setApplyingCoupon(false);
+    }
+  }, []);
   const isAuthError = (err: any) => {
     const status = err?.status || err?.response?.status;
     return status === 401 || status === 403;
@@ -228,6 +227,7 @@ function useCartState(): UseCartReturn {
       quantity: number = 1,
     ) => {
       setIsAddingToCart(true);
+      setAddingItemKey(productVariantId ?? comboKitId ?? null);
       setLoading(true);
       setError(null);
       try {
@@ -267,6 +267,7 @@ function useCartState(): UseCartReturn {
         console.error("Add to cart error:", err);
       } finally {
         setIsAddingToCart(false);
+        setAddingItemKey(null);
         setLoading(false);
       }
     },
@@ -282,6 +283,7 @@ function useCartState(): UseCartReturn {
       const currentItem = currentCart?.items.find((item) => item.id === itemId);
       if (!currentCart || !currentItem) return;
 
+      setLoading(true);
       pendingQuantities.current[itemId] = quantity;
       const optimisticCart = {
         ...currentCart,
@@ -337,6 +339,8 @@ function useCartState(): UseCartReturn {
           setError(errorMessage);
           console.error("Update cart error:", err);
           void fetchCart();
+        } finally {
+          setLoading(false);
         }
       }, 300);
     },
@@ -432,6 +436,7 @@ function useCartState(): UseCartReturn {
     cart,
     loading,
     isAddingToCart,
+    addingItemKey,
     error,
     itemCount,
     fetchCart,

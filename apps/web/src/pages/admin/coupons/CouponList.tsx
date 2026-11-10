@@ -422,6 +422,9 @@ const CouponList: React.FC = () => {
               <th className="text-left px-6 py-4 text-xs font-bold text-text-muted uppercase tracking-wider">
                 Validity
               </th>
+              <th className="text-left px-6 py-4 text-xs font-bold text-text-muted uppercase tracking-wider">
+                Usage
+              </th>
               <th className="text-center px-6 py-4 text-xs font-bold text-text-muted uppercase tracking-wider">
                 Status
               </th>
@@ -434,7 +437,7 @@ const CouponList: React.FC = () => {
             {coupons.length === 0 && (
               <tr>
                 <td
-                  colSpan={5}
+                  colSpan={6}
                   className="px-6 py-12 text-center text-text-muted text-sm"
                 >
                   No coupons found. Click "New Coupon" to create one.
@@ -476,6 +479,28 @@ const CouponList: React.FC = () => {
                       className={`text-[10px] font-medium mt-0.5 ${isValid ? "text-green-400" : "text-red-400"}`}
                     >
                       {isValid ? "Currently Valid" : "Expired / Not Started"}
+                    </p>
+                  </td>
+                  <td className="px-6 py-4">
+                    <p className="text-sm text-text-main-light font-medium">
+                      {coupon.usageCount ?? 0}
+                      {coupon.maxTotalUsers
+                        ? ` / ${coupon.maxTotalUsers}`
+                        : ""}{" "}
+                      used
+                    </p>
+                    <p className="text-[10px] text-text-muted mt-0.5">
+                      {coupon.uniqueUsers ?? 0} user
+                      {(coupon.uniqueUsers ?? 0) === 1 ? "" : "s"}
+                      {coupon.maxUsesPerUser
+                        ? ` · max ${coupon.maxUsesPerUser}/user`
+                        : ""}
+                    </p>
+                    <p className="text-[10px] text-text-muted">
+                      Discount given: ₹
+                      {((coupon.totalDiscountGiven ?? 0) / 100).toLocaleString(
+                        "en-IN",
+                      )}
                     </p>
                   </td>
                   <td className="px-6 py-4 text-center">

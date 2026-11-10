@@ -116,7 +116,6 @@ export const toPublicProduct = (product: ProductWithRelations) => {
           compareAtPriceWithTax,
           stock: v.stock,
           lowStockThreshold: v.lowStockThreshold,
-          weightGrams: v.weightGrams ?? null,
           isActive: v.isActive,
 
           // Primary image only (lean fields)

@@ -1,4 +1,8 @@
-import { AuthProviderType, Prisma, PrismaClient } from "../generated/prisma/client.js";
+import {
+  AuthProviderType,
+  Prisma,
+  PrismaClient,
+} from "../generated/prisma/client.js";
 import { InternalServerError, NotFoundError } from "../lib/error.js";
 import logger from "../lib/logger.js";
 import { normalizeEmail } from "../lib/email.js";

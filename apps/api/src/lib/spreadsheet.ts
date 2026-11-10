@@ -53,9 +53,14 @@ export function parseSpreadsheet(
 
   if (isBinaryWorkbook(bufferOrString)) {
     try {
-      const workbook = XLSX.read(bufferOrString, { type: "buffer", raw: false });
+      const workbook = XLSX.read(bufferOrString, {
+        type: "buffer",
+        raw: false,
+      });
       const firstSheetName = workbook.SheetNames[0];
-      const sheet = firstSheetName ? workbook.Sheets[firstSheetName] : undefined;
+      const sheet = firstSheetName
+        ? workbook.Sheets[firstSheetName]
+        : undefined;
       if (sheet) {
         rawRows = XLSX.utils.sheet_to_json<string[]>(sheet, {
           header: 1,
@@ -85,7 +90,10 @@ function isBinaryWorkbook(input: Buffer | string): input is Buffer {
   if (!Buffer.isBuffer(input) || input.length < 4) return false;
   const isZip = input[0] === 0x50 && input[1] === 0x4b;
   const isOle =
-    input[0] === 0xd0 && input[1] === 0xcf && input[2] === 0x11 && input[3] === 0xe0;
+    input[0] === 0xd0 &&
+    input[1] === 0xcf &&
+    input[2] === 0x11 &&
+    input[3] === 0xe0;
   return isZip || isOle;
 }
 
@@ -197,7 +205,9 @@ function processRawRows(rawRows: string[][]): SpreadsheetParseResult {
 
     // Check if this row is the header
     const normalizedCells = row.map((c) =>
-      String(c).toLowerCase().replace(/[^a-z0-9]/g, ""),
+      String(c)
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, ""),
     );
     const hasName = normalizedCells.some(
       (c) => c === "name" || c === "itemname" || c === "productname",
@@ -261,7 +271,8 @@ function processRawRows(rawRows: string[][]): SpreadsheetParseResult {
   }
 
   const items: ParsedInventoryRow[] = [];
-  const skippedRows: { rowNumber: number; reason: string; raw: string[] }[] = [];
+  const skippedRows: { rowNumber: number; reason: string; raw: string[] }[] =
+    [];
 
   // Step 2: Parse data rows
   for (let i = headerRowIndex + 1; i < rawRows.length; i++) {

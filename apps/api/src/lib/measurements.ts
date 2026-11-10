@@ -18,7 +18,11 @@ type MeasurementSource = {
 };
 
 export type ResolvedMeasurements = {
-  weight: { grams: number; weightClassId: string | null; source: string } | null;
+  weight: {
+    grams: number;
+    weightClassId: string | null;
+    source: string;
+  } | null;
   dimensions: {
     length: number | null;
     width: number | null;
@@ -30,7 +34,9 @@ export type ResolvedMeasurements = {
 
 const hasWeight = (m?: MeasurementSource | null) => m?.weightGrams != null;
 const hasDimensions = (m?: MeasurementSource | null) =>
-  m?.dimensionLength != null || m?.dimensionWidth != null || m?.dimensionHeight != null;
+  m?.dimensionLength != null ||
+  m?.dimensionWidth != null ||
+  m?.dimensionHeight != null;
 
 export function resolveVariantMeasurements(
   variant: (MeasurementSource & { optionValues?: any[] }) | null | undefined,
@@ -42,24 +48,34 @@ export function resolveVariantMeasurements(
   const fromOptions = (variant.optionValues ?? [])
     .map((row: any) => row?.optionValue ?? row)
     .filter(Boolean)
-    .sort((a: any, b: any) => (a.option?.sortOrder ?? 0) - (b.option?.sortOrder ?? 0))
+    .sort(
+      (a: any, b: any) =>
+        (a.option?.sortOrder ?? 0) - (b.option?.sortOrder ?? 0),
+    )
     .map((ov: any) => ({
-      label: `option ${ov.option?.name ?? ""} ${ov.value ?? ov.valueName ?? ""}`.replace(/\s+/g, " ").trim(),
+      label: `option ${ov.option?.name ?? ""} ${ov.value ?? ov.valueName ?? ""}`
+        .replace(/\s+/g, " ")
+        .trim(),
       m: ov as MeasurementSource,
     }));
 
-  const sources: { label: string; m: MeasurementSource | null | undefined }[] = [
-    { label: "variant", m: variant },
-    ...fromOptions,
-    { label: "product", m: product },
-  ];
+  const sources: { label: string; m: MeasurementSource | null | undefined }[] =
+    [
+      { label: "variant", m: variant },
+      ...fromOptions,
+      { label: "product", m: product },
+    ];
 
   const w = sources.find((s) => hasWeight(s.m));
   const d = sources.find((s) => hasDimensions(s.m));
 
   return {
     weight: w
-      ? { grams: w.m!.weightGrams as number, weightClassId: w.m!.weightClassId ?? null, source: w.label }
+      ? {
+          grams: w.m!.weightGrams as number,
+          weightClassId: w.m!.weightClassId ?? null,
+          source: w.label,
+        }
       : null,
     dimensions: d
       ? {

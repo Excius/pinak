@@ -26,4 +26,8 @@ export interface IPaymentGateway {
     amount?: number,
     reason?: string,
   ): Promise<any>;
+  /** Reads a refund back from the gateway to verify its current status. */
+  fetchRefund?(refundId: string): Promise<any>;
+  /** Lists the refunds already issued against a payment. */
+  fetchPaymentRefunds?(paymentId: string): Promise<any>;
 }

@@ -15,6 +15,10 @@ export interface AdminCoupon {
   isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
+  /** Present on list responses only. */
+  usageCount?: number;
+  totalDiscountGiven?: number;
+  uniqueUsers?: number;
 }
 
 export interface AdminCouponListParams {

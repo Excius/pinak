@@ -26,6 +26,23 @@ export class CouponRepository {
     });
   }
 
+  /** Includes soft-deleted coupons: an order placed before deletion still counts. */
+  async findByCodeIncludingDeleted(
+    code: string,
+    tx?: Prisma.TransactionClient,
+  ) {
+    return this.getDb(tx).coupon.findFirst({
+      where: { code: { equals: code, mode: "insensitive" } },
+    });
+  }
+
+  async findUsageByOrder(orderId: string, tx?: Prisma.TransactionClient) {
+    return this.getDb(tx).couponUsage.findFirst({
+      where: { oderId: orderId },
+      select: { id: true },
+    });
+  }
+
   async countUserUsage(
     couponId: string,
     userId: string,
@@ -91,14 +108,41 @@ export class CouponRepository {
     return { items, total };
   }
 
+  /** Aggregated usage per coupon (redemptions, total discount, distinct users). */
+  async getUsageStats(couponIds: string[], tx?: Prisma.TransactionClient) {
+    const stats = new Map<
+      string,
+      { usageCount: number; totalDiscountGiven: number; uniqueUsers: number }
+    >();
+    if (couponIds.length === 0) return stats;
+
+    const db = this.getDb(tx);
+    const perUser = await db.couponUsage.groupBy({
+      by: ["couponId", "userId"],
+      where: { couponId: { in: couponIds } },
+      _count: { _all: true },
+      _sum: { discountAmount: true },
+    });
+
+    for (const row of perUser) {
+      const entry = stats.get(row.couponId) ?? {
+        usageCount: 0,
+        totalDiscountGiven: 0,
+        uniqueUsers: 0,
+      };
+      entry.usageCount += row._count._all;
+      entry.totalDiscountGiven += row._sum.discountAmount ?? 0;
+      entry.uniqueUsers += 1;
+      stats.set(row.couponId, entry);
+    }
+    return stats;
+  }
+
   async findById(id: string, tx?: Prisma.TransactionClient) {
     return this.getDb(tx).coupon.findUnique({ where: { id } });
   }
 
-  async create(
-    data: Prisma.CouponCreateInput,
-    tx?: Prisma.TransactionClient,
-  ) {
+  async create(data: Prisma.CouponCreateInput, tx?: Prisma.TransactionClient) {
     return this.getDb(tx).coupon.create({ data });
   }
 

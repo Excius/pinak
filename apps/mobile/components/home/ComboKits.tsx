@@ -95,56 +95,58 @@ export function ComboKits() {
           const imageUrl = getComboKitImageUrl(kit);
 
           return (
-          <TouchableOpacity
-            key={kit.id}
-            onPress={() => handleKitPress(kit.id)}
-            className="mr-4 w-64 overflow-hidden rounded-2xl border border-surface-border bg-surface active:opacity-75"
-          >
-            {/* Kit Image */}
-            <View className="relative aspect-square bg-surface-light">
-              {imageUrl ? (
-                <Image
-                  source={{ uri: imageUrl }}
-                  className="h-full w-full"
-                  resizeMode="cover"
-                />
-              ) : (
-                <View className="h-full w-full items-center justify-center bg-surface-light">
-                  <Text className="text-xs text-text-secondary">No Image</Text>
+            <TouchableOpacity
+              key={kit.id}
+              onPress={() => handleKitPress(kit.id)}
+              className="mr-4 w-64 overflow-hidden rounded-2xl border border-surface-border bg-surface active:opacity-75"
+            >
+              {/* Kit Image */}
+              <View className="relative aspect-square bg-surface-light">
+                {imageUrl ? (
+                  <Image
+                    source={{ uri: imageUrl }}
+                    className="h-full w-full"
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <View className="h-full w-full items-center justify-center bg-surface-light">
+                    <Text className="text-xs text-text-secondary">
+                      No Image
+                    </Text>
+                  </View>
+                )}
+                {/* Badge */}
+                <View className="absolute right-3 top-3 rounded-lg bg-primary px-2 py-1">
+                  <Text className="text-[0.6rem] font-bold uppercase text-background">
+                    {kit.purchasedCount > 20 ? "Bestseller" : "New"}
+                  </Text>
                 </View>
-              )}
-              {/* Badge */}
-              <View className="absolute right-3 top-3 rounded-lg bg-primary px-2 py-1">
-                <Text className="text-[0.6rem] font-bold uppercase text-background">
-                  {kit.purchasedCount > 20 ? "Bestseller" : "New"}
-                </Text>
               </View>
-            </View>
 
-            {/* Kit Info */}
-            <View className="items-center p-4 text-center">
-              <Text
-                className="mb-1 text-lg font-bold text-text-primary font-display"
-                numberOfLines={2}
-              >
-                {kit.name}
-              </Text>
-              <Text
-                className="mb-3 text-xs text-text-secondary"
-                numberOfLines={1}
-              >
-                {kit.description || "Curated collection"}
-              </Text>
-              <Text className="mb-4 text-base font-bold text-primary">
-                {formatRupeesFromPaise(kit.price)}
-              </Text>
-              <View className="w-full rounded-full border border-primary py-2.5 px-4">
-                <Text className="text-center text-sm font-bold text-primary">
-                  View Kit
+              {/* Kit Info */}
+              <View className="items-center p-4 text-center">
+                <Text
+                  className="mb-1 text-lg font-bold text-text-primary font-display"
+                  numberOfLines={2}
+                >
+                  {kit.name}
                 </Text>
+                <Text
+                  className="mb-3 text-xs text-text-secondary"
+                  numberOfLines={1}
+                >
+                  {kit.description || "Curated collection"}
+                </Text>
+                <Text className="mb-4 text-base font-bold text-primary">
+                  {formatRupeesFromPaise(kit.price)}
+                </Text>
+                <View className="w-full rounded-full border border-primary py-2.5 px-4">
+                  <Text className="text-center text-sm font-bold text-primary">
+                    View Kit
+                  </Text>
+                </View>
               </View>
-            </View>
-          </TouchableOpacity>
+            </TouchableOpacity>
           );
         })}
       </ScrollView>

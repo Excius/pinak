@@ -21,7 +21,14 @@ const ORDER_STATUSES: OrderStatus[] = [
   "DELIVERED",
   "CANCELLED",
 ];
-const PAYMENT_STATUSES: PaymentStatus[] = ["PENDING", "COMPLETED", "FAILED"];
+const PAYMENT_STATUSES: PaymentStatus[] = [
+  "PENDING",
+  "COMPLETED",
+  "FAILED",
+  "REFUNDING",
+  "REFUNDED",
+  "REFUND_FAILED",
+];
 
 const statusColors: Record<OrderStatus, string> = {
   PENDING: "bg-yellow-50 text-yellow-700 border-yellow-200",
@@ -43,12 +50,18 @@ const paymentColors: Record<PaymentStatus, string> = {
   PENDING: "bg-yellow-50 text-yellow-700",
   COMPLETED: "bg-green-50 text-green-700",
   FAILED: "bg-red-50 text-red-700",
+  REFUNDING: "bg-orange-50 text-orange-700",
+  REFUNDED: "bg-blue-50 text-blue-700",
+  REFUND_FAILED: "bg-red-100 text-red-800",
 };
 
 const paymentDotColors: Record<PaymentStatus, string> = {
   PENDING: "bg-yellow-500",
   COMPLETED: "bg-green-500",
   FAILED: "bg-red-500",
+  REFUNDING: "bg-orange-500",
+  REFUNDED: "bg-blue-500",
+  REFUND_FAILED: "bg-red-600",
 };
 
 const formatDate = (dateStr: string) => {

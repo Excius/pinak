@@ -11,7 +11,10 @@ import {
 import { CouponService } from "./coupon.service.js";
 import { getShippingFeePaise } from "../lib/storeSettings.js";
 import { ensureTaxRates, variantTaxRate } from "../lib/taxRates.js";
-import { StockReservationService } from "./stockReservation.service.js";
+import {
+  InsufficientStockOnConfirmError,
+  StockReservationService,
+} from "./stockReservation.service.js";
 import {
   IPaymentGateway,
   PaymentWebhookPayload,
@@ -57,7 +60,13 @@ type OrderResponse = {
   id: string;
   userId: string;
   status: "PENDING" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED";
-  paymentStatus: "PENDING" | "COMPLETED" | "FAILED";
+  paymentStatus:
+    | "PENDING"
+    | "COMPLETED"
+    | "FAILED"
+    | "REFUNDING"
+    | "REFUNDED"
+    | "REFUND_FAILED";
   subtotalAmount: number;
   taxAmount: number;
   discountAmount: number;
@@ -95,7 +104,31 @@ const ORDER_STATUS_VALUES = [
   "DELIVERED",
   "CANCELLED",
 ] as const;
-const PAYMENT_STATUS_VALUES = ["PENDING", "COMPLETED", "FAILED"] as const;
+const PAYMENT_STATUS_VALUES = [
+  "PENDING",
+  "COMPLETED",
+  "FAILED",
+  "REFUNDING",
+  "REFUNDED",
+  "REFUND_FAILED",
+] as const;
+
+/** Result of asking the payment gateway to refund a payment. */
+type GatewayRefund = {
+  issued: boolean;
+  refundId: string | null;
+  refundStatus: "PENDING" | "PROCESSED" | "FAILED";
+};
+
+/** Payment status for an order whose refund was just attempted. */
+const refundPaymentStatus = (
+  refund: GatewayRefund | null,
+): "REFUNDING" | "REFUNDED" | "REFUND_FAILED" => {
+  if (!refund?.issued || refund.refundStatus === "FAILED") {
+    return "REFUND_FAILED";
+  }
+  return refund.refundStatus === "PROCESSED" ? "REFUNDED" : "REFUNDING";
+};
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
@@ -446,9 +479,9 @@ export class OrderService {
 
                 const maxTaxRate = Math.max(
                   0,
-                  ...comboKit.items.map((comboItem) =>
-                    variantTaxRate(comboItem.productVariant),
-                  ),
+                  ...comboKit.items.map(
+                    (comboItem) => variantTaxRate(comboItem.productVariant)
+                  )
                 );
 
                 const componentSnapshot = comboKit.items.map((comboItem) => {
@@ -563,13 +596,10 @@ export class OrderService {
                 const variant = pItem.variant;
                 const effectivePrice = variant.sellingPrice ?? variant.price;
                 const taxRate = variantTaxRate(variant);
-                const priceWithTax =
-                  variant.price + Math.round((variant.price * taxRate) / 100);
-                const sellingPriceWithTax =
-                  variant.sellingPrice != null
-                    ? variant.sellingPrice +
-                      Math.round((variant.sellingPrice * taxRate) / 100)
-                    : null;
+                const priceWithTax = variant.price + Math.round((variant.price * taxRate) / 100);
+                const sellingPriceWithTax = variant.sellingPrice != null
+                  ? variant.sellingPrice + Math.round((variant.sellingPrice * taxRate) / 100)
+                  : null;
 
                 orderItems.push({
                   orderId: "",
@@ -680,15 +710,9 @@ export class OrderService {
             }));
             await this.orderRepository.createItems(orderItemPayload, tx);
 
-            if (couponCode) {
-              await this.couponService.applyCoupon(
-                order.id,
-                couponCode,
-                userId,
-                subtotalAmount,
-                tx,
-              );
-            }
+            // Coupon usage is intentionally NOT recorded here: it is only counted once
+            // payment succeeds (see confirmPayment*), so abandoned checkouts don't burn
+            // the coupon's limits.
 
             await tx.order.update({
               where: { id: order.id },
@@ -807,7 +831,14 @@ export class OrderService {
   }
 
   async cancelOrder(userId: string, orderId: string) {
-    return this.prisma.$transaction(
+    // Only a paid order that is being processed has money to give back.
+    let refundTarget = null as {
+      orderId: string;
+      paymentId: string;
+      amount: number;
+    } | null;
+
+    const cancelled = await this.prisma.$transaction(
       async (tx) => {
         const order = await this.orderRepository.findByIdWithItemsForUser(
           orderId,
@@ -866,17 +897,234 @@ export class OrderService {
           await this.stockReservationService.releaseReservations(order.id, tx);
         }
 
+        const willRefund =
+          order.status === "PROCESSING" &&
+          order.paymentStatus === "COMPLETED" &&
+          !!order.gatewayPaymentId;
+
         const updated = await this.orderRepository.updateStatusAndPayment(
           order.id,
           "CANCELLED",
-          order.paymentStatus === "COMPLETED" ? "COMPLETED" : "FAILED",
+          willRefund
+            ? "REFUNDING"
+            : order.paymentStatus === "COMPLETED"
+              ? "COMPLETED"
+              : "FAILED",
           tx,
         );
+
+        if (willRefund && order.gatewayPaymentId) {
+          refundTarget = {
+            orderId: order.id,
+            paymentId: order.gatewayPaymentId,
+            amount: order.totalAmount,
+          };
+          // Persist the intent with the cancellation so a crash before the gateway
+          // call still leaves a visible "refund pending" trace.
+          const existingBreakup = isRecord(order.getBreakup)
+            ? order.getBreakup
+            : {};
+          await tx.order.update({
+            where: { id: order.id },
+            data: {
+              getBreakup: {
+                ...existingBreakup,
+                paymentRefund: {
+                  refunded: false,
+                  status: "REFUNDING",
+                  amount: order.totalAmount,
+                  reason: "Cancelled by customer",
+                  updatedAt: new Date().toISOString(),
+                },
+              },
+            },
+          });
+        }
 
         return this.mapOrder(updated);
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
     );
+
+    // The transaction is committed, so a second cancel can no longer reach this point
+    // (the order is CANCELLED) and the refund is issued at most once.
+    if (refundTarget) {
+      await this.settleRefund(
+        refundTarget.orderId,
+        refundTarget.paymentId,
+        refundTarget.amount,
+        "Cancelled by customer",
+      );
+    }
+    return cancelled;
+  }
+
+  /** Asks the gateway to refund a payment, then reads the refund back to verify its state. */
+  private async initiateGatewayRefund(
+    paymentId: string,
+    amount: number,
+    reason: string,
+  ): Promise<GatewayRefund> {
+    try {
+      if (!this.paymentService.refundPayment) {
+        throw new Error("Payment gateway does not support refunds");
+      }
+      const created = await this.paymentService.refundPayment(
+        paymentId,
+        amount,
+        reason,
+      );
+      const refundId = typeof created?.id === "string" ? created.id : null;
+      let gatewayStatus: unknown = created?.status;
+
+      if (refundId && this.paymentService.fetchRefund) {
+        try {
+          const fetched = await this.paymentService.fetchRefund(refundId);
+          gatewayStatus = fetched?.status ?? gatewayStatus;
+        } catch (fetchErr) {
+          // The refund exists; the refund.processed webhook will confirm it.
+          console.error(`Could not verify refund ${refundId}:`, fetchErr);
+        }
+      }
+
+      return {
+        issued: true,
+        refundId,
+        refundStatus:
+          gatewayStatus === "processed"
+            ? "PROCESSED"
+            : gatewayStatus === "failed"
+              ? "FAILED"
+              : "PENDING",
+      };
+    } catch (err) {
+      // Idempotency: the payment was already refunded (earlier attempt, dashboard, ...).
+      // Nothing to retry; report the state of the refund that already exists.
+      if (this.isAlreadyRefundedError(err)) {
+        return this.describeExistingRefund(paymentId);
+      }
+      console.error(
+        `Refund request failed for payment ${paymentId}. Manual refund required:`,
+        err,
+      );
+      return { issued: false, refundId: null, refundStatus: "FAILED" };
+    }
+  }
+
+  private isAlreadyRefundedError(err: unknown): boolean {
+    const description = (err as { error?: { description?: unknown } })?.error
+      ?.description;
+    return (
+      typeof description === "string" &&
+      description.toLowerCase().includes("fully refunded")
+    );
+  }
+
+  private async describeExistingRefund(
+    paymentId: string,
+  ): Promise<GatewayRefund> {
+    try {
+      const list = await this.paymentService.fetchPaymentRefunds?.(paymentId);
+      const items: Array<{ id?: unknown; status?: unknown }> = Array.isArray(
+        list?.items,
+      )
+        ? list.items
+        : [];
+      const processed = items.find((r) => r.status === "processed");
+      const chosen = processed ?? items.find((r) => r.status === "pending");
+      return {
+        issued: true,
+        refundId: typeof chosen?.id === "string" ? chosen.id : null,
+        refundStatus: processed ? "PROCESSED" : "PENDING",
+      };
+    } catch (fetchErr) {
+      console.error(
+        `Payment ${paymentId} is already refunded but the refund could not be read back:`,
+        fetchErr,
+      );
+      return { issued: true, refundId: null, refundStatus: "PENDING" };
+    }
+  }
+
+  /**
+   * Refunds a cancelled order's payment and records the outcome. The order stays
+   * REFUNDING until Razorpay confirms (verified now, or via the refund webhook).
+   */
+  private async settleRefund(
+    orderId: string,
+    paymentId: string,
+    amount: number,
+    reason: string,
+  ): Promise<GatewayRefund> {
+    const refund = await this.initiateGatewayRefund(paymentId, amount, reason);
+
+    const current = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      select: { getBreakup: true },
+    });
+    const existingBreakup = isRecord(current?.getBreakup)
+      ? current.getBreakup
+      : {};
+    const previous = isRecord(existingBreakup.paymentRefund)
+      ? existingBreakup.paymentRefund
+      : {};
+
+    // A refund.processed webhook may already have finalised the order: never downgrade it.
+    await this.prisma.order.updateMany({
+      where: { id: orderId, paymentStatus: { not: "REFUNDED" } },
+      data: {
+        paymentStatus: refundPaymentStatus(refund),
+        getBreakup: {
+          ...existingBreakup,
+          paymentRefund: {
+            ...previous,
+            refunded: refund.issued && refund.refundStatus === "PROCESSED",
+            status: refund.issued ? refund.refundStatus : "FAILED",
+            refundId: refund.refundId,
+            reason,
+            updatedAt: new Date().toISOString(),
+          },
+        },
+      },
+    });
+    return refund;
+  }
+
+  /** Applies a Razorpay refund.processed / refund.failed webhook to the matching order. */
+  async handleRefundEvent(
+    paymentId: string,
+    refund: { id: string },
+    outcome: "processed" | "failed",
+  ) {
+    const order = await this.prisma.order.findFirst({
+      where: { gatewayPaymentId: paymentId },
+      select: { id: true, paymentStatus: true, getBreakup: true },
+    });
+    if (!order || order.paymentStatus === "REFUNDED") return;
+
+    const existingBreakup = isRecord(order.getBreakup) ? order.getBreakup : {};
+    const previous = isRecord(existingBreakup.paymentRefund)
+      ? existingBreakup.paymentRefund
+      : {};
+    const processed = outcome === "processed";
+
+    await this.prisma.order.update({
+      where: { id: order.id },
+      data: {
+        // A failed refund means the money was not returned and needs manual follow-up.
+        paymentStatus: processed ? ("REFUNDED" as const) : ("REFUND_FAILED" as const),
+        getBreakup: {
+          ...existingBreakup,
+          paymentRefund: {
+            ...previous,
+            refunded: processed,
+            status: processed ? "PROCESSED" : "FAILED",
+            refundId: refund.id,
+            updatedAt: new Date().toISOString(),
+          },
+        },
+      },
+    });
   }
 
   async listOrdersAdmin(filters: AdminOrderFilters) {
@@ -905,7 +1153,13 @@ export class OrderService {
 
   async updatePaymentStatusAdmin(
     orderId: string,
-    paymentStatus: "PENDING" | "COMPLETED" | "FAILED",
+    paymentStatus:
+      | "PENDING"
+      | "COMPLETED"
+      | "FAILED"
+      | "REFUNDING"
+      | "REFUNDED"
+      | "REFUND_FAILED",
   ) {
     const order = await this.orderRepository.findById(orderId);
     if (!order) {
@@ -916,6 +1170,59 @@ export class OrderService {
       paymentStatus,
     );
     return this.mapOrderAdmin(updated);
+  }
+
+  /**
+   * A payment was captured but the stock is gone (another order confirmed first).
+   * Cancels the order and refunds the payment. Safe against concurrent callers
+   * (webhook + browser verify): only the caller that atomically claims the order
+   * issues the refund. Returns the message to surface to the caller.
+   */
+  private async cancelAndRefundUnfulfillableOrder(
+    orderId: string,
+    paymentData: { paymentId?: string; signature?: string; method?: string },
+  ): Promise<string> {
+    const reason = "Insufficient stock at payment confirmation";
+
+    // Claim the order; a concurrent handler or an already-paid order means nothing to do.
+    const claimed = await this.prisma.order.updateMany({
+      where: {
+        id: orderId,
+        status: { not: "CANCELLED" },
+        paymentStatus: { not: "COMPLETED" },
+      },
+      data: {
+        status: "CANCELLED",
+        paymentStatus: paymentData.paymentId ? "REFUNDING" : "FAILED",
+        gatewayPaymentId: paymentData.paymentId,
+        gatewaySignature: paymentData.signature,
+        paymentMethod: paymentData.method,
+      },
+    });
+    if (claimed.count === 0) {
+      return "This order has already been processed.";
+    }
+
+    await this.stockReservationService.releaseReservations(orderId);
+
+    if (!paymentData.paymentId) {
+      return "This item just went out of stock and your order was cancelled.";
+    }
+
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      select: { totalAmount: true },
+    });
+    const refund = await this.settleRefund(
+      orderId,
+      paymentData.paymentId,
+      order?.totalAmount ?? 0,
+      reason,
+    );
+
+    return refund.issued
+      ? "This item just went out of stock. Your payment is being refunded."
+      : "This item just went out of stock and your order was cancelled. Your refund is being processed.";
   }
 
   async confirmPayment(orderId: string, paymentData: PaymentWebhookPayload) {
@@ -940,19 +1247,14 @@ export class OrderService {
         const isReserved =
           await this.stockReservationService.isReservationActive(orderId);
         if (!isReserved) {
-          let refundIssued = false;
-          if (paymentData.paymentId && this.paymentService.refundPayment) {
-            try {
-              await this.paymentService.refundPayment(
+          const refund = paymentData.paymentId
+            ? await this.initiateGatewayRefund(
                 paymentData.paymentId,
                 order.totalAmount,
                 "Stock reservation expired",
-              );
-              refundIssued = true;
-            } catch (refundErr) {
-              console.error("Auto-refund error for expired order:", refundErr);
-            }
-          }
+              )
+            : null;
+          const refundIssued = refund?.issued ?? false;
 
           const existingBreakup = isRecord(order.getBreakup)
             ? order.getBreakup
@@ -961,11 +1263,13 @@ export class OrderService {
             where: { id: orderId },
             data: {
               status: "CANCELLED",
-              paymentStatus: refundIssued ? "COMPLETED" : "FAILED",
+              paymentStatus: refundPaymentStatus(refund),
               getBreakup: {
                 ...existingBreakup,
                 paymentRefund: {
                   refunded: refundIssued,
+                  status: refund?.refundStatus ?? "FAILED",
+                  refundId: refund?.refundId ?? null,
                   reason: "Stock reservation expired",
                   updatedAt: new Date().toISOString(),
                 },
@@ -982,6 +1286,7 @@ export class OrderService {
         }
 
         await this.stockReservationService.confirmReservations(orderId, tx);
+        await this.couponService.recordUsageForOrder(order, tx);
         await this.cartRepository.clearCartByUser(order.userId, tx);
 
         const existingBreakup = isRecord(order.getBreakup)
@@ -1011,7 +1316,15 @@ export class OrderService {
         return this.mapOrder(updated);
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
-    );
+    ).catch(async (err: unknown): Promise<never> => {
+      // The transaction rolled back, so no stock was deducted: refund instead of leaving a paid, unfulfilled order.
+      if (err instanceof InsufficientStockOnConfirmError) {
+        throw new ValidationError(
+          await this.cancelAndRefundUnfulfillableOrder(orderId, paymentData),
+        );
+      }
+      throw err;
+    });
 
     if (expiredMessage) {
       throw new ValidationError(expiredMessage);
@@ -1074,6 +1387,7 @@ export class OrderService {
     paymentData: { paymentId: string; signature: string; method?: string },
   ) {
     let expiredMessage: string | null = null;
+    let resolvedOrderId: string | undefined;
     const result = await this.prisma.$transaction(
       async (tx) => {
         const order = await tx.order.findFirst({
@@ -1086,6 +1400,8 @@ export class OrderService {
             `Order not found for gatewayOrderId: ${gatewayOrderId}`,
           );
         }
+
+        resolvedOrderId = order.id;
 
         if (order.paymentStatus === "COMPLETED") {
           return this.mapOrder(order);
@@ -1100,19 +1416,14 @@ export class OrderService {
         const isReserved =
           await this.stockReservationService.isReservationActive(order.id);
         if (!isReserved) {
-          let refundIssued = false;
-          if (paymentData.paymentId && this.paymentService.refundPayment) {
-            try {
-              await this.paymentService.refundPayment(
+          const refund = paymentData.paymentId
+            ? await this.initiateGatewayRefund(
                 paymentData.paymentId,
                 order.totalAmount,
                 "Stock reservation expired",
-              );
-              refundIssued = true;
-            } catch (refundErr) {
-              console.error("Auto-refund error for expired order:", refundErr);
-            }
-          }
+              )
+            : null;
+          const refundIssued = refund?.issued ?? false;
 
           const existingBreakup = isRecord(order.getBreakup)
             ? order.getBreakup
@@ -1124,11 +1435,13 @@ export class OrderService {
               gatewaySignature: paymentData.signature,
               paymentMethod: paymentData.method,
               status: "CANCELLED",
-              paymentStatus: refundIssued ? "COMPLETED" : "FAILED",
+              paymentStatus: refundPaymentStatus(refund),
               getBreakup: {
                 ...existingBreakup,
                 paymentRefund: {
                   refunded: refundIssued,
+                  status: refund?.refundStatus ?? "FAILED",
+                  refundId: refund?.refundId ?? null,
                   reason: "Stock reservation expired",
                   updatedAt: new Date().toISOString(),
                 },
@@ -1145,6 +1458,7 @@ export class OrderService {
         }
 
         await this.stockReservationService.confirmReservations(order.id, tx);
+        await this.couponService.recordUsageForOrder(order, tx);
         await this.cartRepository.clearCartByUser(order.userId, tx);
 
         const existingBreakup = isRecord(order.getBreakup)
@@ -1177,7 +1491,15 @@ export class OrderService {
         return this.mapOrder(updated!);
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
-    );
+    ).catch(async (err: unknown): Promise<never> => {
+      // The transaction rolled back, so no stock was deducted: refund instead of leaving a paid, unfulfilled order.
+      if (err instanceof InsufficientStockOnConfirmError && resolvedOrderId) {
+        throw new ValidationError(
+          await this.cancelAndRefundUnfulfillableOrder(resolvedOrderId, paymentData),
+        );
+      }
+      throw err;
+    });
 
     if (expiredMessage) {
       throw new ValidationError(expiredMessage);

@@ -391,9 +391,12 @@ const OrderDetail: React.FC = () => {
               <div className="flex justify-between pt-2">
                 <span className="text-text-muted">Payment Status</span>
                 <span
-                  className={`font-bold text-xs uppercase tracking-wider ${order.paymentStatus === "COMPLETED" ? "text-green-400" : order.paymentStatus === "FAILED" ? "text-red-400" : "text-yellow-400"}`}
+                  className={`font-bold text-xs uppercase tracking-wider ${order.paymentStatus === "COMPLETED" ? "text-green-400" : order.paymentStatus === "FAILED" ? "text-red-400" : (order.paymentStatus === "REFUNDING" || order.paymentStatus === "REFUND_FAILED") ? "text-orange-400" : order.paymentStatus === "REFUNDED" ? "text-blue-400" : "text-yellow-400"}`}
                 >
-                  {order.paymentStatus}
+                  {order.paymentStatus === "REFUNDING" ||
+                  order.paymentStatus === "REFUND_FAILED"
+                    ? "Refund in progress"
+                    : order.paymentStatus}
                 </span>
               </div>
             </div>

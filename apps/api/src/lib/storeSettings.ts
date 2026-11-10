@@ -82,9 +82,13 @@ export function buildSupplier(
     pan: pick(SUPPLIER_KEYS.pan, DEFAULT_SUPPLIER.pan),
     state,
     stateCode: stateCodeFor(state) ?? DEFAULT_SUPPLIER.stateCode,
-    addressLine1: pick(SUPPLIER_KEYS.addressLine1, DEFAULT_SUPPLIER.addressLine1),
+    addressLine1: pick(
+      SUPPLIER_KEYS.addressLine1,
+      DEFAULT_SUPPLIER.addressLine1,
+    ),
     // line 2 may legitimately be empty
-    addressLine2: map.get(SUPPLIER_KEYS.addressLine2) ?? DEFAULT_SUPPLIER.addressLine2,
+    addressLine2:
+      map.get(SUPPLIER_KEYS.addressLine2) ?? DEFAULT_SUPPLIER.addressLine2,
     city: pick(SUPPLIER_KEYS.city, DEFAULT_SUPPLIER.city),
     pincode: pick(SUPPLIER_KEYS.pincode, DEFAULT_SUPPLIER.pincode),
     email: pick(SUPPLIER_KEYS.email, DEFAULT_SUPPLIER.email),

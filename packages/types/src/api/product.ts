@@ -1158,9 +1158,11 @@ export const ProductTypes = {
   },
 
   ImportInventory: {
-    body: z.object({
-      csv: z.string().optional(),
-    }).passthrough(),
+    body: z
+      .object({
+        csv: z.string().optional(),
+      })
+      .passthrough(),
     params: z.object({}),
     query: z.object({}),
     response: z.object({
