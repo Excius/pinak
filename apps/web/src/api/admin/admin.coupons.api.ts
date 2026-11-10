@@ -18,6 +18,7 @@ export interface AdminCoupon {
 }
 
 export interface AdminCouponListParams {
+  deleted?: boolean;
   page?: number;
   limit?: number;
   isActive?: boolean;
@@ -25,19 +26,24 @@ export interface AdminCouponListParams {
 }
 
 export const getAllCouponsAdmin = async (params?: AdminCouponListParams) => {
-  const { data } = await axiosInstance.get("/coupons/admin", { params });
-  return data.data as {
-    items: AdminCoupon[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
+  const { data } = await axiosInstance.get("/coupons/admin", {
+    params: params
+      ? {
+          ...params,
+          isActive:
+            params.isActive === undefined ? undefined : String(params.isActive),
+        }
+      : undefined,
+  });
+  // Backend envelope: { items, pagination: { total, page, limit, totalPages } }
+  const pg = data?.data?.pagination ?? {};
+  return {
+    items: (data?.data?.items || []) as AdminCoupon[],
+    total: (pg.total as number) || 0,
+    page: (pg.page as number) || 1,
+    limit: (pg.limit as number) || 20,
+    totalPages: (pg.totalPages as number) || 1,
   };
-};
-
-export const getCouponByIdAdmin = async (id: string): Promise<AdminCoupon> => {
-  const { data } = await axiosInstance.get(`/coupons/admin/${id}`);
-  return data.data;
 };
 
 export const createCouponAdmin = async (

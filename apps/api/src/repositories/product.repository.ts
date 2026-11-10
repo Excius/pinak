@@ -4,6 +4,7 @@ import {
   PaginatedResponse,
 } from "../types/pagination.types.js";
 import { NotFoundError } from "../lib/error.js";
+import { syncProductFilterIndex } from "../lib/filterIndex.js";
 
 // TODO: Implement analytics and reporting features
 // - Product view tracking and analytics
@@ -16,6 +17,14 @@ import { NotFoundError } from "../lib/error.js";
 
 export class ProductRepository {
   constructor(private prisma: PrismaClient) {}
+
+  /**
+   * Runs read-only queries (e.g. list + count) on the shared pool. These used to run in an
+   * interactive transaction, which pins a connection and made busy pages fail with P2028.
+   */
+  private runReadOnly<T>(fn: (db: PrismaClient) => Promise<T>): Promise<T> {
+    return fn(this.prisma);
+  }
 
   // Expose prisma client for service layer business logic
   get prismaClient() {
@@ -83,7 +92,7 @@ export class ProductRepository {
       ? { [pagination.sortBy]: pagination.sortOrder || "asc" }
       : { createdAt: "desc" };
 
-    return this.prisma.$transaction(async (tx) => {
+    return this.runReadOnly(async (tx) => {
       const [products, total] = await Promise.all([
         tx.product.findMany({
           where,
@@ -247,7 +256,7 @@ export class ProductRepository {
       ? { [pagination.sortBy]: pagination.sortOrder || "asc" }
       : { createdAt: "desc" };
 
-    return this.prisma.$transaction(async (tx) => {
+    return this.runReadOnly(async (tx) => {
       const [products, total] = await Promise.all([
         tx.product.findMany({
           where,
@@ -346,7 +355,7 @@ export class ProductRepository {
       { createdAt: "desc" },
     ];
 
-    return this.prisma.$transaction(async (tx) => {
+    return this.runReadOnly(async (tx) => {
       const [featuredProducts, total] = await Promise.all([
         tx.featuredProduct.findMany({
           where,
@@ -432,7 +441,7 @@ export class ProductRepository {
       createdAt: "desc",
     };
 
-    return this.prisma.$transaction(async (tx) => {
+    return this.runReadOnly(async (tx) => {
       const [featuredProducts, total] = await Promise.all([
         tx.featuredProduct.findMany({
           where: {
@@ -519,6 +528,8 @@ export class ProductRepository {
   getProductVariants(productId: string) {
     return this.prisma.productVariant.findMany({
       where: { productId, isDeleted: false, isActive: true },
+      // Stable order so the storefront always opens the same (first) variant
+      orderBy: { createdAt: "asc" },
       include: {
         images: true,
         optionValues: {
@@ -582,10 +593,14 @@ export class ProductRepository {
           include: { filterValue: { include: { filterGroup: true } } },
         },
         variants: {
+          orderBy: { createdAt: "asc" },
           include: {
             images: true,
             optionValues: {
               include: { optionValue: { include: { option: true } } },
+            },
+            filterValues: {
+              include: { filterValue: { include: { filterGroup: true } } },
             },
           },
         },
@@ -664,7 +679,7 @@ export class ProductRepository {
       ? { [pagination.sortBy]: pagination.sortOrder || "asc" }
       : { createdAt: "desc" };
 
-    return this.prisma.$transaction(async (tx) => {
+    return this.runReadOnly(async (tx) => {
       const [products, total] = await Promise.all([
         tx.product.findMany({
           where,
@@ -736,7 +751,7 @@ export class ProductRepository {
       }),
     };
 
-    return this.prisma.$transaction(async (tx) => {
+    return this.runReadOnly(async (tx) => {
       const [products, total] = await Promise.all([
         tx.product.findMany({
           where,
@@ -780,6 +795,13 @@ export class ProductRepository {
     const where: Prisma.ProductWhereInput = {
       isDeleted: false,
       isActive: status === "ACTIVE",
+      ...(pagination.search && {
+        OR: [
+          { name: { contains: pagination.search, mode: "insensitive" } },
+          { description: { contains: pagination.search, mode: "insensitive" } },
+          { model: { contains: pagination.search, mode: "insensitive" } },
+        ],
+      }),
       ...(pagination.categoryId && {
         categories: { some: { categoryId: pagination.categoryId } },
       }),
@@ -804,7 +826,7 @@ export class ProductRepository {
       ? { [pagination.sortBy]: pagination.sortOrder || "asc" }
       : { createdAt: "desc" };
 
-    return this.prisma.$transaction(async (tx) => {
+    return this.runReadOnly(async (tx) => {
       const [products, total] = await Promise.all([
         tx.product.findMany({
           where,
@@ -812,9 +834,12 @@ export class ProductRepository {
           take,
           orderBy,
           include: {
+            brand: { select: { id: true, name: true, slug: true } },
+            taxClass: { select: { id: true, name: true, rate: true } },
             variants: {
+              where: { isDeleted: false },
               include: {
-                images: true,
+                images: { where: { isDeleted: false } },
               },
             },
           },
@@ -853,9 +878,107 @@ export class ProductRepository {
   }
 
   updateProductStatus(id: string, isActive: boolean) {
-    return this.prisma.product.update({
-      where: { id },
-      data: { isActive },
+    return this.prisma.$transaction(async (tx) => {
+      const product = await tx.product.update({
+        where: { id },
+        data: { isActive },
+      });
+      await tx.productVariant.updateMany({
+        where: { productId: id, isDeleted: false },
+        data: { isActive },
+      });
+      return product;
+    });
+  }
+
+  bulkUpdateProductStatus(productIds: string[], isActive: boolean) {
+    return this.prisma.$transaction(async (tx) => {
+      const productResult = await tx.product.updateMany({
+        where: { id: { in: productIds }, isDeleted: false },
+        data: { isActive },
+      });
+      await tx.productVariant.updateMany({
+        where: { productId: { in: productIds }, isDeleted: false },
+        data: { isActive },
+      });
+      return productResult.count;
+    });
+  }
+
+  findProductByNameOrSlug(
+    name: string,
+    slug: string,
+    options?: { includeDeleted?: boolean },
+  ) {
+    return this.prisma.product.findFirst({
+      where: {
+        ...(options?.includeDeleted ? {} : { isDeleted: false }),
+        OR: [
+          { name: { equals: name.trim(), mode: "insensitive" } },
+          { slug: { equals: slug.trim(), mode: "insensitive" } },
+        ],
+      },
+      include: {
+        variants: options?.includeDeleted
+          ? true
+          : { where: { isDeleted: false } },
+        brand: true,
+        taxClass: true,
+      },
+    });
+  }
+
+  /**
+   * Check if a product slug already exists in the database (including inactive & deleted).
+   */
+  findProductBySlugRaw(slug: string) {
+    return this.prisma.product.findUnique({
+      where: { slug },
+      select: { id: true, slug: true, isDeleted: true, isActive: true, name: true },
+    });
+  }
+
+  getProductsForExport(filters: {
+    status?: "ALL" | "ACTIVE" | "INACTIVE";
+    brandId?: string;
+    categoryId?: string;
+    search?: string;
+  }) {
+    const where: Prisma.ProductWhereInput = {
+      isDeleted: false,
+      ...(filters.status === "ACTIVE" ? { isActive: true } : {}),
+      ...(filters.status === "INACTIVE" ? { isActive: false } : {}),
+      ...(filters.brandId ? { brandId: filters.brandId } : {}),
+      ...(filters.categoryId
+        ? { categories: { some: { categoryId: filters.categoryId } } }
+        : {}),
+      ...(filters.search
+        ? {
+            OR: [
+              { name: { contains: filters.search, mode: "insensitive" } },
+              { description: { contains: filters.search, mode: "insensitive" } },
+              { model: { contains: filters.search, mode: "insensitive" } },
+            ],
+          }
+        : {}),
+    };
+
+    return this.prisma.product.findMany({
+      where,
+      include: {
+        brand: true,
+        taxClass: true,
+        categories: {
+          include: {
+            category: true,
+          },
+        },
+        variants: {
+          where: { isDeleted: false },
+          orderBy: { createdAt: "asc" },
+        },
+      },
+      orderBy: [{ brand: { name: "asc" } }, { name: "asc" }],
     });
   }
 
@@ -953,17 +1076,26 @@ export class ProductRepository {
     });
   }
 
+  // Deleting/restoring a variant changes which filters its product exposes.
   softDeleteProductVariant(id: string) {
-    return this.prisma.productVariant.update({
-      where: { id },
-      data: { isDeleted: true },
+    return this.prisma.$transaction(async (tx) => {
+      const variant = await tx.productVariant.update({
+        where: { id },
+        data: { isDeleted: true },
+      });
+      await syncProductFilterIndex(tx, variant.productId);
+      return variant;
     });
   }
 
   restoreProductVariant(id: string) {
-    return this.prisma.productVariant.update({
-      where: { id },
-      data: { isDeleted: false },
+    return this.prisma.$transaction(async (tx) => {
+      const variant = await tx.productVariant.update({
+        where: { id },
+        data: { isDeleted: false },
+      });
+      await syncProductFilterIndex(tx, variant.productId);
+      return variant;
     });
   }
 
@@ -1052,15 +1184,93 @@ export class ProductRepository {
     );
   }
 
+  /**
+   * Permanently removes a product and everything that hangs off it, atomically.
+   * Variants and their images have no cascade, so they are removed explicitly.
+   * Order items from cancelled orders are detached from the product/variants
+   * (the FKs are nullable); their original ids/SKU are written into
+   * `variantDetails` so the order history stays traceable.
+   *
+   * Returns the image URLs stored for the product so the caller can
+   * remove the files from object storage after the commit.
+   */
   hardDeleteProduct(id: string) {
-    return this.prisma.product.delete({
-      where: { id },
+    return this.prisma.$transaction(async (tx) => {
+      const product = await tx.product.findUniqueOrThrow({
+        where: { id },
+        select: { frontImageUrl: true },
+      });
+      const variants = await tx.productVariant.findMany({
+        where: { productId: id },
+        select: { id: true, sku: true },
+      });
+      const variantIds = variants.map((v) => v.id);
+      const skuByVariantId = new Map(variants.map((v) => [v.id, v.sku]));
+
+      const orderItems = await tx.orderItem.findMany({
+        where: {
+          OR: [
+            { productId: id },
+            ...(variantIds.length
+              ? [{ productVariantId: { in: variantIds } }]
+              : []),
+          ],
+        },
+        select: { id: true, productVariantId: true, variantDetails: true },
+      });
+      for (const item of orderItems) {
+        const existing =
+          item.variantDetails &&
+          typeof item.variantDetails === "object" &&
+          !Array.isArray(item.variantDetails)
+            ? (item.variantDetails as Record<string, Prisma.InputJsonValue>)
+            : item.variantDetails != null
+              ? { previousVariantDetails: item.variantDetails as Prisma.InputJsonValue }
+              : {};
+        await tx.orderItem.update({
+          where: { id: item.id },
+          data: {
+            productId: null,
+            productVariantId: null,
+            variantDetails: {
+              ...existing,
+              deletedProductId: id,
+              ...(item.productVariantId
+                ? {
+                    deletedVariantId: item.productVariantId,
+                    deletedVariantSku: skuByVariantId.get(item.productVariantId) ?? null,
+                  }
+                : {}),
+            },
+          },
+        });
+      }
+
+      const imageUrls: string[] = [];
+      if (product.frontImageUrl) imageUrls.push(product.frontImageUrl);
+
+      if (variantIds.length > 0) {
+        const images = await tx.productImage.findMany({
+          where: { productVariantId: { in: variantIds } },
+          select: { url: true },
+        });
+        imageUrls.push(...images.map((img) => img.url));
+        await tx.productImage.deleteMany({
+          where: { productVariantId: { in: variantIds } },
+        });
+        await tx.productVariant.deleteMany({ where: { id: { in: variantIds } } });
+      }
+
+      await tx.product.delete({ where: { id } });
+      return { imageUrls };
     });
   }
 
   hardDeleteProductVariant(id: string) {
-    return this.prisma.productVariant.delete({
-      where: { id },
+    return this.prisma.$transaction(async (tx) => {
+      const variant = await tx.productVariant.delete({ where: { id } });
+      await syncProductFilterIndex(tx, variant.productId);
+      return variant;
     });
   }
 
@@ -1118,18 +1328,279 @@ export class ProductRepository {
   /** Look up a Brand by slug or name (first match). */
   findBrandBySlugOrName(slugOrName: string) {
     return this.prisma.brand.findFirst({
-      where: { OR: [{ slug: slugOrName }, { name: slugOrName }] },
+      where: {
+        OR: [
+          { slug: { equals: slugOrName.trim(), mode: "insensitive" } },
+          { name: { equals: slugOrName.trim(), mode: "insensitive" } },
+        ],
+      },
     });
   }
 
-  /** Create a new Brand row. */
-  createBrand(name: string, slug: string) {
-    return this.prisma.brand.create({ data: { name, slug } });
+  /** Create a new Brand row with unique slug guarantee. */
+  async createBrand(name: string, slug: string) {
+    let candidateSlug = slug;
+    let counter = 1;
+    while (await this.prisma.brand.findUnique({ where: { slug: candidateSlug } })) {
+      candidateSlug = `${slug}-${counter}`;
+      counter++;
+    }
+    return this.prisma.brand.create({ data: { name, slug: candidateSlug } });
   }
 
   /** Look up a Category by PK (for existence checks inside the product service). */
   findCategoryById(id: string) {
     return this.prisma.category.findUnique({ where: { id } });
+  }
+
+  /** Look up a Category by slug or name. */
+  findCategoryBySlugOrName(slugOrName: string) {
+    return this.prisma.category.findFirst({
+      where: {
+        OR: [
+          { slug: { equals: slugOrName.trim(), mode: "insensitive" } },
+          { name: { equals: slugOrName.trim(), mode: "insensitive" } },
+        ],
+      },
+    });
+  }
+
+  /** Create a new Category with unique slug guarantee. */
+  async createCategory(name: string, slug: string) {
+    let candidateSlug = slug;
+    let counter = 1;
+    while (await this.prisma.category.findUnique({ where: { slug: candidateSlug } })) {
+      candidateSlug = `${slug}-${counter}`;
+      counter++;
+    }
+    return this.prisma.category.create({ data: { name, slug: candidateSlug } });
+  }
+
+  /** Look up a TaxClass by rate with tolerance. */
+  async findTaxClassByRate(ratePercent: number) {
+    const classes = await this.prisma.taxClass.findMany();
+    return (
+      classes.find((tc) => Math.abs(tc.rate - ratePercent) < 0.05) ?? null
+    );
+  }
+
+  /** Create or find a TaxClass safely without name collisions. */
+  async createTaxClass(name: string, rate: number) {
+    const existing = await this.prisma.taxClass.findFirst({
+      where: {
+        OR: [
+          { rate: { gte: rate - 0.01, lte: rate + 0.01 } },
+          { name: { equals: name.trim(), mode: "insensitive" } },
+        ],
+      },
+    });
+    if (existing) return existing;
+    return this.prisma.taxClass.create({ data: { name, rate } });
+  }
+
+  /**
+   * Creates product and variant atomically with isActive: false (for spreadsheet import review).
+   */
+  async createImportedProductAndVariant(params: {
+    name: string;
+    slug: string;
+    brandId?: string;
+    taxClassId?: string;
+    categoryIds?: string[];
+    hsn?: string;
+    mrpPaise: number;
+    sellingPricePaise?: number;
+    stock?: number;
+    sku: string;
+    ean?: string;
+    weightGrams?: number;
+  }) {
+    return this.prisma.$transaction(async (tx) => {
+      // In-transaction collision check for slug
+      let slugToUse = params.slug;
+      const existingSlug = await tx.product.findUnique({
+        where: { slug: slugToUse },
+        select: { id: true },
+      });
+      if (existingSlug) {
+        slugToUse = `${slugToUse}-${Date.now().toString(36)}-${Math.floor(100 + Math.random() * 900)}`;
+      }
+
+      // In-transaction collision check for SKU
+      let skuToUse = params.sku;
+      const existingSku = await tx.productVariant.findUnique({
+        where: { sku: skuToUse },
+        select: { id: true },
+      });
+      if (existingSku) {
+        skuToUse = `${skuToUse}-${Date.now().toString(36)}`;
+      }
+
+      const product = await tx.product.create({
+        data: {
+          name: params.name,
+          slug: slugToUse,
+          brandId: params.brandId,
+          taxClassId: params.taxClassId,
+          model: params.hsn,
+          tags: params.hsn ? [`HSN:${params.hsn}`] : [],
+          requiresShipping: true,
+          isActive: false, // Inactive on import so admin can review and activate
+          isDeleted: false,
+          ...(params.categoryIds?.length
+            ? {
+                categories: {
+                  create: params.categoryIds.map((categoryId) => ({ categoryId })),
+                },
+              }
+            : {}),
+        },
+      });
+
+      const variant = await tx.productVariant.create({
+        data: {
+          productId: product.id,
+          sku: skuToUse,
+          price: params.mrpPaise,
+          sellingPrice: params.sellingPricePaise ?? null,
+          stock: params.stock ?? 0,
+          ean: params.ean ?? null,
+          weightGrams: params.weightGrams ?? null,
+          isActive: false, // Inactive on import
+          isDeleted: false,
+        },
+      });
+
+      return { product, variant };
+    });
+  }
+
+  /**
+   * Updates existing product and its variant for spreadsheet import.
+   * Restores isDeleted: false if the product or variant was soft-deleted.
+   */
+  async updateImportedProductAndVariant(params: {
+    productId: string;
+    variantId?: string;
+    /** Always add a new variant (new SKU on an existing product) instead of updating one. */
+    createVariant?: boolean;
+    brandId?: string;
+    taxClassId?: string;
+    categoryIds?: string[];
+    hsn?: string;
+    mrpPaise: number;
+    sellingPricePaise?: number;
+    stock?: number;
+    sku?: string;
+    ean?: string;
+    weightGrams?: number;
+  }) {
+    return this.prisma.$transaction(async (tx) => {
+      const current = await tx.product.findUniqueOrThrow({
+        where: { id: params.productId },
+        select: { isDeleted: true, tags: true },
+      });
+      const wasDeleted = current.isDeleted;
+
+      const product = await tx.product.update({
+        where: { id: params.productId },
+        data: {
+          isDeleted: false, // restore if soft-deleted
+          // A restored product goes back through review rather than straight to the storefront
+          ...(wasDeleted ? { isActive: false } : {}),
+          ...(params.brandId ? { brandId: params.brandId } : {}),
+          ...(params.taxClassId ? { taxClassId: params.taxClassId } : {}),
+          ...(params.hsn
+            ? {
+                model: params.hsn,
+                tags: [
+                  ...current.tags.filter((t) => !t.startsWith("HSN:")),
+                  `HSN:${params.hsn}`,
+                ],
+              }
+            : {}),
+        },
+      });
+
+      if (params.categoryIds?.length) {
+        // Additive: existing category links are kept, duplicates ignored
+        await tx.productCategory.createMany({
+          data: params.categoryIds.map((categoryId) => ({
+            productId: params.productId,
+            categoryId,
+          })),
+          skipDuplicates: true,
+        });
+      }
+
+      let variant;
+      if (params.variantId && !params.createVariant) {
+        const currentVariant = await tx.productVariant.findUniqueOrThrow({
+          where: { id: params.variantId },
+          select: { isDeleted: true },
+        });
+        variant = await tx.productVariant.update({
+          where: { id: params.variantId },
+          data: {
+            isDeleted: false, // restore if soft-deleted
+            ...(currentVariant.isDeleted || wasDeleted ? { isActive: false } : {}),
+            price: params.mrpPaise,
+            ...(params.sellingPricePaise !== undefined
+              ? { sellingPrice: params.sellingPricePaise }
+              : {}),
+            ...(params.stock !== undefined ? { stock: params.stock } : {}),
+            ...(params.ean ? { ean: params.ean } : {}),
+            ...(params.weightGrams ? { weightGrams: params.weightGrams } : {}),
+          },
+        });
+      } else {
+        const firstVariant = params.createVariant
+          ? null
+          : await tx.productVariant.findFirst({
+              where: { productId: params.productId },
+            });
+        if (firstVariant) {
+          variant = await tx.productVariant.update({
+            where: { id: firstVariant.id },
+            data: {
+              isDeleted: false, // restore if soft-deleted
+              ...(firstVariant.isDeleted || wasDeleted ? { isActive: false } : {}),
+              price: params.mrpPaise,
+              ...(params.sellingPricePaise !== undefined
+                ? { sellingPrice: params.sellingPricePaise }
+                : {}),
+              ...(params.stock !== undefined ? { stock: params.stock } : {}),
+              ...(params.ean ? { ean: params.ean } : {}),
+              ...(params.weightGrams ? { weightGrams: params.weightGrams } : {}),
+            },
+          });
+        } else {
+          let skuToUse = params.sku || `SKU-${Date.now()}`;
+          const existingSku = await tx.productVariant.findUnique({
+            where: { sku: skuToUse },
+            select: { id: true },
+          });
+          if (existingSku) {
+            skuToUse = `${skuToUse}-${Date.now().toString(36)}`;
+          }
+          variant = await tx.productVariant.create({
+            data: {
+              productId: params.productId,
+              sku: skuToUse,
+              price: params.mrpPaise,
+              sellingPrice: params.sellingPricePaise ?? null,
+              stock: params.stock ?? 0,
+              ean: params.ean ?? null,
+              weightGrams: params.weightGrams ?? null,
+              isActive: false,
+              isDeleted: false,
+            },
+          });
+        }
+      }
+
+      return { product, variant };
+    });
   }
 
   /** Look up a FeaturedSection by PK. */

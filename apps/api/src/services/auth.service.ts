@@ -195,79 +195,107 @@ export class AuthService {
       throw new UnauthorizedError("Invalid or expired refresh token");
     }
 
-    return this.prisma.$transaction(async (tx) => {
-      const session = await tx.session.findUnique({
-        where: { id: payload.sessionId },
-      });
+    const userId = payload.sub;
+    const sessionId = payload.sessionId;
 
-      if (session && session.expiresAt < new Date()) {
-        await tx.session.delete({
-          where: { id: session.id },
-        });
-        throw new UnauthorizedError("Refresh token expired");
-      }
+    // NOTE: Throwing inside an interactive transaction rolls it back, which would
+    // undo the session revocations below. The transaction therefore *returns* a
+    // failure result and the error is thrown only after the commit.
+    type RefreshOutcome =
+      | { ok: true; accessToken: string; refreshToken: string }
+      | { ok: false; message: string };
 
-      if (!session || session.isRevoked) {
-        await tx.session.updateMany({
-          where: { userId: payload?.sub },
-          data: { isRevoked: true },
-        });
-        logger.warn(
-          { userId: payload?.sub },
-          `Refresh token reuse detected for user ${payload?.sub}`,
-        );
-        throw new UnauthorizedError("Token reuse detected");
-      }
-
-      if (!(await argon2.verify(session.refreshHash, refreshToken))) {
-        await tx.session.updateMany({
-          where: { userId: payload!.sub },
-          data: { isRevoked: true },
+    const outcome: RefreshOutcome = await this.prisma.$transaction(
+      async (tx): Promise<RefreshOutcome> => {
+        const session = await tx.session.findUnique({
+          where: { id: sessionId },
         });
 
-        logger.warn(
-          { userId: payload!.sub },
-          `Refresh token hash mismatch for user ${payload!.sub}`,
-        );
-        throw new UnauthorizedError("Invalid refresh token");
-      }
+        if (session && session.expiresAt < new Date()) {
+          await tx.session.delete({ where: { id: session.id } });
+          return { ok: false, message: "Refresh token expired" };
+        }
 
-      const newSession = await tx.session.create({
-        data: {
-          userId: payload!.sub,
-          refreshHash: "",
-          expiresAt: new Date(Date.now() + appConfig.REFRESH_TOKEN_EXPIRY),
-          authMethod: session.authMethod,
-        },
-      });
+        if (!session || session.isRevoked) {
+          await tx.session.updateMany({
+            where: { userId },
+            data: { isRevoked: true },
+          });
+          logger.warn(
+            { userId },
+            `Refresh token reuse detected for user ${userId}`,
+          );
+          return { ok: false, message: "Token reuse detected" };
+        }
 
-      const newRefreshToken = this.jwt.generateRefreshToken({
-        sub: payload!.sub,
-        sessionId: newSession.id,
-      });
+        if (!(await argon2.verify(session.refreshHash, refreshToken))) {
+          await tx.session.updateMany({
+            where: { userId },
+            data: { isRevoked: true },
+          });
+          logger.warn(
+            { userId },
+            `Refresh token hash mismatch for user ${userId}`,
+          );
+          return { ok: false, message: "Invalid refresh token" };
+        }
 
-      await tx.session.update({
-        where: { id: newSession.id },
-        data: { refreshHash: await argon2.hash(newRefreshToken) },
-      });
+        // Atomically claim the old session so two concurrent refreshes with the
+        // same token cannot both mint a new session.
+        const claimed = await tx.session.deleteMany({
+          where: { id: session.id, isRevoked: false },
+        });
+        if (claimed.count !== 1) {
+          return { ok: false, message: "Invalid or expired refresh token" };
+        }
 
-      // NOTE: Need to shift this to a background job if scaling issues arise
-      await tx.session.deleteMany({
-        where: { OR: [{ id: session.id }, { expiresAt: { lt: new Date() } }] },
-      });
+        const user = await tx.user.findUnique({ where: { id: userId } });
+        if (!user) {
+          return { ok: false, message: "Invalid or expired refresh token" };
+        }
 
-      const user = await tx.user.findUnique({
-        where: { id: payload!.sub },
-      });
+        const newSession = await tx.session.create({
+          data: {
+            userId,
+            refreshHash: "",
+            expiresAt: new Date(Date.now() + appConfig.REFRESH_TOKEN_EXPIRY),
+            authMethod: session.authMethod,
+          },
+        });
 
-      return {
-        accessToken: this.jwt.generateAccessToken({
-          sub: payload!.sub,
-          role: user!.role as UserRoles,
-        }),
-        refreshToken: newRefreshToken,
-      };
-    });
+        const newRefreshToken = this.jwt.generateRefreshToken({
+          sub: userId,
+          sessionId: newSession.id,
+        });
+
+        await tx.session.update({
+          where: { id: newSession.id },
+          data: { refreshHash: await argon2.hash(newRefreshToken) },
+        });
+
+        // NOTE: Need to shift this to a background job if scaling issues arise
+        await tx.session.deleteMany({
+          where: { expiresAt: { lt: new Date() } },
+        });
+
+        return {
+          ok: true,
+          accessToken: this.jwt.generateAccessToken({
+            sub: userId,
+            role: user.role as UserRoles,
+          }),
+          refreshToken: newRefreshToken,
+        };
+      },
+    );
+
+    if (!outcome.ok) {
+      throw new UnauthorizedError(outcome.message);
+    }
+    return {
+      accessToken: outcome.accessToken,
+      refreshToken: outcome.refreshToken,
+    };
   }
 
   async logout(refreshToken: string): Promise<void> {

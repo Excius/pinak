@@ -10,45 +10,45 @@ export const registerTaxClassAdminRoutes = (
   router.get(
     "/admin",
     rateLimiter,
-    validateMultiple(TaxClassAdminTypes.List),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(TaxClassAdminTypes.List),
     controller.listAdmin,
   );
 
   router.get(
     "/admin/:id",
     rateLimiter,
-    validateMultiple(TaxClassAdminTypes.GetById),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(TaxClassAdminTypes.GetById),
     controller.getAdmin,
   );
 
   router.post(
     "/",
     rateLimiter,
-    validateMultiple(TaxClassTypes.Create),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(TaxClassTypes.Create),
     controller.create,
   );
 
   router.put(
     "/:id",
     rateLimiter,
-    validateMultiple(TaxClassTypes.Update),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(TaxClassTypes.Update),
     controller.update,
   );
 
   router.delete(
     "/:id",
     rateLimiter,
-    validateMultiple(TaxClassTypes.Delete),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(TaxClassTypes.Delete),
     controller.delete,
   );
 };

@@ -1,11 +1,170 @@
 import { prisma } from "../src/lib/prisma.js";
 import { normalizeEmail } from "../src/lib/email.js";
+import { Passwordhasher } from "../src/lib/password.js";
+import { syncProductFilterIndex } from "../src/lib/filterIndex.js";
 import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// ---------------------------------------------------------------------------
+// Static pages & site settings
+// ---------------------------------------------------------------------------
+const defaultPages = [
+  {
+    slug: "about-us",
+    title: "About Us",
+    metaTitle: "About Us | Pinak Beauty",
+    metaDescription:
+      "Discover our story, craftsmanship and mission rooted in Indian traditions.",
+    content: `# About Pinak Beauty
+
+Affordable luxury beauty rooted in rich Indian traditions and inspired by the timeless glow of nature.
+
+## Our Philosophy
+At Pinak, we believe that true beauty begins with authenticity. Our formulations marry centuries-old Ayurvedic wisdom with modern cosmetic science to create high-performance, skin-loving products that celebrate every tone and texture.
+
+## Craftsmanship & Purity
+- **Cruelty-Free & Conscious**: We never test on animals.
+- **Dermatologist-Tested**: Gentle yet efficacious formulations.
+- **Sustainably Sourced**: Ethically sourced botanicals from across India.
+
+## Our Mission
+To democratize luxury beauty by making premium, clean, and elegant cosmetic formulations accessible to everyone.`,
+    isActive: true,
+  },
+  {
+    slug: "privacy-policy",
+    title: "Privacy Policy",
+    metaTitle: "Privacy Policy | Pinak Beauty",
+    metaDescription:
+      "Learn how Pinak Beauty protects and respects your personal data.",
+    content: `# Privacy Policy
+
+*Last updated: November 2026*
+
+Pinak Beauty ("we", "our", or "us") is dedicated to protecting your privacy and safeguarding your personal information.
+
+## Information We Collect
+1. **Personal Information**: Name, email address, phone number, shipping and billing address provided during checkout or account registration.
+2. **Payment Information**: Processed securely via PCI-DSS compliant payment gateways. We do not store raw credit card numbers.
+3. **Usage Data**: Device information, IP address, and browsing actions on our website to enhance your shopping experience.
+
+## How We Use Your Information
+- To fulfill and deliver your orders.
+- To communicate order updates, invoices, and customer care responses.
+- To send promotional newsletters (only with your opt-in consent).
+- To prevent fraudulent transactions and maintain platform security.
+
+## Data Protection
+We employ industry-standard SSL encryption and security controls. We do not sell or lease your personal information to third parties.
+
+## Contact Us
+If you have questions regarding this Privacy Policy, please email **support@pinak.com**.`,
+    isActive: true,
+  },
+  {
+    slug: "terms-and-conditions",
+    title: "Terms & Conditions",
+    metaTitle: "Terms & Conditions | Pinak Beauty",
+    metaDescription: "Terms governing the use of Pinak website and services.",
+    content: `# Terms & Conditions
+
+*Last updated: November 2026*
+
+Welcome to Pinak Beauty. By accessing or using our website, you agree to comply with and be bound by the following terms.
+
+## 1. General Conditions
+We reserve the right to refuse service to anyone for any reason at any time. Prices for our products are subject to change without prior notice.
+
+## 2. Products & Pricing
+All product prices are quoted in Indian Rupees (₹) and include applicable taxes unless specified otherwise. We make every effort to display the colors and images of our products as accurately as possible.
+
+## 3. Order Acceptance
+Your receipt of an order confirmation does not signify our acceptance of your order. We reserve the right to cancel or limit quantities on any order.
+
+## 4. User Conduct
+You agree not to reproduce, duplicate, copy, sell, or exploit any portion of the service or website content without express written permission from Pinak Beauty.`,
+    isActive: true,
+  },
+  {
+    slug: "shipping-policy",
+    title: "Shipping & Delivery Policy",
+    metaTitle: "Shipping & Delivery Policy | Pinak Beauty",
+    metaDescription:
+      "Everything you need to know about our shipping rates and delivery timelines.",
+    content: `# Shipping & Delivery Policy
+
+Thank you for choosing Pinak Beauty. Here are the details of our shipping policy:
+
+## Delivery Timelines
+- **Metro Cities**: 2 to 4 business days.
+- **Rest of India**: 4 to 7 business days.
+- **Express Shipping**: Available at checkout for select PIN codes.
+
+## Shipping Charges
+- **Free Shipping**: On all prepaid orders above ₹499.
+- **Standard Shipping**: ₹50 for orders below ₹499.
+- **Cash on Delivery (COD)**: Available for orders up to ₹5,000 with a nominal convenience fee.
+
+## Order Tracking
+Once your package is dispatched, you will receive an SMS and email notification with your tracking link. You can also track your orders live in your **My Orders** dashboard.`,
+    isActive: true,
+  },
+  {
+    slug: "return-refund-policy",
+    title: "Return & Refund Policy",
+    metaTitle: "Return & Refund Policy | Pinak Beauty",
+    metaDescription:
+      "Our transparent 7-day return and hassle-free refund guidelines.",
+    content: `# Return & Refund Policy
+
+We want you to love your Pinak experience. If you are not completely satisfied, we are here to help.
+
+## Eligibility for Returns
+- Requests must be initiated within **7 days** of delivery.
+- Products must be unopened, unused, and in their original packaging with security seals intact due to hygiene standards.
+- In case of transit damage or wrong item received, please share unboxing photos/videos with **support@pinak.com** within 48 hours of delivery.
+
+## Refund Process
+- Once inspected and approved, refunds are processed within 5-7 business days to your original payment method.
+- For COD orders, refunds are credited via NEFT / UPI to your provided account details.`,
+    isActive: true,
+  },
+];
+
+const defaultSettings = [
+  {
+    key: "WHATSAPP_NUMBER",
+    value: "+919876543210",
+    group: "contact",
+    description: "Customer support WhatsApp number for direct chat",
+    isPublic: true,
+  },
+  {
+    key: "WHATSAPP_DEFAULT_MESSAGE",
+    value: "Hello! I would like to know more about Pinak products.",
+    group: "contact",
+    description: "Pre-filled WhatsApp greeting message",
+    isPublic: true,
+  },
+  {
+    key: "SUPPORT_EMAIL",
+    value: "support@pinak.com",
+    group: "contact",
+    description: "Official customer support email",
+    isPublic: true,
+  },
+  {
+    key: "SUPPORT_PHONE",
+    value: "+919876543210",
+    group: "contact",
+    description: "Customer support phone number",
+    isPublic: true,
+  },
+];
 
 // ---------------------------------------------------------------------------
 // Cleanup — strict reverse-dependency order so FK constraints are satisfied
@@ -40,6 +199,7 @@ async function cleanup() {
   try {
     await prisma.comboKitImage.deleteMany();
   } catch {}
+  await prisma.variantFilterValue.deleteMany();
   await prisma.productImage.deleteMany();
   await prisma.comboKitItem.deleteMany();
   await prisma.comboKit.deleteMany();
@@ -51,6 +211,8 @@ async function cleanup() {
   await prisma.user.deleteMany();
 
   // Content / misc
+  await prisma.page.deleteMany();
+  await prisma.setting.deleteMany();
   await prisma.article.deleteMany();
   await prisma.store.deleteMany();
   await prisma.dynamicAsset.deleteMany();
@@ -78,7 +240,7 @@ async function main() {
   await cleanup();
 
   // Load product image URLs from file
-  const imagesPath = path.join(__dirname, "../../../productimage.txt");
+  const imagesPath = path.join(__dirname, "productimage.txt");
   const imagesContent = await fs.readFile(imagesPath, "utf-8");
   const productImages = imagesContent
     .split("\n")
@@ -354,19 +516,29 @@ async function main() {
   // -------------------------------------------------------------------------
   const filterValueMap: Record<string, Record<string, { id: string }>> = {};
 
-  for (const fg of filterGroupsData) {
+  for (const [fgIndex, fg] of filterGroupsData.entries()) {
     const group = await prisma.filterGroup.create({
-      data: { name: fg.name, slug: fg.slug, sortOrder: 0, isActive: true },
+      data: {
+        name: fg.name,
+        slug: fg.slug,
+        sortOrder: fgIndex,
+        isActive: true,
+      },
     });
 
     filterValueMap[fg.slug] = {};
-    for (const v of fg.values) {
+    for (const [vIndex, v] of fg.values.entries()) {
       const vSlug = v
         .toLowerCase()
         .replace(/[^\w\s-]/g, "")
         .replace(/\s+/g, "-");
       const fv = await prisma.filterValue.create({
-        data: { filterGroupId: group.id, name: v, slug: vSlug },
+        data: {
+          filterGroupId: group.id,
+          name: v,
+          slug: vSlug,
+          sortOrder: vIndex,
+        },
       });
       filterValueMap[fg.slug][vSlug] = fv;
     }
@@ -797,6 +969,7 @@ async function main() {
     });
     createdProducts.push({ id: product.id, slug: product.slug });
 
+    const thisProductVariantIds: string[] = [];
     for (const variant of variants) {
       const createdVariant = await prisma.productVariant.create({
         data: {
@@ -812,6 +985,7 @@ async function main() {
         sku: variant.sku,
         price: variant.price,
       });
+      thisProductVariantIds.push(createdVariant.id);
 
       if (variant.size) {
         const ov = optionValueMap.Size[variant.size];
@@ -845,17 +1019,24 @@ async function main() {
       });
     }
 
-    // Attach filter values for this product
-    const pfData = filterSlugs
-      .map((slug) => fv(slug))
-      .filter(Boolean)
-      .map((filterValueId) => ({ productId: product.id, filterValueId }));
-    if (pfData.length) {
-      await prisma.productFilterValue.createMany({
-        data: pfData,
-        skipDuplicates: true,
-      });
+    // Filters are per variant. The first variant gets every filter for the product;
+    // later variants drop the last one so variants genuinely differ.
+    const filterIds = filterSlugs.map((slug) => fv(slug)).filter(Boolean);
+    for (const [index, variantId] of thisProductVariantIds.entries()) {
+      const idsForVariant =
+        index > 0 && filterIds.length > 2 ? filterIds.slice(0, -1) : filterIds;
+      if (idsForVariant.length) {
+        await prisma.variantFilterValue.createMany({
+          data: idsForVariant.map((filterValueId) => ({
+            variantId,
+            filterValueId,
+          })),
+          skipDuplicates: true,
+        });
+      }
     }
+    // Product-level rows are a derived index of the variants' filters
+    await syncProductFilterIndex(prisma, product.id);
   }
 
   const slugToId = Object.fromEntries(
@@ -867,6 +1048,368 @@ async function main() {
 
   console.log(
     `✅ Created ${productDefs.length} products with variants, images & filter values`,
+  );
+
+  // -------------------------------------------------------------------------
+  // 5.1 Enrich catalog: brand logos, swatches, extra option, SEO, pricing,
+  //     dimensions, extra images, stock edge cases, secondary categories
+  // -------------------------------------------------------------------------
+  const placeholderImage = (label: string) =>
+    `https://placehold.co/600x600/png?text=${encodeURIComponent(label)}`;
+  const pickImage = (i: number, label: string) =>
+    productImages.length > 0
+      ? (productImages[i % productImages.length] as string)
+      : placeholderImage(label);
+
+  // Brand logos
+  let logoIndex = 0;
+  for (const [name, brand] of Object.entries(brandMap)) {
+    await prisma.brand.update({
+      where: { id: brand.id },
+      data: { logoUrl: pickImage(logoIndex++, name) },
+    });
+  }
+
+  // Option / option-value ordering + swatch colours
+  await prisma.option.update({
+    where: { id: optionSize.id },
+    data: { sortOrder: 0 },
+  });
+  await prisma.option.update({
+    where: { id: optionShade.id },
+    data: { sortOrder: 1 },
+  });
+  const shadeSwatches: Record<string, string> = {
+    "Light Beige": "#F5DEB3",
+    "Medium Beige": "#E0C097",
+    "Deep Beige": "#C19A6B",
+    "Ruby Red": "#9B111E",
+    "Nude Pink": "#E8B4B8",
+    "Deep Plum": "#5E2750",
+    Black: "#111111",
+    Brown: "#6B4423",
+    Porcelain: "#F3E5DC",
+    Ivory: "#FFFFF0",
+    Sand: "#C2B280",
+    Coral: "#FF7F50",
+    Rose: "#E8A0BF",
+    Berry: "#8E2D56",
+    "Jet Black": "#0A0A0A",
+    "Deep Brown": "#3B2417",
+    "Warm Tones": "#D9A066",
+    "Cool Tones": "#8FA3BF",
+    Neutral: "#BDB5A6",
+    Smoky: "#5C5C5C",
+  };
+  for (const [index, name] of Object.keys(
+    optionValueMap.Size ?? {},
+  ).entries()) {
+    await prisma.optionValue.update({
+      where: { id: optionValueMap.Size[name].id },
+      data: { sortOrder: index },
+    });
+  }
+  for (const [index, name] of Object.keys(
+    optionValueMap.Shade ?? {},
+  ).entries()) {
+    await prisma.optionValue.update({
+      where: { id: optionValueMap.Shade[name].id },
+      data: { sortOrder: index, swatchColorHex: shadeSwatches[name] ?? null },
+    });
+  }
+
+  // A third option so the dynamic option UI has something beyond Size/Shade
+  const optionFinish = await prisma.option.create({
+    data: { name: "Finish", sortOrder: 2 },
+  });
+  const finishValues: Record<string, { id: string }> = {};
+  for (const [index, name] of ["Matte", "Glossy", "Satin", "Dewy"].entries()) {
+    finishValues[name] = await prisma.optionValue.create({
+      data: { optionId: optionFinish.id, value: name, sortOrder: index },
+    });
+  }
+  const finishForSku = (sku: string): string | null =>
+    sku.startsWith("VML")
+      ? "Matte"
+      : sku.startsWith("RGF") || sku.startsWith("LGF")
+        ? "Dewy"
+        : sku.startsWith("SEP")
+          ? "Satin"
+          : null;
+  for (const v of createdVariants) {
+    const finish = finishForSku(v.sku);
+    if (finish) {
+      await prisma.variantOptionValue.create({
+        data: { variantId: v.id, optionValueId: finishValues[finish].id },
+      });
+    }
+  }
+
+  const ingredientsFor = (name: string): string => {
+    const n = name.toLowerCase();
+    if (/lip|matte/.test(n))
+      return "Castor Oil, Shea Butter, Vitamin E, Jojoba Oil, Beeswax";
+    if (/foundation|glow/.test(n))
+      return "Squalane, Glycerin, Titanium Dioxide, Vitamin E, Hyaluronic Acid";
+    if (/serum|moistur|cream|balm/.test(n))
+      return "Niacinamide, Hyaluronic Acid, Vitamin C, Aloe Vera, Ceramides";
+    if (/mascara|lash|eye/.test(n))
+      return "Carnauba Wax, Panthenol, Iron Oxides, Castor Oil";
+    return "Aqua, Glycerin, Tocopherol, Natural Extracts";
+  };
+  const roundToRupee = (paise: number) => Math.round(paise / 100) * 100;
+  const stockStatuses = [
+    "IN_STOCK",
+    "BACKORDER",
+    "IN_STOCK",
+    "PREORDER",
+    "IN_STOCK",
+    "OUT_OF_STOCK",
+  ] as const;
+
+  const seededProducts = await prisma.product.findMany({
+    orderBy: { createdAt: "asc" },
+    include: {
+      brand: true,
+      variants: { include: { images: true }, orderBy: { createdAt: "asc" } },
+      categories: { include: { category: true } },
+    },
+  });
+
+  for (const [i, product] of seededProducts.entries()) {
+    const primaryImage =
+      product.variants[0]?.images.find((img) => img.isPrimary)?.url ??
+      pickImage(i, product.name);
+    const variantTags = Array.from(
+      new Set(product.variants.flatMap((v) => v.tags)),
+    );
+    const brandName = product.brand?.name ?? "Pinak";
+
+    await prisma.product.update({
+      where: { id: product.id },
+      data: {
+        keyIngredients: ingredientsFor(product.name),
+        metaTitle: `${product.name} | ${brandName} | Pinak`,
+        metaDescription:
+          `Shop ${product.name} by ${brandName}. ${product.description ?? ""}`
+            .trim()
+            .slice(0, 160),
+        metaKeywords: [
+          product.name.toLowerCase(),
+          brandName.toLowerCase(),
+          ...variantTags,
+        ].join(", "),
+        seoKeyword: product.slug,
+        model: `PNK-${String(i + 1).padStart(3, "0")}`,
+        ean: `8901234${String(100000 + i * 137).padStart(6, "0")}`,
+        frontImageUrl: primaryImage,
+        tags: Array.from(
+          new Set([
+            ...variantTags,
+            brandName.toLowerCase().replace(/\s+/g, "-"),
+          ]),
+        ),
+        requiresShipping: true,
+        outOfStockStatus: stockStatuses[i % stockStatuses.length],
+        dimensionLength: 60 + i * 4,
+        dimensionWidth: 40 + (i % 4) * 5,
+        dimensionHeight: 110 + (i % 5) * 12,
+        sortOrder: i,
+        viewCount: 120 + i * 37,
+      },
+    });
+
+    // Secondary category: also list the product under its parent category
+    const parentIds = product.categories
+      .map((c) => c.category.parentId)
+      .filter((id): id is string => Boolean(id));
+    if (parentIds.length) {
+      await prisma.productCategory.createMany({
+        data: parentIds.map((categoryId) => ({
+          productId: product.id,
+          categoryId,
+        })),
+        skipDuplicates: true,
+      });
+    }
+
+    for (const [j, variant] of product.variants.entries()) {
+      const isLastVariant = j === product.variants.length - 1;
+      const onSale = (i + j) % 2 === 0;
+      const hasCompare = !onSale && i % 3 === 0;
+      await prisma.productVariant.update({
+        where: { id: variant.id },
+        data: {
+          ean: `8909876${String(100000 + i * 53 + j).padStart(6, "0")}`,
+          sellingPrice: onSale ? roundToRupee(variant.price * 0.85) : null,
+          comparePrice: hasCompare ? roundToRupee(variant.price * 1.2) : null,
+          weightGrams: (product.weightGrams ?? 30) + j * 5,
+          weightClassId: product.weightClassId,
+          // Stock edge cases for the inventory / alerts screens
+          ...(i === 0 && isLastVariant ? { stock: 0 } : {}),
+          ...(i === 1 && isLastVariant ? { stock: 3 } : {}),
+          ...(i === 2 && isLastVariant ? { stock: 7 } : {}),
+          ...(i === 4 && isLastVariant && product.variants.length > 1
+            ? { isActive: false }
+            : {}),
+        },
+      });
+
+      // Second gallery image per variant
+      await prisma.productImage.create({
+        data: {
+          productVariantId: variant.id,
+          url: pickImage(imageCounter++, `${product.name} 2`),
+          altText: `${product.name} — alternate view`,
+          isPrimary: false,
+          sortOrder: 1,
+        },
+      });
+    }
+  }
+  console.log(
+    "✅ Enriched products & variants (SEO, pricing, dimensions, images, finish option)",
+  );
+
+  // Products in the other lifecycle states the admin UI filters on
+  const catForExtras = await prisma.category.findFirst({
+    where: { slug: "lipstick" },
+  });
+  const catForSkin = await prisma.category.findFirst({
+    where: { slug: "serums" },
+  });
+  const extraProducts = [
+    {
+      name: "Rose Petal Lip Balm",
+      slug: "rose-petal-lip-balm",
+      brand: "LipLux",
+      state: "Pending verification (inactive import)",
+      isActive: false,
+      isDeleted: false,
+      outOfStockStatus: "IN_STOCK" as const,
+      categoryId: catForExtras?.id,
+      tax: "GST 18%",
+      tags: ["HSN:3304", "imported", "lip-care"],
+      variants: [{ sku: "RPLB-001", price: 19900, stock: 40 }],
+    },
+    {
+      name: "Imported Hand Cream",
+      slug: "imported-hand-cream",
+      brand: "SkinCare Plus",
+      state: "Pending verification (inactive import)",
+      isActive: false,
+      isDeleted: false,
+      outOfStockStatus: "IN_STOCK" as const,
+      categoryId: catForSkin?.id,
+      tax: "GST 18%",
+      tags: ["HSN:3304", "imported", "hand-care"],
+      variants: [
+        { sku: "IHC-001", price: 24900, stock: 25 },
+        { sku: "IHC-002", price: 39900, stock: 10 },
+      ],
+    },
+    {
+      name: "Kohl Kajal Pencil (Discontinued)",
+      slug: "kohl-kajal-pencil",
+      brand: "EyeGlow",
+      state: "Archived / soft-deleted",
+      isActive: false,
+      isDeleted: true,
+      outOfStockStatus: "OUT_OF_STOCK" as const,
+      categoryId: catForExtras?.id,
+      tax: "GST 12%",
+      tags: ["discontinued", "eyes"],
+      variants: [{ sku: "KKP-001", price: 14900, stock: 0 }],
+    },
+    {
+      name: "Holiday Glow Palette (Pre-order)",
+      slug: "holiday-glow-palette",
+      brand: "GlowBeauty",
+      state: "Pre-order",
+      isActive: true,
+      isDeleted: false,
+      outOfStockStatus: "PREORDER" as const,
+      categoryId: catForExtras?.id,
+      tax: "GST 28%",
+      tags: ["limited-edition", "holiday", "palette"],
+      variants: [{ sku: "HGP-001", price: 249900, stock: 0 }],
+    },
+    {
+      name: "Travel Mini Serum (Sold Out)",
+      slug: "travel-mini-serum",
+      brand: "SkinCare Plus",
+      state: "Out of stock",
+      isActive: true,
+      isDeleted: false,
+      outOfStockStatus: "OUT_OF_STOCK" as const,
+      categoryId: catForSkin?.id,
+      tax: "GST 18%",
+      tags: ["travel", "serum"],
+      variants: [{ sku: "TMS-001", price: 34900, stock: 0 }],
+    },
+  ];
+  for (const [i, def] of extraProducts.entries()) {
+    const product = await prisma.product.create({
+      data: {
+        name: def.name,
+        slug: def.slug,
+        description: `${def.name} — ${def.state}.`,
+        keyIngredients: ingredientsFor(def.name),
+        metaTitle: `${def.name} | Pinak`,
+        metaDescription: `${def.name} from ${def.brand}.`,
+        metaKeywords: def.tags.join(", "),
+        seoKeyword: def.slug,
+        model: `PNK-X${String(i + 1).padStart(2, "0")}`,
+        ean: `8905555${String(100000 + i).padStart(6, "0")}`,
+        frontImageUrl: pickImage(imageCounter + i, def.name),
+        tags: def.tags,
+        brandId: brandMap[def.brand]?.id,
+        taxClassId: taxClassMap[def.tax]?.id,
+        weightClassId: gramId,
+        lengthClassId: mmId,
+        weightGrams: 25,
+        dimensionLength: 70,
+        dimensionWidth: 40,
+        dimensionHeight: 120,
+        outOfStockStatus: def.outOfStockStatus,
+        isActive: def.isActive,
+        isDeleted: def.isDeleted,
+        sortOrder: 100 + i,
+        viewCount: 20 + i * 11,
+        ...(def.categoryId
+          ? { categories: { create: [{ categoryId: def.categoryId }] } }
+          : {}),
+      },
+    });
+    createdProducts.push({ id: product.id, slug: product.slug });
+    for (const v of def.variants) {
+      const variant = await prisma.productVariant.create({
+        data: {
+          productId: product.id,
+          sku: v.sku,
+          price: v.price,
+          sellingPrice: v.price > 30000 ? roundToRupee(v.price * 0.9) : null,
+          stock: v.stock,
+          weightGrams: 25,
+          weightClassId: gramId,
+          tags: def.tags,
+          isActive: def.isActive,
+          isDeleted: def.isDeleted,
+        },
+      });
+      createdVariants.push({ id: variant.id, sku: v.sku, price: v.price });
+      await prisma.productImage.create({
+        data: {
+          productVariantId: variant.id,
+          url: pickImage(imageCounter++, def.name),
+          altText: def.name,
+          isPrimary: true,
+        },
+      });
+    }
+  }
+  console.log(
+    `✅ Created ${extraProducts.length} extra products (inactive / archived / pre-order / sold out)`,
   );
 
   // -------------------------------------------------------------------------
@@ -1057,7 +1600,9 @@ async function main() {
   // -------------------------------------------------------------------------
   // 8. Users (admin + moderator + regular)
   // -------------------------------------------------------------------------
-  const DUMMY_HASH = "$argon2id$v=19$m=65536,t=3,p=4$dummy_hash_for_testing";
+  // Every seeded account can log in with this password (local/staging testing only).
+  const SEED_PASSWORD = "Test@1234";
+  const PASSWORD_HASH = await Passwordhasher.hashPassword(SEED_PASSWORD);
 
   const usersData = [
     {
@@ -1102,6 +1647,21 @@ async function main() {
       role: "USER" as const,
       isEmailVerified: true,
     },
+    {
+      email: "priya.sharma@example.com",
+      username: "priyas",
+      name: "Priya Sharma",
+      role: "USER" as const,
+      isEmailVerified: true,
+    },
+    {
+      email: "inactive.user@example.com",
+      username: "inactiveuser",
+      name: "Inactive User",
+      role: "USER" as const,
+      isEmailVerified: true,
+      status: "INACTIVE" as const,
+    },
   ];
 
   const createdUsers: Record<string, { id: string }> = {};
@@ -1113,7 +1673,10 @@ async function main() {
         name: u.name,
         role: u.role,
         isEmailVerified: u.isEmailVerified,
-        hashPassword: DUMMY_HASH,
+        hashPassword: PASSWORD_HASH,
+        status:
+          (u as { status?: "ACTIVE" | "INACTIVE" | "DELETED" }).status ??
+          "ACTIVE",
       },
     });
     createdUsers[u.username] = created;
@@ -1121,6 +1684,140 @@ async function main() {
   console.log(
     `✅ Created ${usersData.length} users (admin, moderator, ${usersData.length - 2} regular)`,
   );
+
+  // Addresses (needed for checkout), including a default + secondary per customer
+  const addressesByUser: Record<
+    string,
+    Array<{
+      fullName: string;
+      addressLine1: string;
+      addressLine2?: string;
+      city: string;
+      state: string;
+      pincode: string;
+      phone: string;
+      label: string;
+      isDefault: boolean;
+    }>
+  > = {
+    johndoe: [
+      {
+        fullName: "John Doe",
+        addressLine1: "12, Linking Road",
+        addressLine2: "Bandra West",
+        city: "Mumbai",
+        state: "Maharashtra",
+        pincode: "400050",
+        phone: "9820012345",
+        label: "Home",
+        isDefault: true,
+      },
+      {
+        fullName: "John Doe",
+        addressLine1: "Tower B, Lower Parel",
+        addressLine2: "Kamala Mills",
+        city: "Mumbai",
+        state: "Maharashtra",
+        pincode: "400013",
+        phone: "9820012345",
+        label: "Work",
+        isDefault: false,
+      },
+    ],
+    janesmith: [
+      {
+        fullName: "Jane Smith",
+        addressLine1: "45, MG Road",
+        addressLine2: "Near Metro Station",
+        city: "Bengaluru",
+        state: "Karnataka",
+        pincode: "560001",
+        phone: "9845098450",
+        label: "Home",
+        isDefault: true,
+      },
+      {
+        fullName: "Jane Smith",
+        addressLine1: "7, Park Street",
+        city: "Kolkata",
+        state: "West Bengal",
+        pincode: "700016",
+        phone: "9830098300",
+        label: "Parents",
+        isDefault: false,
+      },
+    ],
+    mikej: [
+      {
+        fullName: "Mike Johnson",
+        addressLine1: "221, Sector 18",
+        city: "Noida",
+        state: "Uttar Pradesh",
+        pincode: "201301",
+        phone: "9811122233",
+        label: "Home",
+        isDefault: true,
+      },
+    ],
+    sarahw: [
+      {
+        fullName: "Sarah Wilson",
+        addressLine1: "9, Jubilee Hills Road No. 36",
+        city: "Hyderabad",
+        state: "Telangana",
+        pincode: "500033",
+        phone: "9900011122",
+        label: "Home",
+        isDefault: true,
+      },
+      {
+        fullName: "Sarah Wilson",
+        addressLine1: "18, Anna Salai",
+        addressLine2: "Teynampet",
+        city: "Chennai",
+        state: "Tamil Nadu",
+        pincode: "600018",
+        phone: "9900033344",
+        label: "Office",
+        isDefault: false,
+      },
+    ],
+    priyas: [
+      {
+        fullName: "Priya Sharma",
+        addressLine1: "B-14, Vasant Vihar",
+        city: "New Delhi",
+        state: "Delhi",
+        pincode: "110057",
+        phone: "9899988776",
+        label: "Home",
+        isDefault: true,
+      },
+    ],
+  };
+  const seededAddresses: Record<string, { id: string }[]> = {};
+  for (const [username, list] of Object.entries(addressesByUser)) {
+    const user = createdUsers[username];
+    if (!user) continue;
+    seededAddresses[username] = [];
+    for (const a of list) {
+      seededAddresses[username].push(
+        await prisma.address.create({ data: { ...a, userId: user.id } }),
+      );
+    }
+  }
+  console.log("✅ Created customer addresses");
+
+  // Google sign-in linked account (exercises the AuthProvider relation)
+  if (createdUsers["priyas"]) {
+    await prisma.authProvider.create({
+      data: {
+        userId: createdUsers["priyas"].id,
+        provider: "GOOGLE",
+        providerId: "seed-google-priya-sharma-0001",
+      },
+    });
+  }
 
   // -------------------------------------------------------------------------
   // 9. Combo kits
@@ -1376,9 +2073,9 @@ async function main() {
   if (johnIdForWishlist) {
     const wishlistCreateItems: Array<{ productVariantId: string }> = [];
 
-    if (skuToVariant["RGF-001"]?.id) {
+    if (skuToVariant["RGF-001-30"]?.id) {
       wishlistCreateItems.push({
-        productVariantId: skuToVariant["RGF-001"].id,
+        productVariantId: skuToVariant["RGF-001-30"].id,
       });
     }
     if (skuToVariant["VCS-001"]?.id) {
@@ -1449,7 +2146,59 @@ async function main() {
       },
     ],
   });
-  console.log("✅ Created 3 coupons (WELCOME10, FLAT200, SKINCARE15)");
+  // Lifecycle variety for the admin coupon screen: expired, inactive, trashed, nearly used up
+  const lastMonth = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const twoMonthsAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+  const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+  await prisma.coupon.createMany({
+    data: [
+      {
+        code: "EXPIRED20",
+        discountType: "PERCENTAGE",
+        discountValue: 20,
+        minOderValue: 50000,
+        maxDiscountValue: 40000,
+        validFrom: twoMonthsAgo,
+        validUntil: lastMonth,
+        isActive: true,
+      },
+      {
+        code: "PAUSED25",
+        discountType: "PERCENTAGE",
+        discountValue: 25,
+        minOderValue: 150000,
+        maxDiscountValue: 100000,
+        validFrom: now,
+        validUntil: in6Months,
+        maxTotalUsers: 50,
+        maxUsesPerUser: 1,
+        isActive: false,
+      },
+      {
+        code: "LASTONE50",
+        discountType: "FLAT",
+        discountValue: 5000,
+        validFrom: now,
+        validUntil: nextWeek,
+        maxTotalUsers: 1,
+        maxUsesPerUser: 1,
+        isActive: true,
+      },
+      {
+        code: "OLDPROMO",
+        discountType: "FLAT",
+        discountValue: 10000,
+        minOderValue: 100000,
+        validFrom: twoMonthsAgo,
+        validUntil: in6Months,
+        isActive: false,
+        isDeleted: true,
+      },
+    ],
+  });
+  console.log(
+    "✅ Created 7 coupons (3 live, 1 expired, 1 paused, 1 single-use, 1 trashed)",
+  );
 
   // -------------------------------------------------------------------------
   // 11. Orders with order items
@@ -1650,6 +2399,246 @@ async function main() {
   // -----------------------------------------------------------
 
   console.log("✅ Created 3 orders (DELIVERED, PROCESSING, SHIPPED)");
+
+  // -------------------------------------------------------------------------
+  // 11.1 More orders (pending / cancelled) + enrich all orders with GST,
+  //      addresses, invoices, gateway/payment data and coupon usage
+  // -------------------------------------------------------------------------
+  const priyaId = createdUsers["priyas"]?.id;
+  const extraOrderDefs: Array<{
+    userId: string | undefined;
+    status: "PENDING" | "CANCELLED";
+    paymentStatus: "PENDING" | "FAILED";
+    sku: string;
+    quantity: number;
+  }> = [
+    {
+      userId: priyaId,
+      status: "PENDING",
+      paymentStatus: "PENDING",
+      sku: "HFM-001",
+      quantity: 1,
+    },
+    {
+      userId: janeId,
+      status: "CANCELLED",
+      paymentStatus: "FAILED",
+      sku: "VML-001",
+      quantity: 2,
+    },
+  ];
+  for (const def of extraOrderDefs) {
+    const variant = skuToVariant[def.sku];
+    if (!def.userId || !variant) continue;
+    const subtotal = variant.price * def.quantity;
+    const order = await prisma.order.create({
+      data: {
+        userId: def.userId,
+        status: def.status,
+        paymentStatus: def.paymentStatus,
+        subtotalAmount: subtotal,
+        taxAmount: Math.round(subtotal * 0.18),
+        shippingAmount: 10000,
+        totalAmount: subtotal + Math.round(subtotal * 0.18) + 10000,
+      },
+    });
+    await prisma.orderItem.create({
+      data: {
+        orderId: order.id,
+        productId: await productIdBySku(def.sku),
+        productVariantId: variant.id,
+        productName: def.sku,
+        price: variant.price,
+        quantity: def.quantity,
+      },
+    });
+  }
+
+  const fyStart =
+    now.getMonth() < 3 ? now.getFullYear() - 1 : now.getFullYear();
+  const invoicePrefix = `INV/${fyStart}-${String(fyStart + 1).slice(-2)}/`;
+  const paymentMethods = ["upi", "card", "netbanking", "wallet"];
+  const welcomeCoupon = await prisma.coupon.findFirst({
+    where: { code: "WELCOME10" },
+  });
+  const ordersToEnrich = await prisma.order.findMany({
+    orderBy: { createdAt: "asc" },
+    include: { items: true, user: { select: { username: true } } },
+  });
+
+  let invoiceSeq = 0;
+  let couponApplied = false;
+  for (const [index, order] of ordersToEnrich.entries()) {
+    const shippingAddress = seededAddresses[order.user.username]?.[0]
+      ? await prisma.address.findUnique({
+          where: { id: seededAddresses[order.user.username][0].id },
+        })
+      : null;
+    const addressSnapshot = shippingAddress
+      ? {
+          fullName: shippingAddress.fullName,
+          addressLine1: shippingAddress.addressLine1,
+          addressLine2: shippingAddress.addressLine2,
+          city: shippingAddress.city,
+          state: shippingAddress.state,
+          pincode: shippingAddress.pincode,
+          phone: shippingAddress.phone,
+        }
+      : null;
+
+    // First delivered order uses a coupon so CouponUsage / discounts are exercised
+    const useCoupon =
+      !couponApplied && welcomeCoupon && order.status === "DELIVERED";
+    const discount = useCoupon
+      ? Math.min(Math.floor((order.subtotalAmount * 10) / 100), 50000)
+      : 0;
+    if (useCoupon) couponApplied = true;
+
+    const shipping = order.shippingAmount > 0 ? 10000 : 0;
+    const netSubtotal = Math.max(0, order.subtotalAmount - discount);
+    const gstPercentage =
+      netSubtotal > 0
+        ? Number(((order.taxAmount / netSubtotal) * 100).toFixed(2))
+        : 0;
+    const total = netSubtotal + order.taxAmount + shipping;
+
+    // Item snapshots in the same shape order.service writes at checkout
+    for (const item of order.items) {
+      if (item.productVariantId) {
+        const variant = await prisma.productVariant.findUnique({
+          where: { id: item.productVariantId },
+          include: {
+            optionValues: {
+              include: { optionValue: { include: { option: true } } },
+            },
+          },
+        });
+        if (!variant) continue;
+        const taxRate = gstPercentage;
+        await prisma.orderItem.update({
+          where: { id: item.id },
+          data: {
+            variantDetails: {
+              itemType: "PRODUCT_VARIANT",
+              sku: variant.sku,
+              ean: variant.ean,
+              tags: variant.tags,
+              price: variant.price,
+              basePrice: variant.price,
+              priceWithTax:
+                variant.price + Math.round((variant.price * taxRate) / 100),
+              sellingPrice: variant.sellingPrice,
+              sellingPriceWithTax:
+                variant.sellingPrice != null
+                  ? variant.sellingPrice +
+                    Math.round((variant.sellingPrice * taxRate) / 100)
+                  : null,
+              taxRate,
+              optionValues: variant.optionValues.map((ov) => ({
+                optionName: ov.optionValue.option.name,
+                valueName: ov.optionValue.value,
+              })),
+            },
+          },
+        });
+      } else if (item.comboKitId) {
+        await prisma.orderItem.update({
+          where: { id: item.id },
+          data: {
+            variantDetails: {
+              itemType: "COMBO_KIT",
+              price: item.price,
+              basePrice: item.price,
+              priceWithTax:
+                item.price + Math.round((item.price * gstPercentage) / 100),
+              sellingPrice: null,
+              sellingPriceWithTax: null,
+              taxRate: gstPercentage,
+            },
+          },
+        });
+      }
+    }
+
+    const isPaid = order.paymentStatus === "COMPLETED";
+    const hasGatewayOrder =
+      order.paymentStatus !== "PENDING" || order.status === "PENDING";
+    const suffix = order.id.slice(-10);
+    const invoiceNumber = isPaid
+      ? `${invoicePrefix}${String(++invoiceSeq).padStart(5, "0")}`
+      : null;
+
+    await prisma.order.update({
+      where: { id: order.id },
+      data: {
+        discountAmount: discount,
+        couponcode: useCoupon ? "WELCOME10" : null,
+        couponDiscount: discount,
+        shippingAmount: shipping,
+        totalAmount: total,
+        gstPercentage,
+        gstNumber: index === 0 ? "27ABCDE1234F1Z5" : null, // one B2B order
+        invoiceNumber,
+        invoiceDate: invoiceNumber ? order.createdAt : null,
+        gatewayOrderId: hasGatewayOrder ? `order_seed_${suffix}` : null,
+        gatewayPaymentId: isPaid ? `pay_seed_${suffix}` : null,
+        gatewaySignature: isPaid ? `seedsig${suffix}`.padEnd(64, "0") : null,
+        paymentMethod: isPaid
+          ? paymentMethods[index % paymentMethods.length]
+          : null,
+        getBreakup: {
+          taxBreakdown: order.items.map((item) => ({
+            rate: gstPercentage,
+            taxableValue: item.price * item.quantity,
+            discountAmount: 0,
+            amount: Math.round(
+              (item.price * item.quantity * gstPercentage) / 100,
+            ),
+          })),
+          shippingAddress: addressSnapshot,
+          billingAddress: addressSnapshot,
+          ...(isPaid
+            ? {
+                payment: {
+                  paymentId: `pay_seed_${suffix}`,
+                  status: "SUCCESS",
+                  updatedAt: order.createdAt.toISOString(),
+                },
+              }
+            : {}),
+          ...(order.paymentStatus === "FAILED"
+            ? {
+                paymentFailure: {
+                  reason: "Payment declined by bank",
+                  updatedAt: order.createdAt.toISOString(),
+                },
+              }
+            : {}),
+          ...(order.status === "PENDING"
+            ? {
+                reservationExpiresAt: new Date(
+                  Date.now() + 15 * 60 * 1000,
+                ).toISOString(),
+              }
+            : {}),
+        },
+      },
+    });
+
+    if (useCoupon && welcomeCoupon) {
+      await prisma.couponUsage.create({
+        data: {
+          couponId: welcomeCoupon.id,
+          userId: order.userId,
+          oderId: order.id,
+          discountAmount: discount,
+        },
+      });
+    }
+  }
+  console.log(
+    `✅ Enriched ${ordersToEnrich.length} orders (GST, addresses, invoices, gateway data, coupon usage)`,
+  );
 
   // -------------------------------------------------------------------------
   // 12. Reviews
@@ -1899,7 +2888,7 @@ async function main() {
   const dynamicAssets = [
     {
       slug: "mobile-home-banner-top",
-      url: "https://via.placeholder.com/1200x400/FF6B6B/FFFFFF?text=Home+Banner",
+      url: "https://placehold.co/1200x400/FF6B6B/FFFFFF/png?text=Home+Banner",
       type: "IMAGE" as const,
       title: "Mobile Home Banner (Top)",
       description:
@@ -1908,7 +2897,7 @@ async function main() {
     },
     {
       slug: "mobile-home-banner-bottom",
-      url: "https://via.placeholder.com/1200x400/4ECDC4/FFFFFF?text=Bottom+Banner",
+      url: "https://placehold.co/1200x400/4ECDC4/FFFFFF/png?text=Bottom+Banner",
       type: "IMAGE" as const,
       title: "Mobile Home Banner (Bottom)",
       description:
@@ -1917,7 +2906,7 @@ async function main() {
     },
     {
       slug: "web-hero-slider-1",
-      url: "https://via.placeholder.com/1920x600/556270/FFFFFF?text=Hero+Slide+1",
+      url: "https://placehold.co/1920x600/556270/FFFFFF/png?text=Hero+Slide+1",
       type: "IMAGE" as const,
       title: "Website Hero Slider — Slide 1",
       description: "First slide in the website hero carousel",
@@ -1925,7 +2914,7 @@ async function main() {
     },
     {
       slug: "web-hero-slider-2",
-      url: "https://via.placeholder.com/1920x600/C7F464/333333?text=Hero+Slide+2",
+      url: "https://placehold.co/1920x600/C7F464/333333/png?text=Hero+Slide+2",
       type: "IMAGE" as const,
       title: "Website Hero Slider — Slide 2",
       description: "Second slide in the website hero carousel",
@@ -1933,14 +2922,14 @@ async function main() {
     },
     {
       slug: "app-splash-screen",
-      url: "https://via.placeholder.com/1080x1920/2C3E50/FFFFFF?text=Splash",
+      url: "https://placehold.co/1080x1920/2C3E50/FFFFFF/png?text=Splash",
       type: "IMAGE" as const,
       title: "Mobile App Splash Screen",
       description: "Splash/loading screen shown when the mobile app launches",
     },
     {
       slug: "checkout-promo-banner",
-      url: "https://via.placeholder.com/800x200/E74C3C/FFFFFF?text=Free+Shipping",
+      url: "https://placehold.co/800x200/E74C3C/FFFFFF/png?text=Free+Shipping",
       type: "IMAGE" as const,
       title: "Checkout Promo Banner",
       description: "Promotional banner shown on the checkout page",
@@ -1962,6 +2951,108 @@ async function main() {
   }
 
   // -------------------------------------------------------------------------
+  // 18. Audit log + static pages & settings
+  // -------------------------------------------------------------------------
+  const adminForAudit = createdUsers["admin"];
+  const moderatorForAudit = createdUsers["moderator"];
+  if (adminForAudit && moderatorForAudit) {
+    const firstProduct = createdProducts[0];
+    const firstOrder = ordersToEnrich[0];
+    const auditEntries = [
+      firstProduct && {
+        entity: "Product",
+        entityId: firstProduct.id,
+        action: "UPDATE",
+        before: { isActive: false },
+        after: { isActive: true },
+        actorId: adminForAudit.id,
+        actorRole: "ADMIN",
+        source: "Admin Panel",
+      },
+      firstProduct && {
+        entity: "Product",
+        entityId: firstProduct.id,
+        action: "UPDATE",
+        before: { stock: 30 },
+        after: { stock: 25 },
+        actorId: moderatorForAudit.id,
+        actorRole: "MODERATOR",
+        source: "Admin Panel",
+      },
+      firstOrder && {
+        entity: "Order",
+        entityId: firstOrder.id,
+        action: "UPDATE",
+        before: { status: "PROCESSING" },
+        after: { status: "DELIVERED" },
+        actorId: adminForAudit.id,
+        actorRole: "ADMIN",
+        source: "Admin Panel",
+      },
+      {
+        entity: "Coupon",
+        entityId: "WELCOME10",
+        action: "CREATE",
+        before: null,
+        after: { code: "WELCOME10", discountValue: 10 },
+        actorId: adminForAudit.id,
+        actorRole: "ADMIN",
+        source: "API",
+      },
+      {
+        entity: "Product",
+        entityId: "bulk-import",
+        action: "CREATE",
+        before: null,
+        after: { imported: 2, status: "inactive" },
+        actorId: adminForAudit.id,
+        actorRole: "ADMIN",
+        source: "Admin Panel",
+      },
+      {
+        entity: "Order",
+        entityId: "cron-reservation-cleanup",
+        action: "UPDATE",
+        before: null,
+        after: { releasedReservations: 0 },
+        actorId: null,
+        actorRole: "SYSTEM",
+        source: "cron",
+      },
+    ].filter(Boolean) as Array<{
+      entity: string;
+      entityId: string;
+      action: string;
+      before: object | null;
+      after: object | null;
+      actorId: string | null;
+      actorRole: string;
+      source: string;
+    }>;
+    for (const entry of auditEntries) {
+      await prisma.auditLog.create({
+        data: {
+          entity: entry.entity,
+          entityId: entry.entityId,
+          action: entry.action,
+          ...(entry.before ? { before: entry.before } : {}),
+          ...(entry.after ? { after: entry.after } : {}),
+          actorId: entry.actorId,
+          actorRole: entry.actorRole,
+          source: entry.source,
+        },
+      });
+    }
+    console.log(`✅ Created ${auditEntries.length} audit log entries`);
+  }
+
+  await prisma.page.createMany({ data: defaultPages });
+  await prisma.setting.createMany({ data: defaultSettings });
+  console.log(
+    `✅ Created ${defaultPages.length} static pages & ${defaultSettings.length} settings`,
+  );
+
+  // -------------------------------------------------------------------------
   // Summary
   // -------------------------------------------------------------------------
   const totalVariants = productDefs.reduce(
@@ -1979,9 +3070,13 @@ async function main() {
   - ${comboKits.length} combo kits
   - 1 cart with combo + variant items
   - 1 wishlist with 3 variant items
-  - 3 coupons · 3 orders · 6 reviews · 3 articles · 3 stores
+  - 7 coupons · 7 orders · 6 reviews · 3 articles · 3 stores · audit logs · static pages & settings
+  - customer addresses, Google-linked user, inactive user
   - 3 quiz questions with options & rules
   - ${dynamicAssets.length} dynamic assets
+
+🔑 Login (all seeded accounts): password '${SEED_PASSWORD}'
+   admin@pinak.com · moderator@pinak.com · john.doe@example.com · jane.smith@example.com · priya.sharma@example.com
   `);
 }
 

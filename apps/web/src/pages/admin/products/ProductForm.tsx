@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import toast from "react-hot-toast";
 import {
   getProductByIdAdmin,
   createProductAdmin,
@@ -32,6 +33,12 @@ import {
   getOptions,
   type AdminOption,
 } from "../../../api/admin/admin.options.api";
+import {
+  getFilterGroups,
+  addFilterToVariantAdmin,
+  removeFilterFromVariantAdmin,
+  type AdminFilterGroup,
+} from "../../../api/admin/admin.filters.api";
 import { formatPaise } from "../../../utils/currency";
 
 const ProductForm = () => {
@@ -44,6 +51,7 @@ const ProductForm = () => {
   const [categories, setCategories] = useState<AdminCategory[]>([]);
   const [brands, setBrands] = useState<AdminBrand[]>([]);
   const [options, setOptions] = useState<AdminOption[]>([]);
+  const [filterGroups, setFilterGroups] = useState<AdminFilterGroup[]>([]);
   const [editingVariant, setEditingVariant] =
     useState<AdminProductVariant | null>(null);
   const [showBrandDropdown, setShowBrandDropdown] = useState(false);
@@ -80,14 +88,16 @@ const ProductForm = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [cats, brs, opts] = await Promise.all([
+        const [cats, brs, opts, groups] = await Promise.all([
           getAllCategoriesAdmin(),
           getAllBrandsAdmin(),
           getOptions(),
+          getFilterGroups().catch(() => [] as AdminFilterGroup[]),
         ]);
         setCategories(cats);
         setBrands(brs);
         setOptions(opts);
+        setFilterGroups(groups);
 
         if (isEdit && id) {
           const product = await getProductByIdAdmin(id);
@@ -174,10 +184,8 @@ const ProductForm = () => {
             console.warn("Category assignment failed (non-blocking):", catErr);
           }
         }
-        setSaveMessage({
-          type: "success",
-          text: "Product updated successfully!",
-        });
+        toast.success("Product updated successfully!");
+        navigate("/admin/products");
       } else {
         // name is required for creation
         if (!cleanData.name) {
@@ -213,11 +221,12 @@ const ProductForm = () => {
       return;
     }
 
-    // Map option values to IDs based on fetched options
+    // Map option values to IDs: prefer the id the API sends, fall back to a name lookup
     let optionValueIds: string[] = [];
     if (variant.optionValues) {
       optionValueIds = variant.optionValues
         .map((ov) => {
+          if (ov.optionValueId) return ov.optionValueId;
           const opt = options.find((o) => o.name === ov.optionName);
           const val = opt?.values.find((v) => v.value === ov.valueName);
           return val?.id || "";
@@ -225,7 +234,10 @@ const ProductForm = () => {
         .filter((id) => id !== "");
     }
 
-    setEditingVariant({ ...variant, optionValueIds });
+    const filterValueIds = (variant.filterValues || []).map(
+      (fv) => fv.filterValueId,
+    );
+    setEditingVariant({ ...variant, optionValueIds, filterValueIds });
   };
 
   const handleUpdateVariant = async (variant: AdminProductVariant) => {
@@ -256,9 +268,14 @@ const ProductForm = () => {
           stock: variant.stock,
           optionValueIds: variant.optionValueIds,
         });
+        const filterValues = await syncVariantFilters(
+          created.id,
+          [],
+          variant.filterValueIds || [],
+        );
         setFormData((prev) => ({
           ...prev,
-          variants: [...(prev.variants || []), created],
+          variants: [...(prev.variants || []), { ...created, filterValues }],
         }));
       } else {
         // Update existing variant
@@ -270,10 +287,19 @@ const ProductForm = () => {
           sku: variant.sku,
           optionValueIds: variant.optionValueIds,
         });
+        const originalIds = (
+          formData.variants?.find((v) => v.id === variant.id)?.filterValues ||
+          []
+        ).map((fv) => fv.filterValueId);
+        const filterValues = await syncVariantFilters(
+          variant.id,
+          originalIds,
+          variant.filterValueIds || [],
+        );
         setFormData((prev) => ({
           ...prev,
           variants: prev.variants?.map((v) =>
-            v.id === variant.id ? { ...v, ...updated } : v,
+            v.id === variant.id ? { ...v, ...updated, filterValues } : v,
           ),
         }));
       }
@@ -286,6 +312,21 @@ const ProductForm = () => {
         "Failed to save variant";
       setSaveMessage({ type: "error", text: msg });
     }
+  };
+
+  // Filters are per variant: apply the difference between what was saved and what is selected.
+  const syncVariantFilters = async (
+    variantId: string,
+    originalIds: string[],
+    desiredIds: string[],
+  ) => {
+    const toAdd = desiredIds.filter((fid) => !originalIds.includes(fid));
+    const toRemove = originalIds.filter((fid) => !desiredIds.includes(fid));
+    await Promise.all([
+      ...toAdd.map((fid) => addFilterToVariantAdmin(variantId, fid)),
+      ...toRemove.map((fid) => removeFilterFromVariantAdmin(variantId, fid)),
+    ]);
+    return desiredIds.map((filterValueId) => ({ variantId, filterValueId }));
   };
 
   const handleDeleteVariant = async (variantId: string) => {
@@ -464,7 +505,7 @@ const ProductForm = () => {
             className="absolute inset-0 bg-black/80 backdrop-blur-sm"
             onClick={() => setEditingVariant(null)}
           />
-          <div className="relative bg-background-light border border-primary/20 rounded-2xl p-8 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl">
+          <div className="relative bg-background-light border border-primary/20 rounded-2xl p-8 w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl">
             <h3 className="text-lg font-bold text-text-main-light mb-4">
               {editingVariant.id
                 ? `Edit Variant: ${editingVariant.sku}`
@@ -553,47 +594,109 @@ const ProductForm = () => {
                 </div>
               </div>
 
-              {/* Options (Size, Shade, etc) */}
+              {/* Options (Size, Shade, etc) — compact grid; scrolls if many options are added */}
               {options.length > 0 && (
-                <div className="space-y-4 mt-4">
-                  {options.map((opt) => {
-                    const selectedValId =
-                      editingVariant.optionValueIds?.find((id) =>
-                        opt.values.some((v) => v.id === id),
-                      ) || "";
-                    return (
-                      <div key={opt.id} className="space-y-2">
-                        <label className="text-xs font-bold text-text-muted uppercase">
-                          {opt.name}
-                        </label>
-                        <select
-                          value={selectedValId}
-                          onChange={(e) => {
-                            const newId = e.target.value;
-                            const otherIds = (
-                              editingVariant.optionValueIds || []
-                            ).filter(
-                              (id) => !opt.values.some((v) => v.id === id),
-                            );
-                            setEditingVariant({
-                              ...editingVariant,
-                              optionValueIds: newId
-                                ? [...otherIds, newId]
-                                : otherIds,
-                            });
-                          }}
-                          className="w-full bg-background-main border border-primary/20 rounded-xl px-4 py-3 text-text-main-light outline-none focus:border-primary"
-                        >
-                          <option value="">None / Not Applicable</option>
-                          {opt.values.map((val) => (
-                            <option key={val.id} value={val.id}>
-                              {val.value}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    );
-                  })}
+                <div className="mt-4 space-y-2">
+                  <label className="text-xs font-bold text-text-muted uppercase">
+                    Options
+                  </label>
+                  <div className="grid grid-cols-2 gap-3 max-h-48 overflow-y-auto pr-1">
+                    {options.map((opt) => {
+                      const selectedValId =
+                        editingVariant.optionValueIds?.find((id) =>
+                          opt.values.some((v) => v.id === id),
+                        ) || "";
+                      return (
+                        <div key={opt.id} className="space-y-1 min-w-0">
+                          <label className="text-[11px] font-bold text-text-muted uppercase truncate block">
+                            {opt.name}
+                          </label>
+                          <select
+                            value={selectedValId}
+                            onChange={(e) => {
+                              const newId = e.target.value;
+                              const otherIds = (
+                                editingVariant.optionValueIds || []
+                              ).filter(
+                                (id) => !opt.values.some((v) => v.id === id),
+                              );
+                              setEditingVariant({
+                                ...editingVariant,
+                                optionValueIds: newId
+                                  ? [...otherIds, newId]
+                                  : otherIds,
+                              });
+                            }}
+                            className="w-full bg-background-main border border-primary/20 rounded-lg px-3 py-2 text-sm text-text-main-light outline-none focus:border-primary"
+                          >
+                            <option value="">None</option>
+                            {opt.values.map((val) => (
+                              <option key={val.id} value={val.id}>
+                                {val.value}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Filters — per variant, since each variant can belong to different filters */}
+              {filterGroups.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  <label className="text-xs font-bold text-text-muted uppercase">
+                    Filters
+                  </label>
+                  <div className="space-y-3 max-h-48 overflow-y-auto pr-1">
+                    {filterGroups
+                      .filter(
+                        (g) =>
+                          g.isActive !== false && (g.values || []).length > 0,
+                      )
+                      .map((group) => (
+                        <div key={group.id} className="space-y-1.5">
+                          <p className="text-[11px] font-bold text-text-muted uppercase">
+                            {group.name}
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {group.values.map((val) => {
+                              const on = (
+                                editingVariant.filterValueIds || []
+                              ).includes(val.id);
+                              return (
+                                <button
+                                  key={val.id}
+                                  type="button"
+                                  onClick={() =>
+                                    setEditingVariant({
+                                      ...editingVariant,
+                                      filterValueIds: on
+                                        ? (
+                                            editingVariant.filterValueIds || []
+                                          ).filter((fid) => fid !== val.id)
+                                        : [
+                                            ...(editingVariant.filterValueIds ||
+                                              []),
+                                            val.id,
+                                          ],
+                                    })
+                                  }
+                                  className={`px-2.5 py-1 rounded-full text-xs font-bold border transition-all cursor-pointer ${
+                                    on
+                                      ? "bg-primary text-white border-primary"
+                                      : "bg-background-main text-text-muted border-primary/20 hover:border-primary/50"
+                                  }`}
+                                >
+                                  {val.name}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                  </div>
                 </div>
               )}
 

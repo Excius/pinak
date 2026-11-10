@@ -7,6 +7,7 @@ import {
 import type { S3ClientConfig, PutObjectCommandInput } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import appConfig from "./config.js";
+import { ValidationError } from "./error.js";
 
 const enabled = appConfig.S3_ENABLED;
 
@@ -31,6 +32,29 @@ if (enabled) {
   s3Client = new S3Client(clientConfig);
 }
 
+// Only media/document types the admin UI actually uploads. SVG and HTML are
+// deliberately excluded: they can carry scripts and are served from a public bucket.
+const ALLOWED_UPLOAD_CONTENT_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "image/avif",
+  "video/mp4",
+  "video/webm",
+  "video/quicktime",
+  "application/pdf",
+]);
+
+function assertAllowedContentType(contentType?: string) {
+  const normalized = contentType?.split(";")[0]?.trim().toLowerCase();
+  if (!normalized || !ALLOWED_UPLOAD_CONTENT_TYPES.has(normalized)) {
+    throw new ValidationError(
+      `Unsupported file type${contentType ? ` "${contentType}"` : ""}. Allowed: JPEG, PNG, WebP, GIF, AVIF, MP4, WebM, MOV, PDF.`,
+    );
+  }
+}
+
 function ensureEnabled() {
   if (!enabled || !s3Client) {
     throw new Error(
@@ -45,6 +69,7 @@ export async function getSignedUploadUrl(
   expiresIn?: number,
 ) {
   ensureEnabled();
+  assertAllowedContentType(contentType);
   const command = new PutObjectCommand({
     Bucket: appConfig.S3_BUCKET,
     Key: key,
@@ -63,6 +88,7 @@ export async function uploadBuffer(
   makePublic = false,
 ) {
   ensureEnabled();
+  assertAllowedContentType(contentType);
   const params: PutObjectCommandInput = {
     Bucket: appConfig.S3_BUCKET!,
     Key: key,

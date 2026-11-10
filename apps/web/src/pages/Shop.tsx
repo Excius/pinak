@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/Layout";
 import ProductCard from "../components/ProductCard";
@@ -11,6 +11,41 @@ import type { Product } from "../api/products.api";
 import type { Category } from "../api/categories.api";
 import type { Brand } from "../api/brands.api";
 import type { FilterGroup } from "../api/filters.api";
+
+// Collapsible sidebar block so a long filter list stays compact.
+const FilterSection: React.FC<{
+  title: string;
+  selectedCount?: number;
+  open: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}> = ({ title, selectedCount = 0, open, onToggle, children }) => (
+  <div className="bg-surface-dark rounded-2xl border border-primary/10">
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-expanded={open}
+      className="w-full flex items-center justify-between gap-2 px-5 py-4 cursor-pointer"
+    >
+      <span className="flex items-center gap-2 text-sm uppercase tracking-widest font-bold text-primary-light">
+        {title}
+        {selectedCount > 0 && (
+          <span className="px-1.5 py-0.5 rounded-full bg-primary text-black text-[10px] font-extrabold leading-none">
+            {selectedCount}
+          </span>
+        )}
+      </span>
+      <span
+        className={`material-icons-outlined text-text-muted transition-transform ${open ? "rotate-180" : ""}`}
+      >
+        expand_more
+      </span>
+    </button>
+    {open && (
+      <div className="px-5 pb-5 max-h-64 overflow-y-auto">{children}</div>
+    )}
+  </div>
+);
 
 const Shop: React.FC = () => {
   const navigate = useNavigate();
@@ -27,6 +62,17 @@ const Shop: React.FC = () => {
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<string>("newest");
   const [filterOpen, setFilterOpen] = useState(false);
+  // Sections the shopper has toggled; unlisted ones use their default (categories/brands open, filter groups closed)
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
+  const resultsRef = useRef<HTMLDivElement>(null);
+  const isFirstRender = useRef(true);
+  const isSectionOpen = (key: string, defaultOpen: boolean) =>
+    openSections[key] ?? defaultOpen;
+  const toggleSection = (key: string, defaultOpen: boolean) =>
+    setOpenSections((prev) => ({
+      ...prev,
+      [key]: !(prev[key] ?? defaultOpen),
+    }));
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -102,6 +148,18 @@ const Shop: React.FC = () => {
     return product.categories?.[0]?.name || "";
   };
 
+  // After changing a filter, bring the results back into view if the page was scrolled past them.
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    const el = resultsRef.current;
+    if (el && el.getBoundingClientRect().top < 80) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [selectedCategory, selectedBrand, selectedFilters, sortBy]);
+
   const handleFilterToggle = (valueId: string) => {
     setSelectedFilters((prev) =>
       prev.includes(valueId)
@@ -116,6 +174,35 @@ const Shop: React.FC = () => {
     setSelectedFilters([]);
     setSortBy("newest");
   };
+
+  const activeChips: { key: string; label: string; onRemove: () => void }[] =
+    [];
+  if (selectedCategory) {
+    activeChips.push({
+      key: `cat-${selectedCategory}`,
+      label:
+        categories.find((c) => c.id === selectedCategory)?.name ?? "Category",
+      onRemove: () => setSelectedCategory(""),
+    });
+  }
+  if (selectedBrand) {
+    activeChips.push({
+      key: `brand-${selectedBrand}`,
+      label: brands.find((b) => b.id === selectedBrand)?.name ?? "Brand",
+      onRemove: () => setSelectedBrand(""),
+    });
+  }
+  for (const valueId of selectedFilters) {
+    const label = filterGroups
+      .flatMap((g) => g.values)
+      .find((v) => v.id === valueId)?.name;
+    if (label)
+      activeChips.push({
+        key: `fv-${valueId}`,
+        label,
+        onRemove: () => handleFilterToggle(valueId),
+      });
+  }
 
   const hasFilters =
     selectedCategory ||
@@ -177,7 +264,7 @@ const Shop: React.FC = () => {
             className={`${filterOpen ? "fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm md:relative md:bg-transparent md:backdrop-blur-none" : "hidden md:block"} w-full md:w-64 shrink-0`}
           >
             <div
-              className={`${filterOpen ? "absolute right-0 top-0 h-full w-[280px] bg-surface-dark overflow-y-auto p-4 animate-slideRight md:relative md:w-auto md:h-auto md:animate-none md:p-0" : ""} space-y-6`}
+              className={`${filterOpen ? "absolute right-0 top-0 h-full w-[280px] bg-surface-dark overflow-y-auto p-4 animate-slideRight md:relative md:w-auto md:h-auto md:animate-none md:p-0" : ""} space-y-4 md:sticky md:top-24 md:max-h-[calc(100vh-7rem)] md:overflow-y-auto md:pr-1`}
             >
               {/* Mobile filter header */}
               {filterOpen && (
@@ -193,10 +280,12 @@ const Shop: React.FC = () => {
                   </button>
                 </div>
               )}
-              <div className="bg-surface-dark rounded-2xl p-6 border border-primary/10">
-                <h3 className="text-sm uppercase tracking-widest font-bold text-primary-light mb-4">
-                  Categories
-                </h3>
+              <FilterSection
+                title="Categories"
+                selectedCount={selectedCategory ? 1 : 0}
+                open={isSectionOpen("categories", true)}
+                onToggle={() => toggleSection("categories", true)}
+              >
                 <ul className="space-y-2">
                   <li>
                     <button
@@ -217,12 +306,14 @@ const Shop: React.FC = () => {
                     </li>
                   ))}
                 </ul>
-              </div>
+              </FilterSection>
 
-              <div className="bg-surface-dark rounded-2xl p-6 border border-primary/10">
-                <h3 className="text-sm uppercase tracking-widest font-bold text-primary-light mb-4">
-                  Brands
-                </h3>
+              <FilterSection
+                title="Brands"
+                selectedCount={selectedBrand ? 1 : 0}
+                open={isSectionOpen("brands", true)}
+                onToggle={() => toggleSection("brands", true)}
+              >
                 <ul className="space-y-2">
                   <li>
                     <button
@@ -243,16 +334,19 @@ const Shop: React.FC = () => {
                     </li>
                   ))}
                 </ul>
-              </div>
+              </FilterSection>
 
               {filterGroups.map((group) => (
-                <div
+                <FilterSection
                   key={group.id}
-                  className="bg-surface-dark rounded-2xl p-6 border border-primary/10"
+                  title={group.name}
+                  selectedCount={
+                    group.values.filter((v) => selectedFilters.includes(v.id))
+                      .length
+                  }
+                  open={isSectionOpen(`group-${group.id}`, false)}
+                  onToggle={() => toggleSection(`group-${group.id}`, false)}
                 >
-                  <h3 className="text-sm uppercase tracking-widest font-bold text-primary-light mb-4">
-                    {group.name}
-                  </h3>
                   <ul className="space-y-3">
                     {group.values.map((val) => (
                       <li key={val.id}>
@@ -281,7 +375,7 @@ const Shop: React.FC = () => {
                       </li>
                     ))}
                   </ul>
-                </div>
+                </FilterSection>
               ))}
 
               {hasFilters && (
@@ -292,11 +386,54 @@ const Shop: React.FC = () => {
                   Clear All Filters
                 </button>
               )}
+              {filterOpen && (
+                <button
+                  type="button"
+                  className="md:hidden sticky bottom-0 w-full py-3 rounded-xl bg-primary text-black font-bold text-sm shadow-lg cursor-pointer"
+                  onClick={() => setFilterOpen(false)}
+                >
+                  {loading
+                    ? "Updating…"
+                    : `Show ${products.length} result${products.length !== 1 ? "s" : ""}`}
+                </button>
+              )}
             </div>
           </aside>
 
           {/* Product Grid */}
-          <div className="flex-1">
+          <div className="flex-1 min-w-0" ref={resultsRef}>
+            {(activeChips.length > 0 || !loading) && (
+              <div className="sticky top-20 z-20 -mx-1 mb-4 px-1 py-2 bg-background-light/90 backdrop-blur border-b border-primary/10 flex flex-wrap items-center gap-2">
+                <span className="text-sm text-text-muted mr-1">
+                  {loading
+                    ? "Updating results…"
+                    : `${products.length} product${products.length !== 1 ? "s" : ""}`}
+                </span>
+                {activeChips.map((chip) => (
+                  <button
+                    key={chip.key}
+                    type="button"
+                    onClick={chip.onRemove}
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/30 text-primary text-xs font-bold cursor-pointer hover:bg-primary/20"
+                    aria-label={`Remove filter ${chip.label}`}
+                  >
+                    {chip.label}
+                    <span className="material-icons-outlined text-[14px]">
+                      close
+                    </span>
+                  </button>
+                ))}
+                {hasFilters && (
+                  <button
+                    type="button"
+                    onClick={clearFilters}
+                    className="ml-auto text-xs font-medium text-text-muted hover:text-primary cursor-pointer"
+                  >
+                    Clear all
+                  </button>
+                )}
+              </div>
+            )}
             {loading ? (
               <ProductGridSkeleton count={8} />
             ) : error ? (
@@ -333,9 +470,6 @@ const Shop: React.FC = () => {
               </div>
             ) : (
               <>
-                <p className="text-sm text-text-muted mb-6">
-                  {products.length} product{products.length !== 1 ? "s" : ""}
-                </p>
                 <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-8">
                   {products.map((product) => {
                     const variant = getFirstVariant(product);

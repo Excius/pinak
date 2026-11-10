@@ -11,18 +11,18 @@ export const registerFilterAdminRoutes = (
   router.get(
     "/admin/groups",
     rateLimiter,
-    validateMultiple(FilterAdminTypes.ListGroups),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(FilterAdminTypes.ListGroups),
     filterController.listGroupsAdmin,
   );
 
   router.get(
     "/admin/groups/:id",
     rateLimiter,
-    validateMultiple(FilterAdminTypes.GetGroupById),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(FilterAdminTypes.GetGroupById),
     filterController.getGroupAdmin,
   );
 
@@ -30,72 +30,72 @@ export const registerFilterAdminRoutes = (
   router.post(
     "/groups",
     rateLimiter,
-    validateMultiple(FilterTypes.CreateGroup),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(FilterTypes.CreateGroup),
     filterController.createGroup,
   );
 
   router.put(
     "/groups/:id",
     rateLimiter,
-    validateMultiple(FilterTypes.UpdateGroup),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(FilterTypes.UpdateGroup),
     filterController.updateGroup,
   );
 
   router.delete(
     "/groups/:id",
     rateLimiter,
-    validateMultiple(FilterTypes.DeleteGroup),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(FilterTypes.DeleteGroup),
     filterController.deleteGroup,
   );
 
   router.post(
     "/groups/:groupId/values",
     rateLimiter,
-    validateMultiple(FilterTypes.CreateValue),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(FilterTypes.CreateValue),
     filterController.createValue,
   );
 
   router.put(
     "/values/:id",
     rateLimiter,
-    validateMultiple(FilterTypes.UpdateValue),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(FilterTypes.UpdateValue),
     filterController.updateValue,
   );
 
   router.delete(
     "/values/:id",
     rateLimiter,
-    validateMultiple(FilterTypes.DeleteValue),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(FilterTypes.DeleteValue),
     filterController.deleteValue,
   );
 
   router.post(
-    "/products/:productId/values/:filterValueId",
+    "/variants/:variantId/values/:filterValueId",
     rateLimiter,
-    validateMultiple(FilterTypes.AddFilterToProduct),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
-    filterController.addFilterToProduct,
+    validateMultiple(FilterTypes.AddFilterToVariant),
+    filterController.addFilterToVariant,
   );
 
   router.delete(
-    "/products/:productId/values/:filterValueId",
+    "/variants/:variantId/values/:filterValueId",
     rateLimiter,
-    validateMultiple(FilterTypes.RemoveFilterFromProduct),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
-    filterController.removeFilterFromProduct,
+    validateMultiple(FilterTypes.RemoveFilterFromVariant),
+    filterController.removeFilterFromVariant,
   );
 };

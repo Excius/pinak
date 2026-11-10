@@ -34,7 +34,8 @@ const deps: CouponRouteDeps = {
   rateLimiter: createRateLimiter(),
 };
 
-registerCouponPublicRoutes(router, deps);
+// Admin first: public GET "/:code" would otherwise capture GET "/admin".
 registerCouponAdminRoutes(router, deps);
+registerCouponPublicRoutes(router, deps);
 
 export default router;

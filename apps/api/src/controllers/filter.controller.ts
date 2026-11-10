@@ -111,21 +111,21 @@ export class FilterController {
     ResponseHandler.success(res, {}, "Filter value deleted successfully");
   };
 
-  addFilterToProduct = async (req: Request, res: Response) => {
-    const { productId, filterValueId } = req.params;
-    const rel = await this.filterService.addFilterToProduct(
-      productId as string,
+  addFilterToVariant = async (req: Request, res: Response) => {
+    const { variantId, filterValueId } = req.params;
+    const rel = await this.filterService.addFilterToVariant(
+      variantId as string,
       filterValueId as string,
     );
-    ResponseHandler.success(res, rel, "Filter value attached to product");
+    ResponseHandler.success(res, rel, "Filter value attached to variant");
   };
 
-  removeFilterFromProduct = async (req: Request, res: Response) => {
-    const { productId, filterValueId } = req.params;
-    await this.filterService.removeFilterFromProduct(
-      productId as string,
+  removeFilterFromVariant = async (req: Request, res: Response) => {
+    const { variantId, filterValueId } = req.params;
+    await this.filterService.removeFilterFromVariant(
+      variantId as string,
       filterValueId as string,
     );
-    ResponseHandler.success(res, {}, "Filter value removed from product");
+    ResponseHandler.success(res, {}, "Filter value removed from variant");
   };
 }

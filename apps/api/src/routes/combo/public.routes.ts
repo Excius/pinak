@@ -51,8 +51,10 @@ export const registerComboPublicRoutes = (
 
   router.patch(
     "/:id/increment-purchase",
-    authMiddleware.authenticate,
     rateLimiter,
+    authMiddleware.authenticate,
+    // Purchase counts must not be client-controlled: restricted to staff.
+    authMiddleware.requireModeratorOrAdmin,
     validateMultiple(ComboKitTypes.IncrementComboKitPurchase),
     comboController.incrementComboKitPurchase,
   );
