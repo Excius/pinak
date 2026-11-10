@@ -19,7 +19,7 @@ const PAGE_SIZE = 8;
 
 export function BestSellers() {
   const router = useRouter();
-  const { addToCart } = useCart();
+  const { addToCart, addingItemKey } = useCart();
   const {
     itemIdsByVariantId,
     itemIdsByProductId,
@@ -108,6 +108,7 @@ export function BestSellers() {
                     itemIdsByProductId[product.id],
                   )}
                   isWishlistLoading={loadingVariantId === product.variantId}
+                  isAddToCartLoading={addingItemKey === product.variantId}
                 />
               </View>
             ))}

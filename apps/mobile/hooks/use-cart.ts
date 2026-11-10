@@ -81,6 +81,7 @@ export interface Cart {
 interface UseCartReturn {
     cart: Cart | null;
     loading: boolean;
+    addingItemKey: string | null;
     error: string | null;
     itemCount: number;
     fetchCart: () => Promise<void>;
@@ -93,6 +94,7 @@ interface UseCartReturn {
 function useCartState(): UseCartReturn {
     const [cart, setCart] = useState<Cart | null>(null);
     const [loading, setLoading] = useState(false);
+    const [addingItemKey, setAddingItemKey] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const cartRef = useRef<Cart | null>(null);
     const updateTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
@@ -142,6 +144,7 @@ function useCartState(): UseCartReturn {
         quantity: number = 1
     ) => {
         setLoading(true);
+        setAddingItemKey(productVariantId ?? comboKitId ?? null);
         setError(null);
         try {
             const token = await getAccessToken();
@@ -173,6 +176,7 @@ function useCartState(): UseCartReturn {
             });
             console.error('Add to cart error:', err);
         } finally {
+            setAddingItemKey(null);
             setLoading(false);
         }
     }, [setCartState]);
@@ -185,6 +189,7 @@ function useCartState(): UseCartReturn {
         const currentItem = currentCart?.items.find((item) => item.id === itemId);
         if (!currentCart || !currentItem) return;
 
+        setLoading(true);
         pendingQuantities.current[itemId] = quantity;
         const optimisticCart = {
             ...currentCart,
@@ -224,6 +229,8 @@ function useCartState(): UseCartReturn {
                 setError(errorMessage);
                 console.error('Update cart error:', err);
                 void fetchCart();
+            } finally {
+                setLoading(false);
             }
         }, 300);
     }, [fetchCart, setCartState]);
@@ -297,6 +304,7 @@ function useCartState(): UseCartReturn {
     return {
         cart,
         loading,
+        addingItemKey,
         error,
         itemCount,
         fetchCart,

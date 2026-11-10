@@ -9,12 +9,14 @@ interface CartItemCardProps {
   item: CartItem;
   onQuantityChange: (quantity: number) => void;
   onRemove: () => void;
+  isLoading?: boolean;
 }
 
 export function CartItemCard({
   item,
   onQuantityChange,
   onRemove,
+  isLoading = false,
 }: CartItemCardProps) {
   const product = item.productVariant?.product;
   const variant = item.productVariant;
@@ -95,7 +97,9 @@ export function CartItemCard({
         <View className="flex-row items-center gap-2">
           <TouchableOpacity
             onPress={() => onQuantityChange(Math.max(1, item.quantity - 1))}
+            disabled={isLoading}
             className="rounded-md border border-surface-border bg-surface p-1"
+            style={{ opacity: isLoading ? 0.5 : 1 }}
           >
             <MaterialCommunityIcons name="minus" size={16} color="#FFFFFF" />
           </TouchableOpacity>
@@ -106,18 +110,21 @@ export function CartItemCard({
 
           <TouchableOpacity
             onPress={() => onQuantityChange(item.quantity + 1)}
-            disabled={item.quantity >= item.availableStock}
+            disabled={isLoading || item.quantity >= item.availableStock}
             className={`rounded-md border border-surface-border ${
-              item.quantity >= item.availableStock
+              isLoading || item.quantity >= item.availableStock
                 ? "bg-surface-light"
                 : "bg-surface"
             } p-1`}
+            style={{ opacity: isLoading ? 0.5 : 1 }}
           >
             <MaterialCommunityIcons
               name="plus"
               size={16}
               color={
-                item.quantity >= item.availableStock ? "#8B8B8B" : "#FFFFFF"
+                isLoading || item.quantity >= item.availableStock
+                  ? "#8B8B8B"
+                  : "#FFFFFF"
               }
             />
           </TouchableOpacity>
@@ -125,7 +132,9 @@ export function CartItemCard({
           {/* Remove Button */}
           <TouchableOpacity
             onPress={onRemove}
+            disabled={isLoading}
             className="ml-auto rounded-md p-1"
+            style={{ opacity: isLoading ? 0.5 : 1 }}
           >
             <MaterialCommunityIcons
               name="trash-can-outline"

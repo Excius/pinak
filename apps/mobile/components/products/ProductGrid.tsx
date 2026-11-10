@@ -23,7 +23,7 @@ export function ProductGrid({
   filterValueIds = [],
 }: ProductGridProps) {
   const router = useRouter();
-  const { addToCart } = useCart();
+  const { addToCart, addingItemKey } = useCart();
   const { isAuthenticated } = useAuth();
   const {
     itemIdsByVariantId,
@@ -120,6 +120,7 @@ export function ProductGrid({
               itemIdsByProductId[item.id],
             )}
             isWishlistLoading={loadingVariantId === item.variantId}
+            isAddToCartLoading={addingItemKey === item.variantId}
           />
         </View>
       )}

@@ -1,4 +1,10 @@
-import { View, Text, Image, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { formatRupeesFromPaise } from "@/utils/currency";
 
@@ -21,6 +27,7 @@ interface ProductCardProps {
   onWishlistToggle?: (isFavorite: boolean) => void;
   isFavorite?: boolean;
   isWishlistLoading?: boolean;
+  isAddToCartLoading?: boolean;
 }
 
 export function ProductCard({
@@ -30,6 +37,7 @@ export function ProductCard({
   onWishlistToggle,
   isFavorite = false,
   isWishlistLoading,
+  isAddToCartLoading = false,
 }: ProductCardProps) {
   const handleWishlistToggle = () => {
     const newFavoriteState = !isFavorite;
@@ -132,11 +140,15 @@ export function ProductCard({
             event.stopPropagation();
             onAddToCart?.();
           }}
-          disabled={!product.canAddToCart}
+          disabled={!product.canAddToCart || isAddToCartLoading}
           className="absolute bottom-3 right-3 w-10 h-10 bg-primary rounded-full justify-center items-center shadow-lg active:scale-90"
           style={{ opacity: product.canAddToCart === false ? 0.5 : 1 }}
         >
-          <MaterialCommunityIcons name="plus" size={20} color="#0A0A0A" />
+          {isAddToCartLoading ? (
+            <ActivityIndicator size="small" color="#0A0A0A" />
+          ) : (
+            <MaterialCommunityIcons name="plus" size={20} color="#0A0A0A" />
+          )}
         </TouchableOpacity>
       </View>
 

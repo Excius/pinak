@@ -21,7 +21,7 @@ const PAGE_SIZE = 8;
 
 export default function BestSellersPage() {
   const router = useRouter();
-  const { addToCart } = useCart();
+  const { addToCart, addingItemKey } = useCart();
   const { isAuthenticated } = useAuth();
   const { itemIdsByVariantId, loadingVariantId, toggleWishlist } =
     useWishlist();
@@ -180,6 +180,7 @@ export default function BestSellersPage() {
                     item.variantId && itemIdsByVariantId[item.variantId],
                   )}
                   isWishlistLoading={loadingVariantId === item.variantId}
+                  isAddToCartLoading={addingItemKey === item.variantId}
                 />
               </View>
             )}

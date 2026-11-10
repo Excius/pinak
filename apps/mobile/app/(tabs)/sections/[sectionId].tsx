@@ -19,7 +19,7 @@ import { mapProductsToCardItems } from "@/utils/mappers/product.mapper";
 export default function FeaturedSectionDetailScreen() {
   const { sectionId } = useLocalSearchParams<{ sectionId?: string }>();
   const router = useRouter();
-  const { addToCart } = useCart();
+  const { addToCart, addingItemKey } = useCart();
   const {
     itemIdsByVariantId,
     itemIdsByProductId,
@@ -127,6 +127,7 @@ export default function FeaturedSectionDetailScreen() {
                   itemIdsByProductId[item.id],
                 )}
                 isWishlistLoading={loadingVariantId === item.variantId}
+                isAddToCartLoading={addingItemKey === item.variantId}
               />
             </View>
           )}

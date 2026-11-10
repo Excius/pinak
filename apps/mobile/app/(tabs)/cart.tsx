@@ -93,6 +93,7 @@ export default function CartPage() {
                     handleQuantityChange(item.id, quantity)
                   }
                   onRemove={() => handleRemove(item.id)}
+                  isLoading={loading}
                 />
               ))}
               <View className="h-4" />
