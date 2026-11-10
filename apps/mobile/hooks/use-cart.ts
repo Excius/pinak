@@ -102,6 +102,7 @@ interface UseCartReturn {
   cart: Cart | null;
   loading: boolean;
   isAddingToCart: boolean;
+  addingItemKey: string | null;
   error: string | null;
   itemCount: number;
   fetchCart: () => Promise<void>;
@@ -123,6 +124,7 @@ function useCartState(): UseCartReturn {
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [addingItemKey, setAddingItemKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(
     null,
@@ -228,6 +230,7 @@ function useCartState(): UseCartReturn {
       quantity: number = 1,
     ) => {
       setIsAddingToCart(true);
+      setAddingItemKey(productVariantId ?? comboKitId ?? null);
       setLoading(true);
       setError(null);
       try {
@@ -267,6 +270,7 @@ function useCartState(): UseCartReturn {
         console.error("Add to cart error:", err);
       } finally {
         setIsAddingToCart(false);
+        setAddingItemKey(null);
         setLoading(false);
       }
     },
@@ -282,6 +286,7 @@ function useCartState(): UseCartReturn {
       const currentItem = currentCart?.items.find((item) => item.id === itemId);
       if (!currentCart || !currentItem) return;
 
+      setLoading(true);
       pendingQuantities.current[itemId] = quantity;
       const optimisticCart = {
         ...currentCart,
@@ -337,6 +342,8 @@ function useCartState(): UseCartReturn {
           setError(errorMessage);
           console.error("Update cart error:", err);
           void fetchCart();
+        } finally {
+          setLoading(false);
         }
       }, 300);
     },
@@ -432,6 +439,7 @@ function useCartState(): UseCartReturn {
     cart,
     loading,
     isAddingToCart,
+    addingItemKey,
     error,
     itemCount,
     fetchCart,

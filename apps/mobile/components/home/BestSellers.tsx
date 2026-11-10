@@ -19,7 +19,7 @@ const PAGE_SIZE = 8;
 
 export function BestSellers() {
   const router = useRouter();
-  const { addToCart, isAddingToCart } = useCart();
+  const { addToCart, addingItemKey } = useCart();
   const {
     itemIdsByVariantId,
     itemIdsByProductId,
@@ -97,7 +97,7 @@ export function BestSellers() {
                   product={product}
                   onPress={() => handleProductPress(product.id)}
                   onAddToCart={() => handleAddToCart(product)}
-                  isAddToCartLoading={isAddingToCart}
+                  isAddToCartLoading={addingItemKey === product.variantId}
                   onWishlistToggle={() => {
                     if (product.variantId) {
                       void toggleWishlist(product.variantId, product.id);
