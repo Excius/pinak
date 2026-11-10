@@ -1,24 +1,84 @@
+import { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, Linking, Alert } from "react-native";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import {
+  getWhatsAppContact,
+  type WhatsAppContact,
+} from "@/services/content.service";
+import { getStores } from "@/services/store.service";
 
 export function WhatsAppAndStoreCTA() {
-  const handleStoreLocator = () => {
-    const LATTITUDE = "20.421684";
-    const LONGITUDE = "72.841062";
+  const [contact, setContact] = useState<WhatsAppContact | null>(null);
+  const [isFindingStore, setIsFindingStore] = useState(false);
 
-    const url = `https://www.google.com/maps?q=${LATTITUDE},${LONGITUDE}`;
-    Linking.openURL(url).catch((err) => {
-      console.error("Error opening store locator:", err);
-      Alert.alert("Unable to Open Store Locator", "Please try again later.", [
-        { text: "OK" },
-      ]);
-    });
+  useEffect(() => {
+    const loadContactDetails = async () => {
+      try {
+        const whatsappContact = await getWhatsAppContact();
+        setContact(whatsappContact);
+      } catch (error) {
+        console.error("Failed to load contact details:", error);
+      }
+    };
+
+    void loadContactDetails();
+  }, []);
+
+  const handleStoreLocator = async () => {
+    if (isFindingStore) return;
+
+    setIsFindingStore(true);
+    try {
+      const Location = await import("expo-location");
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== Location.PermissionStatus.GRANTED) {
+        Alert.alert(
+          "Location Permission Required",
+          "Allow location access to find the nearest store.",
+        );
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+      const stores = await getStores({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+      const store = stores.items[0];
+
+      if (!store) {
+        Alert.alert("No Nearby Store", "No active stores were found nearby.");
+        return;
+      }
+
+      const url = `https://www.google.com/maps/search/?api=1&query=${store.latitude},${store.longitude}`;
+      await Linking.openURL(url);
+    } catch (error) {
+      console.error("Error finding nearby store:", error);
+      const message =
+        error instanceof Error && error.message.includes("ExpoLocation")
+          ? "Please rebuild the mobile app after installing the location package."
+          : "Please try again later.";
+      Alert.alert("Unable to Find Store", message);
+    } finally {
+      setIsFindingStore(false);
+    }
   };
 
   const handleWhatsAppPress = async () => {
-    const phoneNumber = "917688992293";
-    const whatsappUrl = `whatsapp://send?phone=${phoneNumber}`;
-    const webUrl = `https://wa.me/${phoneNumber}`;
+    if (!contact) {
+      Alert.alert("WhatsApp Unavailable", "Please try again later.", [
+        { text: "OK" },
+      ]);
+      return;
+    }
+
+    const phoneNumber = contact.whatsappNumber.replace(/[^0-9]/g, "");
+    const message = encodeURIComponent(contact.defaultMessage);
+    const whatsappUrl = `whatsapp://send?phone=${phoneNumber}&text=${message}`;
+    const webUrl = `https://wa.me/${phoneNumber}?text=${message}`;
 
     try {
       // Try WhatsApp app first
@@ -52,11 +112,14 @@ export function WhatsAppAndStoreCTA() {
           {/* Store Locator Button */}
           <TouchableOpacity
             onPress={handleStoreLocator}
+            disabled={isFindingStore}
             className="w-full rounded-full border-2 border-primary py-4 md:py-4 min-h-[48px] flex items-center justify-center"
-            // onPress={handleStoreLocator}
+            style={{ opacity: isFindingStore ? 0.6 : 1 }}
           >
             <Text className="text-center font-bold text-primary text-base md:text-base">
-              Find a Store Near You
+              {isFindingStore
+                ? "Finding Nearby Store..."
+                : "Find a Store Near You"}
             </Text>
           </TouchableOpacity>
 
