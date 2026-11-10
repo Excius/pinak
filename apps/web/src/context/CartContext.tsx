@@ -10,29 +10,25 @@ import * as cartApi from "../api/cart.api";
 import type { Cart, CartItem } from "../api/cart.api";
 
 interface CartContextType {
-  cart: Cart | null;
-  items: CartItem[];
-  itemCount: number;
-  subtotal: number;
-  taxTotal: number;
-  totalWithTax: number;
-  shippingFee: number;
-  shippingRequired: boolean;
-  grandTotal: number;
-  loading: boolean;
-  isOpen: boolean;
-  openCart: () => void;
-  closeCart: () => void;
-  toggleCart: () => void;
-  addItem: (payload: {
-    productVariantId?: string;
-    comboKitId?: string;
-    quantity?: number;
-  }) => Promise<void>;
-  removeItem: (itemId: string) => Promise<void>;
-  updateQuantity: (itemId: string, quantity: number) => Promise<void>;
-  clearCart: () => Promise<void>;
-  refreshCart: () => Promise<void>;
+  cart: Cart | null
+  items: CartItem[]
+  itemCount: number
+  subtotal: number
+  taxTotal: number
+  totalWithTax: number
+  shippingFee: number
+  shippingRequired: boolean
+  grandTotal: number
+  loading: boolean
+  isOpen: boolean
+  openCart: () => void
+  closeCart: () => void
+  toggleCart: () => void
+  addItem: (payload: { productVariantId?: string; comboKitId?: string; quantity?: number }) => Promise<void>
+  removeItem: (itemId: string) => Promise<void>
+  updateQuantity: (itemId: string, quantity: number) => Promise<void>
+  clearCart: () => Promise<void>
+  refreshCart: () => Promise<void>
 }
 
 const CartContext = createContext<CartContextType | null>(null);
@@ -53,14 +49,14 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
-  const items = cart?.items ?? [];
-  const itemCount = cart?.totalQuantity ?? 0;
-  const subtotal = cart?.subtotal ?? 0;
-  const taxTotal = cart?.taxTotal ?? 0;
-  const totalWithTax = cart?.totalWithTax ?? subtotal;
-  const shippingFee = cart?.shippingFee ?? 0;
-  const shippingRequired = cart?.shippingRequired ?? false;
-  const grandTotal = cart?.grandTotal ?? totalWithTax + shippingFee;
+  const items = cart?.items ?? []
+  const itemCount = cart?.totalQuantity ?? 0
+  const subtotal = cart?.subtotal ?? 0
+  const taxTotal = cart?.taxTotal ?? 0
+  const totalWithTax = cart?.totalWithTax ?? subtotal
+  const shippingFee = cart?.shippingFee ?? 0
+  const shippingRequired = cart?.shippingRequired ?? false
+  const grandTotal = cart?.grandTotal ?? totalWithTax + shippingFee
 
   const openCart = useCallback(() => setIsOpen(true), []);
   const closeCart = useCallback(() => setIsOpen(false), []);

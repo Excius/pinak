@@ -430,9 +430,9 @@ export const toPublicComboKitItems = (
 export const toPublicComboKit = (comboKit: ComboKitRecord): PublicComboKit => {
   const maxTaxRate = Math.max(
     0,
-    ...(comboKit.items ?? []).map((item) =>
-      variantTaxRate(item.productVariant),
-    ),
+    ...(comboKit.items ?? []).map(
+      (item) => variantTaxRate(item.productVariant)
+    )
   );
   const taxAmount = Math.round((comboKit.price * maxTaxRate) / 100);
   const priceWithTax = comboKit.price + taxAmount;
@@ -522,9 +522,9 @@ export const toAdminComboKitItems = (
 export const toAdminComboKit = (comboKit: ComboKitRecord): AdminComboKit => {
   const maxTaxRate = Math.max(
     0,
-    ...(comboKit.items ?? []).map((item) =>
-      variantTaxRate(item.productVariant),
-    ),
+    ...(comboKit.items ?? []).map(
+      (item) => variantTaxRate(item.productVariant)
+    )
   );
   const taxAmount = Math.round((comboKit.price * maxTaxRate) / 100);
   const priceWithTax = comboKit.price + taxAmount;

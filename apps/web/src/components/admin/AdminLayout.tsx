@@ -6,23 +6,23 @@ const AdminLayout = () => {
   const { user, logout } = useAuth();
 
   const navItems = [
-    { label: "Dashboard", path: "/admin", icon: "dashboard" },
-    { label: "Products", path: "/admin/products", icon: "inventory_2" },
-    { label: "Inventory", path: "/admin/inventory", icon: "warning_amber" },
-    { label: "Combo Kits", path: "/admin/combos", icon: "auto_awesome_mosaic" },
-    { label: "Categories", path: "/admin/categories", icon: "category" },
-    { label: "Brands", path: "/admin/brands", icon: "branding_watermark" },
-    { label: "Filters", path: "/admin/filters", icon: "filter_alt" },
-    { label: "Options", path: "/admin/options", icon: "tune" },
-    { label: "Featured", path: "/admin/featured", icon: "star" },
-    { label: "Orders", path: "/admin/orders", icon: "receipt_long" },
-    { label: "Users", path: "/admin/users", icon: "group" },
-    { label: "Coupons", path: "/admin/coupons", icon: "local_offer" },
-    { label: "Stores", path: "/admin/stores", icon: "storefront" },
-    { label: "Pages (CMS)", path: "/admin/pages", icon: "article" },
-    { label: "Banners", path: "/admin/dynamic-assets", icon: "view_carousel" },
-    { label: "Settings", path: "/admin/settings", icon: "settings" },
-  ];
+    { label: 'Dashboard', path: '/admin', icon: 'dashboard' },
+    { label: 'Products', path: '/admin/products', icon: 'inventory_2' },
+    { label: 'Inventory', path: '/admin/inventory', icon: 'warning_amber' },
+    { label: 'Combo Kits', path: '/admin/combos', icon: 'auto_awesome_mosaic' },
+    { label: 'Categories', path: '/admin/categories', icon: 'category' },
+    { label: 'Brands', path: '/admin/brands', icon: 'branding_watermark' },
+    { label: 'Filters', path: '/admin/filters', icon: 'filter_alt' },
+    { label: 'Options', path: '/admin/options', icon: 'tune' },
+    { label: 'Featured', path: '/admin/featured', icon: 'star' },
+    { label: 'Orders', path: '/admin/orders', icon: 'receipt_long' },
+    { label: 'Users', path: '/admin/users', icon: 'group' },
+    { label: 'Coupons', path: '/admin/coupons', icon: 'local_offer' },
+    { label: 'Stores', path: '/admin/stores', icon: 'storefront' },
+    { label: 'Pages (CMS)', path: '/admin/pages', icon: 'article' },
+    { label: 'Banners', path: '/admin/dynamic-assets', icon: 'view_carousel' },
+    { label: 'Settings', path: '/admin/settings', icon: 'settings' },
+  ]
 
   return (
     <div className="min-h-screen bg-background-light flex">

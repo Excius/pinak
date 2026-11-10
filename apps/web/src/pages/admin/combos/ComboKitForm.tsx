@@ -41,26 +41,19 @@ const ComboKitForm = () => {
   // Image management state
   const [uploadingImage, setUploadingImage] = useState(false);
 
-  const [imageError, setImageError] = useState<string | null>(null);
+
+  const [imageError, setImageError] = useState<string | null>(null)
   // Create mode: the image is chosen now and uploaded (as a file) right after the kit is created
-  const [pendingImage, setPendingImage] = useState<File | null>(null);
+  const [pendingImage, setPendingImage] = useState<File | null>(null)
 
   const [form, setForm] = useState<Partial<AdminComboKit>>({
-    name: "",
-    slug: "",
-    description: "",
-    audience: "",
-    price: 0,
-    pricingStrategy: "FIXED_PRICE",
-    discountType: null,
-    discountValue: null,
-    tags: [],
-    isActive: true,
-    sortOrder: 0,
-    items: [],
-    metaTitle: "",
-    metaDescription: "",
-  });
+    name: '', slug: '', description: '', audience: '',
+    price: 0, pricingStrategy: 'FIXED_PRICE',
+    discountType: null, discountValue: null,
+    tags: [], isActive: true, sortOrder: 0, items: [],
+    metaTitle: '', metaDescription: ''
+  })
+
 
   useEffect(() => {
     if (isEdit && id) {
@@ -137,22 +130,9 @@ const ComboKitForm = () => {
     setSaving(true);
     setMsg(null);
     try {
-      const fields = [
-        "name",
-        "slug",
-        "description",
-        "audience",
-        "price",
-        "pricingStrategy",
-        "discountType",
-        "discountValue",
-        "tags",
-        "isActive",
-        "sortOrder",
-        "metaTitle",
-        "metaDescription",
-      ];
-      const payload: Record<string, unknown> = {};
+      const fields = ['name','slug','description','audience','price','pricingStrategy',
+        'discountType','discountValue','tags','isActive','sortOrder','metaTitle','metaDescription']
+      const payload: Record<string, unknown> = {}
       for (const k of fields) {
         const v = (form as any)[k];
         if (v !== "" && v !== null && v !== undefined) payload[k] = v;
@@ -167,26 +147,19 @@ const ComboKitForm = () => {
         await updateComboKitAdmin(id, payload);
         setMsg({ type: "success", text: "Combo kit updated!" });
       } else {
-        if (!payload.name) {
-          setMsg({ type: "error", text: "Name is required." });
-          setSaving(false);
-          return;
-        }
-        const created = await createComboKitAdmin(payload);
+        if (!payload.name) { setMsg({ type: 'error', text: 'Name is required.' }); setSaving(false); return }
+        const created = await createComboKitAdmin(payload)
         if (pendingImage) {
           try {
-            const imageData = new FormData();
-            imageData.append("image", pendingImage);
-            imageData.append("isPrimary", "true");
-            await addComboKitImageAdmin(created.id, imageData);
+            const imageData = new FormData()
+            imageData.append('image', pendingImage)
+            imageData.append('isPrimary', 'true')
+            await addComboKitImageAdmin(created.id, imageData)
           } catch (imgErr) {
-            console.error(
-              "Combo kit created, but the image upload failed",
-              imgErr,
-            );
+            console.error('Combo kit created, but the image upload failed', imgErr)
           }
         }
-        navigate(`/admin/combos/${created.id}`, { replace: true });
+        navigate(`/admin/combos/${created.id}`, { replace: true })
       }
     } catch (err: any) {
       setMsg({
@@ -379,30 +352,18 @@ const ComboKitForm = () => {
             </div>
             {!isEdit && (
               <div className="space-y-2">
-                <label className="text-xs font-bold text-text-muted uppercase">
-                  Primary Image (optional)
-                </label>
+                <label className="text-xs font-bold text-text-muted uppercase">Primary Image (optional)</label>
                 <label className="flex items-center gap-3 px-4 py-3 bg-background-main border border-dashed border-primary/20 rounded-xl cursor-pointer hover:border-primary/60 transition-all">
-                  <span className="material-icons-outlined text-primary">
-                    cloud_upload
-                  </span>
-                  <span className="text-sm text-text-muted truncate">
-                    {pendingImage
-                      ? pendingImage.name
-                      : "Choose an image file (PNG, JPG, WebP up to 10MB)"}
-                  </span>
+                  <span className="material-icons-outlined text-primary">cloud_upload</span>
+                  <span className="text-sm text-text-muted truncate">{pendingImage ? pendingImage.name : 'Choose an image file (PNG, JPG, WebP up to 10MB)'}</span>
                   <input
                     type="file"
                     accept="image/*"
                     className="hidden"
-                    onChange={(e) =>
-                      setPendingImage(e.target.files?.[0] ?? null)
-                    }
+                    onChange={e => setPendingImage(e.target.files?.[0] ?? null)}
                   />
                 </label>
-                <p className="text-[11px] text-text-muted">
-                  You can manage the full image gallery after saving.
-                </p>
+                <p className="text-[11px] text-text-muted">You can manage the full image gallery after saving.</p>
               </div>
             )}
           </section>

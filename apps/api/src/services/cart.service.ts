@@ -2,10 +2,7 @@ import type { PrismaClient } from "../generated/prisma/client.js";
 import { NotFoundError, ValidationError } from "../lib/error.js";
 import { getShippingFeePaise } from "../lib/storeSettings.js";
 import { ensureTaxRates, variantTaxRate } from "../lib/taxRates.js";
-import {
-  CartRepository,
-  CartWithItems,
-} from "../repositories/cart.repository.js";
+import { CartRepository, CartWithItems } from "../repositories/cart.repository.js";
 import { StockReservationService } from "./stockReservation.service.js";
 
 export type AddToCartInput = {
@@ -270,9 +267,9 @@ export class CartService {
 
           const maxTaxRate = Math.max(
             0,
-            ...item.comboKit.items.map((comboItem) =>
-              variantTaxRate(comboItem.productVariant),
-            ),
+            ...item.comboKit.items.map(
+              (comboItem) => variantTaxRate(comboItem.productVariant)
+            )
           );
 
           const comboTaxAmount = Math.round((unitPrice * maxTaxRate) / 100);
@@ -379,9 +376,7 @@ export class CartService {
 
     // Flat fee is admin-configurable (Settings → Shipping); orders use the same value.
     const shippingFee =
-      shippingRequired && items.length > 0
-        ? await getShippingFeePaise(this.prisma)
-        : 0;
+      shippingRequired && items.length > 0 ? await getShippingFeePaise(this.prisma) : 0;
     const grandTotal = totalWithTax + shippingFee;
 
     return {

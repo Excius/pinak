@@ -446,9 +446,9 @@ export class OrderService {
 
                 const maxTaxRate = Math.max(
                   0,
-                  ...comboKit.items.map((comboItem) =>
-                    variantTaxRate(comboItem.productVariant),
-                  ),
+                  ...comboKit.items.map(
+                    (comboItem) => variantTaxRate(comboItem.productVariant)
+                  )
                 );
 
                 const componentSnapshot = comboKit.items.map((comboItem) => {
@@ -563,13 +563,10 @@ export class OrderService {
                 const variant = pItem.variant;
                 const effectivePrice = variant.sellingPrice ?? variant.price;
                 const taxRate = variantTaxRate(variant);
-                const priceWithTax =
-                  variant.price + Math.round((variant.price * taxRate) / 100);
-                const sellingPriceWithTax =
-                  variant.sellingPrice != null
-                    ? variant.sellingPrice +
-                      Math.round((variant.sellingPrice * taxRate) / 100)
-                    : null;
+                const priceWithTax = variant.price + Math.round((variant.price * taxRate) / 100);
+                const sellingPriceWithTax = variant.sellingPrice != null
+                  ? variant.sellingPrice + Math.round((variant.sellingPrice * taxRate) / 100)
+                  : null;
 
                 orderItems.push({
                   orderId: "",

@@ -311,7 +311,7 @@ const OptionList = () => {
     <div className="space-y-6 animate-fade-in">
       {/* ── Option Modal ─────────────────────────────────────────────── */}
       {showOptionModal && (
-        <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div
             className="absolute inset-0 bg-black/80 backdrop-blur-sm"
             onClick={() => setShowOptionModal(false)}
@@ -383,7 +383,7 @@ const OptionList = () => {
 
       {/* ── Value Modal ──────────────────────────────────────────────── */}
       {showValueModal && (
-        <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div
             className="absolute inset-0 bg-black/80 backdrop-blur-sm"
             onClick={() => setShowValueModal(false)}
@@ -439,7 +439,7 @@ const OptionList = () => {
                       type="color"
                       value={
                         valueForm.swatchColorHex &&
-                        SWATCH_HEX.test(valueForm.swatchColorHex)
+                        /^#([A-Fa-f0-9]{6})$/.test(valueForm.swatchColorHex)
                           ? valueForm.swatchColorHex
                           : "#C96C7D"
                       }
@@ -635,7 +635,7 @@ const OptionList = () => {
 
       {/* ── Delete Confirmation ──────────────────────────────────────── */}
       {deleteConfirm && (
-        <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div
             className="absolute inset-0 bg-black/80 backdrop-blur-sm"
             onClick={() => {

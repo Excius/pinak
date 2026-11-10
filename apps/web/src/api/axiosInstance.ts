@@ -47,6 +47,21 @@ const NO_REFRESH_PATHS = [
 const skipsRefresh = (url?: string) =>
   !!url && NO_REFRESH_PATHS.some((path) => url.includes(path));
 
+// Auth endpoints that return 401 for bad credentials/tokens rather than an expired
+// session. Refreshing (and redirecting) on these would wipe the form's error state.
+const NO_REFRESH_PATHS = [
+  '/auth/login',
+  '/auth/register',
+  '/auth/forgot-password',
+  '/auth/verify-email',
+  '/auth/verify-password',
+  '/auth/google/callback',
+  '/auth/username',
+]
+
+const skipsRefresh = (url?: string) =>
+  !!url && NO_REFRESH_PATHS.some((path) => url.includes(path))
+
 // Request interceptor: Add access token to headers
 axiosInstance.interceptors.request.use(
   (config) => {
@@ -66,19 +81,15 @@ axiosInstance.interceptors.response.use(
     const originalRequest = error.config as any;
 
     // If error is 401 (Unauthorized) and not a refresh request, try to refresh token
-    if (
-      error.response?.status === 401 &&
-      !originalRequest._retry &&
-      !skipsRefresh(originalRequest?.url)
-    ) {
+    if (error.response?.status === 401 && !originalRequest._retry && !skipsRefresh(originalRequest?.url)) {
       if (isRefreshing) {
         // If already refreshing, queue this request to retry after refresh completes
         return new Promise((resolve, reject) => {
           failedQueue.push({
             resolve: (token: string) => {
-              originalRequest._retry = true;
-              originalRequest.headers.Authorization = `Bearer ${token}`;
-              resolve(axiosInstance(originalRequest));
+              originalRequest._retry = true
+              originalRequest.headers.Authorization = `Bearer ${token}`
+              resolve(axiosInstance(originalRequest))
             },
             reject: (err: any) => reject(err),
           });
@@ -96,6 +107,17 @@ axiosInstance.interceptors.response.use(
         originalRequest._retry = true;
         originalRequest.headers.Authorization = `Bearer ${currentToken}`;
         return axiosInstance(originalRequest);
+      }
+
+      // This request was sent with an access token that has since been replaced by a
+      // refresh that already finished (its 401 just arrived late). Retry with the
+      // current token instead of rotating the refresh token a second time.
+      const sentToken = String(originalRequest.headers?.Authorization ?? '').replace(/^Bearer\s+/i, '')
+      const currentToken = localStorage.getItem('accessToken')
+      if (currentToken && sentToken && sentToken !== currentToken) {
+        originalRequest._retry = true
+        originalRequest.headers.Authorization = `Bearer ${currentToken}`
+        return axiosInstance(originalRequest)
       }
 
       // Mark that we're refreshing

@@ -64,27 +64,18 @@ const ComboKitDetail: React.FC = () => {
   }, 0);
 
   // Prices are shown including GST, so compare like with like
-  const comboPrice = combo ? (combo.priceWithTax ?? combo.price) : 0;
-  const savings =
-    totalOriginalPrice > 0 && combo ? totalOriginalPrice - comboPrice : 0;
+  const comboPrice = combo ? (combo.priceWithTax ?? combo.price) : 0
+  const savings = totalOriginalPrice > 0 && combo ? totalOriginalPrice - comboPrice : 0
 
   // Combo kit's own gallery first (primary image first), then the component products' pictures
   const comboImages: string[] = combo?.images?.length
-    ? [...combo.images]
-        .sort(
-          (a, b) =>
-            Number(!!b.isPrimary) - Number(!!a.isPrimary) ||
-            (a.sortOrder ?? 0) - (b.sortOrder ?? 0),
-        )
-        .map((i) => i.url)
-    : combo?.imageUrl
-      ? [combo.imageUrl]
-      : [];
-  const allImages: string[] = [...comboImages];
-  items.forEach((item) => {
-    const variant = item.productVariant;
-    const product = variant?.product;
-    const imageUrl = variant?.images?.[0]?.url || product?.frontImageUrl;
+    ? [...combo.images].sort((a, b) => Number(!!b.isPrimary) - Number(!!a.isPrimary) || (a.sortOrder ?? 0) - (b.sortOrder ?? 0)).map(i => i.url)
+    : combo?.imageUrl ? [combo.imageUrl] : []
+  const allImages: string[] = [...comboImages]
+  items.forEach(item => {
+    const variant = item.productVariant
+    const product = variant?.product
+    const imageUrl = variant?.images?.[0]?.url || product?.frontImageUrl
     if (imageUrl && !allImages.includes(imageUrl)) {
       allImages.push(imageUrl);
     }
@@ -92,7 +83,7 @@ const ComboKitDetail: React.FC = () => {
 
   useEffect(() => {
     if (allImages.length > 0) {
-      setSelectedImage(allImages[0] ?? "");
+      setSelectedImage(allImages[0] ?? '')
     }
   }, [combo, items.length]);
 
@@ -313,13 +304,9 @@ const ComboKitDetail: React.FC = () => {
             <div className="bg-surface-dark rounded-2xl p-6 border border-primary/10 space-y-5">
               <div className="flex flex-col space-y-1">
                 <div className="flex items-center gap-4">
-                  <span className="text-3xl font-bold text-primary">
-                    {formatPaise(comboPrice)}
-                  </span>
+                  <span className="text-3xl font-bold text-primary">{formatPaise(comboPrice)}</span>
                   {totalOriginalPrice > comboPrice && (
-                    <span className="text-lg text-text-muted line-through">
-                      {formatPaise(totalOriginalPrice)}
-                    </span>
+                    <span className="text-lg text-text-muted line-through">{formatPaise(totalOriginalPrice)}</span>
                   )}
                 </div>
                 {savings > 0 && (
