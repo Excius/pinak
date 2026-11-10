@@ -44,6 +44,7 @@ const PublicProductVariantSchema = z.object({
   compareAtPriceWithTax: z.number().nullable().optional(),
   stock: z.number(),
   lowStockThreshold: z.number().nullable().optional(),
+  weightGrams: z.number().nullable().optional(),
   isActive: z.boolean(),
   image: PublicProductImageSchema.nullable(),
   optionValues: z.array(
@@ -65,6 +66,14 @@ const PublicProductSchema = z.object({
   seoKeyword: z.string().nullable(),
   keyIngredients: z.string().nullable(),
   frontImageUrl: z.string().nullable(),
+  weightGrams: z.number().nullable().optional(),
+  weightClass: z
+    .object({
+      name: z.string(),
+      unit: z.string(),
+    })
+    .nullable()
+    .optional(),
   tags: z.array(z.string()),
   isActive: z.boolean(),
   brand: z

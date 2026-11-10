@@ -29,6 +29,42 @@ type ProductVariant = ProductDetail["variants"][number];
 type RelatedProduct =
   RelatedProductApi.ResponseTypes["ListRelated"]["data"][number];
 
+const COLOR_SWATCHES: Record<string, string> = {
+  black: "#151515",
+  white: "#F5F1E8",
+  ivory: "#FFF5D6",
+  beige: "#D8B08C",
+  nude: "#C98F72",
+  brown: "#6B3F2A",
+  bronze: "#A9683B",
+  gold: "#C9A962",
+  silver: "#BFC5C9",
+  grey: "#858585",
+  gray: "#858585",
+  red: "#B83A3A",
+  pink: "#E58BA3",
+  rose: "#C96C7D",
+  coral: "#F27C68",
+  orange: "#E87832",
+  peach: "#F2A07E",
+  yellow: "#E5C84A",
+  green: "#5D8B63",
+  teal: "#3C9C95",
+  blue: "#4E78B5",
+  purple: "#805A9C",
+  mauve: "#9B7180",
+  plum: "#633A58",
+};
+
+function getColorSwatch(value: string) {
+  const normalizedValue = value.toLowerCase();
+  const matchingColor = Object.keys(COLOR_SWATCHES).find((color) =>
+    normalizedValue.includes(color),
+  );
+
+  return matchingColor ? COLOR_SWATCHES[matchingColor] : "#C9A962";
+}
+
 export default function ProductDetailScreen() {
   const { productId } = useLocalSearchParams<{ productId?: string }>();
   const router = useRouter();
@@ -151,6 +187,23 @@ export default function ProductDetailScreen() {
 
   const categoryLabel = product?.categories[0]?.name || "Product";
   const brandLabel = product?.brand?.name || "Pinak";
+  const colorValues = Array.from(
+    new Set(
+      product?.variants.flatMap((variant) =>
+        variant.optionValues
+          .filter((option) => /color|shade/i.test(option.optionName))
+          .map((option) => option.valueName),
+      ) || [],
+    ),
+  );
+  const selectedColor = selectedVariant?.optionValues.find((option) =>
+    /color|shade/i.test(option.optionName),
+  )?.valueName;
+  const weightGrams = selectedVariant?.weightGrams ?? product?.weightGrams;
+  const weightLabel =
+    weightGrams != null
+      ? `${weightGrams} ${product?.weightClass?.unit || "g"}`
+      : null;
 
   const handleAddToCart = () => {
     if (canAddToCart && selectedVariant?.id) {
@@ -165,6 +218,21 @@ export default function ProductDetailScreen() {
 
     await addToCart(selectedVariant.id, undefined, 1);
     router.push("/checkout");
+  };
+
+  const handleColorSelect = (colorValue: string) => {
+    const matchingVariant = product?.variants.find(
+      (variant) =>
+        variant.optionValues.some(
+          (option) =>
+            /color|shade/i.test(option.optionName) &&
+            option.valueName === colorValue,
+        ) && variant.isActive,
+    );
+
+    if (matchingVariant) {
+      setSelectedVariantId(matchingVariant.id);
+    }
   };
 
   if (isLoading) {
@@ -323,6 +391,123 @@ export default function ProductDetailScreen() {
               {product.description}
             </Text>
           ) : null}
+
+          {(product.brand || colorValues.length > 0 || weightLabel) && (
+            <View className="mb-8 border-y border-primary/20 py-5">
+              <View className="flex-row items-center justify-between">
+                <View>
+                  <Text className="text-xs font-bold uppercase tracking-[0.2em] text-primary">
+                    Product details
+                  </Text>
+                  <Text className="mt-1 text-xs text-text-secondary">
+                    Made for your beauty ritual
+                  </Text>
+                </View>
+                <View className="h-9 w-9 items-center justify-center rounded-full bg-primary/10">
+                  <MaterialCommunityIcons
+                    name="creation"
+                    size={18}
+                    color="#C9A962"
+                  />
+                </View>
+              </View>
+
+              <View className="mt-5 flex-row flex-wrap gap-y-5">
+                {product.brand ? (
+                  <View className="w-1/2 flex-row items-center pr-3">
+                    <View className="mr-3 h-10 w-10 items-center justify-center overflow-hidden rounded-xl border border-primary/25 bg-primary/10">
+                      {product.brand.logoUrl ? (
+                        <Image
+                          source={{ uri: product.brand.logoUrl }}
+                          className="h-7 w-7"
+                          resizeMode="contain"
+                        />
+                      ) : (
+                        <MaterialCommunityIcons
+                          name="store-outline"
+                          size={19}
+                          color="#C9A962"
+                        />
+                      )}
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
+                        Brand
+                      </Text>
+                      <Text
+                        className="mt-1 text-sm font-semibold text-text-primary"
+                        numberOfLines={1}
+                      >
+                        {brandLabel}
+                      </Text>
+                    </View>
+                  </View>
+                ) : null}
+
+                {weightLabel ? (
+                  <View className="w-1/2 flex-row items-center pl-2">
+                    <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl border border-primary/25 bg-primary/10">
+                      <MaterialCommunityIcons
+                        name="scale-balance"
+                        size={19}
+                        color="#C9A962"
+                      />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
+                        Weight
+                      </Text>
+                      <Text className="mt-1 text-sm font-semibold text-text-primary">
+                        {weightLabel}
+                      </Text>
+                    </View>
+                  </View>
+                ) : null}
+
+                {colorValues.length > 0 ? (
+                  <View className="w-full flex-row items-start">
+                    <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl border border-primary/25 bg-primary/10">
+                      <MaterialCommunityIcons
+                        name="palette-outline"
+                        size={19}
+                        color="#C9A962"
+                      />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
+                        Available shade{colorValues.length > 1 ? "s" : ""}
+                      </Text>
+                      <View className="mt-2 flex-row flex-wrap gap-2">
+                        {colorValues.map((value) => (
+                          <TouchableOpacity
+                            key={value}
+                            onPress={() => handleColorSelect(value)}
+                            accessibilityRole="button"
+                            accessibilityLabel={`Select ${value} shade`}
+                            className={`flex-row items-center rounded-full border bg-surface py-1.5 pl-1.5 pr-3 ${
+                              selectedColor === value
+                                ? "border-primary"
+                                : "border-surface-border"
+                            }`}
+                          >
+                            <View
+                              className="mr-2 h-7 w-7 rounded-full border-2 border-background"
+                              style={{
+                                backgroundColor: getColorSwatch(value),
+                              }}
+                            />
+                            <Text className="text-xs font-semibold text-text-primary">
+                              {value}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    </View>
+                  </View>
+                ) : null}
+              </View>
+            </View>
+          )}
 
           {product.variants.length > 0 ? (
             <View className="mb-8">
@@ -515,11 +700,6 @@ export default function ProductDetailScreen() {
                 opacity: !canAddToCart ? 0.5 : 1,
               }}
             >
-              <MaterialCommunityIcons
-                name="lightning-bolt-outline"
-                size={18}
-                color="#C9A962"
-              />
               <Text className="font-bold text-primary text-sm">Buy Now</Text>
             </TouchableOpacity>
 
