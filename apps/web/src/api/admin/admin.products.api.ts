@@ -11,56 +11,24 @@ export interface AdminProductImage {
 }
 
 export interface AdminProductVariant {
-  id: string;
-  sku: string;
-  price: number;
-  priceWithTax?: number;
-  sellingPrice?: number | null;
-  sellingPriceWithTax?: number | null;
-  taxAmount?: number;
-  compareAtPrice: number | null;
-  compareAtPriceWithTax?: number | null;
-  stock: number;
-  lowStockThreshold: number | null;
-  isActive: boolean;
-  images: AdminProductImage[];
-  optionValues: {
-    optionName: string;
-    valueName: string;
-    optionId?: string;
-    optionValueId?: string;
-    swatchColorHex?: string | null;
-  }[];
-  optionValueIds?: string[];
-  /** Variant-level tax class override; null/absent means it uses the product's tax class. */
-  taxClassId?: string | null;
-  /** Variant weight override in grams; null/absent means it uses the product's weight. */
-  weightGrams?: number | null;
-  weightClassId?: string | null;
-  dimensionLength?: number | null;
-  dimensionWidth?: number | null;
-  dimensionHeight?: number | null;
-  lengthClassId?: string | null;
-  /** What applies after inheritance (own value, else option value, else product). */
-  measurements?: {
-    weight: {
-      grams: number;
-      weightClassId: string | null;
-      source: string;
-    } | null;
-    dimensions: {
-      length: number | null;
-      width: number | null;
-      height: number | null;
-      lengthClassId: string | null;
-      source: string;
-    } | null;
-  };
-  taxRate?: number;
-  taxClass?: { name?: string; rate: number; overridden?: boolean } | null;
-  filterValues?: { variantId: string; filterValueId: string }[];
+  id: string
+  sku: string
+  price: number
+  priceWithTax?: number
+  sellingPrice?: number | null
+  sellingPriceWithTax?: number | null
+  taxAmount?: number
+  compareAtPrice: number | null
+  compareAtPriceWithTax?: number | null
+  stock: number
+  lowStockThreshold: number | null
+  isActive: boolean
+  images: AdminProductImage[]
+  optionValues: { optionName: string; valueName: string; optionId?: string; optionValueId?: string; swatchColorHex?: string | null }[]
+  optionValueIds?: string[]
+  filterValues?: { variantId: string; filterValueId: string }[]
   // Client-side only: filter values selected in the variant editor
-  filterValueIds?: string[];
+  filterValueIds?: string[]
 }
 
 export interface AdminProduct {
@@ -110,31 +78,25 @@ export interface AdminProductListParams {
 
 // Backend list responses are shaped { items, pagination: { total, page, limit, totalPages } }
 const toListResult = (resp: any) => {
-  const pg = resp?.data?.pagination ?? resp?.data ?? {};
+  const pg = resp?.data?.pagination ?? resp?.data ?? {}
   return {
     items: (resp?.data?.items || []) as AdminProduct[],
     total: (pg.total as number) || 0,
     page: (pg.page as number) || 1,
     limit: (pg.limit as number) || 10,
     totalPages: (pg.totalPages as number) || 1,
-  };
-};
+  }
+}
 
 export const getAllProductsAdmin = async (params?: AdminProductListParams) => {
-  const { data: resp } = await axiosInstance.get("/products/admin/all", {
-    params,
-  });
-  return toListResult(resp);
-};
+  const { data: resp } = await axiosInstance.get('/products/admin/all', { params })
+  return toListResult(resp)
+}
 
-export const getDeletedProductsAdmin = async (
-  params?: AdminProductListParams,
-) => {
-  const { data: resp } = await axiosInstance.get("/products/admin/deleted", {
-    params,
-  });
-  return toListResult(resp);
-};
+export const getDeletedProductsAdmin = async (params?: AdminProductListParams) => {
+  const { data: resp } = await axiosInstance.get('/products/admin/deleted', { params })
+  return toListResult(resp)
+}
 
 // ── Product CRUD ───────────────────────────────────────────────────────
 
@@ -175,8 +137,8 @@ export const updateProductStatusAdmin = async (
 };
 
 export const softDeleteProductAdmin = async (id: string) => {
-  await axiosInstance.delete(`/products/admin/${id}`);
-};
+  await axiosInstance.delete(`/products/admin/${id}`)
+}
 
 export const hardDeleteProductAdmin = async (id: string) => {
   await axiosInstance.delete(`/products/admin/${id}/hard`);
@@ -185,6 +147,10 @@ export const hardDeleteProductAdmin = async (id: string) => {
 export const restoreProductAdmin = async (id: string) => {
   await axiosInstance.patch(`/products/admin/${id}/restore`);
 };
+
+export const restoreProductAdmin = async (id: string) => {
+  await axiosInstance.patch(`/products/admin/${id}/restore`)
+}
 
 // ── Product ↔ Category junction ────────────────────────────────────────
 
@@ -374,78 +340,98 @@ export const importInventorySpreadsheetAdmin = async (
     return resp?.data as ImportInventoryResult;
   }
 
-  const formData = new FormData();
-  formData.append("file", fileOrCsv);
+export const getLowStockProductsAdmin = async (page: number = 1, limit: number = 20) => {
+  const { data } = await axiosInstance.get('/products/admin/stock/low-stock', { params: { page, limit } })
+  return data.data
+}
+
+// ── Spreadsheet Inventory Management ───────────────────────────────────
+
+export interface ImportInventoryResult {
+  totalProcessed: number
+  createdProducts: number
+  updatedProducts: number
+  createdVariants: number
+  updatedVariants: number
+  skippedCount: number
+  errors: { row: number; name?: string; error: string }[]
+}
+
+export const importInventorySpreadsheetAdmin = async (
+  fileOrCsv: File | string,
+): Promise<ImportInventoryResult> => {
+  if (typeof fileOrCsv === 'string') {
+    const { data: resp } = await axiosInstance.post('/products/admin/inventory/import', {
+      csv: fileOrCsv,
+    })
+    return resp?.data as ImportInventoryResult
+  }
+
+  const formData = new FormData()
+  formData.append('file', fileOrCsv)
   const { data: resp } = await axiosInstance.post(
-    "/products/admin/inventory/import",
+    '/products/admin/inventory/import',
     formData,
-    { headers: { "Content-Type": "multipart/form-data" } },
-  );
-  return resp?.data as ImportInventoryResult;
-};
+    { headers: { 'Content-Type': 'multipart/form-data' } }
+  )
+  return resp?.data as ImportInventoryResult
+}
 
 export const exportInventorySpreadsheetAdmin = async (params?: {
-  format?: "csv" | "xlsx" | "json";
-  status?: "ALL" | "ACTIVE" | "INACTIVE";
-  brandId?: string;
-  categoryId?: string;
-  search?: string;
+  format?: 'csv' | 'xlsx' | 'json'
+  status?: 'ALL' | 'ACTIVE' | 'INACTIVE'
+  brandId?: string
+  categoryId?: string
+  search?: string
 }): Promise<{ blob: Blob; filename: string }> => {
-  const format = params?.format || "csv";
-  let response;
+  const format = params?.format || 'csv'
+  let response
   try {
-    response = await axiosInstance.get("/products/admin/inventory/export", {
+    response = await axiosInstance.get('/products/admin/inventory/export', {
       params,
-      responseType: "blob",
-    });
+      responseType: 'blob',
+    })
   } catch (err: any) {
     // With responseType 'blob' the JSON error body arrives as a Blob; unwrap it for the UI.
-    const body = err?.response?.data;
+    const body = err?.response?.data
     if (body instanceof Blob) {
       try {
-        const parsed = JSON.parse(await body.text());
-        err.response.data = parsed;
+        const parsed = JSON.parse(await body.text())
+        err.response.data = parsed
       } catch {
         /* keep original error */
       }
     }
-    throw err;
+    throw err
   }
 
-  const disposition = response.headers["content-disposition"] as
-    string | undefined;
-  let filename = `inventory-export-${new Date().toISOString().slice(0, 10)}.${format}`;
+  const disposition = response.headers['content-disposition'] as string | undefined
+  let filename = `inventory-export-${new Date().toISOString().slice(0, 10)}.${format}`
   if (disposition) {
-    const match = disposition.match(/filename="?([^";]+)"?/);
-    if (match && match[1]) filename = match[1];
+    const match = disposition.match(/filename="?([^";]+)"?/)
+    if (match && match[1]) filename = match[1]
   }
 
-  return { blob: response.data as Blob, filename };
-};
+  return { blob: response.data as Blob, filename }
+}
 
 export const bulkUpdateProductStatusAdmin = async (
   productIds: string[],
   isActive: boolean,
 ): Promise<{ updatedCount: number; isActive: boolean }> => {
-  const { data: resp } = await axiosInstance.patch(
-    "/products/admin/inventory/bulk-status",
-    {
-      productIds,
-      isActive,
-    },
-  );
-  return resp?.data;
-};
+  const { data: resp } = await axiosInstance.patch('/products/admin/inventory/bulk-status', {
+    productIds,
+    isActive,
+  })
+  return resp?.data
+}
 
 export const getProductsByStatusAdmin = async (
-  status: "ACTIVE" | "INACTIVE",
+  status: 'ACTIVE' | 'INACTIVE',
   params?: AdminProductListParams,
 ) => {
-  const { data: resp } = await axiosInstance.get(
-    `/products/admin/status/${status}`,
-    {
-      params,
-    },
-  );
-  return toListResult(resp);
-};
+  const { data: resp } = await axiosInstance.get(`/products/admin/status/${status}`, {
+    params,
+  })
+  return toListResult(resp)
+}

@@ -13,6 +13,11 @@ const getApiErrorMessage = (error: unknown, fallback: string): string => {
   return message || fallback;
 };
 
+const getApiErrorMessage = (error: unknown, fallback: string): string => {
+  const message = (error as { response?: { data?: { message?: string } } })?.response?.data?.message
+  return message || fallback
+}
+
 const CouponList: React.FC = () => {
   const [coupons, setCoupons] = useState<AdminCoupon[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,13 +46,13 @@ const CouponList: React.FC = () => {
 
   const fetchCoupons = async () => {
     try {
-      setLoading(true);
-      const data = await getAllCouponsAdmin({ limit: 100 });
-      setCoupons(data.items || []);
+      setLoading(true)
+      const data = await getAllCouponsAdmin({ limit: 100 })
+      setCoupons(data.items || [])
     } catch (error) {
-      console.error("Failed to load coupons", error);
-      setCoupons([]);
-      alert("Failed to load coupons.");
+      console.error('Failed to load coupons', error)
+      setCoupons([])
+      alert('Failed to load coupons.')
     } finally {
       setLoading(false);
     }
@@ -77,28 +82,17 @@ const CouponList: React.FC = () => {
     setForm({
       code: coupon.code,
       discountType: coupon.discountType,
-      discountValue:
-        coupon.discountType === "FLAT"
-          ? coupon.discountValue / 100
-          : coupon.discountValue,
-      minOderValue:
-        coupon.minOderValue != null ? String(coupon.minOderValue / 100) : "",
-      maxDiscountValue:
-        coupon.maxDiscountValue != null
-          ? String(coupon.maxDiscountValue / 100)
-          : "",
-      validFrom: new Date(coupon.validFrom)
-        .toISOString()
-        .split("T")[0] as string,
-      validUntil: new Date(coupon.validUntil)
-        .toISOString()
-        .split("T")[0] as string,
-      maxTotalUsers: coupon.maxTotalUsers?.toString() || "",
-      maxUsesPerUser: coupon.maxUsesPerUser?.toString() || "",
-      isActive: coupon.isActive,
-    });
-    setShowModal(true);
-  };
+      discountValue: coupon.discountType === 'FLAT' ? coupon.discountValue / 100 : coupon.discountValue,
+      minOderValue: coupon.minOderValue != null ? String(coupon.minOderValue / 100) : '',
+      maxDiscountValue: coupon.maxDiscountValue != null ? String(coupon.maxDiscountValue / 100) : '',
+      validFrom: new Date(coupon.validFrom).toISOString().split('T')[0] as string,
+      validUntil: new Date(coupon.validUntil).toISOString().split('T')[0] as string,
+      maxTotalUsers: coupon.maxTotalUsers?.toString() || '',
+      maxUsesPerUser: coupon.maxUsesPerUser?.toString() || '',
+      isActive: coupon.isActive
+    })
+    setShowModal(true)
+  }
 
   const handleSave = async () => {
     setSaving(true);
@@ -107,16 +101,9 @@ const CouponList: React.FC = () => {
         code: form.code,
         discountType: form.discountType,
         // Amounts are entered in rupees; the API stores paise. Percentages stay as-is.
-        discountValue:
-          form.discountType === "FLAT"
-            ? Math.round(Number(form.discountValue) * 100)
-            : Number(form.discountValue),
-        minOderValue: form.minOderValue
-          ? Math.round(Number(form.minOderValue) * 100)
-          : null,
-        maxDiscountValue: form.maxDiscountValue
-          ? Math.round(Number(form.maxDiscountValue) * 100)
-          : null,
+        discountValue: form.discountType === 'FLAT' ? Math.round(Number(form.discountValue) * 100) : Number(form.discountValue),
+        minOderValue: form.minOderValue ? Math.round(Number(form.minOderValue) * 100) : null,
+        maxDiscountValue: form.maxDiscountValue ? Math.round(Number(form.maxDiscountValue) * 100) : null,
         validFrom: new Date(form.validFrom).toISOString(),
         validUntil: new Date(form.validUntil).toISOString(),
         maxTotalUsers: form.maxTotalUsers ? Number(form.maxTotalUsers) : null,
@@ -134,8 +121,8 @@ const CouponList: React.FC = () => {
       setShowModal(false);
       fetchCoupons();
     } catch (error) {
-      console.error("Failed to save coupon", error);
-      alert(getApiErrorMessage(error, "Failed to save coupon."));
+      console.error('Failed to save coupon', error)
+      alert(getApiErrorMessage(error, 'Failed to save coupon.'))
     } finally {
       setSaving(false);
     }
@@ -147,9 +134,9 @@ const CouponList: React.FC = () => {
       fetchCoupons();
       setDeleteConfirm(null);
     } catch (error) {
-      console.error("Failed to delete", error);
-      alert(getApiErrorMessage(error, "Failed to delete coupon."));
-      setDeleteConfirm(null);
+      console.error('Failed to delete', error)
+      alert(getApiErrorMessage(error, 'Failed to delete coupon.'))
+      setDeleteConfirm(null)
     }
   };
 
@@ -207,9 +194,7 @@ const CouponList: React.FC = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
-                    Discount Value ({form.discountType === "FLAT" ? "₹" : "%"})
-                  </label>
+                  <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Discount Value ({form.discountType === 'FLAT' ? '₹' : '%'})</label>
                   <input
                     type="number"
                     value={form.discountValue}
@@ -255,9 +240,7 @@ const CouponList: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
-                    Min Order Value ₹ (Opt)
-                  </label>
+                  <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Min Order Value ₹ (Opt)</label>
                   <input
                     type="number"
                     value={form.minOderValue}
@@ -269,9 +252,7 @@ const CouponList: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
-                    Max Discount ₹ (Opt)
-                  </label>
+                  <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Max Discount ₹ (Opt)</label>
                   <input
                     type="number"
                     value={form.maxDiscountValue}

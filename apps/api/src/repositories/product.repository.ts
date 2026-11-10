@@ -1385,10 +1385,6 @@ export class ProductRepository {
   }
 
   /** Create or find a TaxClass safely without name collisions. */
-  findTaxClassById(id: string) {
-    return this.prisma.taxClass.findUnique({ where: { id } });
-  }
-
   async createTaxClass(name: string, rate: number) {
     const existing = await this.prisma.taxClass.findFirst({
       where: {

@@ -168,6 +168,24 @@ const ProductDetail: React.FC = () => {
     setQuantity(1);
   };
 
+  // When some active variants have no option values, option pills can never reach them,
+  // so list the variants themselves instead.
+  const activeVariants = variants.filter((v) => v.isActive)
+  const needsVariantPicker =
+    activeVariants.length > 1 && activeVariants.some((v) => !v.optionValues || v.optionValues.length === 0)
+
+  const handleVariantPick = (v: VariantDetail) => {
+    setSelectedVariant(v)
+    const opts: Record<string, string> = {}
+    v.optionValues?.forEach((ov) => {
+      opts[ov.optionName] = ov.valueName
+    })
+    setSelectedOptions(opts)
+    const primary = v.images?.find((img) => img.isPrimary)
+    setSelectedImage(primary?.url || v.images?.[0]?.url || product?.frontImageUrl || '')
+    setQuantity(1)
+  }
+
   const handleOptionSelect = (optionName: string, valueName: string) => {
     const nextOptions = { ...selectedOptions, [optionName]: valueName };
     setSelectedOptions(nextOptions);
@@ -453,15 +471,13 @@ const ProductDetail: React.FC = () => {
 
             {needsVariantPicker && (
               <div className="space-y-3">
-                <label className="text-xs font-bold tracking-widest text-primary/70 uppercase">
-                  Select Variant
-                </label>
+                <label className="text-xs font-bold tracking-widest text-primary/70 uppercase">Select Variant</label>
                 <div className="flex flex-wrap gap-2.5">
                   {activeVariants.map((v) => {
                     const label = v.optionValues?.length
-                      ? v.optionValues.map((ov) => ov.valueName).join(" / ")
-                      : `Standard (${v.sku})`;
-                    const isSelected = selectedVariant?.id === v.id;
+                      ? v.optionValues.map((ov) => ov.valueName).join(' / ')
+                      : `Standard (${v.sku})`
+                    const isSelected = selectedVariant?.id === v.id
                     return (
                       <button
                         key={v.id}
@@ -469,13 +485,13 @@ const ProductDetail: React.FC = () => {
                         onClick={() => handleVariantPick(v)}
                         className={`px-4 py-2.5 rounded-xl text-sm font-medium border transition-all cursor-pointer ${
                           isSelected
-                            ? "border-primary bg-primary/10 text-primary shadow-[0_0_10px_rgba(212,175,55,0.2)]"
-                            : "border-primary/20 text-text-muted hover:border-primary/40 hover:text-primary"
+                            ? 'border-primary bg-primary/10 text-primary shadow-[0_0_10px_rgba(212,175,55,0.2)]'
+                            : 'border-primary/20 text-text-muted hover:border-primary/40 hover:text-primary'
                         }`}
                       >
                         {label}
                       </button>
-                    );
+                    )
                   })}
                 </div>
               </div>

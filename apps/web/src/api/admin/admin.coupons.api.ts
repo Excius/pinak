@@ -18,40 +18,27 @@ export interface AdminCoupon {
 }
 
 export interface AdminCouponListParams {
-  deleted?: boolean;
-  page?: number;
-  limit?: number;
-  isActive?: boolean;
-  search?: string;
+  deleted?: boolean
+  page?: number
+  limit?: number
+  isActive?: boolean
+  search?: string
 }
 
 export const getAllCouponsAdmin = async (params?: AdminCouponListParams) => {
-  const { data } = await axiosInstance.get("/coupons/admin", {
-    params: params
-      ? {
-          ...params,
-          isActive:
-            params.isActive === undefined ? undefined : String(params.isActive),
-        }
-      : undefined,
-  });
+  const { data } = await axiosInstance.get('/coupons/admin', {
+    params: params ? { ...params, isActive: params.isActive === undefined ? undefined : String(params.isActive) } : undefined,
+  })
   // Backend envelope: { items, pagination: { total, page, limit, totalPages } }
-  const pg = data?.data?.pagination ?? {};
+  const pg = data?.data?.pagination ?? {}
   return {
     items: (data?.data?.items || []) as AdminCoupon[],
     total: (pg.total as number) || 0,
     page: (pg.page as number) || 1,
     limit: (pg.limit as number) || 20,
     totalPages: (pg.totalPages as number) || 1,
-  };
-};
-
-export const createCouponAdmin = async (
-  payload: Partial<AdminCoupon>,
-): Promise<AdminCoupon> => {
-  const { data } = await axiosInstance.post("/coupons/admin", payload);
-  return data.data;
-};
+  }
+}
 
 export const updateCouponAdmin = async (
   id: string,

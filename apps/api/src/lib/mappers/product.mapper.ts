@@ -243,75 +243,54 @@ export const toAdminProduct = (product: ProductWithRelations) => {
       })) || [],
 
     // Full variants with all fields
-    variants:
-      product.variants?.map((v: any) => {
-        const price = v.price;
-        // Variant-level tax class overrides the product's
-        const variantTax = variantTaxClass(v, product.taxClass);
-        const taxRate = variantTax?.rate ?? 0;
-        const sellingPrice = v.sellingPrice != null ? v.sellingPrice : null;
-        const effectivePrice = sellingPrice ?? price;
-        const comparePrice = v.comparePrice ?? v.compareAtPrice ?? null;
-        const taxAmount = Math.round((effectivePrice * taxRate) / 100);
-        const priceWithTax = price + Math.round((price * taxRate) / 100);
-        const sellingPriceWithTax =
-          sellingPrice != null ? sellingPrice + taxAmount : null;
-        const comparePriceWithTax =
-          comparePrice != null
-            ? comparePrice + Math.round((comparePrice * taxRate) / 100)
-            : null;
+    variants: product.variants?.map((v: any) => {
+      const price = v.price;
+      const sellingPrice = v.sellingPrice != null ? v.sellingPrice : null;
+      const effectivePrice = sellingPrice ?? price;
+      const comparePrice = v.comparePrice ?? v.compareAtPrice ?? null;
+      const taxAmount = Math.round((effectivePrice * taxRate) / 100);
+      const priceWithTax = price + Math.round((price * taxRate) / 100);
+      const sellingPriceWithTax = sellingPrice != null
+        ? sellingPrice + taxAmount
+        : null;
+      const comparePriceWithTax = comparePrice != null
+        ? comparePrice + Math.round((comparePrice * taxRate) / 100)
+        : null;
 
-        return {
-          id: v.id,
-          productId: v.productId,
-          sku: v.sku,
-          price: v.price,
-          sellingPrice,
-          taxAmount,
-          taxRate,
-          taxClass: variantTax
-            ? {
-                name: variantTax.name,
-                rate: variantTax.rate,
-                overridden: variantTax.overridden,
-              }
-            : null,
-          priceWithTax,
-          sellingPriceWithTax,
-          compareAtPrice: v.compareAtPrice,
-          comparePrice: v.comparePrice,
-          comparePriceWithTax,
-          costPrice: v.costPrice,
-          stock: v.stock,
-          lowStockThreshold: v.lowStockThreshold,
-          isActive: v.isActive,
-          isDeleted: v.isDeleted,
-          sortOrder: v.sortOrder,
-          tags: v.tags,
+      return {
+        id: v.id,
+        productId: v.productId,
+        sku: v.sku,
+        price: v.price,
+        sellingPrice,
+        taxAmount,
+        priceWithTax,
+        sellingPriceWithTax,
+        compareAtPrice: v.compareAtPrice,
+        comparePrice: v.comparePrice,
+        comparePriceWithTax,
+        costPrice: v.costPrice,
+        stock: v.stock,
+        lowStockThreshold: v.lowStockThreshold,
+        isActive: v.isActive,
+        isDeleted: v.isDeleted,
+        sortOrder: v.sortOrder,
+        tags: v.tags,
+        
+        // All images
+        images: v.images || [],
+        
+        // All option values
+        optionValues: toVariantOptionValues(v.optionValues),
 
-          // Own measurements + what actually applies (own, else from option values, else product)
-          weightGrams: v.weightGrams ?? null,
-          weightClassId: v.weightClassId ?? null,
-          dimensionLength: v.dimensionLength ?? null,
-          dimensionWidth: v.dimensionWidth ?? null,
-          dimensionHeight: v.dimensionHeight ?? null,
-          lengthClassId: v.lengthClassId ?? null,
-          measurements: resolveVariantMeasurements(v, product),
-
-          // All images
-          images: v.images || [],
-
-          // All option values
-          optionValues: toVariantOptionValues(v.optionValues),
-
-          // Per-variant filter values (with IDs, for the admin editor)
-          filterValues: v.filterValues || [],
-
-          // Timestamps
-          createdAt: v.createdAt,
-          updatedAt: v.updatedAt,
-        };
-      }) || [],
+        // Per-variant filter values (with IDs, for the admin editor)
+        filterValues: v.filterValues || [],
+        
+        // Timestamps
+        createdAt: v.createdAt,
+        updatedAt: v.updatedAt,
+      };
+    }) || [],
 
     // Full filter values with IDs
     filterValues: product.filterValues || [],
@@ -423,8 +402,7 @@ const toVariantOptionValues = (rows: any[] | undefined) =>
       optionValueId: ov.optionValue?.id ?? ov.optionValueId,
       optionName: ov.optionValue?.option?.name ?? ov.optionName,
       valueName: ov.optionValue?.value ?? ov.valueName,
-      swatchColorHex:
-        ov.optionValue?.swatchColorHex ?? ov.swatchColorHex ?? null,
+      swatchColorHex: ov.optionValue?.swatchColorHex ?? ov.swatchColorHex ?? null,
     }))
     .filter((ov) => ov.optionName && ov.valueName);
 
@@ -450,7 +428,6 @@ export const toAdminVariant = (variant: any) => {
   return {
     // All fields
     ...variant,
-    measurements: resolveVariantMeasurements(variant, variant.product),
     optionValues: toVariantOptionValues(variant.optionValues),
     sellingPrice,
     taxAmount,
