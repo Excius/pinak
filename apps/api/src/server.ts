@@ -4,6 +4,7 @@ import config from "./lib/config.js";
 import { prisma } from "./lib/prisma.js";
 import redis from "./lib/redis.js";
 import app from "./app.js";
+import { startTaxRateRefresh } from "./lib/taxRates.js";
 
 class Server {
   private server: HttpServer | null = null;
@@ -103,6 +104,8 @@ class Server {
   }
 
   public start(): void {
+    // Variant-level tax classes are resolved through an in-memory map; keep it warm.
+    startTaxRateRefresh(prisma);
     this.server = app.listen(this.port, () => {
       logger.info(`Server is running at http://localhost:${this.port}`);
       logger.info(

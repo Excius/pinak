@@ -124,7 +124,10 @@ const addToCartBodySchema = z
     quantity: z.coerce.number().int().min(1).default(1),
   })
   .refine(
-    (value) => Number(Boolean(value.productVariantId)) + Number(Boolean(value.comboKitId)) === 1,
+    (value) =>
+      Number(Boolean(value.productVariantId)) +
+        Number(Boolean(value.comboKitId)) ===
+      1,
     {
       message: "Provide exactly one of productVariantId or comboKitId",
       path: ["productVariantId"],

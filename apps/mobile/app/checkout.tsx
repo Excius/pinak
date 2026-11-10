@@ -37,7 +37,7 @@ export default function CheckoutPage() {
   const { selectedAddressId } = useLocalSearchParams<{
     selectedAddressId?: string;
   }>();
-  const { cart, fetchCart } = useCart();
+  const { cart, fetchCart, appliedCoupon } = useCart();
   const [shippingAddress, setShippingAddress] = useState<Address | null>(null);
   const [billingAddress, setBillingAddress] = useState<Address | null>(null);
   const [sameAsShipping, setSameAsShipping] = useState(true);
@@ -80,6 +80,7 @@ export default function CheckoutPage() {
     setLoading(true);
     try {
       const payload = {
+        couponCode: appliedCoupon?.coupon.code,
         shippingAddressId: shippingAddress!.id,
         billingAddressId: sameAsShipping ? undefined : billingAddress!.id,
       };
@@ -88,7 +89,7 @@ export default function CheckoutPage() {
       // console.log("Order created successfully:", response.data);
       // console.log("Payment session details:", response.data.payment);
       const payment = response.data.payment;
-      const razorpayOrderId = payment.paymentId || payment.id;
+      const razorpayOrderId = payment.id;
       if (!razorpayOrderId) {
         // console.log("Payment session creation failed:", payment);
         throw new Error("Payment session could not be created");
@@ -202,7 +203,7 @@ export default function CheckoutPage() {
       >
         <View className="px-4 py-4">
           {/* Order Summary */}
-          <OrderSummary cart={cart} />
+          <OrderSummary cart={cart} appliedCoupon={appliedCoupon} />
 
           {/* Shipping Address */}
           <AddressSelector
@@ -284,7 +285,13 @@ export default function CheckoutPage() {
           ) : (
             <Text className="text-base font-bold text-primary-foreground">
               Place Order (
-              {formatRupeesFromPaise(cart.grandTotal ?? cart.total)})
+              {formatRupeesFromPaise(
+                Math.max(
+                  0,
+                  (cart.grandTotal ?? cart.total) -
+                    (appliedCoupon?.discountAmount ?? 0),
+                ),
+              )}
             </Text>
           )}
         </TouchableOpacity>

@@ -16,27 +16,27 @@ export const registerBrandAdminRoutes = (
   router.get(
     "/admin",
     rateLimiter,
-    validateMultiple(BrandAdminTypes.ListBrands),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(BrandAdminTypes.ListBrands),
     brandController.listAdmin,
   );
 
   router.get(
     "/admin/slug/:slug",
     rateLimiter,
-    validateMultiple(BrandAdminTypes.GetBrandBySlug),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(BrandAdminTypes.GetBrandBySlug),
     brandController.getBySlugAdmin,
   );
 
   router.get(
     "/admin/:id",
     rateLimiter,
-    validateMultiple(BrandAdminTypes.GetBrandById),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(BrandAdminTypes.GetBrandById),
     brandController.getByIdAdmin,
   );
 
@@ -63,9 +63,9 @@ export const registerBrandAdminRoutes = (
   router.delete(
     "/admin/:id",
     rateLimiter,
-    validateMultiple(BrandTypes.DeleteBrand),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(BrandTypes.DeleteBrand),
     brandController.delete,
   );
 };

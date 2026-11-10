@@ -1,10 +1,13 @@
 /**
  * Product Response Mappers
- * 
+ *
  * These mappers transform database entities into optimized DTOs for different consumers:
  * - Public DTOs: Lean responses for frontend (exclude internal fields, timestamps, etc.)
  * - Admin DTOs: Full responses with all fields for admin/moderator use
  */
+
+import { variantTaxClass } from "../taxRates.js";
+import { resolveVariantMeasurements } from "../measurements.js";
 
 type ProductWithRelations = any; // Type will be inferred from Prisma
 
@@ -38,79 +41,114 @@ export const toPublicProduct = (product: ProductWithRelations) => {
     seoKeyword: product.seoKeyword,
     keyIngredients: product.keyIngredients,
     frontImageUrl: product.frontImageUrl,
+    weightGrams: product.weightGrams ?? null,
+    weightClass: product.weightClass
+      ? {
+          name: product.weightClass.name,
+          unit: product.weightClass.unit,
+        }
+      : null,
     tags: product.tags,
     isActive: product.isActive,
-    
+
     // Brand - minimal data
-    brand: product.brand ? {
-      name: product.brand.name,
-      slug: product.brand.slug,
-      logoUrl: product.brand.logoUrl,
-    } : null,
+    brand: product.brand
+      ? {
+          name: product.brand.name,
+          slug: product.brand.slug,
+          logoUrl: product.brand.logoUrl,
+        }
+      : null,
 
     // Tax info - just what's needed for price calculation
-    taxClass: product.taxClass ? {
-      name: product.taxClass.name,
-      rate: product.taxClass.rate,
-    } : null,
+    taxClass: product.taxClass
+      ? {
+          name: product.taxClass.name,
+          rate: product.taxClass.rate,
+        }
+      : null,
 
     // Categories - minimal data
-    categories: product.categories?.map((pc: any) => ({
-      id: pc.category.id,
-      name: pc.category.name,
-      slug: pc.category.slug,
-    })) || [],
+    categories:
+      product.categories?.map((pc: any) => ({
+        id: pc.category.id,
+        name: pc.category.name,
+        slug: pc.category.slug,
+      })) || [],
 
     // Variants - lean version
-    variants: product.variants?.map((v: any) => {
-      const price = v.price;
-      const sellingPrice = v.sellingPrice != null ? v.sellingPrice : null;
-      const effectivePrice = sellingPrice ?? price;
-      const compareAtPrice = v.compareAtPrice ?? v.comparePrice ?? null;
-      const taxAmount = Math.round((effectivePrice * taxRate) / 100);
-      const priceWithTax = price + Math.round((price * taxRate) / 100);
-      const sellingPriceWithTax = sellingPrice != null
-        ? sellingPrice + taxAmount
-        : null;
-      const compareAtPriceWithTax = compareAtPrice != null
-        ? compareAtPrice + Math.round((compareAtPrice * taxRate) / 100)
-        : null;
+    variants:
+      product.variants?.map((v: any) => {
+        const price = v.price;
+        // Variant-level tax class overrides the product's
+        const variantTax = variantTaxClass(v, product.taxClass);
+        const taxRate = variantTax?.rate ?? 0;
+        const sellingPrice = v.sellingPrice != null ? v.sellingPrice : null;
+        const effectivePrice = sellingPrice ?? price;
+        const compareAtPrice = v.compareAtPrice ?? v.comparePrice ?? null;
+        const taxAmount = Math.round((effectivePrice * taxRate) / 100);
+        const priceWithTax = price + Math.round((price * taxRate) / 100);
+        const sellingPriceWithTax =
+          sellingPrice != null ? sellingPrice + taxAmount : null;
+        const compareAtPriceWithTax =
+          compareAtPrice != null
+            ? compareAtPrice + Math.round((compareAtPrice * taxRate) / 100)
+            : null;
 
-      return {
-        id: v.id,
-        sku: v.sku,
-        tags: Array.isArray(v.tags) ? v.tags : [],
-        price: v.price,
-        sellingPrice,
-        taxAmount,
-        priceWithTax,
-        sellingPriceWithTax,
-        compareAtPrice: v.compareAtPrice,
-        compareAtPriceWithTax,
-        stock: v.stock,
-        lowStockThreshold: v.lowStockThreshold,
-        isActive: v.isActive,
-        
-        // Primary image only (lean fields)
-        image: toLeanImage(v.images?.find((img: any) => img.isPrimary) || v.images?.[0] || null),
-        
-        // Option values
-        optionValues: v.optionValues?.map((ov: any) => ({
-          optionId: ov.optionValue?.optionId,
-          optionValueId: ov.optionValue?.id,
-          optionName: ov.optionValue?.option?.name,
-          valueName: ov.optionValue?.value,
-          swatchColorHex: ov.optionValue?.swatchColorHex ?? null,
-        })).filter((ov: any) => ov.optionName && ov.valueName) || [],
-      };
-    }) || [],
+        return {
+          id: v.id,
+          sku: v.sku,
+          tags: Array.isArray(v.tags) ? v.tags : [],
+          price: v.price,
+          sellingPrice,
+          taxAmount,
+          taxRate,
+          taxClass: variantTax
+            ? {
+                name: variantTax.name,
+                rate: variantTax.rate,
+                overridden: variantTax.overridden,
+              }
+            : null,
+          priceWithTax,
+          sellingPriceWithTax,
+          compareAtPrice: v.compareAtPrice,
+          compareAtPriceWithTax,
+          stock: v.stock,
+          lowStockThreshold: v.lowStockThreshold,
+          weightGrams: v.weightGrams ?? null,
+          isActive: v.isActive,
+
+          // Primary image only (lean fields)
+          image: toLeanImage(
+            v.images?.find((img: any) => img.isPrimary) ||
+              v.images?.[0] ||
+              null,
+          ),
+
+          // Option values
+          optionValues:
+            v.optionValues
+              ?.map((ov: any) => ({
+                optionId: ov.optionValue?.optionId,
+                optionValueId: ov.optionValue?.id,
+                optionName: ov.optionValue?.option?.name,
+                valueName: ov.optionValue?.value,
+                swatchColorHex: ov.optionValue?.swatchColorHex ?? null,
+              }))
+              .filter((ov: any) => ov.optionName && ov.valueName) || [],
+        };
+      }) || [],
 
     // Filter values - for faceted search
-    filterValues: product.filterValues?.map((fv: any) => ({
-      filterGroup: fv.filterValue?.filterGroup?.name,
-      value: fv.filterValue?.name,
-      slug: fv.filterValue?.slug,
-    })).filter((fv: any) => fv.filterGroup && fv.value) || [],
+    filterValues:
+      product.filterValues
+        ?.map((fv: any) => ({
+          filterGroup: fv.filterValue?.filterGroup?.name,
+          value: fv.filterValue?.name,
+          slug: fv.filterValue?.slug,
+        }))
+        .filter((fv: any) => fv.filterGroup && fv.value) || [],
 
     // Stats for display (view count, etc.)
     viewCount: product.viewCount,
@@ -121,7 +159,10 @@ export const toPublicProduct = (product: ProductWithRelations) => {
 /**
  * Maps product list to PUBLIC response (paginated)
  */
-export const toPublicProductList = (result: { data: any[], pagination: any }) => {
+export const toPublicProductList = (result: {
+  data: any[];
+  pagination: any;
+}) => {
   return {
     // Featured queries return wrapper rows { product, section, ... }.
     // Normalize both plain product rows and wrapper rows here.
@@ -150,7 +191,7 @@ export const toAdminProduct = (product: ProductWithRelations) => {
     frontImageUrl: product.frontImageUrl,
     tags: product.tags,
     isActive: product.isActive,
-    
+
     // ADMIN-ONLY fields
     createdAt: product.createdAt,
     updatedAt: product.updatedAt,
@@ -194,58 +235,83 @@ export const toAdminProduct = (product: ProductWithRelations) => {
     taxClass: product.taxClass,
 
     // Full categories with IDs
-    categories: product.categories?.map((pc: any) => ({
-      productId: pc.productId,
-      categoryId: pc.categoryId,
-      category: pc.category,
-    })) || [],
+    categories:
+      product.categories?.map((pc: any) => ({
+        productId: pc.productId,
+        categoryId: pc.categoryId,
+        category: pc.category,
+      })) || [],
 
     // Full variants with all fields
-    variants: product.variants?.map((v: any) => {
-      const price = v.price;
-      const sellingPrice = v.sellingPrice != null ? v.sellingPrice : null;
-      const effectivePrice = sellingPrice ?? price;
-      const comparePrice = v.comparePrice ?? v.compareAtPrice ?? null;
-      const taxAmount = Math.round((effectivePrice * taxRate) / 100);
-      const priceWithTax = price + Math.round((price * taxRate) / 100);
-      const sellingPriceWithTax = sellingPrice != null
-        ? sellingPrice + taxAmount
-        : null;
-      const comparePriceWithTax = comparePrice != null
-        ? comparePrice + Math.round((comparePrice * taxRate) / 100)
-        : null;
+    variants:
+      product.variants?.map((v: any) => {
+        const price = v.price;
+        // Variant-level tax class overrides the product's
+        const variantTax = variantTaxClass(v, product.taxClass);
+        const taxRate = variantTax?.rate ?? 0;
+        const sellingPrice = v.sellingPrice != null ? v.sellingPrice : null;
+        const effectivePrice = sellingPrice ?? price;
+        const comparePrice = v.comparePrice ?? v.compareAtPrice ?? null;
+        const taxAmount = Math.round((effectivePrice * taxRate) / 100);
+        const priceWithTax = price + Math.round((price * taxRate) / 100);
+        const sellingPriceWithTax =
+          sellingPrice != null ? sellingPrice + taxAmount : null;
+        const comparePriceWithTax =
+          comparePrice != null
+            ? comparePrice + Math.round((comparePrice * taxRate) / 100)
+            : null;
 
-      return {
-        id: v.id,
-        productId: v.productId,
-        sku: v.sku,
-        price: v.price,
-        sellingPrice,
-        taxAmount,
-        priceWithTax,
-        sellingPriceWithTax,
-        compareAtPrice: v.compareAtPrice,
-        comparePrice: v.comparePrice,
-        comparePriceWithTax,
-        costPrice: v.costPrice,
-        stock: v.stock,
-        lowStockThreshold: v.lowStockThreshold,
-        isActive: v.isActive,
-        isDeleted: v.isDeleted,
-        sortOrder: v.sortOrder,
-        tags: v.tags,
-        
-        // All images
-        images: v.images || [],
-        
-        // All option values
-        optionValues: v.optionValues || [],
-        
-        // Timestamps
-        createdAt: v.createdAt,
-        updatedAt: v.updatedAt,
-      };
-    }) || [],
+        return {
+          id: v.id,
+          productId: v.productId,
+          sku: v.sku,
+          price: v.price,
+          sellingPrice,
+          taxAmount,
+          taxRate,
+          taxClass: variantTax
+            ? {
+                name: variantTax.name,
+                rate: variantTax.rate,
+                overridden: variantTax.overridden,
+              }
+            : null,
+          priceWithTax,
+          sellingPriceWithTax,
+          compareAtPrice: v.compareAtPrice,
+          comparePrice: v.comparePrice,
+          comparePriceWithTax,
+          costPrice: v.costPrice,
+          stock: v.stock,
+          lowStockThreshold: v.lowStockThreshold,
+          isActive: v.isActive,
+          isDeleted: v.isDeleted,
+          sortOrder: v.sortOrder,
+          tags: v.tags,
+
+          // Own measurements + what actually applies (own, else from option values, else product)
+          weightGrams: v.weightGrams ?? null,
+          weightClassId: v.weightClassId ?? null,
+          dimensionLength: v.dimensionLength ?? null,
+          dimensionWidth: v.dimensionWidth ?? null,
+          dimensionHeight: v.dimensionHeight ?? null,
+          lengthClassId: v.lengthClassId ?? null,
+          measurements: resolveVariantMeasurements(v, product),
+
+          // All images
+          images: v.images || [],
+
+          // All option values
+          optionValues: toVariantOptionValues(v.optionValues),
+
+          // Per-variant filter values (with IDs, for the admin editor)
+          filterValues: v.filterValues || [],
+
+          // Timestamps
+          createdAt: v.createdAt,
+          updatedAt: v.updatedAt,
+        };
+      }) || [],
 
     // Full filter values with IDs
     filterValues: product.filterValues || [],
@@ -262,7 +328,10 @@ export const toAdminProduct = (product: ProductWithRelations) => {
 /**
  * Maps product list to ADMIN response (paginated)
  */
-export const toAdminProductList = (result: { data: any[], pagination: any }) => {
+export const toAdminProductList = (result: {
+  data: any[];
+  pagination: any;
+}) => {
   return {
     items: result.data.map(toAdminProduct),
     pagination: result.pagination,
@@ -275,19 +344,21 @@ export const toAdminProductList = (result: { data: any[], pagination: any }) => 
 export const toPublicVariant = (variant: any) => {
   if (!variant) return null;
 
-  const taxRate = variant.product?.taxClass?.rate ?? 0;
+  const variantTax = variantTaxClass(variant);
+  const taxRate = variantTax?.rate ?? 0;
   const price = variant.price;
-  const sellingPrice = variant.sellingPrice != null ? variant.sellingPrice : null;
+  const sellingPrice =
+    variant.sellingPrice != null ? variant.sellingPrice : null;
   const effectivePrice = sellingPrice ?? price;
   const compareAtPrice = variant.compareAtPrice ?? variant.comparePrice ?? null;
   const taxAmount = Math.round((effectivePrice * taxRate) / 100);
   const priceWithTax = price + Math.round((price * taxRate) / 100);
-  const sellingPriceWithTax = sellingPrice != null
-    ? sellingPrice + taxAmount
-    : null;
-  const compareAtPriceWithTax = compareAtPrice != null
-    ? compareAtPrice + Math.round((compareAtPrice * taxRate) / 100)
-    : null;
+  const sellingPriceWithTax =
+    sellingPrice != null ? sellingPrice + taxAmount : null;
+  const compareAtPriceWithTax =
+    compareAtPrice != null
+      ? compareAtPrice + Math.round((compareAtPrice * taxRate) / 100)
+      : null;
 
   return {
     id: variant.id,
@@ -296,6 +367,14 @@ export const toPublicVariant = (variant: any) => {
     price: variant.price,
     sellingPrice,
     taxAmount,
+    taxRate,
+    taxClass: variantTax
+      ? {
+          name: variantTax.name,
+          rate: variantTax.rate,
+          overridden: variantTax.overridden,
+        }
+      : null,
     priceWithTax,
     sellingPriceWithTax,
     compareAtPrice: variant.compareAtPrice,
@@ -303,56 +382,90 @@ export const toPublicVariant = (variant: any) => {
     stock: variant.stock,
     lowStockThreshold: variant.lowStockThreshold,
     isActive: variant.isActive,
-    
+
     // Images - public URLs only
-    images: variant.images?.filter((img: any) => !img.isDeleted).map((img: any) => ({
-      id: img.id,
-      url: img.url,
-      altText: img.altText,
-      isPrimary: img.isPrimary,
-      sortOrder: img.sortOrder,
-    })) || [],
-    
+    images:
+      variant.images
+        ?.filter((img: any) => !img.isDeleted)
+        .map((img: any) => ({
+          id: img.id,
+          url: img.url,
+          altText: img.altText,
+          isPrimary: img.isPrimary,
+          sortOrder: img.sortOrder,
+        })) || [],
+
     // Option values
-    optionValues: variant.optionValues?.map((ov: any) => ({
-      optionId: ov.optionValue?.optionId,
-      optionValueId: ov.optionValue?.id,
-      optionName: ov.optionValue?.option?.name,
-      valueName: ov.optionValue?.value,
-      swatchColorHex: ov.optionValue?.swatchColorHex ?? null,
-    })).filter((ov: any) => ov.optionName && ov.valueName) || [],
+    optionValues:
+      variant.optionValues
+        ?.map((ov: any) => ({
+          optionId: ov.optionValue?.optionId,
+          optionValueId: ov.optionValue?.id,
+          optionName: ov.optionValue?.option?.name,
+          valueName: ov.optionValue?.value,
+          swatchColorHex: ov.optionValue?.swatchColorHex ?? null,
+        }))
+        .filter((ov: any) => ov.optionName && ov.valueName) || [],
   };
 };
 
 /**
  * Maps variant to ADMIN response
  */
+/**
+ * Flattens variant<->option-value junction rows into { optionName, valueName, ... }.
+ * The admin editor needs the same shape the storefront gets, plus the ids.
+ */
+const toVariantOptionValues = (rows: any[] | undefined) =>
+  (rows || [])
+    .map((ov: any) => ({
+      optionId: ov.optionValue?.optionId ?? ov.optionId,
+      optionValueId: ov.optionValue?.id ?? ov.optionValueId,
+      optionName: ov.optionValue?.option?.name ?? ov.optionName,
+      valueName: ov.optionValue?.value ?? ov.valueName,
+      swatchColorHex:
+        ov.optionValue?.swatchColorHex ?? ov.swatchColorHex ?? null,
+    }))
+    .filter((ov) => ov.optionName && ov.valueName);
+
 export const toAdminVariant = (variant: any) => {
   if (!variant) return null;
 
-  const taxRate = variant.product?.taxClass?.rate ?? 0;
+  const variantTax = variantTaxClass(variant);
+  const taxRate = variantTax?.rate ?? 0;
   const price = variant.price;
-  const sellingPrice = variant.sellingPrice != null ? variant.sellingPrice : null;
+  const sellingPrice =
+    variant.sellingPrice != null ? variant.sellingPrice : null;
   const effectivePrice = sellingPrice ?? price;
   const comparePrice = variant.comparePrice ?? variant.compareAtPrice ?? null;
   const taxAmount = Math.round((effectivePrice * taxRate) / 100);
   const priceWithTax = price + Math.round((price * taxRate) / 100);
-  const sellingPriceWithTax = sellingPrice != null
-    ? sellingPrice + taxAmount
-    : null;
-  const comparePriceWithTax = comparePrice != null
-    ? comparePrice + Math.round((comparePrice * taxRate) / 100)
-    : null;
+  const sellingPriceWithTax =
+    sellingPrice != null ? sellingPrice + taxAmount : null;
+  const comparePriceWithTax =
+    comparePrice != null
+      ? comparePrice + Math.round((comparePrice * taxRate) / 100)
+      : null;
 
   return {
     // All fields
     ...variant,
+    measurements: resolveVariantMeasurements(variant, variant.product),
+    optionValues: toVariantOptionValues(variant.optionValues),
     sellingPrice,
     taxAmount,
+    taxRate,
+    taxClass: variantTax
+      ? {
+          name: variantTax.name,
+          rate: variantTax.rate,
+          overridden: variantTax.overridden,
+        }
+      : null,
     priceWithTax,
     sellingPriceWithTax,
     comparePriceWithTax,
-    
+
     // Ensure timestamps are included
     createdAt: variant.createdAt,
     updatedAt: variant.updatedAt,

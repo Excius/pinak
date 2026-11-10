@@ -86,24 +86,34 @@ export class FilterService {
     return this.repo.deleteFilterValue(id);
   }
 
-  // Tag/attach filter value to product
-  async addFilterToProduct(productId: string, filterValueId: string) {
-    const product = await this.repo.getProductById(productId);
-    if (!product) throw new NotFoundError("Product not found");
+  // Attach a filter value to a variant (each variant has its own filters)
+  async addFilterToVariant(variantId: string, filterValueId: string) {
+    const variant = await this.repo.getVariantById(variantId);
+    if (!variant) throw new NotFoundError("Product variant not found");
     const fv = await this.repo.getFilterValueById(filterValueId);
     if (!fv) throw new NotFoundError("Filter value not found");
 
-    const exists = await this.repo.existsProductFilterRef(
-      productId,
+    const exists = await this.repo.existsVariantFilterRef(
+      variantId,
       filterValueId,
     );
     if (exists)
-      throw new ValidationError("Filter value already attached to product");
+      throw new ValidationError("Filter value already attached to variant");
 
-    return this.repo.addFilterToProduct(productId, filterValueId);
+    return this.repo.addFilterToVariant(
+      variant.productId,
+      variantId,
+      filterValueId,
+    );
   }
 
-  async removeFilterFromProduct(productId: string, filterValueId: string) {
-    return this.repo.removeFilterFromProduct(productId, filterValueId);
+  async removeFilterFromVariant(variantId: string, filterValueId: string) {
+    const variant = await this.repo.getVariantById(variantId);
+    if (!variant) throw new NotFoundError("Product variant not found");
+    return this.repo.removeFilterFromVariant(
+      variant.productId,
+      variantId,
+      filterValueId,
+    );
   }
 }

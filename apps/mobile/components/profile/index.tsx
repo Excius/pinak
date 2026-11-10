@@ -45,7 +45,7 @@ export default function ProfileLayout() {
               <MaterialIcons name="person-outline" size={48} color="#C9A962" />
             </View>
             <Text className="text-2xl font-bold text-text-primary mb-2">
-             🙌 Welcome 
+              🙌 Welcome
             </Text>
             <Text className="text-center text-text-secondary mb-8 px-8">
               Sign in to access your profile, orders, wishlist, and personalized

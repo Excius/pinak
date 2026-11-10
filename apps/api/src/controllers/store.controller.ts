@@ -18,9 +18,18 @@ export class StoreController {
       city: query.city ? String(query.city) : undefined,
       state: query.state ? String(query.state) : undefined,
       zipCode: query.zipCode ? String(query.zipCode) : undefined,
-      latitude: query.latitude !== undefined && query.latitude !== "" ? Number(query.latitude) : undefined,
-      longitude: query.longitude !== undefined && query.longitude !== "" ? Number(query.longitude) : undefined,
-      radius: query.radius !== undefined && query.radius !== "" ? Number(query.radius) : undefined,
+      latitude:
+        query.latitude !== undefined && query.latitude !== ""
+          ? Number(query.latitude)
+          : undefined,
+      longitude:
+        query.longitude !== undefined && query.longitude !== ""
+          ? Number(query.longitude)
+          : undefined,
+      radius:
+        query.radius !== undefined && query.radius !== ""
+          ? Number(query.radius)
+          : undefined,
       page: query.page !== undefined ? Number(query.page) : undefined,
       limit: query.limit !== undefined ? Number(query.limit) : undefined,
       sortBy: query.sortBy ? (String(query.sortBy) as any) : undefined,
@@ -60,7 +69,10 @@ export class StoreController {
       city: query.city ? String(query.city) : undefined,
       state: query.state ? String(query.state) : undefined,
       zipCode: query.zipCode ? String(query.zipCode) : undefined,
-      isActive: query.isActive !== undefined ? query.isActive === "true" || query.isActive === true : undefined,
+      isActive:
+        query.isActive !== undefined
+          ? query.isActive === "true" || query.isActive === true
+          : undefined,
       includeDeleted:
         query.includeDeleted !== undefined
           ? query.includeDeleted === "true" || query.includeDeleted === true

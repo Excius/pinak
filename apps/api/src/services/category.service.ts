@@ -227,7 +227,10 @@ export class CategoryService {
           }
         }
       } catch (err) {
-        logger.warn({ id, err }, "Failed to clean up S3 objects for category images during deletion");
+        logger.warn(
+          { id, err },
+          "Failed to clean up S3 objects for category images during deletion",
+        );
       }
     }
 
@@ -256,7 +259,8 @@ export class CategoryService {
 
     let ext = "bin";
     if (contentType) {
-      if (contentType.includes("jpeg") || contentType.includes("jpg")) ext = "jpg";
+      if (contentType.includes("jpeg") || contentType.includes("jpg"))
+        ext = "jpg";
       else if (contentType.includes("png")) ext = "png";
       else if (contentType.includes("webp")) ext = "webp";
       else if (contentType.includes("gif")) ext = "gif";
@@ -267,12 +271,7 @@ export class CategoryService {
     const timestamp = Date.now();
     const key = `categories/${categoryId}/${timestamp}-${rand}.${ext}`;
 
-    const publicUrl = await uploadBuffer(
-      fileBuffer,
-      key,
-      contentType,
-      true,
-    );
+    const publicUrl = await uploadBuffer(fileBuffer, key, contentType, true);
 
     const sanitizedData: Prisma.CategoryImageCreateInput = {
       url: publicUrl,
@@ -281,10 +280,7 @@ export class CategoryService {
       category: { connect: { id: categoryId } },
     };
 
-    return this.categoryRepository.addCategoryImage(
-      categoryId,
-      sanitizedData,
-    );
+    return this.categoryRepository.addCategoryImage(categoryId, sanitizedData);
   }
 
   async setPrimaryImage(imageId: string) {
@@ -319,7 +315,10 @@ export class CategoryService {
           await deleteObject(key);
         }
       } catch (err) {
-        logger.warn({ id, err }, "Failed to delete S3 object for category image");
+        logger.warn(
+          { id, err },
+          "Failed to delete S3 object for category image",
+        );
       }
     }
 

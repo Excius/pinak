@@ -78,6 +78,6 @@ eas build --platform android --profile production
 ```
 
 ```bash
-cd apps/mobile/android               
+cd apps/mobile/android
 ./gradlew installRelease
 ```

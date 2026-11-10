@@ -47,7 +47,11 @@ export class CartController {
     const { itemId } = req.params as { itemId: string };
     const { quantity } = req.body as { quantity: number };
 
-    const cart = await this.cartService.updateCartItem(userId, itemId, quantity);
+    const cart = await this.cartService.updateCartItem(
+      userId,
+      itemId,
+      quantity,
+    );
     ResponseHandler.success(res, cart, "Cart item updated successfully");
   };
 

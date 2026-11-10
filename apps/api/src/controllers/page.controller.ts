@@ -33,7 +33,10 @@ export class PageController {
     const query = req.query as Record<string, any>;
     const result = await this.service.listAdmin({
       search: query.search ? String(query.search) : undefined,
-      isActive: query.isActive !== undefined ? query.isActive === "true" || query.isActive === true : undefined,
+      isActive:
+        query.isActive !== undefined
+          ? query.isActive === "true" || query.isActive === true
+          : undefined,
       includeDeleted:
         query.includeDeleted !== undefined
           ? query.includeDeleted === "true" || query.includeDeleted === true

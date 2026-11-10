@@ -6,10 +6,10 @@
  * paise integers to human-readable ₹ strings.
  */
 
-const inrFormatter = new Intl.NumberFormat('en-IN', {
+const inrFormatter = new Intl.NumberFormat("en-IN", {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
-})
+});
 
 /**
  * Format an amount in paise to a display string in Indian Rupees.
@@ -20,6 +20,6 @@ const inrFormatter = new Intl.NumberFormat('en-IN', {
  * formatPaise(0)      // "₹0.00"
  */
 export function formatPaise(amountInPaise: number): string {
-  const rupees = amountInPaise / 100
-  return `₹${inrFormatter.format(rupees)}`
+  const rupees = amountInPaise / 100;
+  return `₹${inrFormatter.format(rupees)}`;
 }

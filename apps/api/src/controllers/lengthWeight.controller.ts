@@ -31,7 +31,11 @@ export class LengthClassController {
     const { id } = req.params;
     const item = await this.service.getById(id as string);
     if (!item) return ResponseHandler.notFound(res, "Length class not found");
-    ResponseHandler.success(res, toPublicLengthClass(item), "Length class fetched");
+    ResponseHandler.success(
+      res,
+      toPublicLengthClass(item),
+      "Length class fetched",
+    );
   };
 
   listAdmin = async (req: Request, res: Response) => {
@@ -47,20 +51,32 @@ export class LengthClassController {
     const { id } = req.params;
     const item = await this.service.getById(id as string);
     if (!item) return ResponseHandler.notFound(res, "Length class not found");
-    ResponseHandler.success(res, toAdminLengthClass(item), "Length class fetched");
+    ResponseHandler.success(
+      res,
+      toAdminLengthClass(item),
+      "Length class fetched",
+    );
   };
 
   create = async (req: Request, res: Response) => {
     const data = req.body;
     const item = await this.service.create(data);
-    ResponseHandler.success(res, toAdminLengthClass(item), "Length class created");
+    ResponseHandler.success(
+      res,
+      toAdminLengthClass(item),
+      "Length class created",
+    );
   };
 
   update = async (req: Request, res: Response) => {
     const { id } = req.params;
     const data = req.body;
     const item = await this.service.update(id as string, data);
-    ResponseHandler.success(res, toAdminLengthClass(item), "Length class updated");
+    ResponseHandler.success(
+      res,
+      toAdminLengthClass(item),
+      "Length class updated",
+    );
   };
 
   delete = async (req: Request, res: Response) => {
@@ -86,7 +102,11 @@ export class WeightClassController {
     const { id } = req.params;
     const item = await this.service.getById(id as string);
     if (!item) return ResponseHandler.notFound(res, "Weight class not found");
-    ResponseHandler.success(res, toPublicWeightClass(item), "Weight class fetched");
+    ResponseHandler.success(
+      res,
+      toPublicWeightClass(item),
+      "Weight class fetched",
+    );
   };
 
   listAdmin = async (req: Request, res: Response) => {
@@ -102,20 +122,32 @@ export class WeightClassController {
     const { id } = req.params;
     const item = await this.service.getById(id as string);
     if (!item) return ResponseHandler.notFound(res, "Weight class not found");
-    ResponseHandler.success(res, toAdminWeightClass(item), "Weight class fetched");
+    ResponseHandler.success(
+      res,
+      toAdminWeightClass(item),
+      "Weight class fetched",
+    );
   };
 
   create = async (req: Request, res: Response) => {
     const data = req.body;
     const item = await this.service.create(data);
-    ResponseHandler.success(res, toAdminWeightClass(item), "Weight class created");
+    ResponseHandler.success(
+      res,
+      toAdminWeightClass(item),
+      "Weight class created",
+    );
   };
 
   update = async (req: Request, res: Response) => {
     const { id } = req.params;
     const data = req.body;
     const item = await this.service.update(id as string, data);
-    ResponseHandler.success(res, toAdminWeightClass(item), "Weight class updated");
+    ResponseHandler.success(
+      res,
+      toAdminWeightClass(item),
+      "Weight class updated",
+    );
   };
 
   delete = async (req: Request, res: Response) => {

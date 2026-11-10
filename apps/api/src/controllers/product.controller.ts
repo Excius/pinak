@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { ResponseHandler } from "../lib/response.js";
 import { ProductService } from "../services/product.service.js";
 import logger from "../lib/logger.js";
+import { ValidationError } from "../lib/error.js";
 import { ProductPaginationOptions } from "../types/pagination.types.js";
 import {
   toPublicProduct,
@@ -105,12 +106,21 @@ export class ProductController {
       page: parseInt(req.query.page as string) || 1,
       limit: parseInt(req.query.limit as string) || 10,
     };
-    const timeframe = (req.query.timeframe as "week" | "month" | "all_time") || "all_time";
+    const timeframe =
+      (req.query.timeframe as "week" | "month" | "all_time") || "all_time";
     const categoryId = req.query.categoryId as string;
 
-    const products = await this.productService.getBestSellers(pagination, timeframe, categoryId);
+    const products = await this.productService.getBestSellers(
+      pagination,
+      timeframe,
+      categoryId,
+    );
     const publicData = toPublicProductList(products);
-    ResponseHandler.success(res, publicData, "Best sellers fetched successfully");
+    ResponseHandler.success(
+      res,
+      publicData,
+      "Best sellers fetched successfully",
+    );
   };
 
   getBestSellersAdmin = async (req: Request, res: Response) => {
@@ -118,27 +128,44 @@ export class ProductController {
       page: parseInt(req.query.page as string) || 1,
       limit: parseInt(req.query.limit as string) || 10,
     };
-    const timeframe = (req.query.timeframe as "week" | "month" | "all_time") || "all_time";
+    const timeframe =
+      (req.query.timeframe as "week" | "month" | "all_time") || "all_time";
     const categoryId = req.query.categoryId as string;
 
-    const result = await this.productService.getBestSellersAdmin(pagination, timeframe, categoryId);
-    
+    const result = await this.productService.getBestSellersAdmin(
+      pagination,
+      timeframe,
+      categoryId,
+    );
+
     // Map the products to AdminProduct
     const adminData = {
-      items: (result.items as NonNullable<typeof result.items[0]>[]).map(item => ({
-        product: toAdminProduct(item.product as any),
-        salesMetrics: item.salesMetrics,
-      })),
+      items: (result.items as NonNullable<(typeof result.items)[0]>[]).map(
+        (item) => ({
+          product: toAdminProduct(item.product as any),
+          salesMetrics: item.salesMetrics,
+        }),
+      ),
       pagination: result.pagination,
     };
 
-    ResponseHandler.success(res, adminData, "Admin best sellers fetched successfully");
+    ResponseHandler.success(
+      res,
+      adminData,
+      "Admin best sellers fetched successfully",
+    );
   };
 
   getBestSellerAnalytics = async (req: Request, res: Response) => {
-    const timeframe = (req.query.timeframe as "week" | "month" | "all_time") || "month";
-    const analytics = await this.productService.getBestSellerAnalytics(timeframe);
-    ResponseHandler.success(res, analytics, "Best seller analytics fetched successfully");
+    const timeframe =
+      (req.query.timeframe as "week" | "month" | "all_time") || "month";
+    const analytics =
+      await this.productService.getBestSellerAnalytics(timeframe);
+    ResponseHandler.success(
+      res,
+      analytics,
+      "Best seller analytics fetched successfully",
+    );
   };
 
   getFeaturedProducts = async (req: Request, res: Response) => {
@@ -293,12 +320,14 @@ export class ProductController {
   };
 
   getProductsByStatusAdmin = async (req: Request, res: Response) => {
-    const status = req.params.status as "ACTIVE" | "INACTIVE";
+    const status = ((req.params.status as string) || "").toUpperCase() as "ACTIVE" | "INACTIVE";
     const pagination: ProductPaginationOptions = {
       page: parseInt(req.query.page as string) || 1,
       limit: parseInt(req.query.limit as string) || 10,
       sortBy: req.query.sortBy as string,
       sortOrder: (req.query.sortOrder as "asc" | "desc") || "desc",
+      search: req.query.search as string,
+      brand: req.query.brand as string,
     };
 
     const products = await this.productService.getProductsByStatusAdmin(
@@ -375,7 +404,11 @@ export class ProductController {
     const images = await this.productService.getAllVariantImages(
       variantId as string,
     );
-    ResponseHandler.success(res, images, "Product variant images retrieved successfully");
+    ResponseHandler.success(
+      res,
+      images,
+      "Product variant images retrieved successfully",
+    );
   };
 
   addProductImage = async (req: Request, res: Response) => {
@@ -538,7 +571,6 @@ export class ProductController {
     );
   };
 
-
   // TODO: Implement bulk product operations
   // - Bulk create products
   // - Bulk update products
@@ -562,6 +594,102 @@ export class ProductController {
   // - Image CDN integration
   // - Image alt-text generation (AI)
   // - Bulk image operations
+
+  importInventory = async (req: Request, res: Response) => {
+    let bufferOrString: Buffer | string | undefined;
+    let filename: string | undefined;
+
+    if (req.file) {
+      bufferOrString = req.file.buffer;
+      filename = req.file.originalname;
+    } else if (typeof req.body?.csv === "string" && req.body.csv.trim()) {
+      bufferOrString = req.body.csv;
+      filename = "import.csv";
+    } else if (typeof req.body?.data === "string" && req.body.data.trim()) {
+      bufferOrString = req.body.data;
+      filename = "import.csv";
+    }
+
+    if (!bufferOrString) {
+      throw new ValidationError(
+        "Please upload a spreadsheet file (as 'file') or supply CSV data in the 'csv' body field.",
+      );
+    }
+
+    const result = await this.productService.importInventory(
+      bufferOrString,
+      filename,
+    );
+
+    ResponseHandler.success(
+      res,
+      result,
+      "Inventory processed successfully. All newly imported products are inactive for review.",
+    );
+  };
+
+  exportInventory = async (req: Request, res: Response) => {
+    const status = req.query.status as "ALL" | "ACTIVE" | "INACTIVE" | undefined;
+    const brandId = req.query.brandId as string | undefined;
+    const categoryId = req.query.categoryId as string | undefined;
+    const search = req.query.search as string | undefined;
+    const format =
+      (req.query.format as string) === "json"
+        ? "json"
+        : (req.query.format as string) === "xlsx"
+          ? "xlsx"
+          : "csv";
+
+    const result = await this.productService.exportInventory({
+      status,
+      brandId,
+      categoryId,
+      search,
+      format,
+    });
+
+    if (format === "json") {
+      ResponseHandler.success(
+        res,
+        result,
+        "Inventory exported successfully",
+      );
+      return;
+    }
+
+    if (format === "xlsx" && "buffer" in result && result.buffer) {
+      res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      );
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${result.filename}"`,
+      );
+      res.status(200).send(result.buffer);
+      return;
+    }
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${result.filename}"`,
+    );
+    res.status(200).send((result as { csv: string }).csv);
+  };
+
+  bulkUpdateProductStatus = async (req: Request, res: Response) => {
+    const { productIds, isActive } = req.body;
+    const result = await this.productService.bulkUpdateProductStatus(
+      productIds,
+      Boolean(isActive),
+    );
+    ResponseHandler.success(
+      res,
+      result,
+      `Successfully updated status for ${result.updatedCount} products`,
+    );
+  };
 
   // TODO: Implement product review management
   // - Review moderation

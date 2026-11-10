@@ -1,22 +1,24 @@
-import React from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useCart } from '../context/CartContext'
-import { formatPaise } from '../utils/currency'
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { useCart } from "../context/CartContext";
+import { formatPaise } from "../utils/currency";
 
 interface ProductCardProps {
-  id: string
-  name: string
-  slug: string
-  imageUrl?: string
-  price?: number
-  priceWithTax?: number
-  comparePrice?: number
-  compareAtPriceWithTax?: number | null
-  category?: string
-  badge?: string
-  rating?: number
-  variantId?: string
-  variantLabel?: string
+  id: string;
+  name: string;
+  slug: string;
+  imageUrl?: string;
+  price?: number;
+  priceWithTax?: number;
+  sellingPrice?: number | null;
+  sellingPriceWithTax?: number | null;
+  comparePrice?: number;
+  compareAtPriceWithTax?: number | null;
+  category?: string;
+  badge?: string;
+  rating?: number;
+  variantId?: string;
+  variantLabel?: string;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({
@@ -25,65 +27,79 @@ const ProductCard: React.FC<ProductCardProps> = ({
   imageUrl,
   price,
   priceWithTax,
+  sellingPrice,
+  sellingPriceWithTax,
   comparePrice,
   compareAtPriceWithTax,
   category,
   badge,
   rating,
   variantId,
-  variantLabel: _variantLabel,
 }) => {
-  const navigate = useNavigate()
-  const { addItem } = useCart()
+  const navigate = useNavigate();
+  const { addItem } = useCart();
 
-  const displayPrice = priceWithTax ?? price
-  const displayComparePrice = compareAtPriceWithTax ?? comparePrice
+  const isDiscounted = sellingPrice != null;
+  const displayPrice = isDiscounted
+    ? (sellingPriceWithTax ?? sellingPrice)
+    : (priceWithTax ?? price);
+  const originalMRP = priceWithTax ?? price;
+  const displayComparePrice = compareAtPriceWithTax ?? comparePrice;
 
   const discount =
-    displayComparePrice && displayPrice && displayComparePrice > displayPrice
-      ? Math.round(((displayComparePrice - displayPrice) / displayComparePrice) * 100)
-      : null
+    isDiscounted && price
+      ? Math.round(((price - sellingPrice!) / price) * 100)
+      : displayComparePrice &&
+          displayPrice &&
+          displayComparePrice > displayPrice
+        ? Math.round(
+            ((displayComparePrice - displayPrice) / displayComparePrice) * 100,
+          )
+        : null;
 
   const handleAddToCart = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    if (!variantId) return
+    e.stopPropagation();
+    if (!variantId) return;
     addItem({
       productVariantId: variantId,
-      quantity: 1
-    })
-  }
+      quantity: 1,
+    });
+  };
 
   const renderStars = (r: number) => {
-    const stars = []
-    const full = Math.floor(r)
-    const half = r - full >= 0.5
+    const stars = [];
+    const full = Math.floor(r);
+    const half = r - full >= 0.5;
     for (let i = 0; i < full; i++) {
       stars.push(
         <span key={`full-${i}`} className="material-icons-outlined text-sm">
           star
-        </span>
-      )
+        </span>,
+      );
     }
     if (half) {
       stars.push(
         <span key="half" className="material-icons-outlined text-sm">
           star_half
-        </span>
-      )
+        </span>,
+      );
     }
-    const empty = 5 - full - (half ? 1 : 0)
+    const empty = 5 - full - (half ? 1 : 0);
     for (let i = 0; i < empty; i++) {
       stars.push(
         <span key={`empty-${i}`} className="material-icons-outlined text-sm">
           star_border
-        </span>
-      )
+        </span>,
+      );
     }
-    return stars
-  }
+    return stars;
+  };
 
   return (
-    <div className="group cursor-pointer card-lift" onClick={() => navigate(`/products/${slug}`)}>
+    <div
+      className="group cursor-pointer card-lift"
+      onClick={() => navigate(`/products/${slug}`)}
+    >
       <div className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-surface-dark aspect-[3/4] mb-3 sm:mb-4 shadow-sm transition-all border border-primary/5 hover:border-primary/20 img-zoom">
         {imageUrl ? (
           <img
@@ -93,7 +109,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-surface-dark">
-            <span className="material-icons-outlined text-6xl text-text-muted/30">image</span>
+            <span className="material-icons-outlined text-6xl text-text-muted/30">
+              image
+            </span>
           </div>
         )}
         {badge && (
@@ -111,14 +129,20 @@ const ProductCard: React.FC<ProductCardProps> = ({
             className="absolute bottom-3 sm:bottom-4 right-3 sm:right-4 bg-primary p-2.5 sm:p-3 rounded-full shadow-lg translate-y-12 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 touch-show transition-all duration-300 hover:bg-primary-hover cursor-pointer active:scale-95"
             onClick={handleAddToCart}
           >
-            <span className="material-icons-outlined text-xl text-black">add_shopping_cart</span>
+            <span className="material-icons-outlined text-xl text-black">
+              add_shopping_cart
+            </span>
           </button>
         )}
       </div>
       <h3 className="font-display text-sm sm:text-lg font-semibold hover:text-primary transition-colors truncate">
         {name}
       </h3>
-      {category && <p className="text-xs sm:text-sm text-text-muted mb-1 sm:mb-2">{category}</p>}
+      {category && (
+        <p className="text-xs sm:text-sm text-text-muted mb-1 sm:mb-2">
+          {category}
+        </p>
+      )}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 flex-wrap">
           {displayPrice != null && (
@@ -129,16 +153,29 @@ const ProductCard: React.FC<ProductCardProps> = ({
               <span className="text-[10px] text-text-muted">(incl. tax)</span>
             </div>
           )}
-          {displayComparePrice && displayComparePrice > (displayPrice || 0) && (
+          {isDiscounted &&
+          originalMRP != null &&
+          originalMRP > (displayPrice || 0) ? (
             <span className="text-xs sm:text-sm text-text-muted line-through mb-4">
-              {formatPaise(displayComparePrice)}
+              {formatPaise(originalMRP)}
             </span>
+          ) : (
+            displayComparePrice &&
+            displayComparePrice > (displayPrice || 0) && (
+              <span className="text-xs sm:text-sm text-text-muted line-through mb-4">
+                {formatPaise(displayComparePrice)}
+              </span>
+            )
           )}
         </div>
-        {rating != null && <div className="flex text-primary text-xs self-start">{renderStars(rating)}</div>}
+        {rating != null && (
+          <div className="flex text-primary text-xs self-start">
+            {renderStars(rating)}
+          </div>
+        )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ProductCard
+export default ProductCard;

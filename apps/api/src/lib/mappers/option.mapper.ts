@@ -4,6 +4,12 @@ export type OptionValueRecord = {
   value: string;
   sortOrder: number;
   swatchColorHex?: string | null;
+  weightGrams?: number | null;
+  weightClassId?: string | null;
+  dimensionLength?: number | null;
+  dimensionWidth?: number | null;
+  dimensionHeight?: number | null;
+  lengthClassId?: string | null;
   createdAt?: Date;
   updatedAt?: Date;
 };
@@ -37,6 +43,12 @@ export type AdminOptionValue = {
   value: string;
   sortOrder: number;
   swatchColorHex?: string | null;
+  weightGrams?: number | null;
+  weightClassId?: string | null;
+  dimensionLength?: number | null;
+  dimensionWidth?: number | null;
+  dimensionHeight?: number | null;
+  lengthClassId?: string | null;
   createdAt?: Date;
   updatedAt?: Date;
 };
@@ -50,7 +62,9 @@ export type AdminOption = {
   updatedAt?: Date;
 };
 
-export const toPublicOptionValue = (value: OptionValueRecord): PublicOptionValue => ({
+export const toPublicOptionValue = (
+  value: OptionValueRecord,
+): PublicOptionValue => ({
   id: value.id,
   value: value.value,
   sortOrder: value.sortOrder,
@@ -67,12 +81,20 @@ export const toPublicOption = (option: OptionRecord): PublicOption => ({
 export const toPublicOptionList = (options: OptionRecord[]): PublicOption[] =>
   options.map(toPublicOption);
 
-export const toAdminOptionValue = (value: OptionValueRecord): AdminOptionValue => ({
+export const toAdminOptionValue = (
+  value: OptionValueRecord,
+): AdminOptionValue => ({
   id: value.id,
   ...(value.optionId !== undefined && { optionId: value.optionId }),
   value: value.value,
   sortOrder: value.sortOrder,
   swatchColorHex: value.swatchColorHex ?? null,
+  weightGrams: value.weightGrams ?? null,
+  weightClassId: value.weightClassId ?? null,
+  dimensionLength: value.dimensionLength ?? null,
+  dimensionWidth: value.dimensionWidth ?? null,
+  dimensionHeight: value.dimensionHeight ?? null,
+  lengthClassId: value.lengthClassId ?? null,
   ...(value.createdAt !== undefined && { createdAt: value.createdAt }),
   ...(value.updatedAt !== undefined && { updatedAt: value.updatedAt }),
 });

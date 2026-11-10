@@ -55,12 +55,68 @@ export class CouponController {
       cartTotal,
     );
 
-    ResponseHandler.success(res, result, "Coupon validated successfully (Admin)");
+    ResponseHandler.success(
+      res,
+      result,
+      "Coupon validated successfully (Admin)",
+    );
   };
 
   getCouponAdmin = async (req: Request, res: Response) => {
     const { code } = req.params as { code: string };
     const coupon = await this.couponService.getCoupon(code);
     ResponseHandler.success(res, coupon, "Coupon fetched successfully (Admin)");
+  };
+
+  listCouponsAdmin = async (req: Request, res: Response) => {
+    // Validated query values are not written back to req.query (read-only in
+    // Express), so numbers arrive as strings and must be parsed here.
+    const q = req.query as Record<string, string | undefined>;
+    const page = Number.parseInt(q.page ?? "", 10);
+    const limit = Number.parseInt(q.limit ?? "", 10);
+    const data = await this.couponService.listCouponsAdmin({
+      page: Number.isFinite(page) && page > 0 ? page : undefined,
+      limit: Number.isFinite(limit) && limit > 0 ? Math.min(limit, 100) : undefined,
+      search: q.search,
+      isActive: q.isActive,
+      deleted: q.deleted,
+    });
+    ResponseHandler.success(res, data, "Coupons fetched successfully");
+  };
+
+  createCouponAdmin = async (req: Request, res: Response) => {
+    const coupon = await this.couponService.createCouponAdmin(req.body);
+    ResponseHandler.created(res, coupon, "Coupon created successfully");
+  };
+
+  updateCouponAdmin = async (req: Request, res: Response) => {
+    const coupon = await this.couponService.updateCouponAdmin(
+      req.params.id as string,
+      req.body,
+    );
+    ResponseHandler.success(res, coupon, "Coupon updated successfully");
+  };
+
+  updateCouponStatusAdmin = async (req: Request, res: Response) => {
+    const coupon = await this.couponService.setCouponActiveAdmin(
+      req.params.id as string,
+      Boolean(req.body.isActive),
+    );
+    ResponseHandler.success(res, coupon, "Coupon status updated successfully");
+  };
+
+  softDeleteCouponAdmin = async (req: Request, res: Response) => {
+    await this.couponService.softDeleteCouponAdmin(req.params.id as string);
+    ResponseHandler.success(res, null, "Coupon moved to trash");
+  };
+
+  restoreCouponAdmin = async (req: Request, res: Response) => {
+    await this.couponService.restoreCouponAdmin(req.params.id as string);
+    ResponseHandler.success(res, null, "Coupon restored");
+  };
+
+  hardDeleteCouponAdmin = async (req: Request, res: Response) => {
+    await this.couponService.hardDeleteCouponAdmin(req.params.id as string);
+    ResponseHandler.success(res, null, "Coupon permanently deleted");
   };
 }

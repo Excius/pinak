@@ -5,11 +5,12 @@ import type { CouponRouteDeps } from "./index.js";
 
 export const registerCouponPublicRoutes = (
   router: Router,
-  { controller, rateLimiter }: CouponRouteDeps,
+  { controller, authMiddleware, rateLimiter }: CouponRouteDeps,
 ) => {
   router.post(
     "/validate",
     rateLimiter,
+    authMiddleware.authenticate,
     validateMultiple(CouponTypes.ValidateCoupon),
     controller.validateCoupon,
   );

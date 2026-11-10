@@ -26,7 +26,12 @@ const WishlistProductSchema = z.object({
   tags: z.array(z.string()),
   brandId: z.string().nullable(),
   requiresShipping: z.boolean(),
-  outOfStockStatus: z.enum(["IN_STOCK", "OUT_OF_STOCK", "BACKORDER", "PREORDER"]),
+  outOfStockStatus: z.enum([
+    "IN_STOCK",
+    "OUT_OF_STOCK",
+    "BACKORDER",
+    "PREORDER",
+  ]),
   dimensionLength: z.number().nullable(),
   dimensionWidth: z.number().nullable(),
   dimensionHeight: z.number().nullable(),

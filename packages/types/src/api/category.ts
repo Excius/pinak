@@ -227,14 +227,16 @@ export const CategoryAdminTypes = {
   AddCategoryImage: {
     body: z.object({
       altText: z.string().optional(),
-      isPrimary: z.preprocess((val) => {
-        if (typeof val === "string") {
-          const v = val.toLowerCase();
-          if (v === "true") return true;
-          if (v === "false") return false;
-        }
-        return val;
-      }, z.boolean()).optional(),
+      isPrimary: z
+        .preprocess((val) => {
+          if (typeof val === "string") {
+            const v = val.toLowerCase();
+            if (v === "true") return true;
+            if (v === "false") return false;
+          }
+          return val;
+        }, z.boolean())
+        .optional(),
     }),
     params: z.object({ categoryId: z.string().min(1) }),
     query: z.object({}),

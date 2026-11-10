@@ -15,9 +15,10 @@ interface SubCategoryCardItem {
 }
 
 export default function CategoryProductScreen() {
-  const { categoryId, categoryName } = useLocalSearchParams<{
+  const { categoryId, categoryName, brand } = useLocalSearchParams<{
     categoryId?: string;
     categoryName?: string;
+    brand?: string;
   }>();
   const router = useRouter();
   const resolvedCategoryId = String(categoryId || "");
@@ -88,6 +89,7 @@ export default function CategoryProductScreen() {
           <ProductPage
             categoryId={resolvedCategoryId || selectedCategory}
             categoryName={title}
+            brand={brand ? String(brand) : undefined}
           />
         </ScrollView>
       </SafeAreaView>
@@ -111,6 +113,7 @@ export default function CategoryProductScreen() {
         categoryId: parentCategoryId,
         subCategoryId,
         subCategoryName,
+        ...(brand ? { brand: String(brand) } : {}),
       },
     });
   };

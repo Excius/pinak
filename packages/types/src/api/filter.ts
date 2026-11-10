@@ -28,8 +28,8 @@ const AdminFilterGroupSchema = PublicFilterGroupSchema.extend({
   updatedAt: z.date().optional(),
 });
 
-const ProductFilterValueSchema = z.object({
-  productId: z.string(),
+const VariantFilterValueSchema = z.object({
+  variantId: z.string(),
   filterValueId: z.string(),
 });
 
@@ -148,20 +148,20 @@ export const FilterTypes = {
     }),
   },
 
-  AddFilterToProduct: {
+  AddFilterToVariant: {
     body: z.object({}),
-    params: z.object({ productId: z.string(), filterValueId: z.string() }),
+    params: z.object({ variantId: z.string(), filterValueId: z.string() }),
     query: z.object({}),
     response: z.object({
       message: z.string(),
       success: z.boolean(),
-      data: ProductFilterValueSchema,
+      data: VariantFilterValueSchema,
     }),
   },
 
-  RemoveFilterFromProduct: {
+  RemoveFilterFromVariant: {
     body: z.object({}),
-    params: z.object({ productId: z.string(), filterValueId: z.string() }),
+    params: z.object({ variantId: z.string(), filterValueId: z.string() }),
     query: z.object({}),
     response: z.object({
       message: z.string(),

@@ -263,7 +263,7 @@ export const errorHandler = (
   ) {
     ResponseHandler.badRequest(
       res,
-      "Uploaded file is too large. Maximum allowed size is 10MB.",
+      "Uploaded file is too large.",
     );
     return;
   }

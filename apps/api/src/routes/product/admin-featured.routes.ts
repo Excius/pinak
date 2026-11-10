@@ -10,18 +10,18 @@ export const registerProductAdminFeaturedRoutes = (
   router.post(
     "/admin/featured/:sectionId",
     rateLimiter,
-    validateMultiple(ProductTypes.AddProductToFeatured),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ProductTypes.AddProductToFeatured),
     productController.addProductToFeatured,
   );
 
   router.delete(
     "/admin/featured/:featuredProductId",
     rateLimiter,
-    validateMultiple(ProductTypes.RemoveProductFromFeatured),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ProductTypes.RemoveProductFromFeatured),
     productController.removeProductFromFeatured,
   );
 };

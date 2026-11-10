@@ -82,14 +82,22 @@ export class BrandController {
     const { id } = req.params;
     const brand = await this.brandService.getBrandById(id as string);
     if (!brand) return ResponseHandler.notFound(res, "Brand not found");
-    ResponseHandler.success(res, toAdminBrand(brand), "Brand fetched successfully");
+    ResponseHandler.success(
+      res,
+      toAdminBrand(brand),
+      "Brand fetched successfully",
+    );
   };
 
   getBySlugAdmin = async (req: Request, res: Response) => {
     const { slug } = req.params;
     const brand = await this.brandService.getBrandBySlug(slug as string);
     if (!brand) return ResponseHandler.notFound(res, "Brand not found");
-    ResponseHandler.success(res, toAdminBrand(brand), "Brand fetched successfully");
+    ResponseHandler.success(
+      res,
+      toAdminBrand(brand),
+      "Brand fetched successfully",
+    );
   };
 
   create = async (req: Request, res: Response) => {

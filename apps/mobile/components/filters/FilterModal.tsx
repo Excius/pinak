@@ -4,12 +4,14 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
+  Pressable,
   Modal,
   ActivityIndicator,
-  FlatList,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { getFilterGroups } from "@/services/filter.service";
+import { getProductsByCategory } from "@/services/product.service";
 import type { FilterApi } from "@repo/types";
 
 type FilterGroup = FilterApi.ResponseTypes["ListGroups"]["data"][number];
@@ -19,6 +21,8 @@ interface FilterModalProps {
   isVisible: boolean;
   onClose: () => void;
   onApplyFilters: (filterValueIds: string[]) => void;
+  categoryId: string;
+  brand?: string;
 }
 
 /**
@@ -30,12 +34,16 @@ export function FilterModal({
   isVisible,
   onClose,
   onApplyFilters,
+  categoryId,
+  brand,
 }: FilterModalProps) {
   const [groups, setGroups] = useState<FilterGroup[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedFilters, setSelectedFilters] = useState<Set<string>>(
     new Set(),
   );
+  const [resultCount, setResultCount] = useState<number | null>(null);
+  const [isCountingResults, setIsCountingResults] = useState(false);
 
   // Load filter groups
   useEffect(() => {
@@ -55,6 +63,47 @@ export function FilterModal({
 
     void loadFilters();
   }, [isVisible]);
+
+  useEffect(() => {
+    if (!isVisible || !categoryId) return;
+
+    let isCurrentRequest = true;
+    const countResults = async () => {
+      setIsCountingResults(true);
+
+      try {
+        const response = await getProductsByCategory(categoryId, 1, 1, {
+          inStock: true,
+          ...(brand ? { brand } : {}),
+          ...(selectedFilters.size > 0
+            ? { filterValueIds: Array.from(selectedFilters) }
+            : {}),
+        });
+
+        if (isCurrentRequest) {
+          setResultCount(response.data.pagination.total);
+        }
+      } catch (error) {
+        if (isCurrentRequest) {
+          setResultCount(null);
+          console.error("Failed to count filtered products:", error);
+        }
+      } finally {
+        if (isCurrentRequest) {
+          setIsCountingResults(false);
+        }
+      }
+    };
+
+    const timeoutId = setTimeout(() => {
+      void countResults();
+    }, 250);
+
+    return () => {
+      isCurrentRequest = false;
+      clearTimeout(timeoutId);
+    };
+  }, [brand, categoryId, isVisible, selectedFilters]);
 
   // Toggle filter selection
   const toggleFilter = (filterId: string) => {
@@ -83,51 +132,81 @@ export function FilterModal({
       visible={isVisible}
       animationType="slide"
       transparent={true}
+      statusBarTranslucent
+      navigationBarTranslucent
       onRequestClose={onClose}
     >
-      <View className="flex-1 bg-black/50">
-        {/* Modal Content */}
-        <View className="flex-1 mt-auto bg-background rounded-t-3xl overflow-hidden">
-          {/* Header */}
-          <View className="flex-row items-center justify-between px-6 py-4 border-b border-surface-border">
-            <Text className="text-lg font-bold text-text-primary font-display">
-              Filter Products
-            </Text>
+      <View className="flex-1 justify-end bg-black/70">
+        <Pressable className="flex-1" onPress={onClose} />
+        <SafeAreaView
+          edges={["bottom"]}
+          className="max-h-[86%] overflow-hidden rounded-t-[2rem] border-t border-primary/30 bg-background-light"
+        >
+          <View className="items-center px-6 pt-3">
+            <View className="h-1.5 w-12 rounded-full bg-surface-border" />
+          </View>
+
+          <View className="flex-row items-center justify-between px-6 pb-4 pt-3">
+            <View>
+              <Text className="text-2xl font-bold text-text-primary font-display">
+                Refine your search
+              </Text>
+              <Text className="mt-1 text-xs text-text-secondary">
+                Choose one or more options
+              </Text>
+            </View>
             <TouchableOpacity
               onPress={onClose}
-              className="w-8 h-8 rounded-full bg-surface items-center justify-center"
+              accessibilityLabel="Close filters"
+              className="h-10 w-10 items-center justify-center rounded-full border border-surface-border bg-surface"
             >
               <MaterialCommunityIcons name="close" size={20} color="#C9A962" />
             </TouchableOpacity>
           </View>
 
-          {/* Content */}
           {isLoading ? (
-            <View className="flex-1 items-center justify-center">
+            <View className="h-72 items-center justify-center">
               <ActivityIndicator size="small" color="#C9A962" />
             </View>
           ) : groups.length > 0 ? (
-            <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-              <View className="px-6 py-4">
+            <ScrollView
+              className="border-y border-surface-border"
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{
+                paddingHorizontal: 24,
+                paddingVertical: 20,
+              }}
+            >
+              <View>
                 {groups.map((group) => (
-                  <View key={group.id} className="mb-6">
-                    {/* Group Title */}
-                    <Text className="text-sm font-bold text-text-primary font-display uppercase tracking-widest mb-3">
-                      {group.name}
-                    </Text>
+                  <View key={group.id} className="mb-7">
+                    <View className="mb-3 flex-row items-center justify-between">
+                      <Text className="text-base font-bold text-text-primary font-display">
+                        {group.name}
+                      </Text>
+                      <Text className="text-xs text-text-muted">
+                        {group.values.length} options
+                      </Text>
+                    </View>
 
-                    {/* Filter Values */}
-                    <View className="flex-row flex-wrap gap-2">
+                    <View className="flex-row flex-wrap gap-2.5">
                       {group.values.map((value) => (
                         <TouchableOpacity
                           key={value.id}
                           onPress={() => toggleFilter(value.id)}
-                          className={`px-4 py-2 rounded-full border-2 ${
+                          className={`flex-row items-center gap-2 rounded-xl border px-3.5 py-3 ${
                             selectedFilters.has(value.id)
                               ? "bg-primary border-primary"
                               : "bg-surface border-surface-border"
                           }`}
                         >
+                          {selectedFilters.has(value.id) && (
+                            <MaterialCommunityIcons
+                              name="check"
+                              size={15}
+                              color="#0A0A0A"
+                            />
+                          )}
                           <Text
                             className={`text-sm font-semibold ${
                               selectedFilters.has(value.id)
@@ -145,32 +224,54 @@ export function FilterModal({
               </View>
             </ScrollView>
           ) : (
-            <View className="flex-1 items-center justify-center">
+            <View className="h-72 items-center justify-center px-6">
+              <MaterialCommunityIcons
+                name="tune-variant"
+                size={32}
+                color="#C9A962"
+              />
               <Text className="text-sm text-text-secondary">
-                No filters available
+                No filters are available for this catalog yet.
               </Text>
             </View>
           )}
 
-          {/* Footer Buttons */}
-          <View className="flex-row gap-4 px-6 py-4 border-t border-surface-border bg-background">
+          <View className="flex-row items-center gap-3 bg-background-light px-6 py-4">
             <TouchableOpacity
               onPress={handleClearFilters}
-              className="flex-1 border border-primary rounded-full py-3 items-center justify-center"
+              disabled={selectedFilters.size === 0}
+              className={`flex-1 items-center justify-center rounded-xl border py-3.5 ${
+                selectedFilters.size === 0
+                  ? "border-surface-border bg-surface"
+                  : "border-primary/50 bg-surface"
+              }`}
             >
-              <Text className="text-sm font-bold text-primary">Clear All</Text>
+              <Text
+                className={`text-sm font-bold ${
+                  selectedFilters.size === 0
+                    ? "text-text-muted"
+                    : "text-primary"
+                }`}
+              >
+                Clear all
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={handleApplyFilters}
-              className="flex-1 bg-primary rounded-full py-3 items-center justify-center"
+              className="flex-[1.4] flex-row items-center justify-center gap-2 rounded-xl bg-primary py-3.5"
             >
+              <MaterialCommunityIcons name="check" size={17} color="#0A0A0A" />
               <Text className="text-sm font-bold text-background">
-                Apply Filters
+                {isCountingResults
+                  ? "Counting results..."
+                  : resultCount !== null
+                    ? `Show ${resultCount} results`
+                    : "Apply filters"}
               </Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </SafeAreaView>
       </View>
     </Modal>
   );

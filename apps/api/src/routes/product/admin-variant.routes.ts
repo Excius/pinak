@@ -10,9 +10,9 @@ export const registerProductAdminVariantRoutes = (
   router.post(
     "/admin/:productId/variants",
     rateLimiter,
-    validateMultiple(ProductTypes.CreateProductVariant),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ProductTypes.CreateProductVariant),
     productController.createProductVariant,
   );
 
@@ -28,54 +28,54 @@ export const registerProductAdminVariantRoutes = (
   router.put(
     "/admin/variants/:id",
     rateLimiter,
-    validateMultiple(ProductTypes.UpdateProductVariant),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ProductTypes.UpdateProductVariant),
     productController.updateProductVariant,
   );
 
   router.delete(
     "/admin/variants/:id",
     rateLimiter,
-    validateMultiple(ProductTypes.SoftDeleteProductVariant),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ProductTypes.SoftDeleteProductVariant),
     productController.softDeleteProductVariant,
   );
 
   router.patch(
     "/admin/variants/:id/restore",
     rateLimiter,
-    validateMultiple(ProductTypes.RestoreProductVariant),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ProductTypes.RestoreProductVariant),
     productController.restoreProductVariant,
   );
 
   router.patch(
     "/admin/variants/:variantId/stock",
     rateLimiter,
-    validateMultiple(ProductTypes.UpdateVariantStock),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ProductTypes.UpdateVariantStock),
     productController.updateVariantStock,
   );
 
   router.patch(
     "/admin/variants/stock/bulk",
     rateLimiter,
-    validateMultiple(ProductTypes.BulkUpdateVariantStock),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ProductTypes.BulkUpdateVariantStock),
     productController.bulkUpdateVariantStock,
   );
 
   router.delete(
     "/admin/variants/:id/hard",
     rateLimiter,
-    validateMultiple(ProductTypes.HardDeleteProductVariant),
     authMiddleware.authenticate,
     authMiddleware.requireAdmin,
+    validateMultiple(ProductTypes.HardDeleteProductVariant),
     productController.hardDeleteProductVariant,
   );
 };

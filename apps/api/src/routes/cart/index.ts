@@ -26,7 +26,7 @@ const jwtService = new JWTService(
 
 const cartRepository = new CartRepository(prisma);
 const stockReservationService = new StockReservationService(prisma);
-const cartService = new CartService(cartRepository, stockReservationService);
+const cartService = new CartService(cartRepository, stockReservationService, prisma);
 const controller = new CartController(cartService);
 
 const deps: CartRouteDeps = {

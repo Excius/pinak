@@ -19,6 +19,7 @@ import dynamicAssetRoutes from "./dynamicAsset/index.js";
 import storeRoutes from "./store/index.js";
 import pageRoutes from "./page/index.js";
 import settingRoutes from "./setting/index.js";
+import userRoutes from "./user/index.js";
 
 const router = Router();
 
@@ -43,5 +44,6 @@ router.use("/dynamic-assets", dynamicAssetRoutes);
 router.use("/stores", storeRoutes);
 router.use("/pages", pageRoutes);
 router.use("/settings", settingRoutes);
+router.use("/users", userRoutes);
 
 export default router;

@@ -121,7 +121,8 @@ export class FeaturedSectionService {
 
     let ext = "bin";
     if (contentType) {
-      if (contentType.includes("jpeg") || contentType.includes("jpg")) ext = "jpg";
+      if (contentType.includes("jpeg") || contentType.includes("jpg"))
+        ext = "jpg";
       else if (contentType.includes("png")) ext = "png";
       else if (contentType.includes("webp")) ext = "webp";
       else if (contentType.includes("gif")) ext = "gif";
@@ -132,12 +133,7 @@ export class FeaturedSectionService {
     const timestamp = Date.now();
     const key = `featured-sections/${featuredSectionId}/${timestamp}-${rand}.${ext}`;
 
-    const publicUrl = await uploadBuffer(
-      fileBuffer,
-      key,
-      contentType,
-      true,
-    );
+    const publicUrl = await uploadBuffer(fileBuffer, key, contentType, true);
 
     const sanitizedData: Prisma.FeaturedSectionImageCreateInput = {
       url: publicUrl,
@@ -184,7 +180,10 @@ export class FeaturedSectionService {
           await deleteObject(key);
         }
       } catch (err) {
-        logger.warn({ id, err }, "Failed to delete S3 object for featured section image");
+        logger.warn(
+          { id, err },
+          "Failed to delete S3 object for featured section image",
+        );
       }
     }
 

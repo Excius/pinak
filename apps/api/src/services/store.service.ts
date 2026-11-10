@@ -1,6 +1,9 @@
 import { Prisma } from "../generated/prisma/client.js";
 import { NotFoundError, ValidationError } from "../lib/error.js";
-import { StoreRepository, StoreListFilter } from "../repositories/store.repository.js";
+import {
+  StoreRepository,
+  StoreListFilter,
+} from "../repositories/store.repository.js";
 import { StoreRecord, PaginationMeta } from "../lib/mappers/store.mapper.js";
 
 export function calculateDistanceKm(
@@ -110,7 +113,8 @@ export class StoreService {
       if (query.radius !== undefined && query.radius > 0) {
         const r = query.radius;
         storesWithDistance = storesWithDistance.filter(
-          (s) => s.distance !== null && s.distance !== undefined && s.distance <= r,
+          (s) =>
+            s.distance !== null && s.distance !== undefined && s.distance <= r,
         );
       }
 
@@ -290,10 +294,16 @@ export class StoreService {
       throw new NotFoundError("Store not found");
     }
 
-    if (input.latitude !== undefined && (input.latitude < -90 || input.latitude > 90)) {
+    if (
+      input.latitude !== undefined &&
+      (input.latitude < -90 || input.latitude > 90)
+    ) {
       throw new ValidationError("Latitude must be between -90 and 90");
     }
-    if (input.longitude !== undefined && (input.longitude < -180 || input.longitude > 180)) {
+    if (
+      input.longitude !== undefined &&
+      (input.longitude < -180 || input.longitude > 180)
+    ) {
       throw new ValidationError("Longitude must be between -180 and 180");
     }
 

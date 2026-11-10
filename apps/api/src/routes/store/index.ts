@@ -35,7 +35,8 @@ const deps: StoreRouteDeps = {
   rateLimiter: createRateLimiter(),
 };
 
-registerStorePublicRoutes(router, deps);
+// Register admin routes BEFORE public routes so Express does not treat "/admin" as "/:id"
 registerStoreAdminRoutes(router, deps);
+registerStorePublicRoutes(router, deps);
 
 export default router;

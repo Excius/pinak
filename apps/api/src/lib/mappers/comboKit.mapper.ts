@@ -2,6 +2,7 @@ import type {
   ComboKitDiscountType,
   ComboKitPricingStrategy,
 } from "../../generated/prisma/enums.js";
+import { variantTaxRate } from "../taxRates.js";
 
 type ComboPagination = {
   page: number;
@@ -286,19 +287,21 @@ const getPrimaryImageUrl = (
 const toPublicComboKitVariant = (
   variant: ComboProductVariantRecord,
 ): PublicComboKitVariant => {
-  const taxRate = variant.product?.taxClass?.rate ?? 0;
+  const taxRate = variantTaxRate(variant);
   const price = variant.price;
-  const sellingPrice = variant.sellingPrice != null ? variant.sellingPrice : null;
+  const sellingPrice =
+    variant.sellingPrice != null ? variant.sellingPrice : null;
   const effectivePrice = sellingPrice ?? price;
-  const comparePrice = variant.comparePrice ?? (variant as any).compareAtPrice ?? null;
+  const comparePrice =
+    variant.comparePrice ?? (variant as any).compareAtPrice ?? null;
   const taxAmount = Math.round((effectivePrice * taxRate) / 100);
   const priceWithTax = price + Math.round((price * taxRate) / 100);
-  const sellingPriceWithTax = sellingPrice != null
-    ? sellingPrice + taxAmount
-    : null;
-  const comparePriceWithTax = comparePrice != null
-    ? comparePrice + Math.round((comparePrice * taxRate) / 100)
-    : null;
+  const sellingPriceWithTax =
+    sellingPrice != null ? sellingPrice + taxAmount : null;
+  const comparePriceWithTax =
+    comparePrice != null
+      ? comparePrice + Math.round((comparePrice * taxRate) / 100)
+      : null;
 
   return {
     id: variant.id,
@@ -337,19 +340,21 @@ const toPublicComboKitVariant = (
 const toAdminComboKitVariant = (
   variant: ComboProductVariantRecord,
 ): AdminComboKitVariant => {
-  const taxRate = variant.product?.taxClass?.rate ?? 0;
+  const taxRate = variantTaxRate(variant);
   const price = variant.price;
-  const sellingPrice = variant.sellingPrice != null ? variant.sellingPrice : null;
+  const sellingPrice =
+    variant.sellingPrice != null ? variant.sellingPrice : null;
   const effectivePrice = sellingPrice ?? price;
-  const comparePrice = variant.comparePrice ?? (variant as any).compareAtPrice ?? null;
+  const comparePrice =
+    variant.comparePrice ?? (variant as any).compareAtPrice ?? null;
   const taxAmount = Math.round((effectivePrice * taxRate) / 100);
   const priceWithTax = price + Math.round((price * taxRate) / 100);
-  const sellingPriceWithTax = sellingPrice != null
-    ? sellingPrice + taxAmount
-    : null;
-  const comparePriceWithTax = comparePrice != null
-    ? comparePrice + Math.round((comparePrice * taxRate) / 100)
-    : null;
+  const sellingPriceWithTax =
+    sellingPrice != null ? sellingPrice + taxAmount : null;
+  const comparePriceWithTax =
+    comparePrice != null
+      ? comparePrice + Math.round((comparePrice * taxRate) / 100)
+      : null;
 
   return {
     id: variant.id,
@@ -369,7 +374,9 @@ const toAdminComboKitVariant = (
     }),
     comparePriceWithTax,
     stock: variant.stock,
-    ...(variant.weightGrams !== undefined && { weightGrams: variant.weightGrams }),
+    ...(variant.weightGrams !== undefined && {
+      weightGrams: variant.weightGrams,
+    }),
     ...(variant.weightClassId !== undefined && {
       weightClassId: variant.weightClassId,
     }),
@@ -385,14 +392,15 @@ const toAdminComboKitVariant = (
 export const toPublicComboKitItem = (
   item: ComboKitItemRecord,
 ): PublicComboKitItem => {
-  const taxRate = item.productVariant?.product?.taxClass?.rate ?? 0;
+  const taxRate = variantTaxRate(item.productVariant);
   const originalPriceWithTax =
     item.originalPrice != null
       ? item.originalPrice + Math.round((item.originalPrice * taxRate) / 100)
       : null;
   const discountedPriceWithTax =
     item.discountedPrice != null
-      ? item.discountedPrice + Math.round((item.discountedPrice * taxRate) / 100)
+      ? item.discountedPrice +
+        Math.round((item.discountedPrice * taxRate) / 100)
       : null;
 
   return {
@@ -400,7 +408,9 @@ export const toPublicComboKitItem = (
     productVariantId: item.productVariantId,
     quantity: item.quantity,
     sortOrder: item.sortOrder,
-    ...(item.originalPrice !== undefined && { originalPrice: item.originalPrice }),
+    ...(item.originalPrice !== undefined && {
+      originalPrice: item.originalPrice,
+    }),
     ...(originalPriceWithTax !== null && { originalPriceWithTax }),
     ...(item.discountedPrice !== undefined && {
       discountedPrice: item.discountedPrice,
@@ -420,9 +430,9 @@ export const toPublicComboKitItems = (
 export const toPublicComboKit = (comboKit: ComboKitRecord): PublicComboKit => {
   const maxTaxRate = Math.max(
     0,
-    ...(comboKit.items ?? []).map(
-      (item) => item.productVariant?.product?.taxClass?.rate ?? 0
-    )
+    ...(comboKit.items ?? []).map((item) =>
+      variantTaxRate(item.productVariant),
+    ),
   );
   const taxAmount = Math.round((comboKit.price * maxTaxRate) / 100);
   const priceWithTax = comboKit.price + taxAmount;
@@ -469,14 +479,15 @@ export const toPublicComboKitList = (
 export const toAdminComboKitItem = (
   item: ComboKitItemRecord,
 ): AdminComboKitItem => {
-  const taxRate = item.productVariant?.product?.taxClass?.rate ?? 0;
+  const taxRate = variantTaxRate(item.productVariant);
   const originalPriceWithTax =
     item.originalPrice != null
       ? item.originalPrice + Math.round((item.originalPrice * taxRate) / 100)
       : null;
   const discountedPriceWithTax =
     item.discountedPrice != null
-      ? item.discountedPrice + Math.round((item.discountedPrice * taxRate) / 100)
+      ? item.discountedPrice +
+        Math.round((item.discountedPrice * taxRate) / 100)
       : null;
 
   return {
@@ -487,7 +498,9 @@ export const toAdminComboKitItem = (
     productVariantId: item.productVariantId,
     quantity: item.quantity,
     sortOrder: item.sortOrder,
-    ...(item.originalPrice !== undefined && { originalPrice: item.originalPrice }),
+    ...(item.originalPrice !== undefined && {
+      originalPrice: item.originalPrice,
+    }),
     ...(originalPriceWithTax !== null && { originalPriceWithTax }),
     ...(item.discountedPrice !== undefined && {
       discountedPrice: item.discountedPrice,
@@ -509,9 +522,9 @@ export const toAdminComboKitItems = (
 export const toAdminComboKit = (comboKit: ComboKitRecord): AdminComboKit => {
   const maxTaxRate = Math.max(
     0,
-    ...(comboKit.items ?? []).map(
-      (item) => item.productVariant?.product?.taxClass?.rate ?? 0
-    )
+    ...(comboKit.items ?? []).map((item) =>
+      variantTaxRate(item.productVariant),
+    ),
   );
   const taxAmount = Math.round((comboKit.price * maxTaxRate) / 100);
   const priceWithTax = comboKit.price + taxAmount;

@@ -44,6 +44,7 @@ const PublicProductVariantSchema = z.object({
   compareAtPriceWithTax: z.number().nullable().optional(),
   stock: z.number(),
   lowStockThreshold: z.number().nullable().optional(),
+  weightGrams: z.number().nullable().optional(),
   isActive: z.boolean(),
   image: PublicProductImageSchema.nullable(),
   optionValues: z.array(
@@ -68,6 +69,14 @@ const PublicProductSchema = z.object({
   seoKeyword: z.string().nullable(),
   keyIngredients: z.string().nullable(),
   frontImageUrl: z.string().nullable(),
+  weightGrams: z.number().nullable().optional(),
+  weightClass: z
+    .object({
+      name: z.string(),
+      unit: z.string(),
+    })
+    .nullable()
+    .optional(),
   tags: z.array(z.string()),
   isActive: z.boolean(),
   brand: z
@@ -386,78 +395,82 @@ export const ProductTypes = {
         isDeleted: z.boolean(),
         createdAt: z.date(),
         updatedAt: z.date(),
-        images: z.array(
-          z.object({
-            id: z.string(),
-            productVariantId: z.string(),
-            url: z.string(),
-            isPrimary: z.boolean(),
-            altText: z.string().nullable().optional(),
-            sortOrder: z.number(),
-            createdAt: z.date(),
-            updatedAt: z.date(),
-            isDeleted: z.boolean().optional().default(false),
-          }),
-        ).default([]),
-        optionValues: z.array(
-          z.object({
-            variantId: z.string(),
-            optionValueId: z.string(),
-            optionValue: z.object({
+        images: z
+          .array(
+            z.object({
               id: z.string(),
-              optionId: z.string(),
-              value: z.string(),
+              productVariantId: z.string(),
+              url: z.string(),
+              isPrimary: z.boolean(),
+              altText: z.string().nullable().optional(),
               sortOrder: z.number(),
-              swatchColorHex: z.string().nullable().optional(),
               createdAt: z.date(),
               updatedAt: z.date(),
-              option: z.object({
+              isDeleted: z.boolean().optional().default(false),
+            }),
+          )
+          .default([]),
+        optionValues: z
+          .array(
+            z.object({
+              variantId: z.string(),
+              optionValueId: z.string(),
+              optionValue: z.object({
                 id: z.string(),
-                name: z.string(),
+                optionId: z.string(),
+                value: z.string(),
                 sortOrder: z.number(),
+                swatchColorHex: z.string().nullable().optional(),
                 createdAt: z.date(),
                 updatedAt: z.date(),
+                option: z.object({
+                  id: z.string(),
+                  name: z.string(),
+                  sortOrder: z.number(),
+                  createdAt: z.date(),
+                  updatedAt: z.date(),
+                }),
               }),
             }),
-          }),
-        ).default([]),
-        product: z.object({
-          id: z.string(),
-          name: z.string(),
-          slug: z.string(),
-          description: z.string().nullable(),
-          keyIngredients: z.string().nullable(),
-          metaTitle: z.string().nullable(),
-          metaDescription: z.string().nullable(),
-          metaKeywords: z.string().nullable(),
-          seoKeyword: z.string().nullable(),
-          model: z.string().nullable(),
-          ean: z.string().nullable(),
-          frontImageUrl: z.string().nullable(),
-          tags: z.array(z.string()).default([]),
-          brandId: z.string().nullable(),
-          requiresShipping: z.coerce.boolean().optional(),
-          outOfStockStatus: OutOfStockStatusEnum.optional(),
-          dimensionLength: z.number().nullable().optional(),
-          dimensionWidth: z.number().nullable().optional(),
-          dimensionHeight: z.number().nullable().optional(),
-          lengthClassId: z.string().nullable().optional(),
-          weightGrams: z.number().nullable().optional(),
-          weightClassId: z.string().nullable().optional(),
-          taxClassId: z.string().nullable().optional(),
-          sortOrder: z.number().optional(),
-          viewCount: z.number().optional(),
-          purchasedCount: z.number().optional(),
-          isActive: z.boolean().optional(),
-          isDeleted: z.boolean().optional(),
-          createdAt: z.date().optional(),
-          updatedAt: z.date().optional(),
-        }).optional(),
+          )
+          .default([]),
+        product: z
+          .object({
+            id: z.string(),
+            name: z.string(),
+            slug: z.string(),
+            description: z.string().nullable(),
+            keyIngredients: z.string().nullable(),
+            metaTitle: z.string().nullable(),
+            metaDescription: z.string().nullable(),
+            metaKeywords: z.string().nullable(),
+            seoKeyword: z.string().nullable(),
+            model: z.string().nullable(),
+            ean: z.string().nullable(),
+            frontImageUrl: z.string().nullable(),
+            tags: z.array(z.string()).default([]),
+            brandId: z.string().nullable(),
+            requiresShipping: z.coerce.boolean().optional(),
+            outOfStockStatus: OutOfStockStatusEnum.optional(),
+            dimensionLength: z.number().nullable().optional(),
+            dimensionWidth: z.number().nullable().optional(),
+            dimensionHeight: z.number().nullable().optional(),
+            lengthClassId: z.string().nullable().optional(),
+            weightGrams: z.number().nullable().optional(),
+            weightClassId: z.string().nullable().optional(),
+            taxClassId: z.string().nullable().optional(),
+            sortOrder: z.number().optional(),
+            viewCount: z.number().optional(),
+            purchasedCount: z.number().optional(),
+            isActive: z.boolean().optional(),
+            isDeleted: z.boolean().optional(),
+            createdAt: z.date().optional(),
+            updatedAt: z.date().optional(),
+          })
+          .optional(),
       }),
     }),
   },
-
-
 
   // Admin types
   GetAllProductsAdmin: {
@@ -538,6 +551,35 @@ export const ProductTypes = {
           hasPrev: z.boolean(),
         }),
       }),
+    }),
+  },
+
+  GetProductsByStatusAdmin: {
+    body: z.object({}),
+    params: z.object({
+      status: z
+        .string()
+        .transform((v) => v.toUpperCase())
+        .pipe(
+          z.enum(["ACTIVE", "INACTIVE"], {
+            message: "status must be 'ACTIVE' or 'INACTIVE'",
+          }),
+        ),
+    }),
+    query: z.object({
+      page: z.coerce.number().min(1).default(1),
+      limit: z.coerce.number().min(1).max(100).default(10),
+      sortBy: z
+        .enum(["createdAt", "sortOrder", "viewCount", "purchasedCount"])
+        .optional(),
+      sortOrder: z.enum(["asc", "desc"]).optional(),
+      search: z.string().optional(),
+      brand: z.string().optional(),
+    }),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.any(),
     }),
   },
 
@@ -706,6 +748,12 @@ export const ProductTypes = {
         .default(0),
       weightGrams: z.coerce.number().min(0).optional(),
       weightClassId: z.string().optional(),
+      // Optional: overrides the product's tax class for this variant
+      taxClassId: z.string().min(1).optional().nullable(),
+      dimensionLength: z.coerce.number().min(0).optional().nullable(),
+      dimensionWidth: z.coerce.number().min(0).optional().nullable(),
+      dimensionHeight: z.coerce.number().min(0).optional().nullable(),
+      lengthClassId: z.string().min(1).optional().nullable(),
       tags: z.array(z.string()).default([]),
       // Dynamic option values — list of OptionValue IDs (e.g. ["30ml-id", "rose-id"])
       optionValueIds: z.array(z.string()).optional(),
@@ -770,6 +818,12 @@ export const ProductTypes = {
         .optional(),
       weightGrams: z.coerce.number().min(0).optional().nullable(),
       weightClassId: z.string().optional().nullable(),
+      // Set to override the product's tax class; null clears it (inherit from product)
+      taxClassId: z.string().min(1).optional().nullable(),
+      dimensionLength: z.coerce.number().min(0).optional().nullable(),
+      dimensionWidth: z.coerce.number().min(0).optional().nullable(),
+      dimensionHeight: z.coerce.number().min(0).optional().nullable(),
+      lengthClassId: z.string().min(1).optional().nullable(),
       tags: z.array(z.string()).optional(),
       // Append new OptionValue links; use dedicated endpoint to remove
       optionValueIds: z.array(z.string()).optional(),
@@ -811,14 +865,16 @@ export const ProductTypes = {
       // Image file is uploaded as multipart/form-data under field name 'image'.
       // The request body may include optional altText and isPrimary flag.
       altText: z.string("altText must be a string").optional(),
-      isPrimary: z.preprocess((val) => {
-        if (typeof val === "string") {
-          const v = val.toLowerCase();
-          if (v === "true") return true;
-          if (v === "false") return false;
-        }
-        return val;
-      }, z.boolean()).optional(),
+      isPrimary: z
+        .preprocess((val) => {
+          if (typeof val === "string") {
+            const v = val.toLowerCase();
+            if (v === "true") return true;
+            if (v === "false") return false;
+          }
+          return val;
+        }, z.boolean())
+        .optional(),
     }),
     params: z.object({
       variantId: z
@@ -843,14 +899,16 @@ export const ProductTypes = {
   UpdateProductImage: {
     body: z.object({
       altText: z.string("altText must be a string").optional(),
-      isPrimary: z.preprocess((val) => {
-        if (typeof val === "string") {
-          const v = val.toLowerCase();
-          if (v === "true") return true;
-          if (v === "false") return false;
-        }
-        return val;
-      }, z.boolean()).optional(),
+      isPrimary: z
+        .preprocess((val) => {
+          if (typeof val === "string") {
+            const v = val.toLowerCase();
+            if (v === "true") return true;
+            if (v === "false") return false;
+          }
+          return val;
+        }, z.boolean())
+        .optional(),
     }),
     params: z.object({
       id: z
@@ -1096,6 +1154,70 @@ export const ProductTypes = {
       message: z.string(),
       success: z.boolean(),
       data: z.object({}),
+    }),
+  },
+
+  ImportInventory: {
+    body: z.object({
+      csv: z.string().optional(),
+    }).passthrough(),
+    params: z.object({}),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({
+        totalProcessed: z.number(),
+        createdProducts: z.number(),
+        updatedProducts: z.number(),
+        createdVariants: z.number(),
+        updatedVariants: z.number(),
+        skippedCount: z.number(),
+        errors: z.array(
+          z.object({
+            row: z.number(),
+            name: z.string().optional(),
+            error: z.string(),
+          }),
+        ),
+      }),
+    }),
+  },
+
+  ExportInventory: {
+    body: z.object({}),
+    params: z.object({}),
+    query: z.object({
+      status: z.enum(["ALL", "ACTIVE", "INACTIVE"]).optional().default("ALL"),
+      brandId: z.string().optional(),
+      categoryId: z.string().optional(),
+      search: z.string().optional(),
+      format: z.enum(["csv", "xlsx", "json"]).optional().default("csv"),
+    }),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.any(),
+    }),
+  },
+
+  BulkUpdateProductStatus: {
+    body: z.object({
+      productIds: z
+        .array(z.string().min(1, { message: "Product ID cannot be empty" }))
+        .min(1, { message: "At least one product ID is required" })
+        .max(500, { message: "At most 500 products can be updated at once" }),
+      isActive: z.boolean(),
+    }),
+    params: z.object({}),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({
+        updatedCount: z.number(),
+        isActive: z.boolean(),
+      }),
     }),
   },
 };

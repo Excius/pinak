@@ -13,11 +13,17 @@ import { useWishlist } from "@/hooks/use-wishlist";
 
 interface ProductGridProps {
   categoryId: string;
+  brand?: string;
+  filterValueIds?: string[];
 }
 
-export function ProductGrid({ categoryId }: ProductGridProps) {
+export function ProductGrid({
+  categoryId,
+  brand,
+  filterValueIds = [],
+}: ProductGridProps) {
   const router = useRouter();
-  const { addToCart } = useCart();
+  const { addToCart, isAddingToCart } = useCart();
   const { isAuthenticated } = useAuth();
   const {
     itemIdsByVariantId,
@@ -42,6 +48,8 @@ export function ProductGrid({ categoryId }: ProductGridProps) {
     try {
       const response = await getProductsByCategory(categoryId, 1, 20, {
         inStock: true,
+        ...(brand ? { brand } : {}),
+        ...(filterValueIds.length > 0 ? { filterValueIds } : {}),
       });
       setProducts(mapProductsToCardItems(response.data.items));
     } catch (err) {
@@ -53,7 +61,7 @@ export function ProductGrid({ categoryId }: ProductGridProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [categoryId]);
+  }, [brand, categoryId, filterValueIds]);
 
   useEffect(() => {
     void loadProducts();
@@ -102,6 +110,7 @@ export function ProductGrid({ categoryId }: ProductGridProps) {
                 void addToCart(item.variantId, undefined, 1);
               }
             }}
+            isAddToCartLoading={isAddingToCart}
             onWishlistToggle={() => {
               if (item.variantId && isAuthenticated) {
                 void toggleWishlist(item.variantId, item.id);

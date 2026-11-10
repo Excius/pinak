@@ -21,9 +21,12 @@ const AddressSchema = z.object({
     .string()
     .trim()
     .min(1, "State is required")
-    .refine((val) => Boolean(INDIAN_STATES_AND_CODES[val.trim().toUpperCase()]), {
-      message: "Must be a valid Indian state or union territory",
-    }),
+    .refine(
+      (val) => Boolean(INDIAN_STATES_AND_CODES[val.trim().toUpperCase()]),
+      {
+        message: "Must be a valid Indian state or union territory",
+      },
+    ),
   pincode: z
     .string()
     .trim()
@@ -263,7 +266,7 @@ export const OrderTypes = {
             igstAmount: z.number(),
             totalTax: z.number(),
             totalLineAmount: z.number(),
-          })
+          }),
         ),
       }),
     }),

@@ -1,6 +1,6 @@
 const { getDefaultConfig } = require("expo/metro-config");
 const path = require("path");
-const { withNativeWind } = require('nativewind/metro');
+const { withNativeWind } = require("nativewind/metro");
 const projectRoot = __dirname;
 const workspaceRoot = path.resolve(projectRoot, "../..");
 
@@ -21,8 +21,8 @@ config.resolver.extraNodeModules = {
   "react-dom": path.resolve(projectRoot, "node_modules/react-dom"),
 };
 
-module.exports = withNativeWind(config, { 
-  input: './global.css',
+module.exports = withNativeWind(config, {
+  input: "./global.css",
   // Disable CSS interop debugging warnings to prevent navigation context serialization errors
   features: {
     transformPercentagePolyfill: false,

@@ -1,12 +1,14 @@
-import React from 'react'
+import React from "react";
 
 interface SkeletonProps {
-  className?: string
+  className?: string;
 }
 
-export const Skeleton: React.FC<SkeletonProps> = ({ className = '' }) => (
-  <div className={`animate-pulse bg-surface-elevated rounded-lg ${className}`} />
-)
+export const Skeleton: React.FC<SkeletonProps> = ({ className = "" }) => (
+  <div
+    className={`animate-pulse bg-surface-elevated rounded-lg ${className}`}
+  />
+);
 
 export const ProductCardSkeleton: React.FC = () => (
   <div className="space-y-4">
@@ -18,15 +20,17 @@ export const ProductCardSkeleton: React.FC = () => (
       <Skeleton className="h-4 w-24" />
     </div>
   </div>
-)
+);
 
-export const ProductGridSkeleton: React.FC<{ count?: number }> = ({ count = 8 }) => (
+export const ProductGridSkeleton: React.FC<{ count?: number }> = ({
+  count = 8,
+}) => (
   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
     {Array.from({ length: count }).map((_, i) => (
       <ProductCardSkeleton key={i} />
     ))}
   </div>
-)
+);
 
 export const ProductDetailSkeleton: React.FC = () => (
   <div className="max-w-7xl mx-auto px-6 py-12">
@@ -44,4 +48,4 @@ export const ProductDetailSkeleton: React.FC = () => (
       </div>
     </div>
   </div>
-)
+);

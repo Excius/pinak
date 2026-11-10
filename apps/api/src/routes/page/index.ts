@@ -35,7 +35,8 @@ const deps: PageRouteDeps = {
   rateLimiter: createRateLimiter(),
 };
 
-registerPagePublicRoutes(router, deps);
+// Register admin routes BEFORE public routes so Express does not treat "/admin" as a param
 registerPageAdminRoutes(router, deps);
+registerPagePublicRoutes(router, deps);
 
 export default router;

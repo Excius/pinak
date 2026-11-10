@@ -14,7 +14,11 @@ export class AddressController {
   updateAddress = async (req: Request, res: Response) => {
     const userId = req.user!.id;
     const { id } = req.params;
-    const address = await this.addressService.updateAddress(id as string, userId, req.body);
+    const address = await this.addressService.updateAddress(
+      id as string,
+      userId,
+      req.body,
+    );
     ResponseHandler.success(res, address, "Address updated successfully");
   };
 
@@ -28,7 +32,10 @@ export class AddressController {
   getAddressById = async (req: Request, res: Response) => {
     const userId = req.user!.id;
     const { id } = req.params;
-    const address = await this.addressService.getAddressById(id as string, userId);
+    const address = await this.addressService.getAddressById(
+      id as string,
+      userId,
+    );
     ResponseHandler.success(res, address, "Address fetched successfully");
   };
 
@@ -41,7 +48,14 @@ export class AddressController {
   setDefaultAddress = async (req: Request, res: Response) => {
     const userId = req.user!.id;
     const { id } = req.params;
-    const address = await this.addressService.setDefaultAddress(id as string, userId);
-    ResponseHandler.success(res, address, "Default address updated successfully");
+    const address = await this.addressService.setDefaultAddress(
+      id as string,
+      userId,
+    );
+    ResponseHandler.success(
+      res,
+      address,
+      "Default address updated successfully",
+    );
   };
 }

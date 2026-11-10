@@ -1,93 +1,119 @@
-import './index.css'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { AuthProvider, useAuth } from './context/AuthContext'
-import { CartProvider } from './context/CartContext'
-import { Toaster } from 'react-hot-toast'
-import Landing from './pages/Landing'
-import Auth from './pages/Auth'
-import VerifyEmail from './pages/VerifyEmail'
-import ForgotPassword from './pages/ForgotPassword'
-import ResetPassword from './pages/ResetPassword'
-import GoogleCallback from './pages/GoogleCallback'
-import Profile from './pages/Profile'
-import Shop from './pages/Shop'
-import ProductDetail from './pages/ProductDetail'
-import CategoryPage from './pages/CategoryPage'
-import ComboKits from './pages/ComboKits'
-import ComboKitDetail from './pages/ComboKitDetail'
-import Wishlist from './pages/Wishlist'
-import SearchResults from './pages/SearchResults'
-import OrderConfirmation from './pages/OrderConfirmation'
-import Checkout from './pages/Checkout'
-import MyOrders from './pages/MyOrders'
-import OrderDetail from './pages/OrderDetail'
-import AdminLayout from './components/admin/AdminLayout'
-import AdminDashboard from './pages/admin/Dashboard'
-import AdminProductList from './pages/admin/products/ProductList'
-import AdminProductForm from './pages/admin/products/ProductForm'
-import AdminInventoryList from './pages/admin/products/InventoryList'
-import AdminCategoryList from './pages/admin/categories/CategoryList'
-import AdminBrandList from './pages/admin/brands/BrandList'
-import AdminComboKitList from './pages/admin/combos/ComboKitList'
-import AdminComboKitForm from './pages/admin/combos/ComboKitForm'
-import AdminFeaturedSections from './pages/admin/featured/FeaturedSectionList'
-import AdminOrderList from './pages/admin/orders/OrderList'
-import AdminSettings from './pages/admin/settings/SettingsPage'
-import AdminFilterGroupList from './pages/admin/filters/FilterGroupList'
-import AdminOptionList from './pages/admin/options/OptionList'
-import AdminCouponList from './pages/admin/coupons/CouponList'
-import AdminDynamicAssetList from './pages/admin/dynamicAssets/DynamicAssetList'
+import "./index.css";
+import { useEffect } from "react";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import { CartProvider } from "./context/CartContext";
+import { Toaster } from "react-hot-toast";
+import Landing from "./pages/Landing";
+import Auth from "./pages/Auth";
+import VerifyEmail from "./pages/VerifyEmail";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import GoogleCallback from "./pages/GoogleCallback";
+import Profile from "./pages/Profile";
+import Shop from "./pages/Shop";
+import ProductDetail from "./pages/ProductDetail";
+import CategoryPage from "./pages/CategoryPage";
+import ComboKits from "./pages/ComboKits";
+import ComboKitDetail from "./pages/ComboKitDetail";
+import Wishlist from "./pages/Wishlist";
+import SearchResults from "./pages/SearchResults";
+import OrderConfirmation from "./pages/OrderConfirmation";
+import Checkout from "./pages/Checkout";
+import MyOrders from "./pages/MyOrders";
+import OrderDetail from "./pages/OrderDetail";
+import AdminLayout from "./components/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/Dashboard";
+import AdminProductList from "./pages/admin/products/ProductList";
+import AdminProductForm from "./pages/admin/products/ProductForm";
+import AdminInventoryList from "./pages/admin/products/InventoryList";
+import AdminCategoryList from "./pages/admin/categories/CategoryList";
+import AdminBrandList from "./pages/admin/brands/BrandList";
+import AdminComboKitList from "./pages/admin/combos/ComboKitList";
+import AdminComboKitForm from "./pages/admin/combos/ComboKitForm";
+import AdminFeaturedSections from "./pages/admin/featured/FeaturedSectionList";
+import AdminOrderList from "./pages/admin/orders/OrderList";
+import AdminSettings from "./pages/admin/settings/SettingsPage";
+import AdminFilterGroupList from "./pages/admin/filters/FilterGroupList";
+import AdminOptionList from "./pages/admin/options/OptionList";
+import AdminCouponList from "./pages/admin/coupons/CouponList";
+import AdminUserList from "./pages/admin/users/UserList";
+import AdminDynamicAssetList from "./pages/admin/dynamicAssets/DynamicAssetList";
+import StoreLocator from "./pages/StoreLocator";
+import AdminStoreList from "./pages/admin/stores/StoreList";
+import StaticPage from "./pages/StaticPage";
+import AdminPageList from "./pages/admin/pages/PageList";
+import WhatsAppWidget from "./components/WhatsAppWidget";
 
 // Protected route wrapper
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth()
+  const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background-light">
         <div className="text-center space-y-4">
           <div className="inline-flex justify-center items-center w-16 h-16 rounded-full bg-primary/10 border border-primary/20 animate-pulse">
-            <span className="material-icons-outlined text-3xl text-primary">spa</span>
+            <span className="material-icons-outlined text-3xl text-primary">
+              spa
+            </span>
           </div>
           <p className="text-text-muted font-body">Loading...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/auth" replace />
+    return <Navigate to="/auth" replace />;
   }
 
-  return <>{children}</>
+  return <>{children}</>;
 }
 
 // Admin Protected route wrapper
 function AdminProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, isAuthenticated, isLoading } = useAuth()
+  const { user, isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background-light">
         <div className="text-center space-y-4">
           <div className="inline-flex justify-center items-center w-16 h-16 rounded-full bg-primary/10 border border-primary/20 animate-pulse">
-            <span className="material-icons-outlined text-3xl text-primary">spa</span>
+            <span className="material-icons-outlined text-3xl text-primary">
+              spa
+            </span>
           </div>
           <p className="text-text-muted font-body">Loading...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/auth" replace />
+    return <Navigate to="/auth" replace />;
   }
 
-  if (user?.role !== 'ADMIN' && user?.role !== 'MODERATOR') {
-    return <Navigate to="/" replace />
+  if (user?.role !== "ADMIN" && user?.role !== "MODERATOR") {
+    return <Navigate to="/" replace />;
   }
 
-  return <>{children}</>
+  return <>{children}</>;
+}
+
+// Always start a newly opened page at the top instead of keeping the previous scroll position.
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
 }
 
 function AppRoutes() {
@@ -106,17 +132,87 @@ function AppRoutes() {
       <Route path="/combo-kits" element={<ComboKits />} />
       <Route path="/combo-kits/:slug" element={<ComboKitDetail />} />
       <Route path="/search" element={<SearchResults />} />
+      <Route path="/stores" element={<StoreLocator />} />
+
+      {/* Static / Legal Content Pages */}
+      <Route path="/pages/:slug" element={<StaticPage />} />
+      <Route
+        path="/privacy-policy"
+        element={<StaticPage defaultSlug="privacy-policy" />}
+      />
+      <Route
+        path="/terms-and-conditions"
+        element={<StaticPage defaultSlug="terms-and-conditions" />}
+      />
+      <Route path="/about-us" element={<StaticPage defaultSlug="about-us" />} />
+      <Route
+        path="/shipping-policy"
+        element={<StaticPage defaultSlug="shipping-policy" />}
+      />
+      <Route
+        path="/return-refund-policy"
+        element={<StaticPage defaultSlug="return-refund-policy" />}
+      />
 
       {/* Protected routes */}
-      <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-      <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
-      <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
-      <Route path="/orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
-      <Route path="/orders/:orderId" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
-      <Route path="/order-confirmation/:orderId" element={<ProtectedRoute><OrderConfirmation /></ProtectedRoute>} />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/wishlist"
+        element={
+          <ProtectedRoute>
+            <Wishlist />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/checkout"
+        element={
+          <ProtectedRoute>
+            <Checkout />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/orders"
+        element={
+          <ProtectedRoute>
+            <MyOrders />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/orders/:orderId"
+        element={
+          <ProtectedRoute>
+            <OrderDetail />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/order-confirmation/:orderId"
+        element={
+          <ProtectedRoute>
+            <OrderConfirmation />
+          </ProtectedRoute>
+        }
+      />
 
       {/* Admin routes */}
-      <Route path="/admin" element={<AdminProtectedRoute><AdminLayout /></AdminProtectedRoute>}>
+      <Route
+        path="/admin"
+        element={
+          <AdminProtectedRoute>
+            <AdminLayout />
+          </AdminProtectedRoute>
+        }
+      >
         <Route index element={<AdminDashboard />} />
         <Route path="products" element={<AdminProductList />} />
         <Route path="inventory" element={<AdminInventoryList />} />
@@ -129,17 +225,20 @@ function AppRoutes() {
         <Route path="combos/:id" element={<AdminComboKitForm />} />
         <Route path="featured" element={<AdminFeaturedSections />} />
         <Route path="orders" element={<AdminOrderList />} />
+        <Route path="users" element={<AdminUserList />} />
         <Route path="filters" element={<AdminFilterGroupList />} />
         <Route path="options" element={<AdminOptionList />} />
         <Route path="coupons" element={<AdminCouponList />} />
         <Route path="dynamic-assets" element={<AdminDynamicAssetList />} />
+        <Route path="stores" element={<AdminStoreList />} />
+        <Route path="pages" element={<AdminPageList />} />
         <Route path="settings" element={<AdminSettings />} />
       </Route>
 
       {/* Catch-all */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
-  )
+  );
 }
 
 function App() {
@@ -147,22 +246,25 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <CartProvider>
-          <Toaster 
+          <Toaster
             position="top-center"
             toastOptions={{
-              className: 'bg-surface-dark text-text-main-light border border-primary/20',
+              className:
+                "bg-surface-dark text-text-main-light border border-primary/20",
               style: {
-                background: '#1a1a1a',
-                color: '#f5f5f5',
-                border: '1px solid rgba(212, 175, 55, 0.2)',
-              }
-            }} 
+                background: "#1a1a1a",
+                color: "#f5f5f5",
+                border: "1px solid rgba(212, 175, 55, 0.2)",
+              },
+            }}
           />
+          <ScrollToTop />
           <AppRoutes />
+          <WhatsAppWidget />
         </CartProvider>
       </AuthProvider>
     </BrowserRouter>
-  )
+  );
 }
 
-export default App
+export default App;

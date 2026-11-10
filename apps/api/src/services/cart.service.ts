@@ -1,5 +1,11 @@
+import type { PrismaClient } from "../generated/prisma/client.js";
 import { NotFoundError, ValidationError } from "../lib/error.js";
-import { CartRepository, CartWithItems } from "../repositories/cart.repository.js";
+import { getShippingFeePaise } from "../lib/storeSettings.js";
+import { ensureTaxRates, variantTaxRate } from "../lib/taxRates.js";
+import {
+  CartRepository,
+  CartWithItems,
+} from "../repositories/cart.repository.js";
 import { StockReservationService } from "./stockReservation.service.js";
 
 export type AddToCartInput = {
@@ -66,6 +72,7 @@ export type CartItemResponse = {
     name: string;
     slug: string;
     price: number;
+    imageUrl: string | null;
     isActive: boolean;
     metaTitle: string | null;
     metaDescription: string | null;
@@ -120,6 +127,7 @@ export class CartService {
   constructor(
     private cartRepository: CartRepository,
     private stockReservationService: StockReservationService,
+    private prisma: PrismaClient,
   ) {}
 
   private validateAddInput(input: AddToCartInput) {
@@ -128,7 +136,8 @@ export class CartService {
     }
 
     const targetCount =
-      Number(Boolean(input.productVariantId)) + Number(Boolean(input.comboKitId));
+      Number(Boolean(input.productVariantId)) +
+      Number(Boolean(input.comboKitId));
 
     if (targetCount !== 1) {
       throw new ValidationError(
@@ -172,6 +181,8 @@ export class CartService {
   }
 
   private async mapCart(cart: CartWithItems): Promise<CartResponse> {
+    // Variant-level tax classes: make sure the rate map is current before pricing
+    await ensureTaxRates(this.prisma);
     const items: CartItemResponse[] = await Promise.all(
       cart.items.map(async (item) => {
         if (item.productVariantId && item.productVariant) {
@@ -180,7 +191,7 @@ export class CartService {
               item.productVariantId,
             );
 
-          const taxRate = item.productVariant.product.taxClass?.rate ?? 0;
+          const taxRate = variantTaxRate(item.productVariant);
           const mainPrice = item.productVariant.price;
           const sellingPrice =
             item.productVariant.sellingPrice != null
@@ -217,7 +228,8 @@ export class CartService {
               sellingPrice,
               taxAmount: variantTaxAmount,
               priceWithTax: mainPriceWithTax,
-              sellingPriceWithTax: sellingPrice != null ? unitPriceWithTax : null,
+              sellingPriceWithTax:
+                sellingPrice != null ? unitPriceWithTax : null,
               isActive: item.productVariant.isActive,
               image: this.mapVariantImage(item.productVariant.images),
               optionValues: this.mapVariantOptionValues(
@@ -258,11 +270,11 @@ export class CartService {
 
           const maxTaxRate = Math.max(
             0,
-            ...item.comboKit.items.map(
-              (comboItem) => comboItem.productVariant?.product?.taxClass?.rate ?? 0
-            )
+            ...item.comboKit.items.map((comboItem) =>
+              variantTaxRate(comboItem.productVariant),
+            ),
           );
-          
+
           const comboTaxAmount = Math.round((unitPrice * maxTaxRate) / 100);
           const comboItemTaxTotal = comboTaxAmount * item.quantity;
 
@@ -273,8 +285,7 @@ export class CartService {
               componentVariant?.sellingPrice != null
                 ? componentVariant.sellingPrice
                 : null;
-            const compTaxRate =
-              componentVariant?.product?.taxClass?.rate ?? 0;
+            const compTaxRate = variantTaxRate(componentVariant);
             const compPriceWithTax =
               compMainPrice + Math.round((compMainPrice * compTaxRate) / 100);
             const compSellingPriceWithTax =
@@ -329,6 +340,7 @@ export class CartService {
               name: item.comboKit.name,
               slug: item.comboKit.slug,
               price: item.comboKit.price,
+              imageUrl: item.comboKit.images?.[0]?.url ?? null,
               isActive: item.comboKit.isActive,
               metaTitle: item.comboKit.metaTitle,
               metaDescription: item.comboKit.metaDescription,
@@ -348,18 +360,28 @@ export class CartService {
     const subtotal = items.reduce((sum, item) => sum + item.lineTotal, 0);
     const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
     const taxTotal = items.reduce(
-      (sum, item) => sum + (item.lineTotalWithTax ?? item.lineTotal) - item.lineTotal,
+      (sum, item) =>
+        sum + (item.lineTotalWithTax ?? item.lineTotal) - item.lineTotal,
       0,
     );
     const totalWithTax = subtotal + taxTotal;
 
     const shippingRequired = cart.items.some((item) => {
       if (item.productVariant?.product?.requiresShipping) return true;
-      if (item.comboKit?.items?.some((ci) => ci.productVariant?.product?.requiresShipping)) return true;
+      if (
+        item.comboKit?.items?.some(
+          (ci) => ci.productVariant?.product?.requiresShipping,
+        )
+      )
+        return true;
       return false;
     });
 
-    const shippingFee = shippingRequired && items.length > 0 ? 10000 : 0;
+    // Flat fee is admin-configurable (Settings → Shipping); orders use the same value.
+    const shippingFee =
+      shippingRequired && items.length > 0
+        ? await getShippingFeePaise(this.prisma)
+        : 0;
     const grandTotal = totalWithTax + shippingFee;
 
     return {
@@ -418,7 +440,10 @@ export class CartService {
       }
 
       if (existingItem) {
-        await this.cartRepository.incrementItemQuantity(existingItem.id, input.quantity);
+        await this.cartRepository.incrementItemQuantity(
+          existingItem.id,
+          input.quantity,
+        );
       } else {
         await this.cartRepository.addItem(cart.id, {
           productVariantId: input.productVariantId,
@@ -442,7 +467,9 @@ export class CartService {
       );
       const targetQuantity = (existingItem?.quantity ?? 0) + input.quantity;
       const availableStock =
-        await this.stockReservationService.getAvailableStockForCombo(input.comboKitId);
+        await this.stockReservationService.getAvailableStockForCombo(
+          input.comboKitId,
+        );
 
       if (targetQuantity > availableStock) {
         throw new ValidationError("Insufficient combo stock", [
@@ -454,7 +481,10 @@ export class CartService {
       }
 
       if (existingItem) {
-        await this.cartRepository.incrementItemQuantity(existingItem.id, input.quantity);
+        await this.cartRepository.incrementItemQuantity(
+          existingItem.id,
+          input.quantity,
+        );
       } else {
         await this.cartRepository.addItem(cart.id, {
           comboKitId: input.comboKitId,
@@ -471,7 +501,10 @@ export class CartService {
       throw new ValidationError("Quantity must be greater than 0");
     }
 
-    const cartItem = await this.cartRepository.getCartItemByIdForUser(itemId, userId);
+    const cartItem = await this.cartRepository.getCartItemByIdForUser(
+      itemId,
+      userId,
+    );
     if (!cartItem) {
       throw new NotFoundError("Cart item not found");
     }
@@ -511,7 +544,10 @@ export class CartService {
   }
 
   async removeCartItem(userId: string, itemId: string) {
-    const cartItem = await this.cartRepository.getCartItemByIdForUser(itemId, userId);
+    const cartItem = await this.cartRepository.getCartItemByIdForUser(
+      itemId,
+      userId,
+    );
     if (!cartItem) {
       throw new NotFoundError("Cart item not found");
     }

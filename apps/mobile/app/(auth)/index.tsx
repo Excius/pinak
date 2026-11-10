@@ -8,8 +8,6 @@ import * as Linking from "expo-linking";
 import { getGoogleOauthUrlService } from "@/services/auth.service";
 import { toastError } from "@/libs/toast";
 
-
-
 import SignInForm from "@/components/auth/SigninForm";
 import SignUpForm from "@/components/auth/SignUpForm";
 WebBrowser.maybeCompleteAuthSession();

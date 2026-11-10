@@ -110,11 +110,7 @@ export class DynamicAssetController {
   softDelete = async (req: Request, res: Response) => {
     const { id } = req.params;
     await this.service.softDelete(id as string);
-    ResponseHandler.success(
-      res,
-      {},
-      "Dynamic asset soft deleted successfully",
-    );
+    ResponseHandler.success(res, {}, "Dynamic asset soft deleted successfully");
   };
 
   restore = async (req: Request, res: Response) => {

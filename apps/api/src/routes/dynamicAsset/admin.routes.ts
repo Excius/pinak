@@ -17,9 +17,9 @@ export const registerDynamicAssetAdminRoutes = (
   router.get(
     "/admin/all",
     rateLimiter,
-    validateMultiple(DynamicAssetAdminTypes.AdminListDynamicAssets),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(DynamicAssetAdminTypes.AdminListDynamicAssets),
     controller.listAdmin,
   );
 
@@ -27,9 +27,9 @@ export const registerDynamicAssetAdminRoutes = (
   router.get(
     "/admin/:id",
     rateLimiter,
-    validateMultiple(DynamicAssetAdminTypes.AdminGetDynamicAsset),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(DynamicAssetAdminTypes.AdminGetDynamicAsset),
     controller.getByIdAdmin,
   );
 
@@ -48,9 +48,9 @@ export const registerDynamicAssetAdminRoutes = (
   router.patch(
     "/admin/:id",
     rateLimiter,
-    validateMultiple(DynamicAssetAdminTypes.UpdateDynamicAsset),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(DynamicAssetAdminTypes.UpdateDynamicAsset),
     controller.update,
   );
 
@@ -69,9 +69,9 @@ export const registerDynamicAssetAdminRoutes = (
   router.delete(
     "/admin/:id",
     rateLimiter,
-    validateMultiple(DynamicAssetAdminTypes.SoftDeleteDynamicAsset),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(DynamicAssetAdminTypes.SoftDeleteDynamicAsset),
     controller.softDelete,
   );
 
@@ -79,9 +79,9 @@ export const registerDynamicAssetAdminRoutes = (
   router.patch(
     "/admin/:id/restore",
     rateLimiter,
-    validateMultiple(DynamicAssetAdminTypes.RestoreDynamicAsset),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(DynamicAssetAdminTypes.RestoreDynamicAsset),
     controller.restore,
   );
 
@@ -89,9 +89,9 @@ export const registerDynamicAssetAdminRoutes = (
   router.delete(
     "/admin/:id/hard",
     rateLimiter,
-    validateMultiple(DynamicAssetAdminTypes.HardDeleteDynamicAsset),
     authMiddleware.authenticate,
     authMiddleware.requireAdmin,
+    validateMultiple(DynamicAssetAdminTypes.HardDeleteDynamicAsset),
     controller.hardDelete,
   );
 };

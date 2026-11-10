@@ -106,39 +106,23 @@ export function HamburgerMenu({ onClose }: HamburgerMenuProps) {
         shadow-gold-lg
       "
     >
-      {/* <MenuItem
-        icon="tag-outline"
-        label="Brands"
-        href="/brands"
-      /> */}
-
-      {/* <MenuItem
-        icon="shape-outline"
-        label="Categories"
-        href="/categories"
-      /> */}
-
-      {/* <MenuItem
-        icon="heart-outline"
-        label="Wishlist"
-        href="/wishlist"
-      /> */}
-
-      {/* <MenuItem
-        icon="clipboard-list-outline"
-        label="Orders"
-        href="/orders"
-      /> */}
-
-      <MenuItem icon="account-outline" label="Profile" href="/(tabs)/profile" />
       <MenuItem
         icon="clipboard-list-outline"
         label="Orders"
         href="/(tabs)/orders"
       />
       <MenuItem icon="email-outline" label="Contact Us" href="/contact" />
-      <MenuItem icon="information-outline" label="About Us" href="/about" />
-      <MenuItem icon="cog-outline" label="Settings" href="/settings" />
+      <MenuItem
+        icon="shield-check-outline"
+        label="Privacy Policy"
+        href="/privacy-policy"
+      />
+      <MenuItem
+        icon="file-document-outline"
+        label="Terms & Conditions"
+        href="/terms-and-conditions"
+      />
+      <MenuItem icon="information-outline" label="About Us" href="/about-us" />
 
       {isAuthenticated ? (
         <MenuItem icon="logout" label="Logout" onPress={handleLogout} />

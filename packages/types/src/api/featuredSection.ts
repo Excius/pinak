@@ -18,9 +18,10 @@ const PublicFeaturedSectionImageSchema = z.object({
   updatedAt: z.date().or(z.string()).optional(),
 });
 
-export const AdminFeaturedSectionImageSchema = PublicFeaturedSectionImageSchema.extend({
-  isDeleted: z.boolean(),
-});
+export const AdminFeaturedSectionImageSchema =
+  PublicFeaturedSectionImageSchema.extend({
+    isDeleted: z.boolean(),
+  });
 
 const PublicFeaturedSectionSchema = z.object({
   id: z.string(),
@@ -181,14 +182,16 @@ export const FeaturedSectionAdminTypes = {
   AddFeaturedSectionImage: {
     body: z.object({
       altText: z.string().optional(),
-      isPrimary: z.preprocess((val) => {
-        if (typeof val === "string") {
-          const v = val.toLowerCase();
-          if (v === "true") return true;
-          if (v === "false") return false;
-        }
-        return val;
-      }, z.boolean()).optional(),
+      isPrimary: z
+        .preprocess((val) => {
+          if (typeof val === "string") {
+            const v = val.toLowerCase();
+            if (v === "true") return true;
+            if (v === "false") return false;
+          }
+          return val;
+        }, z.boolean())
+        .optional(),
     }),
     params: z.object({ sectionId: z.string().min(1) }),
     query: z.object({}),

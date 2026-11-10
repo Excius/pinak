@@ -41,7 +41,7 @@ export class LengthClassService {
     const referenced = await this.repo.countProductsByLengthClass(id);
     if (referenced > 0)
       throw new ValidationError(
-        "Cannot delete length class while products reference it",
+        "Cannot delete length class while products, variants or option values reference it",
       );
     return this.repo.delete(id);
   }
@@ -81,7 +81,7 @@ export class WeightClassService {
     const referenced = await this.repo.countProductsByWeightClass(id);
     if (referenced > 0)
       throw new ValidationError(
-        "Cannot delete weight class while products reference it",
+        "Cannot delete weight class while products, variants or option values reference it",
       );
     return this.repo.delete(id);
   }

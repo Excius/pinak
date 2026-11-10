@@ -30,6 +30,8 @@ class Config {
    * The database connection URL.
    */
   public readonly DATABASE_URL: string;
+  /** Max pooled Postgres connections held by this API instance. */
+  public readonly DATABASE_POOL_MAX: number;
 
   /**
    * The Redis connection URL.
@@ -223,6 +225,8 @@ class Config {
       throw new Error("DATABASE_URL environment variable is required");
     }
     this.DATABASE_URL = process.env.DATABASE_URL;
+    const poolMax = parseInt(process.env.DATABASE_POOL_MAX || "5", 10);
+    this.DATABASE_POOL_MAX = Number.isFinite(poolMax) && poolMax > 0 ? poolMax : 5;
 
     if (!process.env.REDIS_URL) {
       throw new Error("REDIS_URL environment variable is required");

@@ -16,45 +16,45 @@ export const registerCategoryAdminRoutes = (
   router.get(
     "/admin",
     rateLimiter,
-    validateMultiple(CategoryAdminTypes.ListCategories),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(CategoryAdminTypes.ListCategories),
     categoryController.listCategoriesAdmin,
   );
 
   router.get(
     "/admin/top",
     rateLimiter,
-    validateMultiple(CategoryAdminTypes.ListCategories),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(CategoryAdminTypes.ListCategories),
     categoryController.listTopCategoriesAdmin,
   );
 
   router.get(
     "/admin/tree",
     rateLimiter,
-    validateMultiple(CategoryAdminTypes.GetCategoryTree),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(CategoryAdminTypes.GetCategoryTree),
     categoryController.getCategoryTreeAdmin,
   );
 
   router.get(
     "/admin/slug/:slug",
     rateLimiter,
-    validateMultiple(CategoryAdminTypes.GetCategoryBySlug),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(CategoryAdminTypes.GetCategoryBySlug),
     categoryController.getCategoryBySlugAdmin,
   );
 
   router.get(
     "/admin/:id",
     rateLimiter,
-    validateMultiple(CategoryAdminTypes.GetCategoryById),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(CategoryAdminTypes.GetCategoryById),
     categoryController.getCategoryByIdAdmin,
   );
 
@@ -62,27 +62,27 @@ export const registerCategoryAdminRoutes = (
   router.post(
     "/admin",
     rateLimiter,
-    validateMultiple(CategoryTypes.CreateCategory),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(CategoryTypes.CreateCategory),
     categoryController.createCategory,
   );
 
   router.put(
     "/admin/:id",
     rateLimiter,
-    validateMultiple(CategoryTypes.UpdateCategory),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(CategoryTypes.UpdateCategory),
     categoryController.updateCategory,
   );
 
   router.delete(
     "/admin/:id",
     rateLimiter,
-    validateMultiple(CategoryTypes.DeleteCategory),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(CategoryTypes.DeleteCategory),
     categoryController.deleteCategory,
   );
 
@@ -90,9 +90,9 @@ export const registerCategoryAdminRoutes = (
   router.get(
     "/admin/:categoryId/images",
     rateLimiter,
-    validateMultiple(CategoryAdminTypes.AdminGetCategoryImages),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(CategoryAdminTypes.AdminGetCategoryImages),
     categoryController.getAllImages,
   );
 
@@ -109,18 +109,18 @@ export const registerCategoryAdminRoutes = (
   router.patch(
     "/admin/images/:imageId/primary",
     rateLimiter,
-    validateMultiple(CategoryAdminTypes.SetPrimaryCategoryImage),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(CategoryAdminTypes.SetPrimaryCategoryImage),
     categoryController.setPrimaryImage,
   );
 
   router.delete(
     "/admin/images/:id",
     rateLimiter,
-    validateMultiple(CategoryAdminTypes.DeleteCategoryImage),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(CategoryAdminTypes.DeleteCategoryImage),
     categoryController.deleteImage,
   );
 };

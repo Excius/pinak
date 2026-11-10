@@ -3,7 +3,11 @@ import { Prisma, PrismaClient } from "../generated/prisma/client.js";
 export class AddressRepository {
   constructor(private prisma: PrismaClient) {}
 
-  async create(userId: string, data: Prisma.AddressCreateInput, tx?: Prisma.TransactionClient) {
+  async create(
+    userId: string,
+    data: Prisma.AddressCreateInput,
+    tx?: Prisma.TransactionClient,
+  ) {
     const execute = async (db: Prisma.TransactionClient) => {
       // If setting as default, unset other defaults for this user
       if (data.isDefault) {
@@ -24,7 +28,12 @@ export class AddressRepository {
     return tx ? execute(tx) : this.prisma.$transaction(execute);
   }
 
-  async update(id: string, userId: string, data: Prisma.AddressUpdateInput, tx?: Prisma.TransactionClient) {
+  async update(
+    id: string,
+    userId: string,
+    data: Prisma.AddressUpdateInput,
+    tx?: Prisma.TransactionClient,
+  ) {
     const execute = async (db: Prisma.TransactionClient) => {
       if (data.isDefault) {
         await db.address.updateMany({
@@ -58,10 +67,7 @@ export class AddressRepository {
   async listByUser(userId: string) {
     return this.prisma.address.findMany({
       where: { userId },
-      orderBy: [
-        { isDefault: "desc" },
-        { createdAt: "desc" },
-      ],
+      orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }],
     });
   }
 

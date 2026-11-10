@@ -32,7 +32,7 @@ type RelatedProduct =
 export default function ProductDetailScreen() {
   const { productId } = useLocalSearchParams<{ productId?: string }>();
   const router = useRouter();
-  const { addToCart } = useCart();
+  const { addToCart, isAddingToCart } = useCart();
   const {
     itemIdsByVariantId,
     itemIdsByProductId,
@@ -151,6 +151,34 @@ export default function ProductDetailScreen() {
 
   const categoryLabel = product?.categories[0]?.name || "Product";
   const brandLabel = product?.brand?.name || "Pinak";
+  const colorOptions = useMemo(() => {
+    const options =
+      product?.variants.flatMap((variant) =>
+        variant.optionValues
+          .filter(
+            (option) =>
+              /color|shade/i.test(option.optionName) && option.optionValueId,
+          )
+          .map((option) => ({
+            optionId: option.optionId,
+            optionValueId: option.optionValueId as string,
+            name: option.valueName,
+            swatchColorHex: option.swatchColorHex,
+          })),
+      ) || [];
+
+    return Array.from(
+      new Map(options.map((option) => [option.optionValueId, option])).values(),
+    );
+  }, [product]);
+  const selectedColorOptionId = selectedVariant?.optionValues.find((option) =>
+    /color|shade/i.test(option.optionName),
+  )?.optionValueId;
+  const weightGrams = selectedVariant?.weightGrams ?? product?.weightGrams;
+  const weightLabel =
+    weightGrams != null
+      ? `${weightGrams} ${product?.weightClass?.unit || "g"}`
+      : null;
 
   const handleAddToCart = () => {
     if (canAddToCart && selectedVariant?.id) {
@@ -165,6 +193,21 @@ export default function ProductDetailScreen() {
 
     await addToCart(selectedVariant.id, undefined, 1);
     router.push("/checkout");
+  };
+
+  const handleColorSelect = (optionValueId: string) => {
+    const matchingVariant = product?.variants.find(
+      (variant) =>
+        variant.optionValues.some(
+          (option) =>
+            /color|shade/i.test(option.optionName) &&
+            option.optionValueId === optionValueId,
+        ) && variant.isActive,
+    );
+
+    if (matchingVariant) {
+      setSelectedVariantId(matchingVariant.id);
+    }
   };
 
   if (isLoading) {
@@ -323,6 +366,126 @@ export default function ProductDetailScreen() {
               {product.description}
             </Text>
           ) : null}
+
+          {(product.brand || colorOptions.length > 0 || weightLabel) && (
+            <View className="mb-8 border-y border-primary/20 py-5">
+              <View className="flex-row items-center justify-between">
+                <View>
+                  <Text className="text-xs font-bold uppercase tracking-[0.2em] text-primary">
+                    Product details
+                  </Text>
+                  <Text className="mt-1 text-xs text-text-secondary">
+                    Made for your beauty ritual
+                  </Text>
+                </View>
+                <View className="h-9 w-9 items-center justify-center rounded-full bg-primary/10">
+                  <MaterialCommunityIcons
+                    name="creation"
+                    size={18}
+                    color="#C9A962"
+                  />
+                </View>
+              </View>
+
+              <View className="mt-5 flex-row flex-wrap gap-y-5">
+                {product.brand ? (
+                  <View className="w-1/2 flex-row items-center pr-3">
+                    <View className="mr-3 h-10 w-10 items-center justify-center overflow-hidden rounded-xl border border-primary/25 bg-primary/10">
+                      {product.brand.logoUrl ? (
+                        <Image
+                          source={{ uri: product.brand.logoUrl }}
+                          className="h-7 w-7"
+                          resizeMode="contain"
+                        />
+                      ) : (
+                        <MaterialCommunityIcons
+                          name="store-outline"
+                          size={19}
+                          color="#C9A962"
+                        />
+                      )}
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
+                        Brand
+                      </Text>
+                      <Text
+                        className="mt-1 text-sm font-semibold text-text-primary"
+                        numberOfLines={1}
+                      >
+                        {brandLabel}
+                      </Text>
+                    </View>
+                  </View>
+                ) : null}
+
+                {weightLabel ? (
+                  <View className="w-1/2 flex-row items-center pl-2">
+                    <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl border border-primary/25 bg-primary/10">
+                      <MaterialCommunityIcons
+                        name="scale-balance"
+                        size={19}
+                        color="#C9A962"
+                      />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
+                        Weight
+                      </Text>
+                      <Text className="mt-1 text-sm font-semibold text-text-primary">
+                        {weightLabel}
+                      </Text>
+                    </View>
+                  </View>
+                ) : null}
+
+                {colorOptions.length > 0 ? (
+                  <View className="w-full flex-row items-start">
+                    <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl border border-primary/25 bg-primary/10">
+                      <MaterialCommunityIcons
+                        name="palette-outline"
+                        size={19}
+                        color="#C9A962"
+                      />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
+                        Available shade{colorOptions.length > 1 ? "s" : ""}
+                      </Text>
+                      <View className="mt-2 flex-row flex-wrap gap-2">
+                        {colorOptions.map((color) => (
+                          <TouchableOpacity
+                            key={color.optionValueId}
+                            onPress={() =>
+                              handleColorSelect(color.optionValueId)
+                            }
+                            accessibilityRole="button"
+                            accessibilityLabel={`Select ${color.name} shade`}
+                            className={`flex-row items-center rounded-full border bg-surface py-1.5 pl-1.5 pr-3 ${
+                              selectedColorOptionId === color.optionValueId
+                                ? "border-primary"
+                                : "border-surface-border"
+                            }`}
+                          >
+                            <View
+                              className="mr-2 h-7 w-7 rounded-full border-2 border-background"
+                              style={{
+                                backgroundColor:
+                                  color.swatchColorHex || "#8B8B8B",
+                              }}
+                            />
+                            <Text className="text-xs font-semibold text-text-primary">
+                              {color.name}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    </View>
+                  </View>
+                ) : null}
+              </View>
+            </View>
+          )}
 
           {product.variants.length > 0 ? (
             <View className="mb-8">
@@ -509,35 +672,38 @@ export default function ProductDetailScreen() {
               onPress={() => {
                 void handleBuyNow();
               }}
-              disabled={!canAddToCart}
+              disabled={!canAddToCart || isAddingToCart}
               className="h-14 px-4 bg-surface rounded-xl flex-row items-center justify-center border border-primary/40"
               style={{
-                opacity: !canAddToCart ? 0.5 : 1,
+                opacity: !canAddToCart || isAddingToCart ? 0.5 : 1,
               }}
             >
-              <MaterialCommunityIcons
-                name="lightning-bolt-outline"
-                size={18}
-                color="#C9A962"
-              />
               <Text className="font-bold text-primary text-sm">Buy Now</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={handleAddToCart}
-              disabled={!canAddToCart}
+              disabled={!canAddToCart || isAddingToCart}
               className="flex-1 h-14 bg-primary rounded-xl flex-row items-center justify-center gap-3 shadow-lg"
               style={{
-                opacity: !canAddToCart ? 0.5 : 1,
+                opacity: !canAddToCart || isAddingToCart ? 0.5 : 1,
               }}
             >
-              <MaterialCommunityIcons
-                name="cart-plus"
-                size={20}
-                color="#0A0A0A"
-              />
+              {isAddingToCart ? (
+                <ActivityIndicator size="small" color="#0A0A0A" />
+              ) : (
+                <MaterialCommunityIcons
+                  name="cart-plus"
+                  size={20}
+                  color="#0A0A0A"
+                />
+              )}
               <Text className="font-bold text-background text-base">
-                {canAddToCart ? "Add to Cart" : "Out of Stock"}
+                {isAddingToCart
+                  ? "Adding to Cart..."
+                  : canAddToCart
+                    ? "Add to Cart"
+                    : "Out of Stock"}
               </Text>
             </TouchableOpacity>
           </View>

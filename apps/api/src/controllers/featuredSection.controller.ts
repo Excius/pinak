@@ -90,7 +90,11 @@ export class FeaturedSectionController {
   delete = async (req: Request, res: Response) => {
     const { id } = req.params;
     await this.service.deleteFeaturedSection(id as string);
-    ResponseHandler.success(res, {}, "Featured section soft deleted successfully");
+    ResponseHandler.success(
+      res,
+      {},
+      "Featured section soft deleted successfully",
+    );
   };
 
   restore = async (req: Request, res: Response) => {
@@ -106,13 +110,21 @@ export class FeaturedSectionController {
   hardDelete = async (req: Request, res: Response) => {
     const { id } = req.params;
     await this.service.hardDeleteFeaturedSection(id as string);
-    ResponseHandler.success(res, {}, "Featured section permanently deleted successfully");
+    ResponseHandler.success(
+      res,
+      {},
+      "Featured section permanently deleted successfully",
+    );
   };
 
   getAllImages = async (req: Request, res: Response) => {
     const { sectionId } = req.params;
     const images = await this.service.getAllImages(sectionId as string);
-    ResponseHandler.success(res, images, "Featured section images retrieved successfully");
+    ResponseHandler.success(
+      res,
+      images,
+      "Featured section images retrieved successfully",
+    );
   };
 
   addFeaturedSectionImage = async (req: Request, res: Response) => {
@@ -128,7 +140,11 @@ export class FeaturedSectionController {
       file.buffer,
       file.mimetype,
     );
-    ResponseHandler.created(res, image, "Featured section image added successfully");
+    ResponseHandler.created(
+      res,
+      image,
+      "Featured section image added successfully",
+    );
   };
 
   setPrimaryImage = async (req: Request, res: Response) => {
@@ -140,7 +156,11 @@ export class FeaturedSectionController {
   deleteImage = async (req: Request, res: Response) => {
     const { id } = req.params;
     await this.service.deleteImage(id as string);
-    ResponseHandler.success(res, {}, "Featured section image deleted successfully");
+    ResponseHandler.success(
+      res,
+      {},
+      "Featured section image deleted successfully",
+    );
   };
 
   softDeleteImage = this.deleteImage;

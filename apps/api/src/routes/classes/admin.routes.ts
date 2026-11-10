@@ -5,95 +5,100 @@ import type { ClassesRouteDeps } from "./index.js";
 
 export const registerClassesAdminRoutes = (
   router: Router,
-  { lengthController, weightController, authMiddleware, rateLimiter }: ClassesRouteDeps,
+  {
+    lengthController,
+    weightController,
+    authMiddleware,
+    rateLimiter,
+  }: ClassesRouteDeps,
 ) => {
   router.get(
     "/admin/length-classes",
     rateLimiter,
-    validateMultiple(LengthWeightAdminTypes.ListLength),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(LengthWeightAdminTypes.ListLength),
     lengthController.listAdmin,
   );
 
   router.get(
     "/admin/length-classes/:id",
     rateLimiter,
-    validateMultiple(LengthWeightAdminTypes.GetLengthById),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(LengthWeightAdminTypes.GetLengthById),
     lengthController.getAdmin,
   );
 
   router.get(
     "/admin/weight-classes",
     rateLimiter,
-    validateMultiple(LengthWeightAdminTypes.ListWeight),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(LengthWeightAdminTypes.ListWeight),
     weightController.listAdmin,
   );
 
   router.get(
     "/admin/weight-classes/:id",
     rateLimiter,
-    validateMultiple(LengthWeightAdminTypes.GetWeightById),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(LengthWeightAdminTypes.GetWeightById),
     weightController.getAdmin,
   );
 
   router.post(
     "/length-classes",
     rateLimiter,
-    validateMultiple(LengthWeightTypes.CreateLength),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(LengthWeightTypes.CreateLength),
     lengthController.create,
   );
 
   router.put(
     "/length-classes/:id",
     rateLimiter,
-    validateMultiple(LengthWeightTypes.UpdateLength),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(LengthWeightTypes.UpdateLength),
     lengthController.update,
   );
 
   router.delete(
     "/length-classes/:id",
     rateLimiter,
-    validateMultiple(LengthWeightTypes.DeleteLength),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(LengthWeightTypes.DeleteLength),
     lengthController.delete,
   );
 
   router.post(
     "/weight-classes",
     rateLimiter,
-    validateMultiple(LengthWeightTypes.CreateWeight),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(LengthWeightTypes.CreateWeight),
     weightController.create,
   );
 
   router.put(
     "/weight-classes/:id",
     rateLimiter,
-    validateMultiple(LengthWeightTypes.UpdateWeight),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(LengthWeightTypes.UpdateWeight),
     weightController.update,
   );
 
   router.delete(
     "/weight-classes/:id",
     rateLimiter,
-    validateMultiple(LengthWeightTypes.DeleteWeight),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(LengthWeightTypes.DeleteWeight),
     weightController.delete,
   );
 };

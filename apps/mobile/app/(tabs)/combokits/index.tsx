@@ -17,6 +17,9 @@ import { formatRupeesFromPaise } from "@/utils/currency";
 type ComboKit =
   ComboKitApi.ResponseTypes["GetComboKits"]["data"]["items"][number];
 
+const getComboKitImageUrl = (kit: ComboKit) =>
+  kit.images.find((image) => image.isPrimary)?.url ?? kit.images[0]?.url;
+
 interface ComboKitCardProps {
   kit: ComboKit;
   onPress: (kitId: string) => void;
@@ -27,6 +30,7 @@ interface ComboKitCardProps {
  * Displays individual combo kit with image, info, and details
  */
 function ComboKitCard({ kit, onPress }: ComboKitCardProps) {
+  const imageUrl = getComboKitImageUrl(kit);
   const discountPercent = kit.discountValue
     ? Math.round(
         (kit.discountValue / (kit.price + (kit.discountValue || 0))) * 100,
@@ -40,9 +44,9 @@ function ComboKitCard({ kit, onPress }: ComboKitCardProps) {
     >
       {/* Image Section */}
       <View className="relative aspect-square bg-surface-light">
-        {kit.imageUrl ? (
+        {imageUrl ? (
           <Image
-            source={{ uri: kit.imageUrl }}
+            source={{ uri: imageUrl }}
             className="h-full w-full"
             resizeMode="cover"
           />
@@ -87,7 +91,7 @@ function ComboKitCard({ kit, onPress }: ComboKitCardProps) {
 
         {/* Pricing */}
         <View className="flex-row items-center gap-1 mb-3">
-          <Text className="text-base font-bold text-primary">
+          <Text className="text-base font-bold text-green-500">
             {formatRupeesFromPaise(kit.price)}
           </Text>
           {discountPercent > 0 && (

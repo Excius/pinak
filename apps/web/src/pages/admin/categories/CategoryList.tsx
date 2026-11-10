@@ -1,140 +1,157 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from "react";
 import {
   getAllCategoriesAdmin,
   createCategoryAdmin,
   updateCategoryAdmin,
   deleteCategoryAdmin,
-  getAllCategoryImagesAdmin,
   addCategoryImageAdmin,
+  deleteCategoryImageAdmin,
   setPrimaryCategoryImageAdmin,
-  deleteCategoryImageAdmin
-} from '../../../api/admin/admin.catalog.api'
-import type { AdminCategory, AdminCategoryImage } from '../../../api/admin/admin.catalog.api'
+} from "../../../api/admin/admin.catalog.api";
+import type { AdminCategory } from "../../../api/admin/admin.catalog.api";
 
 interface CategoryFormData {
-  name: string
-  slug: string
-  parentId: string
+  name: string;
+  slug: string;
+  parentId: string;
 }
 
-const emptyForm: CategoryFormData = { name: '', slug: '', parentId: '' }
+const emptyForm: CategoryFormData = { name: "", slug: "", parentId: "" };
 
 const CategoryList = () => {
-  const [categories, setCategories] = useState<AdminCategory[]>([])
-  const [loading, setLoading] = useState(true)
-  const [editing, setEditing] = useState<AdminCategory | null>(null)
-  const [showModal, setShowModal] = useState(false)
-  const [form, setForm] = useState<CategoryFormData>(emptyForm)
-  const [saving, setSaving] = useState(false)
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
-  const [images, setImages] = useState<AdminCategoryImage[]>([])
-  const [uploadingImage, setUploadingImage] = useState(false)
+  const [categories, setCategories] = useState<AdminCategory[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState<AdminCategory | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [form, setForm] = useState<CategoryFormData>(emptyForm);
+  const [saving, setSaving] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  const [imageError, setImageError] = useState<string | null>(null);
 
   const fetchCategories = async () => {
     try {
-      const data = await getAllCategoriesAdmin()
-      setCategories(data)
+      const data = await getAllCategoriesAdmin();
+      setCategories(data);
     } catch (err) {
-      console.error('Failed to fetch categories', err)
+      console.error("Failed to fetch categories", err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  useEffect(() => { fetchCategories() }, [])
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void fetchCategories();
+  }, []);
 
   const openCreate = () => {
-    setEditing(null)
-    setForm(emptyForm)
-    setImages([])
-    setShowModal(true)
-  }
+    setEditing(null);
+    setForm(emptyForm);
 
-  const openEdit = async (cat: AdminCategory) => {
-    setEditing(cat)
-    setForm({ name: cat.name, slug: cat.slug, parentId: cat.parentId || '' })
-    setShowModal(true)
-    try {
-      const imgs = await getAllCategoryImagesAdmin(cat.id)
-      setImages(imgs)
-    } catch (err) {
-      console.error('Failed to fetch category images', err)
-      setImages([])
-    }
-  }
+    setImageError(null);
+    setShowModal(true);
+  };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file || !editing) return
-    const data = new FormData()
-    data.append('image', file)
-    data.append('isPrimary', images.length === 0 ? 'true' : 'false')
-    setUploadingImage(true)
-    try {
-      const newImg = await addCategoryImageAdmin(editing.id, data)
-      setImages(prev => [...prev, newImg])
-      await fetchCategories()
-    } catch (err) {
-      console.error('Failed to upload category image', err)
-    } finally {
-      setUploadingImage(false)
-      e.target.value = ''
-    }
-  }
+  const openEdit = (cat: AdminCategory) => {
+    setEditing(cat);
+    setForm({ name: cat.name, slug: cat.slug, parentId: cat.parentId || "" });
 
-  const handleSetPrimaryImage = async (imgId: string) => {
-    try {
-      await setPrimaryCategoryImageAdmin(imgId)
-      setImages(prev => prev.map(img => ({ ...img, isPrimary: img.id === imgId })))
-      await fetchCategories()
-    } catch (err) {
-      console.error('Failed to set primary image', err)
-    }
-  }
-
-  const handleDeleteImage = async (imgId: string) => {
-    try {
-      await deleteCategoryImageAdmin(imgId)
-      setImages(prev => prev.filter(img => img.id !== imgId))
-      await fetchCategories()
-    } catch (err) {
-      console.error('Failed to delete image', err)
-    }
-  }
+    setImageError(null);
+    setShowModal(true);
+  };
 
   const handleSave = async () => {
-    if (!form.name.trim()) return
-    setSaving(true)
+    if (!form.name.trim()) return;
+    setSaving(true);
     try {
-      const payload: Record<string, unknown> = { name: form.name }
-      if (form.slug.trim()) payload.slug = form.slug
-      if (form.parentId.trim()) payload.parentId = form.parentId
+      const payload: { name: string; slug?: string; parentId?: string } = {
+        name: form.name.trim(),
+      };
+      if (form.slug.trim()) payload.slug = form.slug.trim();
+      if (form.parentId.trim()) payload.parentId = form.parentId;
 
       if (editing) {
-        await updateCategoryAdmin(editing.id, payload as any)
+        await updateCategoryAdmin(editing.id, payload);
       } else {
-        await createCategoryAdmin(payload as any)
+        await createCategoryAdmin(payload);
       }
-      setShowModal(false)
-      setForm(emptyForm)
-      setEditing(null)
-      await fetchCategories()
+      setShowModal(false);
+      setForm(emptyForm);
+      setEditing(null);
+      await fetchCategories();
     } catch (err) {
-      console.error('Failed to save category', err)
+      console.error("Failed to save category", err);
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   const handleDelete = async (id: string) => {
     try {
-      await deleteCategoryAdmin(id)
-      setDeleteConfirm(null)
-      await fetchCategories()
+      await deleteCategoryAdmin(id);
+      setDeleteConfirm(null);
+      await fetchCategories();
     } catch (err) {
-      console.error('Failed to delete category', err)
+      console.error("Failed to delete category", err);
     }
-  }
+  };
+
+  const handleImageUpload = async (categoryId: string, file: File) => {
+    setUploadingImage(true);
+    setImageError(null);
+    try {
+      const isFirst = !editing?.images || editing.images.length === 0;
+      const formData = new FormData();
+      formData.append("image", file);
+      formData.append("isPrimary", isFirst ? "true" : "false");
+      await addCategoryImageAdmin(categoryId, formData);
+      await fetchCategories();
+      if (editing?.id === categoryId) {
+        const updatedCats = await getAllCategoriesAdmin();
+        const updatedCat = updatedCats.find((c) => c.id === categoryId);
+        if (updatedCat) setEditing(updatedCat);
+      }
+    } catch (err: unknown) {
+      console.error("Category image upload failed", err);
+      const errorMsg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message || "Failed to upload image. Please try again.";
+      setImageError(errorMsg);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleDeleteImage = async (imageId: string, categoryId: string) => {
+    if (!window.confirm("Are you sure you want to delete this image?")) return;
+    try {
+      await deleteCategoryImageAdmin(imageId);
+      await fetchCategories();
+      if (editing?.id === categoryId) {
+        const updatedCats = await getAllCategoriesAdmin();
+        const updatedCat = updatedCats.find((c) => c.id === categoryId);
+        if (updatedCat) setEditing(updatedCat);
+      }
+    } catch (err) {
+      console.error("Category image delete failed", err);
+    }
+  };
+
+  const handleSetPrimaryImage = async (imageId: string, categoryId: string) => {
+    try {
+      await setPrimaryCategoryImageAdmin(imageId);
+      await fetchCategories();
+      if (editing?.id === categoryId) {
+        const updatedCats = await getAllCategoriesAdmin();
+        const updatedCat = updatedCats.find((c) => c.id === categoryId);
+        if (updatedCat) setEditing(updatedCat);
+      }
+    } catch (err) {
+      console.error("Set primary category image failed", err);
+    }
+  };
 
   if (loading) {
     return (
@@ -144,118 +161,187 @@ const CategoryList = () => {
           <p className="text-sm text-text-muted">Loading categories...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <div className="space-y-6 animate-fade-in">
-
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowModal(false)} />
-          <div className="relative bg-background-light border border-primary/20 rounded-2xl p-8 w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div
+            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            onClick={() => setShowModal(false)}
+          />
+          <div className="relative bg-background-light border border-primary/20 rounded-2xl p-8 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl">
             <h3 className="text-xl font-display font-bold text-text-main-light mb-6">
-              {editing ? 'Edit Category' : 'New Category'}
+              {editing ? "Edit Category" : "New Category"}
             </h3>
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-xs font-bold text-text-muted uppercase">Name *</label>
+                <label className="text-xs font-bold text-text-muted uppercase">
+                  Name *
+                </label>
                 <input
                   value={form.name}
-                  onChange={e => setForm(prev => ({ ...prev, name: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, name: e.target.value }))
+                  }
                   placeholder="e.g. Skincare"
                   className="w-full bg-background-main border border-primary/20 rounded-xl px-4 py-3 text-text-main-light outline-none focus:border-primary"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-bold text-text-muted uppercase">Slug</label>
+                <label className="text-xs font-bold text-text-muted uppercase">
+                  Slug
+                </label>
                 <input
                   value={form.slug}
-                  onChange={e => setForm(prev => ({ ...prev, slug: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, slug: e.target.value }))
+                  }
                   placeholder="skincare (auto-generated if empty)"
                   className="w-full bg-background-main border border-primary/20 rounded-xl px-4 py-3 text-text-main-light outline-none focus:border-primary"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-bold text-text-muted uppercase">Parent Category</label>
+                <label className="text-xs font-bold text-text-muted uppercase">
+                  Parent Category
+                </label>
                 <select
                   value={form.parentId}
-                  onChange={e => setForm(prev => ({ ...prev, parentId: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, parentId: e.target.value }))
+                  }
                   className="w-full bg-background-main border border-primary/20 rounded-xl px-4 py-3 text-text-main-light outline-none focus:border-primary appearance-none"
                 >
-                  <option value="" className="bg-[#0a0a0a]">None (Top-level)</option>
+                  <option value="" className="bg-[#0a0a0a]">
+                    None (Top-level)
+                  </option>
                   {categories
-                    .filter(c => c.id !== editing?.id)
-                    .map(c => (
-                      <option key={c.id} value={c.id} className="bg-[#0a0a0a]">{c.name}</option>
-                    ))
-                  }
+                    .filter((c) => c.id !== editing?.id)
+                    .map((c) => (
+                      <option key={c.id} value={c.id} className="bg-[#0a0a0a]">
+                        {c.name}
+                      </option>
+                    ))}
                 </select>
               </div>
 
-              {/* Category Images (S3 Upload) */}
-              <div className="space-y-3 pt-3 border-t border-primary/10">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-text-muted uppercase">
-                    Category Images ({images.length})
-                  </label>
-                  {editing && (
-                    <label className={`cursor-pointer bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${uploadingImage ? 'opacity-50 pointer-events-none' : ''}`}>
-                      <span className="material-icons-outlined text-sm">{uploadingImage ? 'hourglass_top' : 'cloud_upload'}</span>
-                      {uploadingImage ? 'Uploading...' : 'Upload Image'}
+              {/* Category Images */}
+              <div className="space-y-3 mt-4 pt-4 border-t border-primary/10">
+                <label className="text-xs font-bold text-text-muted uppercase">
+                  Category Images
+                </label>
+                {editing ? (
+                  <>
+                    <label className="flex flex-col items-center justify-center gap-2 p-5 bg-background-main border-2 border-dashed border-primary/20 rounded-xl cursor-pointer hover:border-primary/60 hover:bg-primary/[0.02] transition-all group">
+                      {uploadingImage ? (
+                        <div className="flex items-center gap-2 text-primary text-sm font-medium">
+                          <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                          <span>Uploading image...</span>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <span className="material-icons-outlined text-primary text-xl">
+                              cloud_upload
+                            </span>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm font-medium text-text-main-light">
+                              Click to upload category image
+                            </p>
+                            <p className="text-xs text-text-muted mt-0.5">
+                              Supports PNG, JPG, WebP up to 10MB
+                            </p>
+                          </div>
+                        </>
+                      )}
                       <input
                         type="file"
-                        accept="image/*"
                         className="hidden"
+                        accept="image/*"
                         disabled={uploadingImage}
-                        onChange={handleImageUpload}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file && editing.id)
+                            handleImageUpload(editing.id, file);
+                          e.target.value = "";
+                        }}
                       />
                     </label>
-                  )}
-                </div>
 
-                {!editing ? (
-                  <p className="text-xs text-text-muted bg-background-main/50 p-3 rounded-xl border border-primary/10">
-                    Save category first to upload and manage its images in S3.
-                  </p>
-                ) : images.length === 0 ? (
-                  <div className="text-center py-6 border-2 border-dashed border-primary/20 rounded-xl bg-background-main/30">
-                    <span className="material-icons-outlined text-2xl text-primary/30 mb-1 block">image</span>
-                    <p className="text-xs text-text-muted">No images uploaded to S3 yet.</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5 max-h-48 overflow-y-auto p-1">
-                    {images.map(img => (
-                      <div key={img.id} className={`group relative rounded-xl border overflow-hidden bg-background-main aspect-square flex items-center justify-center ${img.isPrimary ? 'border-primary ring-1 ring-primary' : 'border-primary/10'}`}>
-                        <img src={img.url} alt={img.altText || form.name || 'Category image'} className="w-full h-full object-cover" />
-                        {img.isPrimary && (
-                          <span className="absolute top-1 left-1 bg-primary text-black text-[9px] font-bold px-1.5 py-0.5 rounded shadow">
-                            Primary
-                          </span>
-                        )}
-                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
-                          {!img.isPrimary && (
-                            <button
-                              type="button"
-                              onClick={() => handleSetPrimaryImage(img.id)}
-                              title="Set as primary"
-                              className="w-6 h-6 rounded-full bg-primary/20 text-primary hover:bg-primary hover:text-black flex items-center justify-center transition-all cursor-pointer"
-                            >
-                              <span className="material-icons-outlined text-xs">star</span>
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteImage(img.id)}
-                            title="Delete image"
-                            className="w-6 h-6 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white flex items-center justify-center transition-all cursor-pointer"
-                          >
-                            <span className="material-icons-outlined text-xs">delete</span>
-                          </button>
-                        </div>
+                    {imageError && (
+                      <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-xs text-red-400 flex items-center gap-2">
+                        <span className="material-icons-outlined text-base">
+                          error_outline
+                        </span>
+                        <span>{imageError}</span>
                       </div>
-                    ))}
+                    )}
+
+                    {editing.images && editing.images.length > 0 && (
+                      <div className="grid grid-cols-3 gap-3 py-2">
+                        {editing.images.map((img) => (
+                          <div
+                            key={img.id}
+                            className={`relative group rounded-xl border-2 overflow-hidden ${img.isPrimary ? "border-primary shadow-[0_0_8px_rgba(212,175,55,0.3)]" : "border-primary/10"}`}
+                          >
+                            <div className="w-full aspect-square bg-background-main">
+                              <img
+                                src={img.url}
+                                className="w-full h-full object-cover"
+                                alt={img.altText || ""}
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src =
+                                    "https://placehold.co/100x100?text=No+Image";
+                                }}
+                              />
+                            </div>
+                            {img.isPrimary && (
+                              <div className="absolute top-1.5 left-1.5 bg-primary text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider shadow">
+                                Primary
+                              </div>
+                            )}
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                              {!img.isPrimary && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleSetPrimaryImage(img.id, editing.id)
+                                  }
+                                  className="p-1.5 bg-primary/90 text-white rounded-lg hover:bg-primary transition-colors cursor-pointer"
+                                  title="Set as primary image"
+                                >
+                                  <span className="material-icons-outlined text-sm">
+                                    star
+                                  </span>
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleDeleteImage(img.id, editing.id)
+                                }
+                                className="p-1.5 bg-red-500/90 text-white rounded-lg hover:bg-red-500 transition-colors cursor-pointer"
+                                title="Delete image"
+                              >
+                                <span className="material-icons-outlined text-sm">
+                                  delete
+                                </span>
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="p-4 bg-background-main rounded-xl border border-primary/10 text-center">
+                    <p className="text-xs text-text-muted">
+                      Save this category first to upload images.
+                    </p>
                   </div>
                 )}
               </div>
@@ -271,7 +357,7 @@ const CategoryList = () => {
                   disabled={saving || !form.name.trim()}
                   className="flex-1 bg-primary text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-lg hover:shadow-primary/30 transition-all disabled:opacity-50"
                 >
-                  {saving ? 'Saving...' : editing ? 'Update' : 'Create'}
+                  {saving ? "Saving..." : editing ? "Update" : "Create"}
                 </button>
               </div>
             </div>
@@ -282,11 +368,21 @@ const CategoryList = () => {
       {/* Delete Confirmation */}
       {deleteConfirm && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setDeleteConfirm(null)} />
+          <div
+            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            onClick={() => setDeleteConfirm(null)}
+          />
           <div className="relative bg-background-light border border-red-500/20 rounded-2xl p-8 w-full max-w-sm shadow-2xl text-center">
-            <span className="material-icons-outlined text-4xl text-red-500 mb-4">warning</span>
-            <h3 className="text-lg font-display font-bold text-text-main-light mb-2">Delete Category?</h3>
-            <p className="text-sm text-text-muted mb-6">This action cannot be undone. All products linked to this category will be unlinked.</p>
+            <span className="material-icons-outlined text-4xl text-red-500 mb-4">
+              warning
+            </span>
+            <h3 className="text-lg font-display font-bold text-text-main-light mb-2">
+              Delete Category?
+            </h3>
+            <p className="text-sm text-text-muted mb-6">
+              This action cannot be undone. All products linked to this category
+              will be unlinked.
+            </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
@@ -308,8 +404,12 @@ const CategoryList = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-display font-bold text-text-main-light">Categories</h1>
-          <p className="text-sm text-text-muted mt-1">Manage your store's product taxonomy.</p>
+          <h1 className="text-2xl font-display font-bold text-text-main-light">
+            Categories
+          </h1>
+          <p className="text-sm text-text-muted mt-1">
+            Manage your store's product taxonomy.
+          </p>
         </div>
         <button
           onClick={openCreate}
@@ -325,44 +425,74 @@ const CategoryList = () => {
         <table className="w-full">
           <thead>
             <tr className="border-b border-primary/10 bg-background-main/50">
-              <th className="text-left px-6 py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Name</th>
-              <th className="text-left px-6 py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Slug</th>
-              <th className="text-left px-6 py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Parent</th>
-              <th className="text-right px-6 py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Actions</th>
+              <th className="text-left px-6 py-4 text-xs font-bold text-text-muted uppercase tracking-wider w-16">
+                Image
+              </th>
+              <th className="text-left px-6 py-4 text-xs font-bold text-text-muted uppercase tracking-wider">
+                Name
+              </th>
+              <th className="text-left px-6 py-4 text-xs font-bold text-text-muted uppercase tracking-wider">
+                Slug
+              </th>
+              <th className="text-left px-6 py-4 text-xs font-bold text-text-muted uppercase tracking-wider">
+                Parent
+              </th>
+              <th className="text-right px-6 py-4 text-xs font-bold text-text-muted uppercase tracking-wider">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
             {categories.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-6 py-12 text-center text-text-muted text-sm">
+                <td
+                  colSpan={5}
+                  className="px-6 py-12 text-center text-text-muted text-sm"
+                >
                   No categories yet. Click "New Category" to create one.
                 </td>
               </tr>
             )}
-            {categories.map(cat => (
-              <tr key={cat.id} className="border-b border-primary/5 hover:bg-primary/[0.02] transition-colors">
+            {categories.map((cat) => (
+              <tr
+                key={cat.id}
+                className="border-b border-primary/5 hover:bg-primary/[0.02] transition-colors"
+              >
                 <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    {cat.categoryImages && cat.categoryImages.length > 0 ? (
+                  <div className="w-10 h-10 rounded-lg bg-background-light border border-primary/10 overflow-hidden flex items-center justify-center shrink-0">
+                    {cat.images?.find((img) => img.isPrimary)?.url ||
+                    cat.images?.[0]?.url ? (
                       <img
-                        src={cat.categoryImages.find(i => i.isPrimary)?.url || cat.categoryImages[0]?.url}
+                        src={
+                          cat.images?.find((img) => img.isPrimary)?.url ||
+                          cat.images?.[0]?.url
+                        }
                         alt={cat.name}
-                        className="w-9 h-9 rounded-lg object-cover border border-primary/20 shrink-0"
+                        className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-9 h-9 rounded-lg bg-background-main border border-primary/10 flex items-center justify-center text-text-muted/40 shrink-0">
-                        <span className="material-icons-outlined text-base">category</span>
-                      </div>
+                      <span className="material-icons-outlined text-text-muted text-sm">
+                        image
+                      </span>
                     )}
-                    <p className="text-sm font-bold text-text-main-light">{cat.name}</p>
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                  <span className="text-xs text-text-muted font-mono bg-background-main px-2 py-1 rounded">{cat.slug}</span>
+                  <p className="text-sm font-bold text-text-main-light">
+                    {cat.name}
+                  </p>
+                </td>
+                <td className="px-6 py-4">
+                  <span className="text-xs text-text-muted font-mono bg-background-main px-2 py-1 rounded">
+                    {cat.slug}
+                  </span>
                 </td>
                 <td className="px-6 py-4">
                   <span className="text-sm text-text-muted">
-                    {cat.parentId ? categories.find(c => c.id === cat.parentId)?.name || cat.parentId : '—'}
+                    {cat.parentId
+                      ? categories.find((c) => c.id === cat.parentId)?.name ||
+                        cat.parentId
+                      : "—"}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-right">
@@ -371,13 +501,17 @@ const CategoryList = () => {
                       onClick={() => openEdit(cat)}
                       className="p-2 text-text-muted hover:text-primary transition-colors rounded-lg hover:bg-primary/5"
                     >
-                      <span className="material-icons-outlined text-lg">edit</span>
+                      <span className="material-icons-outlined text-lg">
+                        edit
+                      </span>
                     </button>
                     <button
                       onClick={() => setDeleteConfirm(cat.id)}
                       className="p-2 text-text-muted hover:text-red-500 transition-colors rounded-lg hover:bg-red-500/5"
                     >
-                      <span className="material-icons-outlined text-lg">delete</span>
+                      <span className="material-icons-outlined text-lg">
+                        delete
+                      </span>
                     </button>
                   </div>
                 </td>
@@ -387,7 +521,7 @@ const CategoryList = () => {
         </table>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default CategoryList
+export default CategoryList;

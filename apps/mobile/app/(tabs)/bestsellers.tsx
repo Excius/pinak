@@ -21,7 +21,7 @@ const PAGE_SIZE = 8;
 
 export default function BestSellersPage() {
   const router = useRouter();
-  const { addToCart } = useCart();
+  const { addToCart, isAddingToCart } = useCart();
   const { isAuthenticated } = useAuth();
   const { itemIdsByVariantId, loadingVariantId, toggleWishlist } =
     useWishlist();
@@ -171,6 +171,7 @@ export default function BestSellersPage() {
                   product={item}
                   onPress={() => handleProductPress(item.id)}
                   onAddToCart={() => handleAddToCart(item)}
+                  isAddToCartLoading={isAddingToCart}
                   onWishlistToggle={() => {
                     if (item.variantId && isAuthenticated) {
                       void toggleWishlist(item.variantId);

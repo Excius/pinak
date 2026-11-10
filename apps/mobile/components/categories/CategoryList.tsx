@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, ActivityIndicator } from "react-native";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { CategoryCard } from "./CategoryCard";
 import { useCategoryStore } from "@/store/category/store";
 import { getTopCategories } from "@/services/category.service";
@@ -11,6 +11,7 @@ import {
 
 export function CategoryList() {
   const router = useRouter();
+  const { brand } = useLocalSearchParams<{ brand?: string }>();
   const selectCategory = useCategoryStore((state) => state.selectCategory);
   const [categories, setCategories] = useState<CategoryCardItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -42,7 +43,11 @@ export function CategoryList() {
     selectCategory(categoryId);
     router.push({
       pathname: "/categories/[categoryId]",
-      params: { categoryId, categoryName },
+      params: {
+        categoryId,
+        categoryName,
+        ...(brand ? { brand: String(brand) } : {}),
+      },
     });
   };
 

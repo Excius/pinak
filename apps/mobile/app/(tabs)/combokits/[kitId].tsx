@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
   View,
@@ -20,6 +20,32 @@ import { formatRupeesFromPaise } from "@/utils/currency";
 
 type ComboKit = ComboKitApi.ResponseTypes["GetComboKitById"]["data"];
 type ComboKitItem = ComboKit["items"][number];
+
+const getComboKitPrice = (kit: ComboKit) => {
+  if (kit.price != null && Number.isFinite(Number(kit.price))) {
+    return Number(kit.price);
+  }
+
+  return kit.items.reduce((total, item) => {
+    const itemPrice =
+      item.discountedPrice ??
+      item.productVariant?.sellingPrice ??
+      item.productVariant?.price ??
+      0;
+    return total + itemPrice * item.quantity;
+  }, 0);
+};
+
+const getComboKitOriginalPrice = (kit: ComboKit) =>
+  kit.items.reduce((total, item) => {
+    const itemPrice =
+      item.originalPriceWithTax ??
+      item.originalPrice ??
+      item.productVariant?.priceWithTax ??
+      item.productVariant?.price ??
+      0;
+    return total + itemPrice * item.quantity;
+  }, 0);
 
 /**
  * ComboKit Item Component
@@ -49,12 +75,22 @@ function ComboKitItemCard({ item }: { item: ComboKitItem }) {
 
         {/* Item Info */}
         <View className="flex-1">
-          <Text
-            className="text-sm font-bold text-text-primary"
-            numberOfLines={2}
-          >
-            {item.productVariant?.sku || "Product"}
-          </Text>
+          <View className="flex-row items-start">
+            <Text
+              className="flex-1 text-sm font-bold text-text-primary"
+              numberOfLines={2}
+            >
+              {item.productVariant?.sku || "Product"}
+            </Text>
+            {item.isRequired && (
+              <Text
+                accessibilityLabel="Required"
+                className="ml-1 text-base font-bold text-red-500"
+              >
+                *
+              </Text>
+            )}
+          </View>
 
           {/* Variant Options */}
           {item.productVariant?.optionValues &&
@@ -100,14 +136,6 @@ function ComboKitItemCard({ item }: { item: ComboKitItem }) {
           </View>
         </View>
 
-        {/* Required Badge */}
-        {item.isRequired && (
-          <View className="bg-error px-2 py-1 rounded-full">
-            <Text className="text-[0.6rem] font-bold text-background">
-              REQUIRED
-            </Text>
-          </View>
-        )}
       </View>
     </View>
   );
@@ -120,7 +148,7 @@ function ComboKitItemCard({ item }: { item: ComboKitItem }) {
 export default function ComboKitDetailScreen() {
   const { kitId } = useLocalSearchParams<{ kitId?: string }>();
   const router = useRouter();
-  const { addToCart } = useCart();
+  const { addToCart, isAddingToCart } = useCart();
 
   const [kit, setKit] = useState<ComboKit | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -157,27 +185,9 @@ export default function ComboKitDetailScreen() {
     void loadKit();
   }, [kitId]);
 
-  // Calculate pricing metrics
-  const pricingMetrics = useMemo(() => {
-    if (!kit) return { discountPercent: 0, savingsAmount: 0 };
-
-    if (kit.discountType === "PERCENTAGE" && kit.discountValue) {
-      const discountPercent = kit.discountValue;
-      const fullPrice = kit.price / (1 - discountPercent / 100);
-      const savingsAmount = fullPrice - kit.price;
-      return {
-        discountPercent: Math.round(discountPercent),
-        savingsAmount: Math.round(savingsAmount),
-      };
-    }
-
-    if (kit.discountType === "FIXED_AMOUNT" && kit.discountValue) {
-      const savingsAmount = kit.discountValue;
-      return { discountPercent: 0, savingsAmount };
-    }
-
-    return { discountPercent: 0, savingsAmount: 0 };
-  }, [kit]);
+  const kitPrice = kit ? getComboKitPrice(kit) : 0;
+  const originalPrice = kit ? getComboKitOriginalPrice(kit) : 0;
+  const savingsAmount = Math.max(0, originalPrice - kitPrice);
 
   const kitImageUrl =
     kit?.images.find((image) => image.isPrimary)?.url ?? kit?.images[0]?.url;
@@ -285,24 +295,27 @@ export default function ComboKitDetailScreen() {
                 <Text className="text-xs text-text-secondary font-semibold uppercase tracking-widest mb-1">
                   Bundle Price
                 </Text>
-                <Text className="text-3xl font-bold text-primary font-display">
-                  {formatRupeesFromPaise(kit.price)}
+                <Text className="text-3xl font-bold text-green-500 font-display">
+                  {formatRupeesFromPaise(kitPrice)}
                 </Text>
               </View>
-              {pricingMetrics.discountPercent > 0 && (
-                <View className="bg-error px-3 py-2 rounded-lg">
-                  <Text className="text-sm font-bold text-background">
-                    Save {pricingMetrics.discountPercent}%
+              {originalPrice > kitPrice && (
+                <View className="items-end">
+                  <Text className="text-xs text-text-secondary">
+                    Original price
+                  </Text>
+                  <Text className="text-base text-text-muted line-through">
+                    {formatRupeesFromPaise(originalPrice)}
                   </Text>
                 </View>
               )}
             </View>
 
-            {pricingMetrics.savingsAmount > 0 && (
+            {savingsAmount > 0 && (
               <View className="mt-3 pt-3 border-t border-surface-border">
-                <Text className="text-xs text-text-secondary">
-                  You save {formatRupeesFromPaise(pricingMetrics.savingsAmount)}{" "}
-                  with this bundle
+                <Text className="text-sm font-semibold text-green-500">
+                  Total value {formatRupeesFromPaise(originalPrice)} — You save{" "}
+                  {formatRupeesFromPaise(savingsAmount)}
                 </Text>
               </View>
             )}
@@ -341,7 +354,7 @@ export default function ComboKitDetailScreen() {
           {/* Items Section */}
           <View className="mb-6">
             <Text className="text-lg font-bold text-text-primary font-display mb-3">
-              What's Included
+              What&apos;s Included
             </Text>
             {kit.items && kit.items.length > 0 ? (
               kit.items.map((item) => (
@@ -356,21 +369,30 @@ export default function ComboKitDetailScreen() {
 
           {/* Add to Cart Button */}
           <TouchableOpacity
-            onPress={() => {
-              if (kit?.id) {
-                void addToCart(undefined, kit.id, 1);
-              }
+            disabled={isAddingToCart}
+            onPress={async () => {
+              if (!kit?.id || isAddingToCart) return;
+
+              await addToCart(undefined, kit.id, 1);
             }}
-            className="bg-primary rounded-full py-4 items-center justify-center mb-4"
+            className={`bg-primary rounded-full py-4 px-4 items-center justify-center mb-4 ${
+              isAddingToCart ? "opacity-60" : ""
+            }`}
           >
-            <View className="flex-row items-center gap-2">
-              <MaterialCommunityIcons
-                name="shopping-outline"
-                size={20}
-                color="#0A0A0A"
-              />
-              <Text className="text-base font-bold text-background">
-                Add to Cart - {formatRupeesFromPaise(kit.price)}
+            <View className="flex-row items-center justify-center">
+              {isAddingToCart ? (
+                <ActivityIndicator size="small" color="#0A0A0A" />
+              ) : (
+                <MaterialCommunityIcons
+                  name="shopping-outline"
+                  size={20}
+                  color="#0A0A0A"
+                />
+              )}
+              <Text className="ml-2 shrink-0 text-base font-bold text-background">
+                {isAddingToCart
+                  ? "Adding to Cart..."
+                  : `Add to Cart - ${formatRupeesFromPaise(kitPrice)}`}
               </Text>
             </View>
           </TouchableOpacity>

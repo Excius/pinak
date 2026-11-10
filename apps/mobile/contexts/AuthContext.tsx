@@ -85,14 +85,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       // Clear persisted credentials only for explicit auth failures.
       // Keep tokens when failures are transient (e.g. API down during rebuild).
       if (isAuthFailure(err)) {
-        console.log("Auth check failed, clearing invalid session:", err);
         await deleteAccessToken();
         await deleteRefreshToken();
       } else {
-        console.log(
-          "Auth check failed due to transient error, keeping session:",
-          err,
-        );
+        console.warn("Auth check failed due to a transient error:", err);
       }
 
       setUser(null);

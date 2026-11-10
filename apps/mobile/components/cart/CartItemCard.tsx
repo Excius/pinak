@@ -22,7 +22,10 @@ export function CartItemCard({
 
   const isProductVariant = !!variant;
   const name = isProductVariant ? product?.name : comboKit?.name;
-  const imageUrl = isProductVariant ? variant?.image?.url : comboKit?.imageUrl;
+  const imageUrl = isProductVariant
+    ? variant?.image?.url
+    : comboKit?.imageUrl ??
+      comboKit?.items?.[0]?.productVariant?.image?.url;
   const brand = isProductVariant ? product?.brand?.name : null;
   const optionValues = isProductVariant ? variant?.optionValues : null;
 
@@ -85,7 +88,7 @@ export function CartItemCard({
                     item.unitPrice,
                   priceWithTax:
                     item.priceWithTax ?? item.productVariant?.priceWithTax,
-                }),
+                }) ?? item.unitPrice,
               )}
             </Text>
           ) : null}

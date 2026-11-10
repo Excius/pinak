@@ -83,9 +83,7 @@ export const PageAdminTypes = {
   GetPageById: {
     body: z.object({}),
     params: z.object({
-      id: z
-        .string("id must be a string")
-        .min(1, { message: "id is required" }),
+      id: z.string("id must be a string").min(1, { message: "id is required" }),
     }),
     query: z.object({}),
     response: z.object({
@@ -107,7 +105,10 @@ export const PageAdminTypes = {
         .trim()
         .min(1, { message: "Page slug is required" })
         .max(200)
-        .regex(/^[a-z0-9-]+$/, "Slug must only contain lowercase alphanumeric characters and hyphens"),
+        .regex(
+          /^[a-z0-9-]+$/,
+          "Slug must only contain lowercase alphanumeric characters and hyphens",
+        ),
       content: z
         .string("content must be a string")
         .min(1, { message: "Page content is required" }),
@@ -132,7 +133,10 @@ export const PageAdminTypes = {
         .trim()
         .min(1)
         .max(200)
-        .regex(/^[a-z0-9-]+$/, "Slug must only contain lowercase alphanumeric characters and hyphens")
+        .regex(
+          /^[a-z0-9-]+$/,
+          "Slug must only contain lowercase alphanumeric characters and hyphens",
+        )
         .optional(),
       content: z.string().min(1).optional(),
       metaTitle: z.string().trim().optional().nullable(),
@@ -140,9 +144,7 @@ export const PageAdminTypes = {
       isActive: z.coerce.boolean().optional(),
     }),
     params: z.object({
-      id: z
-        .string("id must be a string")
-        .min(1, { message: "id is required" }),
+      id: z.string("id must be a string").min(1, { message: "id is required" }),
     }),
     query: z.object({}),
     response: z.object({
@@ -155,9 +157,7 @@ export const PageAdminTypes = {
   DeletePage: {
     body: z.object({}),
     params: z.object({
-      id: z
-        .string("id must be a string")
-        .min(1, { message: "id is required" }),
+      id: z.string("id must be a string").min(1, { message: "id is required" }),
     }),
     query: z.object({}),
     response: z.object({
@@ -170,9 +170,7 @@ export const PageAdminTypes = {
   RestorePage: {
     body: z.object({}),
     params: z.object({
-      id: z
-        .string("id must be a string")
-        .min(1, { message: "id is required" }),
+      id: z.string("id must be a string").min(1, { message: "id is required" }),
     }),
     query: z.object({}),
     response: z.object({

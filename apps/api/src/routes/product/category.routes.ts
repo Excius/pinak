@@ -22,27 +22,27 @@ export const registerProductAdminCategoryRoutes = (
   router.post(
     "/admin/:productId/categories",
     rateLimiter,
-    validateMultiple(ProductCategoryTypes.AddProductToCategory),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ProductCategoryTypes.AddProductToCategory),
     productCategoryController.add,
   );
 
   router.delete(
     "/admin/:productId/categories/:categoryId",
     rateLimiter,
-    validateMultiple(ProductCategoryTypes.RemoveProductFromCategory),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ProductCategoryTypes.RemoveProductFromCategory),
     productCategoryController.remove,
   );
 
   router.put(
     "/admin/:productId/categories",
     rateLimiter,
-    validateMultiple(ProductCategoryTypes.SetCategoriesForProduct),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ProductCategoryTypes.SetCategoriesForProduct),
     productCategoryController.setCategories,
   );
 };

@@ -2,50 +2,73 @@ import PDFDocument from "pdfkit";
 import { INDIAN_STATES_AND_CODES } from "@repo/types";
 import { PrismaClient, Prisma } from "../generated/prisma/client.js";
 import { NotFoundError, ValidationError } from "../lib/error.js";
+import { getSupplierDetails } from "../lib/storeSettings.js";
 
 const STATE_CODES = INDIAN_STATES_AND_CODES;
-
-export const SUPPLIER_CONFIG = {
-  companyName: "Pinak Beauty & Care Pvt. Ltd.",
-  brandName: "Pinak",
-  gstin: "27AAACP1234A1Z5", // 15-digit GSTIN for Maharashtra
-  pan: "AAACP1234A",
-  state: "Maharashtra",
-  stateCode: "27",
-  addressLine1: "Building A, Tech Park, BKC",
-  addressLine2: "Bandra East",
-  city: "Mumbai",
-  pincode: "400051",
-  email: "support@pinak.com",
-  phone: "+91-22-4000-1000",
-};
 
 export function convertNumberToIndianWords(amountInPaise: number): string {
   const rupees = Math.floor(amountInPaise / 100);
   const paise = amountInPaise % 100;
 
   const singleDigits = [
-    "", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",
-    "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen",
-    "Seventeen", "Eighteen", "Nineteen",
+    "",
+    "One",
+    "Two",
+    "Three",
+    "Four",
+    "Five",
+    "Six",
+    "Seven",
+    "Eight",
+    "Nine",
+    "Ten",
+    "Eleven",
+    "Twelve",
+    "Thirteen",
+    "Fourteen",
+    "Fifteen",
+    "Sixteen",
+    "Seventeen",
+    "Eighteen",
+    "Nineteen",
   ];
   const tensDigits = [
-    "", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety",
+    "",
+    "",
+    "Twenty",
+    "Thirty",
+    "Forty",
+    "Fifty",
+    "Sixty",
+    "Seventy",
+    "Eighty",
+    "Ninety",
   ];
 
   function numToWords(n: number): string {
     if (n === 0) return "";
     if (n < 20) return singleDigits[n] + " ";
-    if (n < 100) return tensDigits[Math.floor(n / 10)] + " " + singleDigits[n % 10] + " ";
-    if (n < 1000) return singleDigits[Math.floor(n / 100)] + " Hundred " + numToWords(n % 100);
+    if (n < 100)
+      return tensDigits[Math.floor(n / 10)] + " " + singleDigits[n % 10] + " ";
+    if (n < 1000)
+      return (
+        singleDigits[Math.floor(n / 100)] + " Hundred " + numToWords(n % 100)
+      );
     if (n < 100000)
-      return numToWords(Math.floor(n / 1000)) + "Thousand " + numToWords(n % 1000);
+      return (
+        numToWords(Math.floor(n / 1000)) + "Thousand " + numToWords(n % 1000)
+      );
     if (n < 10000000)
-      return numToWords(Math.floor(n / 100000)) + "Lakh " + numToWords(n % 100000);
-    return numToWords(Math.floor(n / 10000000)) + "Crore " + numToWords(n % 10000000);
+      return (
+        numToWords(Math.floor(n / 100000)) + "Lakh " + numToWords(n % 100000)
+      );
+    return (
+      numToWords(Math.floor(n / 10000000)) + "Crore " + numToWords(n % 10000000)
+    );
   }
 
-  let words = rupees === 0 ? "Zero Rupees" : "Rupees " + numToWords(rupees).trim();
+  let words =
+    rupees === 0 ? "Zero Rupees" : "Rupees " + numToWords(rupees).trim();
   if (paise > 0) {
     words += " and " + numToWords(paise).trim() + " Paise";
   }
@@ -148,7 +171,9 @@ export class InvoiceService {
               String(err?.message ?? "").includes("Order_invoiceNumber_key") ||
               err?.meta?.modelName === "Order");
           if (isUniqueError && attempt < 4) {
-            await new Promise((resolve) => setTimeout(resolve, 50 + Math.random() * 100));
+            await new Promise((resolve) =>
+              setTimeout(resolve, 50 + Math.random() * 100),
+            );
             continue;
           }
           throw err;
@@ -156,17 +181,25 @@ export class InvoiceService {
       }
     }
 
-    const breakup = (typeof order.getBreakup === "object" && order.getBreakup !== null)
-      ? (order.getBreakup as Record<string, any>)
-      : {};
+    const breakup =
+      typeof order.getBreakup === "object" && order.getBreakup !== null
+        ? (order.getBreakup as Record<string, any>)
+        : {};
 
     const shippingAddress = breakup.shippingAddress || {};
     const billingAddress = breakup.billingAddress || shippingAddress;
-    const taxBreakdown = Array.isArray(breakup.taxBreakdown) ? breakup.taxBreakdown : [];
+    const taxBreakdown = Array.isArray(breakup.taxBreakdown)
+      ? breakup.taxBreakdown
+      : [];
 
-    const customerState = shippingAddress.state || billingAddress.state || "Maharashtra";
+    const customerState =
+      shippingAddress.state || billingAddress.state || "Maharashtra";
     const customerStateCode = getStateCode(customerState);
-    const isSameState = customerStateCode === SUPPLIER_CONFIG.stateCode;
+    const supplier = await getSupplierDetails(
+      this.prisma,
+      (state) => STATE_CODES[state.trim().toUpperCase()],
+    );
+    const isSameState = customerStateCode === supplier.stateCode;
 
     // Format line items with CGST/SGST or IGST bifurcation
     const formattedItems = order.items.map((item, idx) => {
@@ -174,12 +207,15 @@ export class InvoiceService {
         rate: order.gstPercentage,
         taxableValue: item.price * item.quantity,
         discountAmount: 0,
-        amount: Math.round((item.price * item.quantity * order.gstPercentage) / 100),
+        amount: Math.round(
+          (item.price * item.quantity * order.gstPercentage) / 100,
+        ),
       };
 
       const lineSubtotal = item.price * item.quantity;
       const discount = lineBreakdown.discountAmount || 0;
-      const taxableValue = lineBreakdown.taxableValue ?? (lineSubtotal - discount);
+      const taxableValue =
+        lineBreakdown.taxableValue ?? lineSubtotal - discount;
       const totalTax = lineBreakdown.amount || 0;
       const totalLineAmount = taxableValue + totalTax;
 
@@ -226,11 +262,14 @@ export class InvoiceService {
     const totalSgst = formattedItems.reduce((sum, i) => sum + i.sgstAmount, 0);
     const totalIgst = formattedItems.reduce((sum, i) => sum + i.igstAmount, 0);
 
-    const netTaxableAmount = formattedItems.reduce((sum, i) => sum + i.taxableValue, 0);
+    const netTaxableAmount = formattedItems.reduce(
+      (sum, i) => sum + i.taxableValue,
+      0,
+    );
     const amountInWords = convertNumberToIndianWords(order.totalAmount);
 
     return {
-      supplier: SUPPLIER_CONFIG,
+      supplier,
       customer: {
         name: shippingAddress.fullName || order.user.name || "Valued Customer",
         email: order.user.email,
@@ -347,7 +386,7 @@ export class InvoiceService {
         <td class="meta-box">
           <div class="meta-title">Supplier Details</div>
           <strong>${data.supplier.companyName}</strong><br/>
-          ${data.supplier.addressLine1}, ${data.supplier.addressLine2}<br/>
+          ${[data.supplier.addressLine1, data.supplier.addressLine2].filter(Boolean).join(", ")}<br/>
           ${data.supplier.city}, ${data.supplier.state} - ${data.supplier.pincode}<br/>
           State Code: <strong>${data.supplier.stateCode}</strong> | PAN: <strong>${data.supplier.pan}</strong><br/>
           Email: ${data.supplier.email} | Phone: ${data.supplier.phone}
@@ -469,7 +508,10 @@ export class InvoiceService {
     `;
   }
 
-  async generateInvoicePdfBuffer(orderId: string, userId: string): Promise<Buffer> {
+  async generateInvoicePdfBuffer(
+    orderId: string,
+    userId: string,
+  ): Promise<Buffer> {
     const data = await this.getInvoiceData(orderId, userId);
 
     return new Promise((resolve, reject) => {
@@ -484,10 +526,19 @@ export class InvoiceService {
 
       // Header
       doc.fontSize(20).fillColor("#111827").text("TAX INVOICE", 40, 40);
-      doc.fontSize(9).fillColor("#6b7280").text("Rule 46 CGST Rules, 2017", 40, 65);
+      doc
+        .fontSize(9)
+        .fillColor("#6b7280")
+        .text("Rule 46 CGST Rules, 2017", 40, 65);
 
-      doc.fontSize(16).fillColor("#4f46e5").text(data.supplier.brandName, 400, 40, { align: "right" });
-      doc.fontSize(9).fillColor("#374151").text(data.supplier.companyName, 300, 60, { align: "right" });
+      doc
+        .fontSize(16)
+        .fillColor("#4f46e5")
+        .text(data.supplier.brandName, 400, 40, { align: "right" });
+      doc
+        .fontSize(9)
+        .fillColor("#374151")
+        .text(data.supplier.companyName, 300, 60, { align: "right" });
       doc.text(`GSTIN: ${data.supplier.gstin}`, 300, 72, { align: "right" });
 
       doc.moveTo(40, 90).lineTo(550, 90).strokeColor("#e5e7eb").stroke();
@@ -495,35 +546,53 @@ export class InvoiceService {
       // Info Grid
       let y = 100;
       doc.fontSize(10).fillColor("#111827").text("Supplier Details:", 40, y);
-      doc.fontSize(9).fillColor("#4b5563")
+      doc
+        .fontSize(9)
+        .fillColor("#4b5563")
         .text(`${data.supplier.companyName}`, 40, y + 15)
-        .text(`${data.supplier.addressLine1}, ${data.supplier.city}, ${data.supplier.state} - ${data.supplier.pincode}`)
-        .text(`State Code: ${data.supplier.stateCode} | PAN: ${data.supplier.pan}`)
+        .text(
+          `${[data.supplier.addressLine1, data.supplier.addressLine2].filter(Boolean).join(", ")}, ${data.supplier.city}, ${data.supplier.state} - ${data.supplier.pincode}`,
+        )
+        .text(
+          `State Code: ${data.supplier.stateCode} | PAN: ${data.supplier.pan}`,
+        )
         .text(`Email: ${data.supplier.email}`);
 
       doc.fontSize(10).fillColor("#111827").text("Invoice Details:", 320, y);
-      doc.fontSize(9).fillColor("#4b5563")
+      doc
+        .fontSize(9)
+        .fillColor("#4b5563")
         .text(`Invoice No: ${data.invoice.number}`, 320, y + 15)
-        .text(`Invoice Date: ${data.invoice.date ? new Date(data.invoice.date).toLocaleDateString("en-IN") : "N/A"}`)
+        .text(
+          `Invoice Date: ${data.invoice.date ? new Date(data.invoice.date).toLocaleDateString("en-IN") : "N/A"}`,
+        )
         .text(`Order ID: #${data.invoice.orderId}`)
-        .text(`Payment: ${data.invoice.paymentStatus} (${data.invoice.paymentMethod})`);
+        .text(
+          `Payment: ${data.invoice.paymentStatus} (${data.invoice.paymentMethod})`,
+        );
 
       y += 75;
       doc.moveTo(40, y).lineTo(550, y).strokeColor("#e5e7eb").stroke();
 
       y += 10;
       doc.fontSize(10).fillColor("#111827").text("Billed & Shipped To:", 40, y);
-      doc.fontSize(9).fillColor("#4b5563")
+      doc
+        .fontSize(9)
+        .fillColor("#4b5563")
         .text(`Customer: ${data.customer.name}`, 40, y + 15)
         .text(`Address: ${data.customer.shippingAddress}`)
-        .text(`Place of Supply: ${data.customer.state} (State Code: ${data.customer.stateCode})`)
+        .text(
+          `Place of Supply: ${data.customer.state} (State Code: ${data.customer.stateCode})`,
+        )
         .text(`GSTIN: ${data.customer.gstin}`);
 
       y += 65;
 
       // Table Headers
       doc.rect(40, y, 510, 20).fill("#1f2937");
-      doc.fontSize(8).fillColor("#ffffff")
+      doc
+        .fontSize(8)
+        .fillColor("#ffffff")
         .text("#", 45, y + 5)
         .text("Description", 65, y + 5)
         .text("HSN", 210, y + 5)
@@ -545,7 +614,9 @@ export class InvoiceService {
           ? `${item.cgstRate + item.sgstRate}%`
           : `${item.igstRate}%`;
 
-        doc.fontSize(8).fillColor("#111827")
+        doc
+          .fontSize(8)
+          .fillColor("#111827")
           .text(`${item.itemNo}`, 45, y + 4)
           .text(`${item.description.slice(0, 28)}`, 65, y + 4)
           .text(`${item.hsnCode}`, 210, y + 4)
@@ -564,29 +635,83 @@ export class InvoiceService {
 
       y += 10;
       // Summary
-      doc.fontSize(9).fillColor("#374151")
-        .text(`Gross Subtotal: ₹${formatINR(data.pricing.grossSubtotal)}`, 350, y, { align: "right" })
-        .text(`Discount: - ₹${formatINR(data.pricing.discountAmount)}`, 350, y + 14, { align: "right" })
-        .text(`Net Taxable Value: ₹${formatINR(data.pricing.netTaxableAmount)}`, 350, y + 28, { align: "right" });
+      doc
+        .fontSize(9)
+        .fillColor("#374151")
+        .text(
+          `Gross Subtotal: ₹${formatINR(data.pricing.grossSubtotal)}`,
+          350,
+          y,
+          { align: "right" },
+        )
+        .text(
+          `Discount: - ₹${formatINR(data.pricing.discountAmount)}`,
+          350,
+          y + 14,
+          { align: "right" },
+        )
+        .text(
+          `Net Taxable Value: ₹${formatINR(data.pricing.netTaxableAmount)}`,
+          350,
+          y + 28,
+          { align: "right" },
+        );
 
       if (data.pricing.isSameState) {
-        doc.text(`CGST: ₹${formatINR(data.pricing.totalCgst)}`, 350, y + 42, { align: "right" })
-           .text(`SGST: ₹${formatINR(data.pricing.totalSgst)}`, 350, y + 56, { align: "right" })
-           .text(`Shipping: ₹${formatINR(data.pricing.shippingAmount)}`, 350, y + 70, { align: "right" });
+        doc
+          .text(`CGST: ₹${formatINR(data.pricing.totalCgst)}`, 350, y + 42, {
+            align: "right",
+          })
+          .text(`SGST: ₹${formatINR(data.pricing.totalSgst)}`, 350, y + 56, {
+            align: "right",
+          })
+          .text(
+            `Shipping: ₹${formatINR(data.pricing.shippingAmount)}`,
+            350,
+            y + 70,
+            { align: "right" },
+          );
         y += 84;
       } else {
-        doc.text(`IGST: ₹${formatINR(data.pricing.totalIgst)}`, 350, y + 42, { align: "right" })
-           .text(`Shipping: ₹${formatINR(data.pricing.shippingAmount)}`, 350, y + 56, { align: "right" });
+        doc
+          .text(`IGST: ₹${formatINR(data.pricing.totalIgst)}`, 350, y + 42, {
+            align: "right",
+          })
+          .text(
+            `Shipping: ₹${formatINR(data.pricing.shippingAmount)}`,
+            350,
+            y + 56,
+            { align: "right" },
+          );
         y += 70;
       }
 
       doc.rect(340, y, 210, 22).fill("#111827");
-      doc.fontSize(10).fillColor("#ffffff").text(`Grand Total: ₹${formatINR(data.pricing.totalAmount)}`, 350, y + 6, { align: "right" });
+      doc
+        .fontSize(10)
+        .fillColor("#ffffff")
+        .text(
+          `Grand Total: ₹${formatINR(data.pricing.totalAmount)}`,
+          350,
+          y + 6,
+          { align: "right" },
+        );
 
       y += 35;
-      doc.fontSize(9).fillColor("#111827").text(`Amount in Words: ${data.pricing.amountInWords}`, 40, y);
+      doc
+        .fontSize(9)
+        .fillColor("#111827")
+        .text(`Amount in Words: ${data.pricing.amountInWords}`, 40, y);
 
-      doc.fontSize(8).fillColor("#9ca3af").text("Computer generated GST Tax Invoice under Rule 46 of CGST Rules, 2017.", 40, 780, { align: "center" });
+      doc
+        .fontSize(8)
+        .fillColor("#9ca3af")
+        .text(
+          "Computer generated GST Tax Invoice under Rule 46 of CGST Rules, 2017.",
+          40,
+          780,
+          { align: "center" },
+        );
 
       doc.end();
     });

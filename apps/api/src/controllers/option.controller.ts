@@ -45,7 +45,11 @@ export class OptionController {
     const { id } = req.params;
     const option = await this.optionService.getOptionById(id as string);
     if (!option) return ResponseHandler.notFound(res, "Option not found");
-    ResponseHandler.success(res, toAdminOption(option), "Option fetched successfully");
+    ResponseHandler.success(
+      res,
+      toAdminOption(option),
+      "Option fetched successfully",
+    );
   };
 
   create = async (req: Request, res: Response) => {
@@ -77,11 +81,7 @@ export class OptionController {
 
   createValue = async (req: Request, res: Response) => {
     const { optionId } = req.params;
-    const data = req.body as {
-      value: string;
-      sortOrder?: number;
-      swatchColorHex?: string | null;
-    };
+    const data = req.body as Parameters<OptionService["createOptionValue"]>[1];
     const v = await this.optionService.createOptionValue(
       optionId as string,
       data,

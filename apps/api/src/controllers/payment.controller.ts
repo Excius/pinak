@@ -22,19 +22,14 @@ export class PaymentController {
         return ResponseHandler.badRequest(res, "Missing signature");
       }
 
-      // 1. Verify Webhook Signature
-      // The body MUST be the raw string to verify the signature. 
-      // If we use express.json(), we need raw body. But for simplicity if express.json() is used, 
-      // passing JSON.stringify(req.body) *might* fail if key ordering changes.
-      // Assuming Express is configured to make raw body available, or we just trust Razorpay SDK 
-      // for verifyPayment. We will pass the raw payload object to our service.
-      const payloadString = JSON.stringify(req.body); 
-
-      const isValid = await this.paymentGateway.verifyPayment({
-        orderId: payloadString, // For webhooks, we pass the raw body as 'orderId' to hash
-        status: "SUCCESS",
+      // 1. Verify the webhook signature over the exact raw bytes Razorpay sent.
+      if (!req.rawBody) {
+        return ResponseHandler.badRequest(res, "Missing request body");
+      }
+      const isValid = this.paymentGateway.verifyWebhookSignature(
+        req.rawBody,
         signature,
-      });
+      );
 
       if (!isValid) {
         return ResponseHandler.badRequest(res, "Invalid payment signature");
@@ -44,15 +39,18 @@ export class PaymentController {
       if (event === "payment.captured" || event === "order.paid") {
         const paymentEntity = req.body.payload.payment.entity;
         const razorpayOrderId = paymentEntity.order_id; // e.g. order_IluGWxBm9U8zJ8
-        const razorpayPaymentId = paymentEntity.id;     // e.g. pay_IluGWxBm9U8zJ8
+        const razorpayPaymentId = paymentEntity.id; // e.g. pay_IluGWxBm9U8zJ8
 
         try {
           // We need an OrderService method to confirm by gatewayOrderId
-          await this.orderService.confirmPaymentByGatewayOrderId(razorpayOrderId, {
-            paymentId: razorpayPaymentId,
-            signature: signature,
-            method: paymentEntity.method,
-          });
+          await this.orderService.confirmPaymentByGatewayOrderId(
+            razorpayOrderId,
+            {
+              paymentId: razorpayPaymentId,
+              signature: signature,
+              method: paymentEntity.method,
+            },
+          );
         } catch (confirmErr: any) {
           console.error("Webhook payment confirmation error:", confirmErr);
           // Return 200 OK to Razorpay so it acknowledges business outcome (e.g. reservation expired)
@@ -62,7 +60,10 @@ export class PaymentController {
         const paymentEntity = req.body.payload.payment.entity;
         const razorpayOrderId = paymentEntity.order_id;
         const reason = paymentEntity.error_description || "Payment failed";
-        await this.orderService.handlePaymentFailureByGatewayOrderId(razorpayOrderId, reason);
+        await this.orderService.handlePaymentFailureByGatewayOrderId(
+          razorpayOrderId,
+          reason,
+        );
       }
 
       // Always return 200 OK to Razorpay so they stop retrying the webhook
@@ -80,12 +81,13 @@ export class PaymentController {
    */
   verifyFrontendPayment = async (req: Request, res: Response) => {
     try {
-      const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+      const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
+        req.body;
 
       const isValid = this.paymentGateway.verifyFrontendSignature(
         razorpay_order_id,
         razorpay_payment_id,
-        razorpay_signature
+        razorpay_signature,
       );
 
       if (!isValid) {
@@ -93,11 +95,14 @@ export class PaymentController {
       }
 
       // If valid, confirm the payment (this is idempotent, so if webhook fired first, it's fine)
-      await this.orderService.confirmPaymentByGatewayOrderId(razorpay_order_id, {
-        paymentId: razorpay_payment_id,
-        signature: razorpay_signature,
-        method: "sync_verification",
-      });
+      await this.orderService.confirmPaymentByGatewayOrderId(
+        razorpay_order_id,
+        {
+          paymentId: razorpay_payment_id,
+          signature: razorpay_signature,
+          method: "sync_verification",
+        },
+      );
 
       return ResponseHandler.success(
         res,
@@ -107,13 +112,16 @@ export class PaymentController {
     } catch (error: any) {
       console.error("Verification error:", error);
       if (error?.message?.includes("already confirmed")) {
-         return ResponseHandler.success(
-            res,
-            { orderId: req.body.razorpay_order_id, status: "COMPLETED" },
-            "Payment verified successfully",
-         );
+        return ResponseHandler.success(
+          res,
+          { orderId: req.body.razorpay_order_id, status: "COMPLETED" },
+          "Payment verified successfully",
+        );
       }
-      return ResponseHandler.badRequest(res, error.message || "Failed to verify payment");
+      return ResponseHandler.badRequest(
+        res,
+        error.message || "Failed to verify payment",
+      );
     }
   };
 }

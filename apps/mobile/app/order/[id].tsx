@@ -279,7 +279,6 @@ export default function OrderDetailPage() {
 
         {/* option to render the invoice ifle in headera s well  */}
 
-        
         {/* <TouchableOpacity
           onPress={() => void handleOpenInvoice()}
           accessibilityRole="button"
