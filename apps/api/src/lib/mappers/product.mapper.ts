@@ -77,68 +77,53 @@ export const toPublicProduct = (product: ProductWithRelations) => {
       })) || [],
 
     // Variants - lean version
-    variants:
-      product.variants?.map((v: any) => {
-        const price = v.price;
-        // Variant-level tax class overrides the product's
-        const variantTax = variantTaxClass(v, product.taxClass);
-        const taxRate = variantTax?.rate ?? 0;
-        const sellingPrice = v.sellingPrice != null ? v.sellingPrice : null;
-        const effectivePrice = sellingPrice ?? price;
-        const compareAtPrice = v.compareAtPrice ?? v.comparePrice ?? null;
-        const taxAmount = Math.round((effectivePrice * taxRate) / 100);
-        const priceWithTax = price + Math.round((price * taxRate) / 100);
-        const sellingPriceWithTax =
-          sellingPrice != null ? sellingPrice + taxAmount : null;
-        const compareAtPriceWithTax =
-          compareAtPrice != null
-            ? compareAtPrice + Math.round((compareAtPrice * taxRate) / 100)
-            : null;
+    variants: product.variants?.map((v: any) => {
+      const price = v.price;
+      // Variant-level tax class overrides the product's
+      const variantTax = variantTaxClass(v, product.taxClass);
+      const taxRate = variantTax?.rate ?? 0;
+      const sellingPrice = v.sellingPrice != null ? v.sellingPrice : null;
+      const effectivePrice = sellingPrice ?? price;
+      const compareAtPrice = v.compareAtPrice ?? v.comparePrice ?? null;
+      const taxAmount = Math.round((effectivePrice * taxRate) / 100);
+      const priceWithTax = price + Math.round((price * taxRate) / 100);
+      const sellingPriceWithTax = sellingPrice != null
+        ? sellingPrice + taxAmount
+        : null;
+      const compareAtPriceWithTax = compareAtPrice != null
+        ? compareAtPrice + Math.round((compareAtPrice * taxRate) / 100)
+        : null;
 
-        return {
-          id: v.id,
-          sku: v.sku,
-          tags: Array.isArray(v.tags) ? v.tags : [],
-          price: v.price,
-          sellingPrice,
-          taxAmount,
-          taxRate,
-          taxClass: variantTax
-            ? {
-                name: variantTax.name,
-                rate: variantTax.rate,
-                overridden: variantTax.overridden,
-              }
-            : null,
-          priceWithTax,
-          sellingPriceWithTax,
-          compareAtPrice: v.compareAtPrice,
-          compareAtPriceWithTax,
-          stock: v.stock,
-          lowStockThreshold: v.lowStockThreshold,
-          weightGrams: v.weightGrams ?? null,
-          isActive: v.isActive,
-
-          // Primary image only (lean fields)
-          image: toLeanImage(
-            v.images?.find((img: any) => img.isPrimary) ||
-              v.images?.[0] ||
-              null,
-          ),
-
-          // Option values
-          optionValues:
-            v.optionValues
-              ?.map((ov: any) => ({
-                optionId: ov.optionValue?.optionId,
-                optionValueId: ov.optionValue?.id,
-                optionName: ov.optionValue?.option?.name,
-                valueName: ov.optionValue?.value,
-                swatchColorHex: ov.optionValue?.swatchColorHex ?? null,
-              }))
-              .filter((ov: any) => ov.optionName && ov.valueName) || [],
-        };
-      }) || [],
+      return {
+        id: v.id,
+        sku: v.sku,
+        tags: Array.isArray(v.tags) ? v.tags : [],
+        price: v.price,
+        sellingPrice,
+        taxAmount,
+        taxRate,
+        taxClass: variantTax ? { name: variantTax.name, rate: variantTax.rate, overridden: variantTax.overridden } : null,
+        priceWithTax,
+        sellingPriceWithTax,
+        compareAtPrice: v.compareAtPrice,
+        compareAtPriceWithTax,
+        stock: v.stock,
+        lowStockThreshold: v.lowStockThreshold,
+        isActive: v.isActive,
+        
+        // Primary image only (lean fields)
+        image: toLeanImage(v.images?.find((img: any) => img.isPrimary) || v.images?.[0] || null),
+        
+        // Option values
+        optionValues: v.optionValues?.map((ov: any) => ({
+          optionId: ov.optionValue?.optionId,
+          optionValueId: ov.optionValue?.id,
+          optionName: ov.optionValue?.option?.name,
+          valueName: ov.optionValue?.value,
+          swatchColorHex: ov.optionValue?.swatchColorHex ?? null,
+        })).filter((ov: any) => ov.optionName && ov.valueName) || [],
+      };
+    }) || [],
 
     // Filter values - for faceted search
     filterValues:
@@ -245,6 +230,9 @@ export const toAdminProduct = (product: ProductWithRelations) => {
     // Full variants with all fields
     variants: product.variants?.map((v: any) => {
       const price = v.price;
+      // Variant-level tax class overrides the product's
+      const variantTax = variantTaxClass(v, product.taxClass);
+      const taxRate = variantTax?.rate ?? 0;
       const sellingPrice = v.sellingPrice != null ? v.sellingPrice : null;
       const effectivePrice = sellingPrice ?? price;
       const comparePrice = v.comparePrice ?? v.compareAtPrice ?? null;
@@ -264,6 +252,8 @@ export const toAdminProduct = (product: ProductWithRelations) => {
         price: v.price,
         sellingPrice,
         taxAmount,
+        taxRate,
+        taxClass: variantTax ? { name: variantTax.name, rate: variantTax.rate, overridden: variantTax.overridden } : null,
         priceWithTax,
         sellingPriceWithTax,
         compareAtPrice: v.compareAtPrice,
@@ -276,6 +266,15 @@ export const toAdminProduct = (product: ProductWithRelations) => {
         isDeleted: v.isDeleted,
         sortOrder: v.sortOrder,
         tags: v.tags,
+
+        // Own measurements + what actually applies (own, else from option values, else product)
+        weightGrams: v.weightGrams ?? null,
+        weightClassId: v.weightClassId ?? null,
+        dimensionLength: v.dimensionLength ?? null,
+        dimensionWidth: v.dimensionWidth ?? null,
+        dimensionHeight: v.dimensionHeight ?? null,
+        lengthClassId: v.lengthClassId ?? null,
+        measurements: resolveVariantMeasurements(v, product),
         
         // All images
         images: v.images || [],
@@ -347,13 +346,7 @@ export const toPublicVariant = (variant: any) => {
     sellingPrice,
     taxAmount,
     taxRate,
-    taxClass: variantTax
-      ? {
-          name: variantTax.name,
-          rate: variantTax.rate,
-          overridden: variantTax.overridden,
-        }
-      : null,
+    taxClass: variantTax ? { name: variantTax.name, rate: variantTax.rate, overridden: variantTax.overridden } : null,
     priceWithTax,
     sellingPriceWithTax,
     compareAtPrice: variant.compareAtPrice,
@@ -428,17 +421,12 @@ export const toAdminVariant = (variant: any) => {
   return {
     // All fields
     ...variant,
+    measurements: resolveVariantMeasurements(variant, variant.product),
     optionValues: toVariantOptionValues(variant.optionValues),
     sellingPrice,
     taxAmount,
     taxRate,
-    taxClass: variantTax
-      ? {
-          name: variantTax.name,
-          rate: variantTax.rate,
-          overridden: variantTax.overridden,
-        }
-      : null,
+    taxClass: variantTax ? { name: variantTax.name, rate: variantTax.rate, overridden: variantTax.overridden } : null,
     priceWithTax,
     sellingPriceWithTax,
     comparePriceWithTax,

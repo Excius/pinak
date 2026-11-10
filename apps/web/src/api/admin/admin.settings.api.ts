@@ -129,62 +129,50 @@ export const setAdminSetting = async (
   const { data: resp } = await axiosInstance.put(
     `/settings/admin/${encodeURIComponent(key)}`,
     payload,
-  );
-  return resp?.data as AdminSettingItem;
-};
+  )
+  return resp?.data as AdminSettingItem
+}
 
 // ── Shipping & supplier (typed store settings) ──────────────────────────
 
 export interface ShippingConfig {
   /** Flat shipping charge in paise. */
-  shippingFee: number;
+  shippingFee: number
 }
 
 export interface SupplierDetails {
-  companyName: string;
-  brandName: string;
-  gstin: string;
-  pan: string;
-  state: string;
-  stateCode: string;
-  addressLine1: string;
-  addressLine2: string;
-  city: string;
-  pincode: string;
-  email: string;
-  phone: string;
+  companyName: string
+  brandName: string
+  gstin: string
+  pan: string
+  state: string
+  stateCode: string
+  addressLine1: string
+  addressLine2: string
+  city: string
+  pincode: string
+  email: string
+  phone: string
 }
 
-export type SupplierDetailsInput = Omit<
-  SupplierDetails,
-  "brandName" | "stateCode"
->;
+export type SupplierDetailsInput = Omit<SupplierDetails, 'brandName' | 'stateCode'>
 
 export const getShippingConfig = async (): Promise<ShippingConfig> => {
-  const { data: resp } = await axiosInstance.get("/settings/admin/shipping");
-  return resp?.data as ShippingConfig;
-};
+  const { data: resp } = await axiosInstance.get('/settings/admin/shipping')
+  return resp?.data as ShippingConfig
+}
 
-export const updateShippingConfig = async (
-  shippingFee: number,
-): Promise<ShippingConfig> => {
-  const { data: resp } = await axiosInstance.put("/settings/admin/shipping", {
-    shippingFee,
-  });
-  return resp?.data as ShippingConfig;
-};
+export const updateShippingConfig = async (shippingFee: number): Promise<ShippingConfig> => {
+  const { data: resp } = await axiosInstance.put('/settings/admin/shipping', { shippingFee })
+  return resp?.data as ShippingConfig
+}
 
 export const getSupplierDetails = async (): Promise<SupplierDetails> => {
-  const { data: resp } = await axiosInstance.get("/settings/admin/supplier");
-  return resp?.data as SupplierDetails;
-};
+  const { data: resp } = await axiosInstance.get('/settings/admin/supplier')
+  return resp?.data as SupplierDetails
+}
 
-export const updateSupplierDetails = async (
-  payload: SupplierDetailsInput,
-): Promise<SupplierDetails> => {
-  const { data: resp } = await axiosInstance.put(
-    "/settings/admin/supplier",
-    payload,
-  );
-  return resp?.data as SupplierDetails;
-};
+export const updateSupplierDetails = async (payload: SupplierDetailsInput): Promise<SupplierDetails> => {
+  const { data: resp } = await axiosInstance.put('/settings/admin/supplier', payload)
+  return resp?.data as SupplierDetails
+}

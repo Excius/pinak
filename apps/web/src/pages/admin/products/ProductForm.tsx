@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import toast from 'react-hot-toast'
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import toast from "react-hot-toast";
 import {
   getProductByIdAdmin,
   createProductAdmin,
@@ -16,34 +16,61 @@ import {
   getRelatedProductsAdmin,
   addRelatedProductAdmin,
   removeRelatedProductAdmin,
-  getAllProductsAdmin
-} from '../../../api/admin/admin.products.api'
-import type { AdminProduct, AdminProductVariant } from '../../../api/admin/admin.products.api'
-import { getAllCategoriesAdmin, getAllBrandsAdmin } from '../../../api/admin/admin.catalog.api'
-import type { AdminCategory, AdminBrand } from '../../../api/admin/admin.catalog.api'
-import { getOptions, type AdminOption } from '../../../api/admin/admin.options.api'
+  getAllProductsAdmin,
+} from "../../../api/admin/admin.products.api";
+import type {
+  AdminProduct,
+  AdminProductVariant,
+} from "../../../api/admin/admin.products.api";
+import {
+  getAllCategoriesAdmin,
+  getAllBrandsAdmin,
+} from "../../../api/admin/admin.catalog.api";
+import type {
+  AdminCategory,
+  AdminBrand,
+} from "../../../api/admin/admin.catalog.api";
+import {
+  getOptions,
+  type AdminOption,
+} from "../../../api/admin/admin.options.api";
+import {
+  getAllTaxClasses,
+  getAllWeightClasses,
+  getAllLengthClasses,
+  type TaxClass,
+  type WeightClass,
+  type LengthClass,
+} from "../../../api/admin/admin.settings.api";
 import {
   getFilterGroups,
   addFilterToVariantAdmin,
   removeFilterFromVariantAdmin,
   type AdminFilterGroup,
-} from '../../../api/admin/admin.filters.api'
-import { formatPaise } from '../../../utils/currency'
+} from "../../../api/admin/admin.filters.api";
+import { formatPaise } from "../../../utils/currency";
 
 const ProductForm = () => {
-  const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
-  const isEdit = Boolean(id)
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const isEdit = Boolean(id);
 
-  const [loading, setLoading] = useState(isEdit)
-  const [saving, setSaving] = useState(false)
-  const [categories, setCategories] = useState<AdminCategory[]>([])
-  const [brands, setBrands] = useState<AdminBrand[]>([])
-  const [options, setOptions] = useState<AdminOption[]>([])
-  const [filterGroups, setFilterGroups] = useState<AdminFilterGroup[]>([])
-  const [editingVariant, setEditingVariant] = useState<AdminProductVariant | null>(null)
-  const [showBrandDropdown, setShowBrandDropdown] = useState(false)
-  const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [loading, setLoading] = useState(isEdit);
+  const [saving, setSaving] = useState(false);
+  const [categories, setCategories] = useState<AdminCategory[]>([]);
+  const [brands, setBrands] = useState<AdminBrand[]>([]);
+  const [options, setOptions] = useState<AdminOption[]>([]);
+  const [filterGroups, setFilterGroups] = useState<AdminFilterGroup[]>([]);
+  const [taxClasses, setTaxClasses] = useState<TaxClass[]>([]);
+  const [weightClasses, setWeightClasses] = useState<WeightClass[]>([]);
+  const [lengthClasses, setLengthClasses] = useState<LengthClass[]>([]);
+  const [editingVariant, setEditingVariant] =
+    useState<AdminProductVariant | null>(null);
+  const [showBrandDropdown, setShowBrandDropdown] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   const [formData, setFormData] = useState<Partial<AdminProduct>>({
     name: "",
@@ -73,16 +100,23 @@ const ProductForm = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [cats, brs, opts, groups] = await Promise.all([
-          getAllCategoriesAdmin(), 
-          getAllBrandsAdmin(),
-          getOptions(),
-          getFilterGroups().catch(() => [] as AdminFilterGroup[])
-        ])
-        setCategories(cats)
-        setBrands(brs)
-        setOptions(opts)
-        setFilterGroups(groups)
+        const [cats, brs, opts, groups, taxes, weights, lengths] =
+          await Promise.all([
+            getAllCategoriesAdmin(),
+            getAllBrandsAdmin(),
+            getOptions(),
+            getFilterGroups().catch(() => [] as AdminFilterGroup[]),
+            getAllTaxClasses().catch(() => [] as TaxClass[]),
+            getAllWeightClasses().catch(() => [] as WeightClass[]),
+            getAllLengthClasses().catch(() => [] as LengthClass[]),
+          ]);
+        setTaxClasses(taxes);
+        setWeightClasses(weights);
+        setLengthClasses(lengths);
+        setCategories(cats);
+        setBrands(brs);
+        setOptions(opts);
+        setFilterGroups(groups);
 
         if (isEdit && id) {
           const product = await getProductByIdAdmin(id);
@@ -186,8 +220,8 @@ const ProductForm = () => {
             console.warn("Category assignment failed (non-blocking):", catErr);
           }
         }
-        toast.success('Product updated successfully!')
-        navigate('/admin/products')
+        toast.success("Product updated successfully!");
+        navigate("/admin/products");
       } else {
         // name is required for creation
         if (!cleanData.name) {
@@ -222,21 +256,79 @@ const ProductForm = () => {
       setEditingVariant(null);
       return;
     }
-    
+
     // Map option values to IDs: prefer the id the API sends, fall back to a name lookup
-    let optionValueIds: string[] = []
+    let optionValueIds: string[] = [];
     if (variant.optionValues) {
-      optionValueIds = variant.optionValues.map(ov => {
-        if (ov.optionValueId) return ov.optionValueId
-        const opt = options.find(o => o.name === ov.optionName)
-        const val = opt?.values.find(v => v.value === ov.valueName)
-        return val?.id || ''
-      }).filter(id => id !== '')
+      optionValueIds = variant.optionValues
+        .map((ov) => {
+          if (ov.optionValueId) return ov.optionValueId;
+          const opt = options.find((o) => o.name === ov.optionName);
+          const val = opt?.values.find((v) => v.value === ov.valueName);
+          return val?.id || "";
+        })
+        .filter((id) => id !== "");
     }
-    
-    const filterValueIds = (variant.filterValues || []).map(fv => fv.filterValueId)
-    setEditingVariant({ ...variant, optionValueIds, filterValueIds })
-  }
+
+    const filterValueIds = (variant.filterValues || []).map(
+      (fv) => fv.filterValueId,
+    );
+    setEditingVariant({ ...variant, optionValueIds, filterValueIds });
+  };
+
+  // What this variant would inherit: its selected option values (by option order), then the product
+  const inheritedMeasurements = (() => {
+    const chosen = editingVariant?.optionValueIds ?? [];
+    const fromOptions = options
+      .slice()
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+      .flatMap((o) =>
+        o.values
+          .filter((v) => chosen.includes(v.id))
+          .map((v) => ({ v, label: `${o.name} ${v.value}` })),
+      );
+    const w = fromOptions.find((x) => x.v.weightGrams != null);
+    const d = fromOptions.find(
+      (x) =>
+        x.v.dimensionLength != null ||
+        x.v.dimensionWidth != null ||
+        x.v.dimensionHeight != null,
+    );
+    return {
+      weight: w
+        ? {
+            grams: w.v.weightGrams as number,
+            weightClassId: w.v.weightClassId ?? null,
+            source: w.label,
+          }
+        : formData.weightGrams != null
+          ? {
+              grams: formData.weightGrams,
+              weightClassId: formData.weightClassId ?? null,
+              source: "product",
+            }
+          : null,
+      dimensions: d
+        ? {
+            length: d.v.dimensionLength ?? null,
+            width: d.v.dimensionWidth ?? null,
+            height: d.v.dimensionHeight ?? null,
+            lengthClassId: d.v.lengthClassId ?? null,
+            source: d.label,
+          }
+        : formData.dimensionLength != null ||
+            formData.dimensionWidth != null ||
+            formData.dimensionHeight != null
+          ? {
+              length: formData.dimensionLength ?? null,
+              width: formData.dimensionWidth ?? null,
+              height: formData.dimensionHeight ?? null,
+              lengthClassId: formData.lengthClassId ?? null,
+              source: "product",
+            }
+          : null,
+    };
+  })();
 
   const handleUpdateVariant = async (variant: AdminProductVariant) => {
     try {
@@ -264,13 +356,36 @@ const ProductForm = () => {
           sellingPrice:
             variant.sellingPrice !== undefined ? variant.sellingPrice : null,
           stock: variant.stock,
-          optionValueIds: variant.optionValueIds
-        })
-        const filterValues = await syncVariantFilters(created.id, [], variant.filterValueIds || [])
-        setFormData(prev => ({
+          optionValueIds: variant.optionValueIds,
+          ...(variant.taxClassId ? { taxClassId: variant.taxClassId } : {}),
+          ...(variant.weightGrams != null
+            ? { weightGrams: variant.weightGrams }
+            : {}),
+          ...(variant.weightClassId
+            ? { weightClassId: variant.weightClassId }
+            : {}),
+          ...(variant.dimensionLength != null
+            ? { dimensionLength: variant.dimensionLength }
+            : {}),
+          ...(variant.dimensionWidth != null
+            ? { dimensionWidth: variant.dimensionWidth }
+            : {}),
+          ...(variant.dimensionHeight != null
+            ? { dimensionHeight: variant.dimensionHeight }
+            : {}),
+          ...(variant.lengthClassId
+            ? { lengthClassId: variant.lengthClassId }
+            : {}),
+        });
+        const filterValues = await syncVariantFilters(
+          created.id,
+          [],
+          variant.filterValueIds || [],
+        );
+        setFormData((prev) => ({
           ...prev,
-          variants: [...(prev.variants || []), { ...created, filterValues }]
-        }))
+          variants: [...(prev.variants || []), { ...created, filterValues }],
+        }));
       } else {
         // Update existing variant
         const updated = await updateProductVariantAdmin(variant.id, {
@@ -279,14 +394,32 @@ const ProductForm = () => {
             variant.sellingPrice !== undefined ? variant.sellingPrice : null,
           stock: variant.stock,
           sku: variant.sku,
-          optionValueIds: variant.optionValueIds
-        })
-        const originalIds = (formData.variants?.find(v => v.id === variant.id)?.filterValues || []).map(fv => fv.filterValueId)
-        const filterValues = await syncVariantFilters(variant.id, originalIds, variant.filterValueIds || [])
-        setFormData(prev => ({
+          optionValueIds: variant.optionValueIds,
+          // null clears the override so the variant uses its product's tax class again
+          taxClassId: variant.taxClassId || null,
+          // null clears the override so the variant uses its product's weight again
+          weightGrams: variant.weightGrams ?? null,
+          weightClassId: variant.weightClassId || null,
+          dimensionLength: variant.dimensionLength ?? null,
+          dimensionWidth: variant.dimensionWidth ?? null,
+          dimensionHeight: variant.dimensionHeight ?? null,
+          lengthClassId: variant.lengthClassId || null,
+        });
+        const originalIds = (
+          formData.variants?.find((v) => v.id === variant.id)?.filterValues ||
+          []
+        ).map((fv) => fv.filterValueId);
+        const filterValues = await syncVariantFilters(
+          variant.id,
+          originalIds,
+          variant.filterValueIds || [],
+        );
+        setFormData((prev) => ({
           ...prev,
-          variants: prev.variants?.map(v => v.id === variant.id ? { ...v, ...updated, filterValues } : v)
-        }))
+          variants: prev.variants?.map((v) =>
+            v.id === variant.id ? { ...v, ...updated, filterValues } : v,
+          ),
+        }));
       }
       setEditingVariant(null);
     } catch (err: any) {
@@ -313,17 +446,6 @@ const ProductForm = () => {
     ]);
     return desiredIds.map((filterValueId) => ({ variantId, filterValueId }));
   };
-
-  // Filters are per variant: apply the difference between what was saved and what is selected.
-  const syncVariantFilters = async (variantId: string, originalIds: string[], desiredIds: string[]) => {
-    const toAdd = desiredIds.filter(fid => !originalIds.includes(fid))
-    const toRemove = originalIds.filter(fid => !desiredIds.includes(fid))
-    await Promise.all([
-      ...toAdd.map(fid => addFilterToVariantAdmin(variantId, fid)),
-      ...toRemove.map(fid => removeFilterFromVariantAdmin(variantId, fid)),
-    ])
-    return desiredIds.map(filterValueId => ({ variantId, filterValueId }))
-  }
 
   const handleDeleteVariant = async (variantId: string) => {
     if (!window.confirm("Are you sure you want to delete this variant?"))
@@ -548,8 +670,11 @@ const ProductForm = () => {
       {/* â”€â”€ Variant Edit Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {editingVariant && (
         <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setEditingVariant(null)} />
-          <div className="relative bg-background-light border border-primary/20 rounded-2xl p-8 w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl">
+          <div
+            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            onClick={() => setEditingVariant(null)}
+          />
+          <div className="relative bg-background-light border border-primary/20 rounded-2xl p-8 w-full max-w-5xl max-h-[92vh] overflow-y-auto shadow-2xl">
             <h3 className="text-lg font-bold text-text-main-light mb-4">
               {editingVariant.id
                 ? `Edit Variant: ${editingVariant.sku}`
@@ -640,75 +765,161 @@ const ProductForm = () => {
                   </div>
                 </div>
 
-              {/* Options (Size, Shade, etc) — compact grid; scrolls if many options are added */}
-              {options.length > 0 && (
-                <div className="mt-4 space-y-2">
-                  <label className="text-xs font-bold text-text-muted uppercase">Options</label>
-                  <div className="grid grid-cols-2 gap-3 max-h-48 overflow-y-auto pr-1">
-                    {options.map(opt => {
-                      const selectedValId = editingVariant.optionValueIds?.find(id => opt.values.some(v => v.id === id)) || ''
-                      return (
-                        <div key={opt.id} className="space-y-1 min-w-0">
-                          <label className="text-[11px] font-bold text-text-muted uppercase truncate block">{opt.name}</label>
-                          <select
-                            value={selectedValId}
-                            onChange={e => {
-                              const newId = e.target.value
-                              const otherIds = (editingVariant.optionValueIds || []).filter(id => !opt.values.some(v => v.id === id))
-                              setEditingVariant({ 
-                                ...editingVariant, 
-                                optionValueIds: newId ? [...otherIds, newId] : otherIds 
-                              })
-                            }}
-                            className="w-full bg-background-main border border-primary/20 rounded-lg px-3 py-2 text-sm text-text-main-light outline-none focus:border-primary"
-                          >
-                            <option value="">None</option>
-                            {opt.values.map(val => (
-                              <option key={val.id} value={val.id}>{val.value}</option>
-                            ))}
-                          </select>
-                        </div>
-                      )
-                    })}
+                {/* Weight & size — per variant. Blank = inherited from the selected option values (or the product) */}
+                <div className="space-y-3 mt-4 p-4 rounded-xl border border-primary/10 bg-background-main/40">
+                  <div>
+                    <label className="text-xs font-bold text-text-muted uppercase">
+                      Package weight &amp; dimensions (for shipping)
+                    </label>
+                    <p className="text-[11px] text-text-muted mt-0.5">
+                      The packed parcel, not the product quantity (30ml, 50ml…
+                      is chosen under Options).{" "}
+                      {inheritedMeasurements.weight ||
+                      inheritedMeasurements.dimensions
+                        ? "Leave a field blank to use the value inherited from the selected options."
+                        : "Leave blank if not needed, or set it once on an option value (Admin → Options) so every matching variant inherits it."}
+                    </p>
                   </div>
-                </div>
-              )}
-
-              {/* Filters — per variant, since each variant can belong to different filters */}
-              {filterGroups.length > 0 && (
-                <div className="mt-4 space-y-2">
-                  <label className="text-xs font-bold text-text-muted uppercase">Filters</label>
-                  <div className="space-y-3 max-h-48 overflow-y-auto pr-1">
-                    {filterGroups.filter(g => g.isActive !== false && (g.values || []).length > 0).map(group => (
-                      <div key={group.id} className="space-y-1.5">
-                        <p className="text-[11px] font-bold text-text-muted uppercase">{group.name}</p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {group.values.map(val => {
-                            const on = (editingVariant.filterValueIds || []).includes(val.id)
-                            return (
-                              <button
-                                key={val.id}
-                                type="button"
-                                onClick={() => setEditingVariant({
-                                  ...editingVariant,
-                                  filterValueIds: on
-                                    ? (editingVariant.filterValueIds || []).filter(fid => fid !== val.id)
-                                    : [...(editingVariant.filterValueIds || []), val.id],
-                                })}
-                                className={`px-2.5 py-1 rounded-full text-xs font-bold border transition-all cursor-pointer ${
-                                  on
-                                    ? 'bg-primary text-white border-primary'
-                                    : 'bg-background-main text-text-muted border-primary/20 hover:border-primary/50'
-                                }`}
-                              >
-                                {val.name}
-                              </button>
-                            )
-                          })}
-                        </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-text-muted uppercase">
+                        Weight
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        step="any"
+                        value={editingVariant.weightGrams ?? ""}
+                        onChange={(e) =>
+                          setEditingVariant({
+                            ...editingVariant,
+                            weightGrams:
+                              e.target.value === ""
+                                ? null
+                                : Number(e.target.value),
+                          })
+                        }
+                        placeholder={
+                          inheritedMeasurements.weight
+                            ? `${inheritedMeasurements.weight.grams} (${inheritedMeasurements.weight.source})`
+                            : ""
+                        }
+                        className="w-full bg-background-main border border-primary/20 rounded-lg px-3 py-2 text-sm text-text-main-light outline-none focus:border-primary"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-text-muted uppercase">
+                        Weight Class
+                      </label>
+                      <select
+                        value={editingVariant.weightClassId || ""}
+                        onChange={(e) =>
+                          setEditingVariant({
+                            ...editingVariant,
+                            weightClassId: e.target.value || null,
+                          })
+                        }
+                        className="w-full bg-background-main border border-primary/20 rounded-lg px-3 py-2 text-sm text-text-main-light outline-none focus:border-primary"
+                      >
+                        <option value="">
+                          {inheritedMeasurements.weight?.weightClassId
+                            ? "Inherited"
+                            : "None"}
+                        </option>
+                        {weightClasses.map((w) => (
+                          <option key={w.id} value={w.id}>
+                            {w.name} ({w.unit})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-4 gap-3">
+                    {(
+                      [
+                        ["dimensionLength", "Length", "length"],
+                        ["dimensionWidth", "Width", "width"],
+                        ["dimensionHeight", "Height", "height"],
+                      ] as const
+                    ).map(([key, label, dimKey]) => (
+                      <div key={key} className="space-y-1 min-w-0">
+                        <label className="text-[11px] font-bold text-text-muted uppercase">
+                          {label}
+                        </label>
+                        <input
+                          type="number"
+                          min={0}
+                          step="any"
+                          value={editingVariant[key] ?? ""}
+                          onChange={(e) =>
+                            setEditingVariant({
+                              ...editingVariant,
+                              [key]:
+                                e.target.value === ""
+                                  ? null
+                                  : Number(e.target.value),
+                            })
+                          }
+                          placeholder={
+                            inheritedMeasurements.dimensions?.[dimKey] != null
+                              ? String(inheritedMeasurements.dimensions[dimKey])
+                              : ""
+                          }
+                          className="w-full bg-background-main border border-primary/20 rounded-lg px-3 py-2 text-sm text-text-main-light outline-none focus:border-primary"
+                        />
                       </div>
                     ))}
+                    <div className="space-y-1 min-w-0">
+                      <label className="text-[11px] font-bold text-text-muted uppercase">
+                        Unit
+                      </label>
+                      <select
+                        value={editingVariant.lengthClassId || ""}
+                        onChange={(e) =>
+                          setEditingVariant({
+                            ...editingVariant,
+                            lengthClassId: e.target.value || null,
+                          })
+                        }
+                        className="w-full bg-background-main border border-primary/20 rounded-lg px-2 py-2 text-sm text-text-main-light outline-none focus:border-primary"
+                      >
+                        <option value="">
+                          {inheritedMeasurements.dimensions?.lengthClassId
+                            ? "Inherited"
+                            : "None"}
+                        </option>
+                        {lengthClasses.map((l) => (
+                          <option key={l.id} value={l.id}>
+                            {l.unit}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
+                  {inheritedMeasurements.weight &&
+                    editingVariant.weightGrams == null && (
+                      <p className="text-[11px] text-primary">
+                        Weight inherited from{" "}
+                        {inheritedMeasurements.weight.source}:{" "}
+                        {inheritedMeasurements.weight.grams} g
+                      </p>
+                    )}
+                  {inheritedMeasurements.dimensions &&
+                    editingVariant.dimensionLength == null &&
+                    editingVariant.dimensionWidth == null &&
+                    editingVariant.dimensionHeight == null && (
+                      <p className="text-[11px] text-primary">
+                        Package size inherited from{" "}
+                        {inheritedMeasurements.dimensions.source}:{" "}
+                        {[
+                          inheritedMeasurements.dimensions.length,
+                          inheritedMeasurements.dimensions.width,
+                          inheritedMeasurements.dimensions.height,
+                        ]
+                          .map((d) => d ?? "–")
+                          .join(" × ")}
+                      </p>
+                    )}
                 </div>
 
                 {/* Tax class — per variant; blank means "same as the product" */}

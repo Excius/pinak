@@ -2,42 +2,32 @@ import axiosInstance from "./axiosInstance";
 import { getProducts } from "./products.api";
 
 export interface ComboKit {
-  id: string;
-  name: string;
-  slug: string;
-  description?: string;
-  audience?: string;
-  price: number;
-  taxAmount?: number;
-  priceWithTax?: number;
-  pricingStrategy: string;
-  discountType?: string;
-  discountValue?: number;
-  tags: string[];
+  id: string
+  name: string
+  slug: string
+  description?: string
+  audience?: string
+  price: number
+  taxAmount?: number
+  priceWithTax?: number
+  pricingStrategy: string
+  discountType?: string
+  discountValue?: number
+  tags: string[]
   /** Legacy single image; the API now sends the gallery in `images`. */
-  imageUrl?: string;
-  images?: Array<{
-    id?: string;
-    url: string;
-    altText?: string | null;
-    isPrimary?: boolean;
-    sortOrder?: number;
-  }>;
-  viewCount: number;
-  purchasedCount: number;
-  isActive: boolean;
-  items?: ComboKitItem[];
-  createdAt: string;
-  updatedAt: string;
+  imageUrl?: string
+  images?: Array<{ id?: string; url: string; altText?: string | null; isPrimary?: boolean; sortOrder?: number }>
+  viewCount: number
+  purchasedCount: number
+  isActive: boolean
+  items?: ComboKitItem[]
+  createdAt: string
+  updatedAt: string
 }
 
 /** Primary image of a combo kit (falls back to the first image, then the legacy field). */
-export const getComboKitImageUrl = (
-  combo: Pick<ComboKit, "images" | "imageUrl">,
-): string | undefined =>
-  combo.images?.find((img) => img.isPrimary)?.url ??
-  combo.images?.[0]?.url ??
-  combo.imageUrl;
+export const getComboKitImageUrl = (combo: Pick<ComboKit, 'images' | 'imageUrl'>): string | undefined =>
+  combo.images?.find((img) => img.isPrimary)?.url ?? combo.images?.[0]?.url ?? combo.imageUrl
 
 export interface ComboKitItem {
   id: string;

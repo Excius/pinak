@@ -12,6 +12,7 @@ import {
   generateInventoryXLSX,
   type InventoryExportRow,
 } from "../lib/spreadsheet.js";
+import { variantTaxClass } from "../lib/taxRates.js";
 
 // Input types that extend Prisma types with additional fields for API input
 type ProductCreateInputWithExtras = Prisma.ProductCreateInput & {
@@ -648,12 +649,14 @@ export class ProductService {
 
       if (p.variants && p.variants.length > 0) {
         for (const v of p.variants) {
+          // A variant's own tax class (if set) overrides the product's
+          const variantTax = variantTaxClass(v, p.taxClass);
           rows.push({
             name: p.name,
             mrp: v.price / 100, // paise to Rupees
             hsn,
             parentGroup: brandName,
-            taxRate,
+            taxRate: variantTax ? Math.round(variantTax.rate * 100) / 10000 : taxRate,
             sku: v.sku,
             sellingPrice:
               v.sellingPrice !== null && v.sellingPrice !== undefined

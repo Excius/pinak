@@ -440,9 +440,7 @@ const ProductDetail: React.FC = () => {
                 </div>
                 <p className="text-xs text-text-muted mt-1">
                   Price inclusive of all taxes
-                  {(selectedVariant?.taxClass ?? product.taxClass)?.name
-                    ? ` (${(selectedVariant?.taxClass ?? product.taxClass)?.name})`
-                    : ""}
+                  {(selectedVariant?.taxClass ?? product.taxClass)?.name ? ` (${(selectedVariant?.taxClass ?? product.taxClass)?.name})` : ''}
                 </p>
               </div>
             )}

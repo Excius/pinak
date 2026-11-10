@@ -160,6 +160,33 @@ const defaultSettings = [
     description: 'Customer support phone number',
     isPublic: true,
   },
+  // Shipping charge (paise) — editable in Admin → Settings → Shipping
+  {
+    key: 'SHIPPING_FEE',
+    value: '10000',
+    group: 'shipping',
+    description: 'Flat shipping charge in paise for orders that need shipping',
+    isPublic: true,
+  },
+  // Supplier details printed on invoices — editable in Admin → Settings → Supplier Details
+  ...Object.entries({
+    SUPPLIER_COMPANY_NAME: 'Pinak Beauty & Care Pvt. Ltd.',
+    SUPPLIER_GSTIN: '27AAACP1234A1Z5',
+    SUPPLIER_PAN: 'AAACP1234A',
+    SUPPLIER_STATE: 'Maharashtra',
+    SUPPLIER_ADDRESS_LINE1: 'Building A, Tech Park, BKC',
+    SUPPLIER_ADDRESS_LINE2: '',
+    SUPPLIER_CITY: 'Mumbai',
+    SUPPLIER_PINCODE: '400051',
+    SUPPLIER_EMAIL: 'support@pinak.com',
+    SUPPLIER_PHONE: '+91-22-4000-1000',
+  }).map(([key, value]) => ({
+    key,
+    value,
+    group: 'supplier',
+    description: 'Supplier details printed on tax invoices',
+    isPublic: false,
+  })),
 ];
 
 // ---------------------------------------------------------------------------
@@ -1074,6 +1101,35 @@ async function main() {
     });
   }
 
+  // Size option values carry the measurements their variants inherit (weight in grams, size in mm)
+  const sizeMeasurements: Record<string, { weightGrams: number; l: number; w: number; h: number }> = {
+    "30ml": { weightGrams: 90, l: 40, w: 40, h: 105 },
+    "35ml": { weightGrams: 100, l: 40, w: 40, h: 110 },
+    "50ml": { weightGrams: 130, l: 45, w: 45, h: 120 },
+    "100ml": { weightGrams: 230, l: 55, w: 55, h: 150 },
+    "200ml": { weightGrams: 420, l: 65, w: 65, h: 185 },
+    "4g": { weightGrams: 25, l: 20, w: 20, h: 95 },
+    "8ml": { weightGrams: 35, l: 22, w: 22, h: 110 },
+    "10ml": { weightGrams: 40, l: 24, w: 24, h: 115 },
+    "12g": { weightGrams: 60, l: 70, w: 70, h: 20 },
+    "15g": { weightGrams: 75, l: 75, w: 75, h: 22 },
+  };
+  for (const [name, m] of Object.entries(sizeMeasurements)) {
+    const ov = optionValueMap.Size?.[name];
+    if (!ov) continue;
+    await prisma.optionValue.update({
+      where: { id: ov.id },
+      data: {
+        weightGrams: m.weightGrams,
+        weightClassId: gramId,
+        dimensionLength: m.l,
+        dimensionWidth: m.w,
+        dimensionHeight: m.h,
+        lengthClassId: mmId,
+      },
+    });
+  }
+
   // A third option so the dynamic option UI has something beyond Size/Shade
   const optionFinish = await prisma.option.create({
     data: { name: "Finish", sortOrder: 2 },
@@ -1141,9 +1197,6 @@ async function main() {
         tags: Array.from(new Set([...variantTags, brandName.toLowerCase().replace(/\s+/g, "-")])),
         requiresShipping: true,
         outOfStockStatus: stockStatuses[i % stockStatuses.length],
-        dimensionLength: 60 + i * 4,
-        dimensionWidth: 40 + (i % 4) * 5,
-        dimensionHeight: 110 + (i % 5) * 12,
         sortOrder: i,
         viewCount: 120 + i * 37,
       },
@@ -1170,8 +1223,10 @@ async function main() {
           ean: `8909876${String(100000 + i * 53 + j).padStart(6, "0")}`,
           sellingPrice: onSale ? roundToRupee(variant.price * 0.85) : null,
           comparePrice: hasCompare ? roundToRupee(variant.price * 1.2) : null,
-          weightGrams: (product.weightGrams ?? 30) + j * 5,
-          weightClassId: product.weightClassId,
+          // Weight/size normally come from the Size option value; one variant overrides to show it
+          ...(i === 0 && j === 0 ? { weightGrams: 135, weightClassId: gramId, dimensionLength: 48, dimensionWidth: 48, dimensionHeight: 118, lengthClassId: mmId } : {}),
+          // A variant that overrides its product's tax class (shows the per-variant tax option)
+          ...(i === 3 && j === 1 && taxClassMap["GST 5%"] ? { taxClassId: taxClassMap["GST 5%"].id } : {}),
           // Stock edge cases for the inventory / alerts screens
           ...(i === 0 && isLastVariant ? { stock: 0 } : {}),
           ...(i === 1 && isLastVariant ? { stock: 3 } : {}),
@@ -1210,7 +1265,7 @@ async function main() {
       state: "Pending verification (inactive import)", isActive: false, isDeleted: false,
       outOfStockStatus: "IN_STOCK" as const, categoryId: catForSkin?.id, tax: "GST 18%",
       tags: ["HSN:3304", "imported", "hand-care"],
-      variants: [{ sku: "IHC-001", price: 24900, stock: 25 }, { sku: "IHC-002", price: 39900, stock: 10 }],
+      variants: [{ sku: "IHC-001", price: 24900, stock: 25, size: "50ml" }, { sku: "IHC-002", price: 39900, stock: 10, size: "100ml" }],
     },
     {
       name: "Kohl Kajal Pencil (Discontinued)", slug: "kohl-kajal-pencil", brand: "EyeGlow",
@@ -1254,9 +1309,6 @@ async function main() {
         weightClassId: gramId,
         lengthClassId: mmId,
         weightGrams: 25,
-        dimensionLength: 70,
-        dimensionWidth: 40,
-        dimensionHeight: 120,
         outOfStockStatus: def.outOfStockStatus,
         isActive: def.isActive,
         isDeleted: def.isDeleted,
@@ -1282,6 +1334,13 @@ async function main() {
         },
       });
       createdVariants.push({ id: variant.id, sku: v.sku, price: v.price });
+      // Variants of one product must differ by an option, or shoppers cannot tell them apart
+      const sizeValue = (v as { size?: string }).size;
+      if (sizeValue && optionValueMap.Size?.[sizeValue]) {
+        await prisma.variantOptionValue.create({
+          data: { variantId: variant.id, optionValueId: optionValueMap.Size[sizeValue].id },
+        });
+      }
       await prisma.productImage.create({
         data: {
           productVariantId: variant.id,

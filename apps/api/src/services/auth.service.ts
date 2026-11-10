@@ -260,6 +260,9 @@ export class AuthService {
         if (!user) {
           return { ok: false, message: "Invalid or expired refresh token" };
         }
+        if (user.status !== "ACTIVE") {
+          return { ok: false, message: "This account is not active" };
+        }
 
         const newSession = await tx.session.create({
           data: {
