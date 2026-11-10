@@ -22,6 +22,12 @@ interface ValueFormData {
   swatchColorHex: string | null
 }
 
+const getApiErrorMessage = (err: unknown, fallback: string): string => {
+  const data = (err as { response?: { data?: { message?: string; errors?: { message?: string }[] } } })?.response?.data
+  const detail = data?.errors?.map(e => e.message).filter(Boolean).join('. ')
+  return [data?.message, detail].filter(Boolean).join(': ') || fallback
+}
+
 const emptyOptionForm: OptionFormData = { name: '', sortOrder: 0 }
 const emptyValueForm: ValueFormData = { value: '', sortOrder: 0, swatchColorHex: null }
 
@@ -47,6 +53,9 @@ const OptionList = () => {
   // Delete confirmation
   const [deleteConfirm, setDeleteConfirm] = useState<{ type: 'option' | 'value'; id: string; label: string } | null>(null)
 
+  // Last API error, scoped to the modal it belongs to so it is never shown in the wrong place
+  const [actionError, setActionError] = useState<{ scope: 'option' | 'value' | 'delete'; message: string } | null>(null)
+
   // Expanded options
   const [expandedOptions, setExpandedOptions] = useState<Set<string>>(new Set())
 
@@ -68,12 +77,14 @@ const OptionList = () => {
   // ── Option CRUD ───────────────────────────────────────────────────────
 
   const openCreateOption = () => {
+    setActionError(null)
     setEditingOption(null)
     setOptionForm(emptyOptionForm)
     setShowOptionModal(true)
   }
 
   const openEditOption = (option: AdminOption) => {
+    setActionError(null)
     setEditingOption(option)
     setOptionForm({ name: option.name, sortOrder: option.sortOrder })
     setShowOptionModal(true)
@@ -82,6 +93,7 @@ const OptionList = () => {
   const handleSaveOption = async () => {
     if (!optionForm.name.trim()) return
     setSaving(true)
+    setActionError(null)
     try {
       if (editingOption) {
         await updateOption(editingOption.id, optionForm)
@@ -92,24 +104,28 @@ const OptionList = () => {
       await fetchOptions()
     } catch (err) {
       console.error('Failed to save option', err)
+      setActionError({ scope: 'option', message: getApiErrorMessage(err, 'Failed to save option.') })
     } finally {
       setSaving(false)
     }
   }
 
   const handleDeleteOption = async (id: string) => {
+    setActionError(null)
     try {
       await deleteOption(id)
       setDeleteConfirm(null)
       await fetchOptions()
     } catch (err) {
       console.error('Failed to delete option', err)
+      setActionError({ scope: 'delete', message: getApiErrorMessage(err, 'Failed to delete option.') })
     }
   }
 
   // ── Value CRUD ────────────────────────────────────────────────────────
 
   const openCreateValue = (optionId: string) => {
+    setActionError(null)
     setValueParentId(optionId)
     setEditingValue(null)
     setValueForm(emptyValueForm)
@@ -117,6 +133,7 @@ const OptionList = () => {
   }
 
   const openEditValue = (optionId: string, val: AdminOptionValue) => {
+    setActionError(null)
     setValueParentId(optionId)
     setEditingValue(val)
     setValueForm({
@@ -130,6 +147,7 @@ const OptionList = () => {
   const handleSaveValue = async () => {
     if (!valueForm.value.trim() || !valueParentId) return
     setSavingValue(true)
+    setActionError(null)
     try {
       const payload = {
         value: valueForm.value.trim(),
@@ -145,18 +163,21 @@ const OptionList = () => {
       await fetchOptions()
     } catch (err) {
       console.error('Failed to save option value', err)
+      setActionError({ scope: 'value', message: getApiErrorMessage(err, 'Failed to save option value.') })
     } finally {
       setSavingValue(false)
     }
   }
 
   const handleDeleteValue = async (valueId: string) => {
+    setActionError(null)
     try {
       await deleteOptionValue(valueId)
       setDeleteConfirm(null)
       await fetchOptions()
     } catch (err) {
       console.error('Failed to delete option value', err)
+      setActionError({ scope: 'delete', message: getApiErrorMessage(err, 'Failed to delete option value.') })
     }
   }
 
@@ -213,6 +234,12 @@ const OptionList = () => {
                   className="w-full bg-background-main border border-primary/20 rounded-xl px-4 py-3 text-text-main-light outline-none focus:border-primary"
                 />
               </div>
+              {actionError?.scope === 'option' && (
+                <div className="mt-4 p-3 rounded-xl text-sm bg-red-500/10 border border-red-500/20 text-red-400 flex items-start gap-2 text-left" role="alert">
+                  <span className="material-icons-outlined text-base">error_outline</span>
+                  <span>{actionError.message}</span>
+                </div>
+              )}
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={() => setShowOptionModal(false)}
@@ -327,6 +354,12 @@ const OptionList = () => {
                 />
               </div>
 
+              {actionError?.scope === 'value' && (
+                <div className="mt-4 p-3 rounded-xl text-sm bg-red-500/10 border border-red-500/20 text-red-400 flex items-start gap-2 text-left" role="alert">
+                  <span className="material-icons-outlined text-base">error_outline</span>
+                  <span>{actionError.message}</span>
+                </div>
+              )}
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={() => setShowValueModal(false)}
@@ -350,7 +383,7 @@ const OptionList = () => {
       {/* ── Delete Confirmation ──────────────────────────────────────── */}
       {deleteConfirm && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setDeleteConfirm(null)} />
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => { setActionError(null); setDeleteConfirm(null) }} />
           <div className="relative bg-background-light border border-red-500/20 rounded-2xl p-8 w-full max-w-sm shadow-2xl text-center">
             <span className="material-icons-outlined text-4xl text-red-500 mb-4">warning</span>
             <h3 className="text-lg font-display font-bold text-text-main-light mb-2">
@@ -358,11 +391,24 @@ const OptionList = () => {
             </h3>
             <p className="text-sm text-text-muted mb-6">
               This will permanently remove <strong className="text-text-main-light">{deleteConfirm.label}</strong>
-              {deleteConfirm.type === 'option' ? ' and all its values. This may affect product variants.' : '.'}
+              {deleteConfirm.type === 'option' ? '. An option can only be deleted once all of its values have been removed.' : '. This may affect product variants that use it.'}
             </p>
+            {actionError?.scope === 'delete' && (
+              <div className="mb-6 p-3 rounded-xl text-sm bg-red-500/10 border border-red-500/20 text-red-400 text-left" role="alert">
+                <div className="flex items-start gap-2">
+                  <span className="material-icons-outlined text-base">error_outline</span>
+                  <span>{actionError.message}</span>
+                </div>
+                {/still has values/i.test(actionError.message) && (
+                  <p className="mt-2 text-xs text-red-300">
+                    Delete each value under this option first (expand the option and remove its values), then delete the option.
+                  </p>
+                )}
+              </div>
+            )}
             <div className="flex gap-3">
               <button
-                onClick={() => setDeleteConfirm(null)}
+                onClick={() => { setActionError(null); setDeleteConfirm(null) }}
                 className="flex-1 px-5 py-2.5 rounded-xl font-bold text-sm border border-primary/20 text-text-muted hover:bg-primary/5 transition-all cursor-pointer"
               >
                 Cancel

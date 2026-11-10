@@ -49,4 +49,59 @@ export class CouponRepository {
       },
     });
   }
+
+  // ── Admin CRUD ──────────────────────────────────────────────────────
+
+  async listAdmin(
+    opts: {
+      page: number;
+      limit: number;
+      search?: string;
+      isActive?: boolean;
+      deleted: boolean;
+    },
+    tx?: Prisma.TransactionClient,
+  ) {
+    const db = this.getDb(tx);
+    const where: Prisma.CouponWhereInput = {
+      isDeleted: opts.deleted,
+      ...(opts.isActive !== undefined ? { isActive: opts.isActive } : {}),
+      ...(opts.search
+        ? { code: { contains: opts.search, mode: "insensitive" } }
+        : {}),
+    };
+    const [items, total] = await Promise.all([
+      db.coupon.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        skip: (opts.page - 1) * opts.limit,
+        take: opts.limit,
+      }),
+      db.coupon.count({ where }),
+    ]);
+    return { items, total };
+  }
+
+  async findById(id: string, tx?: Prisma.TransactionClient) {
+    return this.getDb(tx).coupon.findUnique({ where: { id } });
+  }
+
+  async create(
+    data: Prisma.CouponCreateInput,
+    tx?: Prisma.TransactionClient,
+  ) {
+    return this.getDb(tx).coupon.create({ data });
+  }
+
+  async update(
+    id: string,
+    data: Prisma.CouponUpdateInput,
+    tx?: Prisma.TransactionClient,
+  ) {
+    return this.getDb(tx).coupon.update({ where: { id }, data });
+  }
+
+  async hardDelete(id: string, tx?: Prisma.TransactionClient) {
+    return this.getDb(tx).coupon.delete({ where: { id } });
+  }
 }

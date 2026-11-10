@@ -239,7 +239,10 @@ export const toAdminProduct = (product: ProductWithRelations) => {
         images: v.images || [],
         
         // All option values
-        optionValues: v.optionValues || [],
+        optionValues: toVariantOptionValues(v.optionValues),
+
+        // Per-variant filter values (with IDs, for the admin editor)
+        filterValues: v.filterValues || [],
         
         // Timestamps
         createdAt: v.createdAt,
@@ -327,6 +330,21 @@ export const toPublicVariant = (variant: any) => {
 /**
  * Maps variant to ADMIN response
  */
+/**
+ * Flattens variant<->option-value junction rows into { optionName, valueName, ... }.
+ * The admin editor needs the same shape the storefront gets, plus the ids.
+ */
+const toVariantOptionValues = (rows: any[] | undefined) =>
+  (rows || [])
+    .map((ov: any) => ({
+      optionId: ov.optionValue?.optionId ?? ov.optionId,
+      optionValueId: ov.optionValue?.id ?? ov.optionValueId,
+      optionName: ov.optionValue?.option?.name ?? ov.optionName,
+      valueName: ov.optionValue?.value ?? ov.valueName,
+      swatchColorHex: ov.optionValue?.swatchColorHex ?? ov.swatchColorHex ?? null,
+    }))
+    .filter((ov) => ov.optionName && ov.valueName);
+
 export const toAdminVariant = (variant: any) => {
   if (!variant) return null;
 
@@ -347,6 +365,7 @@ export const toAdminVariant = (variant: any) => {
   return {
     // All fields
     ...variant,
+    optionValues: toVariantOptionValues(variant.optionValues),
     sellingPrice,
     taxAmount,
     priceWithTax,

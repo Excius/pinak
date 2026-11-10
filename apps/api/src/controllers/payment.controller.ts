@@ -22,19 +22,14 @@ export class PaymentController {
         return ResponseHandler.badRequest(res, "Missing signature");
       }
 
-      // 1. Verify Webhook Signature
-      // The body MUST be the raw string to verify the signature. 
-      // If we use express.json(), we need raw body. But for simplicity if express.json() is used, 
-      // passing JSON.stringify(req.body) *might* fail if key ordering changes.
-      // Assuming Express is configured to make raw body available, or we just trust Razorpay SDK 
-      // for verifyPayment. We will pass the raw payload object to our service.
-      const payloadString = JSON.stringify(req.body); 
-
-      const isValid = await this.paymentGateway.verifyPayment({
-        orderId: payloadString, // For webhooks, we pass the raw body as 'orderId' to hash
-        status: "SUCCESS",
+      // 1. Verify the webhook signature over the exact raw bytes Razorpay sent.
+      if (!req.rawBody) {
+        return ResponseHandler.badRequest(res, "Missing request body");
+      }
+      const isValid = this.paymentGateway.verifyWebhookSignature(
+        req.rawBody,
         signature,
-      });
+      );
 
       if (!isValid) {
         return ResponseHandler.badRequest(res, "Invalid payment signature");

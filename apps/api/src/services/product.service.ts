@@ -3,9 +3,15 @@ import { deleteObject, uploadBuffer, extractS3KeyFromUrl } from "../lib/s3.js";
 import appConfig from "../lib/config.js";
 import { ProductPaginationOptions } from "../types/pagination.types.js";
 import { Prisma } from "../generated/prisma/client.js";
-import { ValidationError, NotFoundError } from "../lib/error.js";
+import { ValidationError, NotFoundError, BaseError } from "../lib/error.js";
 import { isPrismaP2002 } from "../lib/prisma-errors.js";
 import logger from "../lib/logger.js";
+import {
+  parseSpreadsheet,
+  generateInventoryCSV,
+  generateInventoryXLSX,
+  type InventoryExportRow,
+} from "../lib/spreadsheet.js";
 
 // Input types that extend Prisma types with additional fields for API input
 type ProductCreateInputWithExtras = Prisma.ProductCreateInput & {
@@ -54,6 +60,8 @@ type VariantUpdateDTO = Prisma.ProductVariantUpdateInput & {
   size?: string;
   shade?: string;
 };
+
+const MAX_IMPORT_ROWS = 5000;
 
 export class ProductService {
   constructor(private productRepository: ProductRepository) {}
@@ -363,6 +371,339 @@ export class ProductService {
 
   async updateProductStatus(id: string, isActive: boolean) {
     return this.productRepository.updateProductStatus(id, isActive);
+  }
+
+  async bulkUpdateProductStatus(productIds: string[], isActive: boolean) {
+    if (!productIds || productIds.length === 0) {
+      throw new ValidationError("At least one product ID must be provided");
+    }
+    const updatedCount = await this.productRepository.bulkUpdateProductStatus(
+      productIds,
+      isActive,
+    );
+    return { updatedCount, isActive };
+  }
+
+  /**
+   * Imports products and variants from spreadsheet buffer or CSV string.
+   * All newly imported products are created with isActive: false so admin can verify them.
+   */
+  async importInventory(
+    bufferOrString: Buffer | string,
+    filename?: string,
+  ) {
+    const parseResult = parseSpreadsheet(bufferOrString, filename);
+    const { items, skippedRows } = parseResult;
+
+    if (items.length === 0 && skippedRows.length === 0) {
+      throw new ValidationError(
+        "The spreadsheet does not contain any recognizable product rows. Ensure headers contain at least 'Name' and 'MRP'.",
+      );
+    }
+
+    if (items.length > MAX_IMPORT_ROWS) {
+      throw new ValidationError(
+        `Too many rows (${items.length}). Import at most ${MAX_IMPORT_ROWS} products per file.`,
+      );
+    }
+
+    let createdProducts = 0;
+    let updatedProducts = 0;
+    let createdVariants = 0;
+    let updatedVariants = 0;
+    const errors: { row: number; name?: string; error: string }[] = [];
+
+    // Add skipped rows as validation errors/notes
+    for (const skipped of skippedRows) {
+      errors.push({
+        row: skipped.rowNumber,
+        name: skipped.raw[0] || undefined,
+        error: skipped.reason,
+      });
+    }
+
+    // Cache brand, tax, category Lookups to minimize queries
+    const brandCache = new Map<string, string>(); // name -> brandId
+    const taxCache = new Map<number, string>(); // ratePercent -> taxClassId
+    const categoryCache = new Map<string, string>(); // lowercase name -> categoryId
+    const usedSlugsInBatch = new Set<string>();
+    const usedSkusInBatch = new Set<string>();
+
+    for (const item of items) {
+      try {
+        // 1. Resolve Brand
+        let brandId: string | undefined = undefined;
+        const brandName = (item.parentGroup || "").trim();
+        if (brandName) {
+          const lowerBrand = brandName.toLowerCase();
+          if (brandCache.has(lowerBrand)) {
+            brandId = brandCache.get(lowerBrand);
+          } else {
+            let brand = await this.productRepository.findBrandBySlugOrName(brandName);
+            if (!brand) {
+              brand = await this.productRepository.createBrand(
+                brandName,
+                this.generateSlug(brandName),
+              );
+            }
+            brandId = brand.id;
+            brandCache.set(lowerBrand, brand.id);
+          }
+        }
+
+        // 2. Resolve TaxClass
+        let taxClassId: string | undefined = undefined;
+        const taxRate = item.taxRatePercent;
+        if (taxCache.has(taxRate)) {
+          taxClassId = taxCache.get(taxRate);
+        } else {
+          let taxClass = await this.productRepository.findTaxClassByRate(taxRate);
+          if (!taxClass) {
+            taxClass = await this.productRepository.createTaxClass(
+              `GST ${taxRate}%`,
+              taxRate,
+            );
+          }
+          taxClassId = taxClass.id;
+          taxCache.set(taxRate, taxClass.id);
+        }
+
+        // 3. Resolve Category (if provided)
+        // Exports join multiple categories with "; ", so accept the same on import.
+        const categoryIds: string[] = [];
+        const catNames = (item.category || "")
+          .split(/[;|]/)
+          .map((c) => c.trim())
+          .filter(Boolean);
+        for (const catName of catNames) {
+          const lowerCat = catName.toLowerCase();
+          let id = categoryCache.get(lowerCat);
+          if (!id) {
+            let category =
+              await this.productRepository.findCategoryBySlugOrName(catName);
+            if (!category) {
+              category = await this.productRepository.createCategory(
+                catName,
+                this.generateSlug(catName),
+              );
+            }
+            id = category.id;
+            categoryCache.set(lowerCat, id);
+          }
+          if (!categoryIds.includes(id)) categoryIds.push(id);
+        }
+
+        // 4. Check if variant exists by SKU, or product exists by name or slug
+        let existingVariant = item.sku
+          ? await this.productRepository.findVariantBySku(item.sku)
+          : null;
+
+        let existingProduct: any = existingVariant?.productId
+          ? await this.productRepository.getProductByIdAdmin(existingVariant.productId)
+          : await this.productRepository.findProductByNameOrSlug(
+              item.name,
+              this.generateSlug(item.name),
+              { includeDeleted: true },
+            );
+
+        if (existingProduct) {
+          // Update existing product & variant
+          const targetVariantId =
+            existingVariant?.id ??
+            existingProduct.variants?.find((v: any) => !v.isDeleted)?.id ??
+            existingProduct.variants?.[0]?.id;
+
+          // A new SKU on a product matched by name is an additional variant,
+          // not a reason to overwrite the first variant's price/stock.
+          const addAsNewVariant = Boolean(item.sku) && !existingVariant;
+
+          await this.productRepository.updateImportedProductAndVariant({
+            productId: existingProduct.id,
+            variantId: addAsNewVariant ? undefined : targetVariantId,
+            createVariant: addAsNewVariant,
+            brandId,
+            taxClassId,
+            categoryIds,
+            hsn: item.hsn,
+            mrpPaise: item.mrpPaise,
+            sellingPricePaise: item.sellingPricePaise,
+            stock: item.stock,
+            sku: item.sku,
+            ean: item.ean,
+            weightGrams: item.weightGrams,
+          });
+
+          updatedProducts++;
+          if (targetVariantId && !addAsNewVariant) {
+            updatedVariants++;
+          } else {
+            createdVariants++;
+          }
+        } else {
+          // Create new product & variant (strictly isActive: false)
+          const finalSlug = await this.generateUniqueProductSlug(
+            item.name,
+            usedSlugsInBatch,
+          );
+
+          // Generate SKU if not provided
+          let finalSku = item.sku;
+          if (!finalSku) {
+            const brandCode = (item.parentGroup || "PIN")
+              .replace(/[^a-zA-Z0-9]/g, "")
+              .slice(0, 3)
+              .toUpperCase();
+            const nameCode = item.name
+              .replace(/[^a-zA-Z0-9]/g, "")
+              .slice(0, 4)
+              .toUpperCase();
+            const priceCode = Math.round(item.mrp);
+            const randSuffix = Math.floor(1000 + Math.random() * 9000);
+            finalSku = `${brandCode}-${nameCode}-${priceCode}-${randSuffix}`;
+          }
+
+          // Ensure SKU uniqueness
+          let skuCandidate = finalSku;
+          let skuCounter = 1;
+          while (
+            usedSkusInBatch.has(skuCandidate) ||
+            (await this.productRepository.findVariantBySku(skuCandidate))
+          ) {
+            skuCandidate = `${finalSku}-${skuCounter}`;
+            skuCounter++;
+          }
+          finalSku = skuCandidate;
+          usedSkusInBatch.add(finalSku);
+
+          await this.productRepository.createImportedProductAndVariant({
+            name: item.name,
+            slug: finalSlug,
+            brandId,
+            taxClassId,
+            categoryIds,
+            hsn: item.hsn,
+            mrpPaise: item.mrpPaise,
+            sellingPricePaise: item.sellingPricePaise,
+            stock: item.stock,
+            sku: finalSku,
+            ean: item.ean,
+            weightGrams: item.weightGrams,
+          });
+
+          createdProducts++;
+          createdVariants++;
+        }
+      } catch (err: any) {
+        logger.error(
+          { row: item.rowNumber, name: item.name, err },
+          "Failed to process inventory row:",
+        );
+        errors.push({
+          row: item.rowNumber,
+          name: item.name,
+          // Only operational (validation-style) messages reach the client;
+          // database/internal error text stays in the logs.
+          error:
+            err instanceof BaseError ? err.message : "Failed to import row",
+        });
+      }
+    }
+
+    return {
+      totalProcessed: items.length,
+      createdProducts,
+      updatedProducts,
+      createdVariants,
+      updatedVariants,
+      skippedCount: errors.length,
+      errors,
+    };
+  }
+
+  /**
+   * Exports inventory as CSV string or JSON dataset.
+   */
+  async exportInventory(filters: {
+    status?: "ALL" | "ACTIVE" | "INACTIVE";
+    brandId?: string;
+    categoryId?: string;
+    search?: string;
+    format?: "csv" | "xlsx" | "json";
+  }) {
+    const products = await this.productRepository.getProductsForExport(filters);
+    const rows: InventoryExportRow[] = [];
+
+    for (const p of products) {
+      const categoryNames =
+        p.categories?.map((c: any) => c.category?.name).filter(Boolean).join("; ") || "";
+      const brandName = p.brand?.name ?? "";
+      const taxRate = p.taxClass ? Math.round(p.taxClass.rate * 100) / 10000 : 0.18;
+      const hsn = p.model ?? "";
+      const isProductActive = p.isActive;
+
+      if (p.variants && p.variants.length > 0) {
+        for (const v of p.variants) {
+          rows.push({
+            name: p.name,
+            mrp: v.price / 100, // paise to Rupees
+            hsn,
+            parentGroup: brandName,
+            taxRate,
+            sku: v.sku,
+            sellingPrice:
+              v.sellingPrice !== null && v.sellingPrice !== undefined
+                ? v.sellingPrice / 100
+                : null,
+            stock: v.stock,
+            category: categoryNames,
+            status: isProductActive && v.isActive ? "ACTIVE" : "INACTIVE",
+            ean: v.ean || p.ean || "",
+            weightGrams: v.weightGrams ?? p.weightGrams ?? null,
+          });
+        }
+      } else {
+        rows.push({
+          name: p.name,
+          mrp: 0,
+          hsn,
+          parentGroup: brandName,
+          taxRate,
+          sku: "",
+          sellingPrice: null,
+          stock: 0,
+          category: categoryNames,
+          status: isProductActive ? "ACTIVE" : "INACTIVE",
+          ean: p.ean || "",
+          weightGrams: p.weightGrams ?? null,
+        });
+      }
+    }
+
+    if (filters.format === "json") {
+      return {
+        items: rows,
+        count: rows.length,
+      };
+    }
+
+    if (filters.format === "xlsx") {
+      const buffer = generateInventoryXLSX(rows);
+      const filename = `inventory-export-${new Date().toISOString().slice(0, 10)}.xlsx`;
+      return {
+        buffer,
+        filename,
+        count: rows.length,
+      };
+    }
+
+    const csv = generateInventoryCSV(rows);
+    const filename = `inventory-export-${new Date().toISOString().slice(0, 10)}.csv`;
+
+    return {
+      csv,
+      filename,
+      count: rows.length,
+    };
   }
 
   async createProductVariant(
@@ -940,10 +1281,17 @@ export class ProductService {
   async hardDeleteProduct(id: string) {
     // Business logic validation
 
-    // Validate product exists
-    const product = await this.productRepository.getProductById(id);
+    // Look up in any state (the public getter hides deleted/inactive products)
+    const product = await this.productRepository.getProductByIdAdmin(id);
     if (!product) {
-      throw new ValidationError("Product not found");
+      throw new NotFoundError("Product not found");
+    }
+
+    // Permanent deletion is only allowed from the trash
+    if (!product.isDeleted) {
+      throw new ValidationError(
+        "Only archived (soft-deleted) products can be permanently deleted. Delete the product first.",
+      );
     }
 
     // Collect all dependency counts via the repository
@@ -955,7 +1303,6 @@ export class ProductService {
       featuredCount,
       reviewCount,
       comboKitCount,
-      activeVariantCount,
     } = await this.productRepository.getProductHardDeleteDependencies(id);
 
     const blockers: string[] = [];
@@ -965,7 +1312,6 @@ export class ProductService {
     if (featuredCount) blockers.push("featured sections");
     if (reviewCount) blockers.push("reviews");
     if (comboKitCount) blockers.push("combo kits");
-    if (activeVariantCount) blockers.push("active variants");
 
     if (blockers.length > 0) {
       logger.warn(
@@ -976,7 +1322,20 @@ export class ProductService {
       );
     }
 
-    return this.productRepository.hardDeleteProduct(id);
+    const { imageUrls } = await this.productRepository.hardDeleteProduct(id);
+
+    // Remove image files only after the DB commit so a failed delete never
+    // leaves live rows pointing at missing files. Best-effort: leftovers are logged.
+    if (appConfig.S3_ENABLED) {
+      for (const url of new Set(imageUrls)) {
+        try {
+          const key = extractS3KeyFromUrl(url);
+          if (key) await deleteObject(key);
+        } catch (err) {
+          logger.warn({ productId: id, err }, "Failed to delete S3 object for hard-deleted product");
+        }
+      }
+    }
   }
 
   async hardDeleteProductVariant(id: string) {
@@ -1021,6 +1380,33 @@ export class ProductService {
       .replace(/[^\w\s-]/g, "") // Remove special characters
       .replace(/[\s_-]+/g, "-") // Replace spaces, underscores with hyphens
       .replace(/^-+|-+$/g, ""); // Remove leading/trailing hyphens
+  }
+
+  /**
+   * Generates a collision-free slug checked against the database (including inactive & deleted).
+   */
+  private async generateUniqueProductSlug(
+    name: string,
+    usedSlugsInBatch?: Set<string>,
+  ): Promise<string> {
+    let baseSlug = this.generateSlug(name);
+    if (!baseSlug) {
+      baseSlug = `product-${Date.now()}`;
+    }
+
+    let candidate = baseSlug;
+    let counter = 1;
+
+    while (
+      usedSlugsInBatch?.has(candidate) ||
+      (await this.productRepository.findProductBySlugRaw(candidate))
+    ) {
+      candidate = `${baseSlug}-${counter}`;
+      counter++;
+    }
+
+    usedSlugsInBatch?.add(candidate);
+    return candidate;
   }
 
   private sanitizeSlug(slug: string): string {

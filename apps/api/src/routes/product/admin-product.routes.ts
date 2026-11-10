@@ -10,90 +10,90 @@ export const registerProductAdminProductRoutes = (
   router.get(
     "/admin/all",
     rateLimiter,
-    validateMultiple(ProductTypes.GetAllProductsAdmin),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ProductTypes.GetAllProductsAdmin),
     productController.getAllProductsAdmin,
   );
 
   router.get(
     "/admin/deleted",
     rateLimiter,
-    validateMultiple(ProductTypes.GetAllProductsAdmin),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ProductTypes.GetAllProductsAdmin),
     productController.getDeletedProductsAdmin,
   );
 
   router.get(
     "/admin/status/:status",
     rateLimiter,
-    validateMultiple(ProductTypes.GetAllProductsAdmin),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ProductTypes.GetProductsByStatusAdmin),
     productController.getProductsByStatusAdmin,
   );
 
   router.get(
     "/admin/:id",
     rateLimiter,
-    validateMultiple(ProductTypes.GetProductById),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ProductTypes.GetProductById),
     productController.getProductByIdAdmin,
   );
 
   router.post(
     "/admin",
     rateLimiter,
-    validateMultiple(ProductTypes.CreateProduct),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ProductTypes.CreateProduct),
     productController.createProduct,
   );
 
   router.put(
     "/admin/:id",
     rateLimiter,
-    validateMultiple(ProductTypes.UpdateProduct),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ProductTypes.UpdateProduct),
     productController.updateProduct,
   );
 
   router.patch(
     "/admin/:id/status",
     rateLimiter,
-    validateMultiple(ProductTypes.UpdateProductStatus),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ProductTypes.UpdateProductStatus),
     productController.updateProductStatus,
   );
 
   router.delete(
     "/admin/:id",
     rateLimiter,
-    validateMultiple(ProductTypes.SoftDeleteProduct),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ProductTypes.SoftDeleteProduct),
     productController.softDeleteProduct,
   );
 
   router.patch(
     "/admin/:id/restore",
     rateLimiter,
-    validateMultiple(ProductTypes.RestoreProduct),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ProductTypes.RestoreProduct),
     productController.restoreProduct,
   );
 
   router.delete(
     "/admin/:id/hard",
     rateLimiter,
-    validateMultiple(ProductTypes.HardDeleteProduct),
     authMiddleware.authenticate,
     authMiddleware.requireAdmin,
+    validateMultiple(ProductTypes.HardDeleteProduct),
     productController.hardDeleteProduct,
   );
 };

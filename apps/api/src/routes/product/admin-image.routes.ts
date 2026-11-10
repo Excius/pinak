@@ -15,9 +15,9 @@ export const registerProductAdminImageRoutes = (
   router.get(
     "/admin/variants/:variantId/images",
     rateLimiter,
-    validateMultiple(ProductTypes.AdminGetProductVariantImages),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ProductTypes.AdminGetProductVariantImages),
     productController.getAllImages,
   );
 
@@ -34,9 +34,9 @@ export const registerProductAdminImageRoutes = (
   router.patch(
     "/admin/images/:imageId/primary",
     rateLimiter,
-    validateMultiple(ProductTypes.SetPrimaryImage),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ProductTypes.SetPrimaryImage),
     productController.setPrimaryImage,
   );
 
@@ -53,9 +53,9 @@ export const registerProductAdminImageRoutes = (
   router.delete(
     "/admin/images/:id",
     rateLimiter,
-    validateMultiple(ProductTypes.DeleteImage),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ProductTypes.DeleteImage),
     productController.deleteImage,
   );
 };

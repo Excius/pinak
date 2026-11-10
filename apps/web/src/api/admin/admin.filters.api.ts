@@ -62,3 +62,13 @@ export const updateFilterValue = async (valueId: string, payload: { name?: strin
 export const deleteFilterValue = async (valueId: string): Promise<void> => {
   await axiosInstance.delete(`/filters/values/${valueId}`)
 }
+
+// ── Variant ↔ Filter Value junction (each variant has its own filters) ──
+
+export const addFilterToVariantAdmin = async (variantId: string, filterValueId: string): Promise<void> => {
+  await axiosInstance.post(`/filters/variants/${variantId}/values/${filterValueId}`)
+}
+
+export const removeFilterFromVariantAdmin = async (variantId: string, filterValueId: string): Promise<void> => {
+  await axiosInstance.delete(`/filters/variants/${variantId}/values/${filterValueId}`)
+}

@@ -11,18 +11,18 @@ export const registerOptionAdminRoutes = (
   router.get(
     "/admin",
     rateLimiter,
-    validateMultiple(OptionAdminTypes.ListOptions),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(OptionAdminTypes.ListOptions),
     optionController.listAdmin,
   );
 
   router.get(
     "/admin/:id",
     rateLimiter,
-    validateMultiple(OptionAdminTypes.GetOptionById),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(OptionAdminTypes.GetOptionById),
     optionController.getByIdAdmin,
   );
 
@@ -30,54 +30,54 @@ export const registerOptionAdminRoutes = (
   router.post(
     "/",
     rateLimiter,
-    validateMultiple(OptionTypes.CreateOption),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(OptionTypes.CreateOption),
     optionController.create,
   );
 
   router.put(
     "/:id",
     rateLimiter,
-    validateMultiple(OptionTypes.UpdateOption),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(OptionTypes.UpdateOption),
     optionController.update,
   );
 
   router.delete(
     "/:id",
     rateLimiter,
-    validateMultiple(OptionTypes.DeleteOption),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(OptionTypes.DeleteOption),
     optionController.remove,
   );
 
   router.post(
     "/:optionId/values",
     rateLimiter,
-    validateMultiple(OptionTypes.CreateOptionValue),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(OptionTypes.CreateOptionValue),
     optionController.createValue,
   );
 
   router.put(
     "/values/:id",
     rateLimiter,
-    validateMultiple(OptionTypes.UpdateOptionValue),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(OptionTypes.UpdateOptionValue),
     optionController.updateValue,
   );
 
   router.delete(
     "/values/:id",
     rateLimiter,
-    validateMultiple(OptionTypes.DeleteOptionValue),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(OptionTypes.DeleteOptionValue),
     optionController.deleteValue,
   );
 };

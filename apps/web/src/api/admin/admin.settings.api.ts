@@ -16,17 +16,17 @@ export const getAllTaxClasses = async (): Promise<TaxClass[]> => {
 }
 
 export const createTaxClass = async (payload: { name: string; rate: number }): Promise<TaxClass> => {
-  const { data: resp } = await axiosInstance.post('/tax-classes/admin', payload)
+  const { data: resp } = await axiosInstance.post('/tax-classes', payload)
   return resp?.data as TaxClass
 }
 
 export const updateTaxClass = async (id: string, payload: { name?: string; rate?: number }): Promise<TaxClass> => {
-  const { data: resp } = await axiosInstance.put(`/tax-classes/admin/${id}`, payload)
+  const { data: resp } = await axiosInstance.put(`/tax-classes/${id}`, payload)
   return resp?.data as TaxClass
 }
 
 export const deleteTaxClass = async (id: string) => {
-  await axiosInstance.delete(`/tax-classes/admin/${id}`)
+  await axiosInstance.delete(`/tax-classes/${id}`)
 }
 
 // ── Weight Classes ─────────────────────────────────────────────────────
@@ -45,17 +45,17 @@ export const getAllWeightClasses = async (): Promise<WeightClass[]> => {
 }
 
 export const createWeightClass = async (payload: { name: string; unit: string }): Promise<WeightClass> => {
-  const { data: resp } = await axiosInstance.post('/weight-classes/admin', payload)
+  const { data: resp } = await axiosInstance.post('/weight-classes', payload)
   return resp?.data as WeightClass
 }
 
 export const updateWeightClass = async (id: string, payload: { name?: string; unit?: string }): Promise<WeightClass> => {
-  const { data: resp } = await axiosInstance.put(`/weight-classes/admin/${id}`, payload)
+  const { data: resp } = await axiosInstance.put(`/weight-classes/${id}`, payload)
   return resp?.data as WeightClass
 }
 
 export const deleteWeightClass = async (id: string) => {
-  await axiosInstance.delete(`/weight-classes/admin/${id}`)
+  await axiosInstance.delete(`/weight-classes/${id}`)
 }
 
 // ── Length Classes ──────────────────────────────────────────────────────
@@ -74,17 +74,17 @@ export const getAllLengthClasses = async (): Promise<LengthClass[]> => {
 }
 
 export const createLengthClass = async (payload: { name: string; unit: string }): Promise<LengthClass> => {
-  const { data: resp } = await axiosInstance.post('/length-classes/admin', payload)
+  const { data: resp } = await axiosInstance.post('/length-classes', payload)
   return resp?.data as LengthClass
 }
 
 export const updateLengthClass = async (id: string, payload: { name?: string; unit?: string }): Promise<LengthClass> => {
-  const { data: resp } = await axiosInstance.put(`/length-classes/admin/${id}`, payload)
+  const { data: resp } = await axiosInstance.put(`/length-classes/${id}`, payload)
   return resp?.data as LengthClass
 }
 
 export const deleteLengthClass = async (id: string) => {
-  await axiosInstance.delete(`/length-classes/admin/${id}`)
+  await axiosInstance.delete(`/length-classes/${id}`)
 }
 
 
