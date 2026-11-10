@@ -32,7 +32,7 @@ type RelatedProduct =
 export default function ProductDetailScreen() {
   const { productId } = useLocalSearchParams<{ productId?: string }>();
   const router = useRouter();
-  const { addToCart } = useCart();
+  const { addToCart, isAddingToCart } = useCart();
   const {
     itemIdsByVariantId,
     itemIdsByProductId,
@@ -672,10 +672,10 @@ export default function ProductDetailScreen() {
               onPress={() => {
                 void handleBuyNow();
               }}
-              disabled={!canAddToCart}
+              disabled={!canAddToCart || isAddingToCart}
               className="h-14 px-4 bg-surface rounded-xl flex-row items-center justify-center border border-primary/40"
               style={{
-                opacity: !canAddToCart ? 0.5 : 1,
+                opacity: !canAddToCart || isAddingToCart ? 0.5 : 1,
               }}
             >
               <Text className="font-bold text-primary text-sm">Buy Now</Text>
@@ -683,19 +683,27 @@ export default function ProductDetailScreen() {
 
             <TouchableOpacity
               onPress={handleAddToCart}
-              disabled={!canAddToCart}
+              disabled={!canAddToCart || isAddingToCart}
               className="flex-1 h-14 bg-primary rounded-xl flex-row items-center justify-center gap-3 shadow-lg"
               style={{
-                opacity: !canAddToCart ? 0.5 : 1,
+                opacity: !canAddToCart || isAddingToCart ? 0.5 : 1,
               }}
             >
-              <MaterialCommunityIcons
-                name="cart-plus"
-                size={20}
-                color="#0A0A0A"
-              />
+              {isAddingToCart ? (
+                <ActivityIndicator size="small" color="#0A0A0A" />
+              ) : (
+                <MaterialCommunityIcons
+                  name="cart-plus"
+                  size={20}
+                  color="#0A0A0A"
+                />
+              )}
               <Text className="font-bold text-background text-base">
-                {canAddToCart ? "Add to Cart" : "Out of Stock"}
+                {isAddingToCart
+                  ? "Adding to Cart..."
+                  : canAddToCart
+                    ? "Add to Cart"
+                    : "Out of Stock"}
               </Text>
             </TouchableOpacity>
           </View>

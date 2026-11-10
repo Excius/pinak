@@ -1,25 +1,80 @@
-import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
-import { Cart } from "@/hooks/use-cart";
+import React, { useState } from "react";
+import { View, Text, TouchableOpacity, TextInput } from "react-native";
+import { AppliedCoupon, Cart } from "@/hooks/use-cart";
 import { formatRupeesFromPaise } from "@/utils/currency";
 
 interface CartSummaryProps {
   cart: Cart | null;
   onCheckout: () => void;
   isLoading?: boolean;
+  appliedCoupon?: AppliedCoupon | null;
+  applyingCoupon?: boolean;
+  onApplyCoupon?: (code: string) => Promise<boolean>;
+  onRemoveCoupon?: () => void;
 }
 
 export function CartSummary({
   cart,
   onCheckout,
   isLoading = false,
+  appliedCoupon,
+  applyingCoupon = false,
+  onApplyCoupon,
+  onRemoveCoupon,
 }: CartSummaryProps) {
+  const [couponCode, setCouponCode] = useState("");
   if (!cart || cart.items.length === 0) {
     return null;
   }
 
   return (
     <View className="border-t border-surface-border bg-surface/70 px-4 py-4">
+      <View className="mb-4">
+        <Text className="mb-2 text-sm font-semibold text-text-primary">
+          Have a coupon?
+        </Text>
+        {appliedCoupon ? (
+          <View className="flex-row items-center justify-between rounded-lg border border-primary/40 bg-primary/10 px-3 py-2">
+            <View>
+              <Text className="font-semibold text-primary">
+                {appliedCoupon.coupon.code}
+              </Text>
+              <Text className="text-xs text-text-secondary">
+                You saved {formatRupeesFromPaise(appliedCoupon.discountAmount)}
+              </Text>
+            </View>
+            <TouchableOpacity onPress={onRemoveCoupon}>
+              <Text className="text-xs font-semibold text-primary">Remove</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View className="flex-row gap-2">
+            <TextInput
+              value={couponCode}
+              onChangeText={setCouponCode}
+              placeholder="Enter code"
+              placeholderTextColor="#8a8a8a"
+              autoCapitalize="characters"
+              className="flex-1 rounded-lg border border-surface-border bg-background px-3 py-2 text-sm text-text-primary"
+              editable={!applyingCoupon}
+            />
+            <TouchableOpacity
+              onPress={() => onApplyCoupon?.(couponCode)}
+              disabled={applyingCoupon || !couponCode.trim()}
+              className={`items-center justify-center rounded-lg px-4 ${
+                applyingCoupon || !couponCode.trim()
+                  ? "bg-surface-light"
+                  : "bg-primary"
+              }`}
+            >
+              <Text className="text-sm font-bold text-background">
+                {applyingCoupon ? "..." : "Apply"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
+
       {/* Subtotal */}
       <View className="mb-2 flex-row justify-between">
         <Text className="text-sm text-text-secondary">Subtotal</Text>
@@ -43,6 +98,15 @@ export function CartSummary({
         </Text>
       </View>
 
+      {appliedCoupon && (
+        <View className="mb-3 flex-row justify-between">
+          <Text className="text-sm text-text-secondary">Coupon discount</Text>
+          <Text className="text-sm font-semibold text-green-600">
+            -{formatRupeesFromPaise(appliedCoupon.discountAmount)}
+          </Text>
+        </View>
+      )}
+
       {cart.shippingRequired && (
         <View className="mb-3 flex-row justify-between">
           <Text className="text-sm text-text-secondary">Shipping</Text>
@@ -61,7 +125,13 @@ export function CartSummary({
       <View className="mb-4 flex-row justify-between">
         <Text className="text-base font-bold text-text-primary">Total</Text>
         <Text className="text-base font-bold text-primary">
-          {formatRupeesFromPaise(cart.grandTotal ?? cart.total)}
+          {formatRupeesFromPaise(
+            Math.max(
+              0,
+              (cart.grandTotal ?? cart.total) -
+                (appliedCoupon?.discountAmount ?? 0),
+            ),
+          )}
         </Text>
       </View>
 

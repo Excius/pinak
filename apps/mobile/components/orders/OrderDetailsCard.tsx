@@ -9,6 +9,10 @@ interface OrderDetailItem {
   productName: string;
   quantity: number;
   price: number;
+  basePrice?: number;
+  priceWithTax?: number;
+  sellingPrice?: number | null;
+  sellingPriceWithTax?: number | null;
   lineTotal: number;
 }
 

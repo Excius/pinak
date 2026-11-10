@@ -94,7 +94,10 @@ function WishlistItemCard({
               </Text>
               {variant.sellingPrice != null ? (
                 <Text className="text-xs text-text-muted line-through">
-                  {formatRupeesFromPaise(getOriginalPriceWithTax(variant))}
+                  {formatRupeesFromPaise(
+                    getOriginalPriceWithTax(variant) ??
+                      getActivePriceWithTax(variant),
+                  )}
                 </Text>
               ) : null}
             </View>

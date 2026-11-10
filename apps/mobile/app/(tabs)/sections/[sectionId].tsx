@@ -19,7 +19,7 @@ import { mapProductsToCardItems } from "@/utils/mappers/product.mapper";
 export default function FeaturedSectionDetailScreen() {
   const { sectionId } = useLocalSearchParams<{ sectionId?: string }>();
   const router = useRouter();
-  const { addToCart } = useCart();
+  const { addToCart, isAddingToCart } = useCart();
   const {
     itemIdsByVariantId,
     itemIdsByProductId,
@@ -117,6 +117,7 @@ export default function FeaturedSectionDetailScreen() {
                     void addToCart(item.variantId, undefined, 1);
                   }
                 }}
+                isAddToCartLoading={isAddingToCart}
                 onWishlistToggle={() => {
                   if (item.variantId) {
                     void toggleWishlist(item.variantId, item.id);

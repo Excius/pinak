@@ -15,6 +15,9 @@ import { formatRupeesFromPaise } from "@/utils/currency";
 type ComboKit =
   ComboKitApi.ResponseTypes["GetComboKits"]["data"]["items"][number];
 
+const getComboKitImageUrl = (kit: ComboKit) =>
+  kit.images.find((image) => image.isPrimary)?.url ?? kit.images[0]?.url;
+
 /**
  * ComboKits Homepage Component
  * Displays a carousel of featured combo kits/bundles
@@ -88,7 +91,10 @@ export function ComboKits() {
         showsHorizontalScrollIndicator={false}
         className="px-4"
       >
-        {kits.map((kit) => (
+        {kits.map((kit) => {
+          const imageUrl = getComboKitImageUrl(kit);
+
+          return (
           <TouchableOpacity
             key={kit.id}
             onPress={() => handleKitPress(kit.id)}
@@ -96,9 +102,9 @@ export function ComboKits() {
           >
             {/* Kit Image */}
             <View className="relative aspect-square bg-surface-light">
-              {kit.imageUrl ? (
+              {imageUrl ? (
                 <Image
-                  source={{ uri: kit.imageUrl }}
+                  source={{ uri: imageUrl }}
                   className="h-full w-full"
                   resizeMode="cover"
                 />
@@ -139,7 +145,8 @@ export function ComboKits() {
               </View>
             </View>
           </TouchableOpacity>
-        ))}
+          );
+        })}
       </ScrollView>
     </View>
   );

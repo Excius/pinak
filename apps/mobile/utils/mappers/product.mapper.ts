@@ -64,7 +64,9 @@ function getListDisplayPrice(variants: ProductListItem["variants"]): {
   const price = getActivePriceWithTax(preferredVariant);
   const compareAtPrice = getOriginalPriceWithTax(preferredVariant);
 
-  return preferredVariant.sellingPrice != null && compareAtPrice > price
+  return preferredVariant.sellingPrice != null &&
+    compareAtPrice != null &&
+    compareAtPrice > price
     ? { price, originalPrice: compareAtPrice }
     : { price };
 }

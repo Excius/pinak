@@ -15,7 +15,17 @@ import {
 const BOTTOM_NAV_HEIGHT = 72;
 
 export default function CartPage() {
-  const { cart, loading, fetchCart, updateItem, removeItem } = useCart();
+  const {
+    cart,
+    loading,
+    fetchCart,
+    updateItem,
+    removeItem,
+    appliedCoupon,
+    applyingCoupon,
+    applyCoupon,
+    removeCoupon,
+  } = useCart();
   const insets = useSafeAreaInsets();
   const bottomOffset = BOTTOM_NAV_HEIGHT + insets.bottom;
 
@@ -103,6 +113,10 @@ export default function CartPage() {
               cart={cart}
               onCheckout={handleCheckout}
               isLoading={loading}
+              appliedCoupon={appliedCoupon}
+              applyingCoupon={applyingCoupon}
+              onApplyCoupon={applyCoupon}
+              onRemoveCoupon={removeCoupon}
             />
           </>
         )}

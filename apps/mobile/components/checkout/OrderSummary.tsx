@@ -1,13 +1,14 @@
 import React from "react";
 import { View, Text, ScrollView } from "react-native";
-import { Cart } from "@/hooks/use-cart";
+import { AppliedCoupon, Cart } from "@/hooks/use-cart";
 import { formatRupeesFromPaise } from "@/utils/currency";
 
 interface OrderSummaryProps {
   cart: Cart;
+  appliedCoupon?: AppliedCoupon | null;
 }
 
-export function OrderSummary({ cart }: OrderSummaryProps) {
+export function OrderSummary({ cart, appliedCoupon }: OrderSummaryProps) {
   return (
     <View className="mb-4 rounded-2xl border border-surface-border/70 bg-surface px-4 py-4">
       <View className="mb-3 flex-row items-center justify-between">
@@ -72,6 +73,15 @@ export function OrderSummary({ cart }: OrderSummaryProps) {
         </Text>
       </View>
 
+      {appliedCoupon && (
+        <View className="mb-3 flex-row justify-between">
+          <Text className="text-xs text-text-secondary">Coupon discount</Text>
+          <Text className="text-xs font-semibold text-green-600">
+            -{formatRupeesFromPaise(appliedCoupon.discountAmount)}
+          </Text>
+        </View>
+      )}
+
       {cart.shippingRequired && (
         <View className="mb-3 flex-row justify-between">
           <Text className="text-sm text-text-secondary">Shipping</Text>
@@ -87,7 +97,13 @@ export function OrderSummary({ cart }: OrderSummaryProps) {
       <View className="flex-row justify-between">
         <Text className="text-sm font-bold text-text-primary">Total</Text>
         <Text className="text-sm font-bold text-primary">
-          {formatRupeesFromPaise(cart.grandTotal ?? cart.total)}
+          {formatRupeesFromPaise(
+            Math.max(
+              0,
+              (cart.grandTotal ?? cart.total) -
+                (appliedCoupon?.discountAmount ?? 0),
+            ),
+          )}
         </Text>
       </View>
     </View>

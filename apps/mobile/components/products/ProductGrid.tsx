@@ -23,7 +23,7 @@ export function ProductGrid({
   filterValueIds = [],
 }: ProductGridProps) {
   const router = useRouter();
-  const { addToCart } = useCart();
+  const { addToCart, isAddingToCart } = useCart();
   const { isAuthenticated } = useAuth();
   const {
     itemIdsByVariantId,
@@ -110,6 +110,7 @@ export function ProductGrid({
                 void addToCart(item.variantId, undefined, 1);
               }
             }}
+            isAddToCartLoading={isAddingToCart}
             onWishlistToggle={() => {
               if (item.variantId && isAuthenticated) {
                 void toggleWishlist(item.variantId, item.id);
