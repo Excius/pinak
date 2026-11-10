@@ -18,12 +18,12 @@ export class OrderController {
     const userId = this.getAuthenticatedUserId(req, res);
     if (!userId) return;
 
-    const { 
-      couponCode, 
-      shippingAddress, 
-      billingAddress, 
-      shippingAddressId, 
-      billingAddressId 
+    const {
+      couponCode,
+      shippingAddress,
+      billingAddress,
+      shippingAddressId,
+      billingAddressId,
     } = req.body as {
       couponCode?: string;
       shippingAddress?: any;
@@ -65,7 +65,8 @@ export class OrderController {
         | "DELIVERED"
         | "CANCELLED"
         | undefined,
-      paymentStatus: paymentStatus as "PENDING" | "COMPLETED" | "FAILED" | undefined,
+      paymentStatus: paymentStatus as
+        "PENDING" | "COMPLETED" | "FAILED" | undefined,
     });
     ResponseHandler.success(res, result, "Orders fetched successfully");
   };
@@ -111,7 +112,8 @@ export class OrderController {
         | "DELIVERED"
         | "CANCELLED"
         | undefined,
-      paymentStatus: paymentStatus as "PENDING" | "COMPLETED" | "FAILED" | undefined,
+      paymentStatus: paymentStatus as
+        "PENDING" | "COMPLETED" | "FAILED" | undefined,
     });
     ResponseHandler.success(res, result, "Orders fetched successfully");
   };

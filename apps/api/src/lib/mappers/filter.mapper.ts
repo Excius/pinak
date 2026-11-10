@@ -80,9 +80,13 @@ export const toPublicFilterGroupList = (
   groups: FilterGroupRecord[],
 ): PublicFilterGroup[] => groups.map(toPublicFilterGroup);
 
-export const toAdminFilterValue = (value: FilterValueRecord): AdminFilterValue => ({
+export const toAdminFilterValue = (
+  value: FilterValueRecord,
+): AdminFilterValue => ({
   id: value.id,
-  ...(value.filterGroupId !== undefined && { filterGroupId: value.filterGroupId }),
+  ...(value.filterGroupId !== undefined && {
+    filterGroupId: value.filterGroupId,
+  }),
   name: value.name,
   slug: value.slug,
   sortOrder: value.sortOrder,
@@ -90,7 +94,9 @@ export const toAdminFilterValue = (value: FilterValueRecord): AdminFilterValue =
   ...(value.updatedAt !== undefined && { updatedAt: value.updatedAt }),
 });
 
-export const toAdminFilterGroup = (group: FilterGroupRecord): AdminFilterGroup => ({
+export const toAdminFilterGroup = (
+  group: FilterGroupRecord,
+): AdminFilterGroup => ({
   id: group.id,
   name: group.name,
   slug: group.slug,

@@ -29,42 +29,6 @@ type ProductVariant = ProductDetail["variants"][number];
 type RelatedProduct =
   RelatedProductApi.ResponseTypes["ListRelated"]["data"][number];
 
-const COLOR_SWATCHES: Record<string, string> = {
-  black: "#151515",
-  white: "#F5F1E8",
-  ivory: "#FFF5D6",
-  beige: "#D8B08C",
-  nude: "#C98F72",
-  brown: "#6B3F2A",
-  bronze: "#A9683B",
-  gold: "#C9A962",
-  silver: "#BFC5C9",
-  grey: "#858585",
-  gray: "#858585",
-  red: "#B83A3A",
-  pink: "#E58BA3",
-  rose: "#C96C7D",
-  coral: "#F27C68",
-  orange: "#E87832",
-  peach: "#F2A07E",
-  yellow: "#E5C84A",
-  green: "#5D8B63",
-  teal: "#3C9C95",
-  blue: "#4E78B5",
-  purple: "#805A9C",
-  mauve: "#9B7180",
-  plum: "#633A58",
-};
-
-function getColorSwatch(value: string) {
-  const normalizedValue = value.toLowerCase();
-  const matchingColor = Object.keys(COLOR_SWATCHES).find((color) =>
-    normalizedValue.includes(color),
-  );
-
-  return matchingColor ? COLOR_SWATCHES[matchingColor] : "#C9A962";
-}
-
 export default function ProductDetailScreen() {
   const { productId } = useLocalSearchParams<{ productId?: string }>();
   const router = useRouter();
@@ -187,18 +151,29 @@ export default function ProductDetailScreen() {
 
   const categoryLabel = product?.categories[0]?.name || "Product";
   const brandLabel = product?.brand?.name || "Pinak";
-  const colorValues = Array.from(
-    new Set(
+  const colorOptions = useMemo(() => {
+    const options =
       product?.variants.flatMap((variant) =>
         variant.optionValues
-          .filter((option) => /color|shade/i.test(option.optionName))
-          .map((option) => option.valueName),
-      ) || [],
-    ),
-  );
-  const selectedColor = selectedVariant?.optionValues.find((option) =>
+          .filter(
+            (option) =>
+              /color|shade/i.test(option.optionName) && option.optionValueId,
+          )
+          .map((option) => ({
+            optionId: option.optionId,
+            optionValueId: option.optionValueId as string,
+            name: option.valueName,
+            swatchColorHex: option.swatchColorHex,
+          })),
+      ) || [];
+
+    return Array.from(
+      new Map(options.map((option) => [option.optionValueId, option])).values(),
+    );
+  }, [product]);
+  const selectedColorOptionId = selectedVariant?.optionValues.find((option) =>
     /color|shade/i.test(option.optionName),
-  )?.valueName;
+  )?.optionValueId;
   const weightGrams = selectedVariant?.weightGrams ?? product?.weightGrams;
   const weightLabel =
     weightGrams != null
@@ -220,13 +195,13 @@ export default function ProductDetailScreen() {
     router.push("/checkout");
   };
 
-  const handleColorSelect = (colorValue: string) => {
+  const handleColorSelect = (optionValueId: string) => {
     const matchingVariant = product?.variants.find(
       (variant) =>
         variant.optionValues.some(
           (option) =>
             /color|shade/i.test(option.optionName) &&
-            option.valueName === colorValue,
+            option.optionValueId === optionValueId,
         ) && variant.isActive,
     );
 
@@ -392,7 +367,7 @@ export default function ProductDetailScreen() {
             </Text>
           ) : null}
 
-          {(product.brand || colorValues.length > 0 || weightLabel) && (
+          {(product.brand || colorOptions.length > 0 || weightLabel) && (
             <View className="mb-8 border-y border-primary/20 py-5">
               <View className="flex-row items-center justify-between">
                 <View>
@@ -464,7 +439,7 @@ export default function ProductDetailScreen() {
                   </View>
                 ) : null}
 
-                {colorValues.length > 0 ? (
+                {colorOptions.length > 0 ? (
                   <View className="w-full flex-row items-start">
                     <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl border border-primary/25 bg-primary/10">
                       <MaterialCommunityIcons
@@ -475,17 +450,19 @@ export default function ProductDetailScreen() {
                     </View>
                     <View className="flex-1">
                       <Text className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
-                        Available shade{colorValues.length > 1 ? "s" : ""}
+                        Available shade{colorOptions.length > 1 ? "s" : ""}
                       </Text>
                       <View className="mt-2 flex-row flex-wrap gap-2">
-                        {colorValues.map((value) => (
+                        {colorOptions.map((color) => (
                           <TouchableOpacity
-                            key={value}
-                            onPress={() => handleColorSelect(value)}
+                            key={color.optionValueId}
+                            onPress={() =>
+                              handleColorSelect(color.optionValueId)
+                            }
                             accessibilityRole="button"
-                            accessibilityLabel={`Select ${value} shade`}
+                            accessibilityLabel={`Select ${color.name} shade`}
                             className={`flex-row items-center rounded-full border bg-surface py-1.5 pl-1.5 pr-3 ${
-                              selectedColor === value
+                              selectedColorOptionId === color.optionValueId
                                 ? "border-primary"
                                 : "border-surface-border"
                             }`}
@@ -493,11 +470,12 @@ export default function ProductDetailScreen() {
                             <View
                               className="mr-2 h-7 w-7 rounded-full border-2 border-background"
                               style={{
-                                backgroundColor: getColorSwatch(value),
+                                backgroundColor:
+                                  color.swatchColorHex || "#8B8B8B",
                               }}
                             />
                             <Text className="text-xs font-semibold text-text-primary">
-                              {value}
+                              {color.name}
                             </Text>
                           </TouchableOpacity>
                         ))}

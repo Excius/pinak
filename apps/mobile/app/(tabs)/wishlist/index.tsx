@@ -15,6 +15,7 @@ import {
   removeFromWishlist,
   clearWishlist,
 } from "@/services/wishlist.service";
+import { useWishlist } from "@/hooks/use-wishlist";
 import type { WishlistApi } from "@repo/types";
 import { formatRupeesFromPaise } from "@/utils/currency";
 import {
@@ -132,6 +133,7 @@ function WishlistItemCard({
  */
 export default function WishlistScreen() {
   const router = useRouter();
+  const { refreshWishlist } = useWishlist();
   const [items, setItems] = useState<WishlistItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -165,6 +167,7 @@ export default function WishlistScreen() {
       setIsRemoving(itemId);
       await removeFromWishlist(itemId);
       setItems((prev) => prev.filter((item) => item.id !== itemId));
+      await refreshWishlist();
     } catch (err) {
       console.error("Failed to remove item:", err);
       // Optionally show an error toast here
@@ -178,6 +181,7 @@ export default function WishlistScreen() {
     try {
       await clearWishlist();
       setItems([]);
+      await refreshWishlist();
     } catch (err) {
       console.error("Failed to clear wishlist:", err);
     }

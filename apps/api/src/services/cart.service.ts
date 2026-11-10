@@ -1,5 +1,8 @@
 import { NotFoundError, ValidationError } from "../lib/error.js";
-import { CartRepository, CartWithItems } from "../repositories/cart.repository.js";
+import {
+  CartRepository,
+  CartWithItems,
+} from "../repositories/cart.repository.js";
 import { StockReservationService } from "./stockReservation.service.js";
 
 export type AddToCartInput = {
@@ -128,7 +131,8 @@ export class CartService {
     }
 
     const targetCount =
-      Number(Boolean(input.productVariantId)) + Number(Boolean(input.comboKitId));
+      Number(Boolean(input.productVariantId)) +
+      Number(Boolean(input.comboKitId));
 
     if (targetCount !== 1) {
       throw new ValidationError(
@@ -217,7 +221,8 @@ export class CartService {
               sellingPrice,
               taxAmount: variantTaxAmount,
               priceWithTax: mainPriceWithTax,
-              sellingPriceWithTax: sellingPrice != null ? unitPriceWithTax : null,
+              sellingPriceWithTax:
+                sellingPrice != null ? unitPriceWithTax : null,
               isActive: item.productVariant.isActive,
               image: this.mapVariantImage(item.productVariant.images),
               optionValues: this.mapVariantOptionValues(
@@ -259,10 +264,11 @@ export class CartService {
           const maxTaxRate = Math.max(
             0,
             ...item.comboKit.items.map(
-              (comboItem) => comboItem.productVariant?.product?.taxClass?.rate ?? 0
-            )
+              (comboItem) =>
+                comboItem.productVariant?.product?.taxClass?.rate ?? 0,
+            ),
           );
-          
+
           const comboTaxAmount = Math.round((unitPrice * maxTaxRate) / 100);
           const comboItemTaxTotal = comboTaxAmount * item.quantity;
 
@@ -273,8 +279,7 @@ export class CartService {
               componentVariant?.sellingPrice != null
                 ? componentVariant.sellingPrice
                 : null;
-            const compTaxRate =
-              componentVariant?.product?.taxClass?.rate ?? 0;
+            const compTaxRate = componentVariant?.product?.taxClass?.rate ?? 0;
             const compPriceWithTax =
               compMainPrice + Math.round((compMainPrice * compTaxRate) / 100);
             const compSellingPriceWithTax =
@@ -348,14 +353,20 @@ export class CartService {
     const subtotal = items.reduce((sum, item) => sum + item.lineTotal, 0);
     const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
     const taxTotal = items.reduce(
-      (sum, item) => sum + (item.lineTotalWithTax ?? item.lineTotal) - item.lineTotal,
+      (sum, item) =>
+        sum + (item.lineTotalWithTax ?? item.lineTotal) - item.lineTotal,
       0,
     );
     const totalWithTax = subtotal + taxTotal;
 
     const shippingRequired = cart.items.some((item) => {
       if (item.productVariant?.product?.requiresShipping) return true;
-      if (item.comboKit?.items?.some((ci) => ci.productVariant?.product?.requiresShipping)) return true;
+      if (
+        item.comboKit?.items?.some(
+          (ci) => ci.productVariant?.product?.requiresShipping,
+        )
+      )
+        return true;
       return false;
     });
 
@@ -418,7 +429,10 @@ export class CartService {
       }
 
       if (existingItem) {
-        await this.cartRepository.incrementItemQuantity(existingItem.id, input.quantity);
+        await this.cartRepository.incrementItemQuantity(
+          existingItem.id,
+          input.quantity,
+        );
       } else {
         await this.cartRepository.addItem(cart.id, {
           productVariantId: input.productVariantId,
@@ -442,7 +456,9 @@ export class CartService {
       );
       const targetQuantity = (existingItem?.quantity ?? 0) + input.quantity;
       const availableStock =
-        await this.stockReservationService.getAvailableStockForCombo(input.comboKitId);
+        await this.stockReservationService.getAvailableStockForCombo(
+          input.comboKitId,
+        );
 
       if (targetQuantity > availableStock) {
         throw new ValidationError("Insufficient combo stock", [
@@ -454,7 +470,10 @@ export class CartService {
       }
 
       if (existingItem) {
-        await this.cartRepository.incrementItemQuantity(existingItem.id, input.quantity);
+        await this.cartRepository.incrementItemQuantity(
+          existingItem.id,
+          input.quantity,
+        );
       } else {
         await this.cartRepository.addItem(cart.id, {
           comboKitId: input.comboKitId,
@@ -471,7 +490,10 @@ export class CartService {
       throw new ValidationError("Quantity must be greater than 0");
     }
 
-    const cartItem = await this.cartRepository.getCartItemByIdForUser(itemId, userId);
+    const cartItem = await this.cartRepository.getCartItemByIdForUser(
+      itemId,
+      userId,
+    );
     if (!cartItem) {
       throw new NotFoundError("Cart item not found");
     }
@@ -511,7 +533,10 @@ export class CartService {
   }
 
   async removeCartItem(userId: string, itemId: string) {
-    const cartItem = await this.cartRepository.getCartItemByIdForUser(itemId, userId);
+    const cartItem = await this.cartRepository.getCartItemByIdForUser(
+      itemId,
+      userId,
+    );
     if (!cartItem) {
       throw new NotFoundError("Cart item not found");
     }

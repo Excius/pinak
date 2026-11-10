@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback } from "react";
 import {
   getAdminPages,
   createAdminPage,
@@ -7,161 +7,164 @@ import {
   restoreAdminPage,
   type AdminPageItem,
   type CreatePagePayload,
-} from '../../../api/admin/admin.pages.api'
-import MarkdownRenderer from '../../../components/MarkdownRenderer'
-import RichTextEditor from '../../../components/admin/RichTextEditor'
-import toast from 'react-hot-toast'
+} from "../../../api/admin/admin.pages.api";
+import MarkdownRenderer from "../../../components/MarkdownRenderer";
+import RichTextEditor from "../../../components/admin/RichTextEditor";
+import toast from "react-hot-toast";
 
-type TabType = 'active' | 'trash'
+type TabType = "active" | "trash";
 
 const PageList = () => {
-  const [tab, setTab] = useState<TabType>('active')
-  const [pages, setPages] = useState<AdminPageItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState('')
-  const [page, setPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const [total, setTotal] = useState(0)
+  const [tab, setTab] = useState<TabType>("active");
+  const [pages, setPages] = useState<AdminPageItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
 
   // Modals state
-  const [showModal, setShowModal] = useState(false)
-  const [editingPage, setEditingPage] = useState<AdminPageItem | null>(null)
-  const [saving, setSaving] = useState(false)
-  const [activeEditorTab, setActiveEditorTab] = useState<'write' | 'preview'>('write')
+  const [showModal, setShowModal] = useState(false);
+  const [editingPage, setEditingPage] = useState<AdminPageItem | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [activeEditorTab, setActiveEditorTab] = useState<"write" | "preview">(
+    "write",
+  );
 
   // Form state
   const [form, setForm] = useState<CreatePagePayload>({
-    title: '',
-    slug: '',
-    content: '',
-    metaTitle: '',
-    metaDescription: '',
+    title: "",
+    slug: "",
+    content: "",
+    metaTitle: "",
+    metaDescription: "",
     isActive: true,
-  })
+  });
 
   // Delete & Restore confirmation modals
-  const [deleteId, setDeleteId] = useState<string | null>(null)
-  const [restoreId, setRestoreId] = useState<string | null>(null)
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [restoreId, setRestoreId] = useState<string | null>(null);
 
   const fetchPages = useCallback(async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       const data = await getAdminPages({
         page,
         limit: 15,
         search: search.trim() || undefined,
-        includeDeleted: tab === 'trash',
-        isActive: tab === 'active' ? undefined : undefined,
-      })
+        includeDeleted: tab === "trash",
+        isActive: tab === "active" ? undefined : undefined,
+      });
 
       // When tab is 'trash', filter to deleted only if backend returns mixed
       const items =
-        tab === 'trash'
+        tab === "trash"
           ? data.items.filter((p) => p.isDeleted)
-          : data.items.filter((p) => !p.isDeleted)
+          : data.items.filter((p) => !p.isDeleted);
 
-      setPages(items)
-      setTotalPages(data.pagination.totalPages || 1)
-      setTotal(data.pagination.total || items.length)
+      setPages(items);
+      setTotalPages(data.pagination.totalPages || 1);
+      setTotal(data.pagination.total || items.length);
     } catch (err: any) {
-      console.error('Failed to fetch pages', err)
-      toast.error('Failed to load content pages')
+      console.error("Failed to fetch pages", err);
+      toast.error("Failed to load content pages");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [page, search, tab])
+  }, [page, search, tab]);
 
   useEffect(() => {
-    fetchPages()
-  }, [fetchPages])
+    fetchPages();
+  }, [fetchPages]);
 
   // Helper to generate a slug from title
   const generateSlug = (text: string) => {
     return text
       .toLowerCase()
       .trim()
-      .replace(/[^\w\s-]/g, '')
-      .replace(/[\s_-]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-  }
+      .replace(/[^\w\s-]/g, "")
+      .replace(/[\s_-]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+  };
 
   const handleOpenAdd = () => {
-    setEditingPage(null)
+    setEditingPage(null);
     setForm({
-      title: '',
-      slug: '',
-      content: '<h1>Page Title</h1><p>Welcome to this page. You can easily edit this text, use headings, bullet lists, or bold key words using the toolbar above.</p>',
-      metaTitle: '',
-      metaDescription: '',
+      title: "",
+      slug: "",
+      content:
+        "<h1>Page Title</h1><p>Welcome to this page. You can easily edit this text, use headings, bullet lists, or bold key words using the toolbar above.</p>",
+      metaTitle: "",
+      metaDescription: "",
       isActive: true,
-    })
-    setActiveEditorTab('write')
-    setShowModal(true)
-  }
+    });
+    setActiveEditorTab("write");
+    setShowModal(true);
+  };
 
   const handleOpenEdit = (item: AdminPageItem) => {
-    setEditingPage(item)
+    setEditingPage(item);
     setForm({
       title: item.title,
       slug: item.slug,
       content: item.content,
-      metaTitle: item.metaTitle || '',
-      metaDescription: item.metaDescription || '',
+      metaTitle: item.metaTitle || "",
+      metaDescription: item.metaDescription || "",
       isActive: item.isActive,
-    })
-    setActiveEditorTab('write')
-    setShowModal(true)
-  }
+    });
+    setActiveEditorTab("write");
+    setShowModal(true);
+  };
 
   const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (!form.title.trim() || !form.slug.trim() || !form.content.trim()) {
-      toast.error('Title, slug, and content are required')
-      return
+      toast.error("Title, slug, and content are required");
+      return;
     }
 
-    setSaving(true)
+    setSaving(true);
     try {
       if (editingPage) {
-        await updateAdminPage(editingPage.id, form)
-        toast.success('Page updated successfully')
+        await updateAdminPage(editingPage.id, form);
+        toast.success("Page updated successfully");
       } else {
-        await createAdminPage(form)
-        toast.success('Page created successfully')
+        await createAdminPage(form);
+        toast.success("Page created successfully");
       }
-      setShowModal(false)
-      fetchPages()
+      setShowModal(false);
+      fetchPages();
     } catch (err: any) {
-      console.error('Save page error', err)
-      toast.error(err.response?.data?.message || 'Failed to save page')
+      console.error("Save page error", err);
+      toast.error(err.response?.data?.message || "Failed to save page");
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   const handleDelete = async () => {
-    if (!deleteId) return
+    if (!deleteId) return;
     try {
-      await deleteAdminPage(deleteId)
-      toast.success('Page moved to trash')
-      setDeleteId(null)
-      fetchPages()
+      await deleteAdminPage(deleteId);
+      toast.success("Page moved to trash");
+      setDeleteId(null);
+      fetchPages();
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to delete page')
+      toast.error(err.response?.data?.message || "Failed to delete page");
     }
-  }
+  };
 
   const handleRestore = async () => {
-    if (!restoreId) return
+    if (!restoreId) return;
     try {
-      await restoreAdminPage(restoreId)
-      toast.success('Page restored successfully')
-      setRestoreId(null)
-      fetchPages()
+      await restoreAdminPage(restoreId);
+      toast.success("Page restored successfully");
+      setRestoreId(null);
+      fetchPages();
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to restore page')
+      toast.error(err.response?.data?.message || "Failed to restore page");
     }
-  }
+  };
 
   return (
     <div className="space-y-6 animate-fade-in text-text-main-light">
@@ -172,7 +175,8 @@ const PageList = () => {
             Static & Legal Pages (CMS)
           </h1>
           <p className="text-sm text-text-muted mt-1">
-            Manage Privacy Policy, Terms & Conditions, About Us, and other content pages.
+            Manage Privacy Policy, Terms & Conditions, About Us, and other
+            content pages.
           </p>
         </div>
         <button
@@ -189,30 +193,34 @@ const PageList = () => {
         <div className="flex gap-2">
           <button
             onClick={() => {
-              setTab('active')
-              setPage(1)
+              setTab("active");
+              setPage(1);
             }}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
-              tab === 'active'
-                ? 'bg-primary/10 text-primary border border-primary/20 shadow-sm'
-                : 'text-text-muted hover:bg-background-main border border-transparent'
+              tab === "active"
+                ? "bg-primary/10 text-primary border border-primary/20 shadow-sm"
+                : "text-text-muted hover:bg-background-main border border-transparent"
             }`}
           >
-            <span className="material-icons-outlined text-base">description</span>
+            <span className="material-icons-outlined text-base">
+              description
+            </span>
             Active Pages
           </button>
           <button
             onClick={() => {
-              setTab('trash')
-              setPage(1)
+              setTab("trash");
+              setPage(1);
             }}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
-              tab === 'trash'
-                ? 'bg-red-500/10 text-red-400 border border-red-500/20 shadow-sm'
-                : 'text-text-muted hover:bg-background-main border border-transparent'
+              tab === "trash"
+                ? "bg-red-500/10 text-red-400 border border-red-500/20 shadow-sm"
+                : "text-text-muted hover:bg-background-main border border-transparent"
             }`}
           >
-            <span className="material-icons-outlined text-base">delete_outline</span>
+            <span className="material-icons-outlined text-base">
+              delete_outline
+            </span>
             Trash / Deleted
           </button>
         </div>
@@ -226,8 +234,8 @@ const PageList = () => {
             placeholder="Search by title or slug..."
             value={search}
             onChange={(e) => {
-              setSearch(e.target.value)
-              setPage(1)
+              setSearch(e.target.value);
+              setPage(1);
             }}
             className="w-full bg-background-main border border-primary/20 rounded-xl pl-10 pr-4 py-2 text-xs sm:text-sm text-text-main-light placeholder-text-muted outline-none focus:border-primary transition-colors"
           />
@@ -251,7 +259,10 @@ const PageList = () => {
             <tbody className="divide-y divide-primary/5 text-sm">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-text-muted">
+                  <td
+                    colSpan={6}
+                    className="px-6 py-12 text-center text-text-muted"
+                  >
                     <div className="flex items-center justify-center gap-3">
                       <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
                       <span>Loading pages...</span>
@@ -260,16 +271,26 @@ const PageList = () => {
                 </tr>
               ) : pages.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-text-muted">
-                    <span className="material-icons-outlined text-4xl opacity-40 block mb-2">article</span>
+                  <td
+                    colSpan={6}
+                    className="px-6 py-12 text-center text-text-muted"
+                  >
+                    <span className="material-icons-outlined text-4xl opacity-40 block mb-2">
+                      article
+                    </span>
                     No pages found matching your search.
                   </td>
                 </tr>
               ) : (
                 pages.map((item) => (
-                  <tr key={item.id} className="hover:bg-primary/[0.02] transition-colors">
+                  <tr
+                    key={item.id}
+                    className="hover:bg-primary/[0.02] transition-colors"
+                  >
                     <td className="px-6 py-4">
-                      <p className="font-bold text-text-main-light">{item.title}</p>
+                      <p className="font-bold text-text-main-light">
+                        {item.title}
+                      </p>
                     </td>
                     <td className="px-6 py-4">
                       <code className="text-xs bg-background-main px-2 py-1 rounded text-primary font-mono border border-primary/10">
@@ -279,11 +300,17 @@ const PageList = () => {
                     <td className="px-6 py-4 max-w-xs truncate text-xs text-text-muted">
                       {item.metaTitle || item.metaDescription ? (
                         <div>
-                          <p className="truncate text-text-main-light font-medium">{item.metaTitle || '-'}</p>
-                          <p className="truncate text-[10px] text-text-muted">{item.metaDescription || '-'}</p>
+                          <p className="truncate text-text-main-light font-medium">
+                            {item.metaTitle || "-"}
+                          </p>
+                          <p className="truncate text-[10px] text-text-muted">
+                            {item.metaDescription || "-"}
+                          </p>
                         </div>
                       ) : (
-                        <span className="text-text-muted/60 italic">Not set</span>
+                        <span className="text-text-muted/60 italic">
+                          Not set
+                        </span>
                       )}
                     </td>
                     <td className="px-6 py-4">
@@ -302,7 +329,9 @@ const PageList = () => {
                       )}
                     </td>
                     <td className="px-6 py-4 text-xs text-text-muted whitespace-nowrap">
-                      {item.updatedAt ? new Date(item.updatedAt).toLocaleDateString() : '-'}
+                      {item.updatedAt
+                        ? new Date(item.updatedAt).toLocaleDateString()
+                        : "-"}
                     </td>
                     <td className="px-6 py-4 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1.5">
@@ -315,25 +344,31 @@ const PageList = () => {
                             title="View public page"
                             className="p-1.5 text-text-muted hover:text-primary transition-colors rounded-lg hover:bg-primary/10"
                           >
-                            <span className="material-icons-outlined text-lg">open_in_new</span>
+                            <span className="material-icons-outlined text-lg">
+                              open_in_new
+                            </span>
                           </a>
                         )}
 
-                        {tab === 'active' ? (
+                        {tab === "active" ? (
                           <>
                             <button
                               onClick={() => handleOpenEdit(item)}
                               title="Edit Page"
                               className="p-1.5 text-text-muted hover:text-primary transition-colors rounded-lg hover:bg-primary/10"
                             >
-                              <span className="material-icons-outlined text-lg">edit</span>
+                              <span className="material-icons-outlined text-lg">
+                                edit
+                              </span>
                             </button>
                             <button
                               onClick={() => setDeleteId(item.id)}
                               title="Delete Page"
                               className="p-1.5 text-text-muted hover:text-red-400 transition-colors rounded-lg hover:bg-red-500/10"
                             >
-                              <span className="material-icons-outlined text-lg">delete</span>
+                              <span className="material-icons-outlined text-lg">
+                                delete
+                              </span>
                             </button>
                           </>
                         ) : (
@@ -342,7 +377,9 @@ const PageList = () => {
                             title="Restore Page"
                             className="p-1.5 text-text-muted hover:text-green-400 transition-colors rounded-lg hover:bg-green-500/10"
                           >
-                            <span className="material-icons-outlined text-lg">restore</span>
+                            <span className="material-icons-outlined text-lg">
+                              restore
+                            </span>
                           </button>
                         )}
                       </div>
@@ -391,10 +428,11 @@ const PageList = () => {
             <div className="p-6 border-b border-primary/10 flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-display font-bold text-text-main-light">
-                  {editingPage ? 'Edit Content Page' : 'Create New Page'}
+                  {editingPage ? "Edit Content Page" : "Create New Page"}
                 </h3>
                 <p className="text-xs text-text-muted mt-0.5">
-                  Publish legal, policy, and informational pages with visual formatting tools.
+                  Publish legal, policy, and informational pages with visual
+                  formatting tools.
                 </p>
               </div>
               <button
@@ -405,7 +443,10 @@ const PageList = () => {
               </button>
             </div>
 
-            <form onSubmit={handleSave} className="flex-1 overflow-y-auto p-6 space-y-5">
+            <form
+              onSubmit={handleSave}
+              className="flex-1 overflow-y-auto p-6 space-y-5"
+            >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold uppercase tracking-wider text-text-muted">
@@ -416,12 +457,12 @@ const PageList = () => {
                     required
                     value={form.title}
                     onChange={(e) => {
-                      const newTitle = e.target.value
+                      const newTitle = e.target.value;
                       setForm((prev) => ({
                         ...prev,
                         title: newTitle,
                         slug: editingPage ? prev.slug : generateSlug(newTitle),
-                      }))
+                      }));
                     }}
                     placeholder="e.g. Terms & Conditions"
                     className="w-full bg-background-main border border-primary/20 rounded-xl px-4 py-2.5 text-sm text-text-main-light outline-none focus:border-primary"
@@ -437,7 +478,10 @@ const PageList = () => {
                     required
                     value={form.slug}
                     onChange={(e) =>
-                      setForm((prev) => ({ ...prev, slug: generateSlug(e.target.value) }))
+                      setForm((prev) => ({
+                        ...prev,
+                        slug: generateSlug(e.target.value),
+                      }))
                     }
                     placeholder="e.g. terms-and-conditions"
                     className="w-full bg-background-main border border-primary/20 rounded-xl px-4 py-2.5 text-sm font-mono text-primary outline-none focus:border-primary"
@@ -452,8 +496,13 @@ const PageList = () => {
                   </label>
                   <input
                     type="text"
-                    value={form.metaTitle || ''}
-                    onChange={(e) => setForm((prev) => ({ ...prev, metaTitle: e.target.value }))}
+                    value={form.metaTitle || ""}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        metaTitle: e.target.value,
+                      }))
+                    }
                     placeholder="e.g. Terms & Conditions | Pinak Beauty"
                     className="w-full bg-background-main border border-primary/20 rounded-xl px-4 py-2.5 text-sm text-text-main-light outline-none focus:border-primary"
                   />
@@ -465,9 +514,12 @@ const PageList = () => {
                   </label>
                   <input
                     type="text"
-                    value={form.metaDescription || ''}
+                    value={form.metaDescription || ""}
                     onChange={(e) =>
-                      setForm((prev) => ({ ...prev, metaDescription: e.target.value }))
+                      setForm((prev) => ({
+                        ...prev,
+                        metaDescription: e.target.value,
+                      }))
                     }
                     placeholder="Brief summary for search engines..."
                     className="w-full bg-background-main border border-primary/20 rounded-xl px-4 py-2.5 text-sm text-text-main-light outline-none focus:border-primary"
@@ -480,31 +532,33 @@ const PageList = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <label className="text-xs font-bold uppercase tracking-wider text-text-muted flex items-center gap-1.5">
-                      <span className="text-primary font-bold">●</span> Page Content (Rich Visual Editor) *
+                      <span className="text-primary font-bold">●</span> Page
+                      Content (Rich Visual Editor) *
                     </label>
                     <p className="text-[11px] text-text-muted mt-0.5">
-                      Format your text visually with headings, bold, italics, lists, and links. No markdown knowledge needed.
+                      Format your text visually with headings, bold, italics,
+                      lists, and links. No markdown knowledge needed.
                     </p>
                   </div>
                   <div className="flex gap-1 bg-background-main p-1 rounded-xl border border-primary/10">
                     <button
                       type="button"
-                      onClick={() => setActiveEditorTab('write')}
+                      onClick={() => setActiveEditorTab("write")}
                       className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                        activeEditorTab === 'write'
-                          ? 'bg-primary text-background-main'
-                          : 'text-text-muted hover:text-text-main-light'
+                        activeEditorTab === "write"
+                          ? "bg-primary text-background-main"
+                          : "text-text-muted hover:text-text-main-light"
                       }`}
                     >
                       Editor
                     </button>
                     <button
                       type="button"
-                      onClick={() => setActiveEditorTab('preview')}
+                      onClick={() => setActiveEditorTab("preview")}
                       className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                        activeEditorTab === 'preview'
-                          ? 'bg-primary text-background-main'
-                          : 'text-text-muted hover:text-text-main-light'
+                        activeEditorTab === "preview"
+                          ? "bg-primary text-background-main"
+                          : "text-text-muted hover:text-text-main-light"
                       }`}
                     >
                       Live Preview
@@ -512,7 +566,7 @@ const PageList = () => {
                   </div>
                 </div>
 
-                {activeEditorTab === 'write' ? (
+                {activeEditorTab === "write" ? (
                   <RichTextEditor
                     value={form.content}
                     onChange={(newContent) =>
@@ -523,12 +577,19 @@ const PageList = () => {
                 ) : (
                   <div className="bg-background-main border border-primary/20 rounded-2xl p-6 min-h-[340px] max-h-[500px] overflow-y-auto">
                     <div className="mb-4 pb-3 border-b border-primary/10 flex items-center justify-between text-xs text-text-muted">
-                      <span className="font-semibold text-primary">Previewing Public Layout</span>
+                      <span className="font-semibold text-primary">
+                        Previewing Public Layout
+                      </span>
                       <span className="text-[10px] bg-primary/10 px-2 py-0.5 rounded text-primary">
-                        /pages/{form.slug || 'slug'}
+                        /pages/{form.slug || "slug"}
                       </span>
                     </div>
-                    <MarkdownRenderer content={form.content || '<p><em>No content to preview yet.</em></p>'} />
+                    <MarkdownRenderer
+                      content={
+                        form.content ||
+                        "<p><em>No content to preview yet.</em></p>"
+                      }
+                    />
                   </div>
                 )}
               </div>
@@ -538,7 +599,9 @@ const PageList = () => {
                   type="checkbox"
                   id="page-active-toggle"
                   checked={form.isActive}
-                  onChange={(e) => setForm((prev) => ({ ...prev, isActive: e.target.checked }))}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, isActive: e.target.checked }))
+                  }
                   className="w-4 h-4 rounded text-primary focus:ring-primary accent-primary"
                 />
                 <label
@@ -562,7 +625,11 @@ const PageList = () => {
                   disabled={saving}
                   className="px-6 py-2.5 rounded-xl bg-gold-gradient text-background-main font-bold text-sm hover:brightness-110 shadow-lg shadow-primary/20 disabled:opacity-50"
                 >
-                  {saving ? 'Saving...' : editingPage ? 'Update Page' : 'Create Page'}
+                  {saving
+                    ? "Saving..."
+                    : editingPage
+                      ? "Update Page"
+                      : "Create Page"}
                 </button>
               </div>
             </form>
@@ -578,12 +645,15 @@ const PageList = () => {
             onClick={() => setDeleteId(null)}
           />
           <div className="relative bg-background-light border border-red-500/20 rounded-2xl p-8 w-full max-w-sm shadow-2xl text-center">
-            <span className="material-icons-outlined text-4xl text-red-500 mb-4">delete_outline</span>
+            <span className="material-icons-outlined text-4xl text-red-500 mb-4">
+              delete_outline
+            </span>
             <h3 className="text-lg font-display font-bold text-text-main-light mb-2">
               Move Page to Trash?
             </h3>
             <p className="text-sm text-text-muted mb-6">
-              This page will be soft-deleted and removed from public access. You can restore it anytime from the Trash tab.
+              This page will be soft-deleted and removed from public access. You
+              can restore it anytime from the Trash tab.
             </p>
             <div className="flex gap-3">
               <button
@@ -611,12 +681,15 @@ const PageList = () => {
             onClick={() => setRestoreId(null)}
           />
           <div className="relative bg-background-light border border-green-500/20 rounded-2xl p-8 w-full max-w-sm shadow-2xl text-center">
-            <span className="material-icons-outlined text-4xl text-green-500 mb-4">restore</span>
+            <span className="material-icons-outlined text-4xl text-green-500 mb-4">
+              restore
+            </span>
             <h3 className="text-lg font-display font-bold text-text-main-light mb-2">
               Restore Page?
             </h3>
             <p className="text-sm text-text-muted mb-6">
-              This page will be reactivated and will be accessible to public users again.
+              This page will be reactivated and will be accessible to public
+              users again.
             </p>
             <div className="flex gap-3">
               <button
@@ -636,7 +709,7 @@ const PageList = () => {
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default PageList
+export default PageList;

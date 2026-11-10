@@ -100,8 +100,10 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 
 const parseAddress = (value: unknown): AddressInput | null => {
   if (!isRecord(value)) return null;
-  const fullName = typeof value.fullName === "string" ? value.fullName.trim() : "";
-  const addressLine1 = typeof value.addressLine1 === "string" ? value.addressLine1.trim() : "";
+  const fullName =
+    typeof value.fullName === "string" ? value.fullName.trim() : "";
+  const addressLine1 =
+    typeof value.addressLine1 === "string" ? value.addressLine1.trim() : "";
   const city = typeof value.city === "string" ? value.city.trim() : "";
   const state = typeof value.state === "string" ? value.state.trim() : "";
   const pincode = typeof value.pincode === "string" ? value.pincode.trim() : "";
@@ -390,7 +392,7 @@ export class OrderService {
             const orderItems: CreateOrderItemInput[] = [];
 
             type ParsedCartItem = {
-              item: typeof cart.items[0];
+              item: (typeof cart.items)[0];
               lineSubtotal: number;
               taxRate: number;
               label: string;
@@ -412,7 +414,8 @@ export class OrderService {
                 const taxRate = variant.product.taxClass?.rate ?? 0;
 
                 subtotalAmount += lineSubtotal;
-                shippingRequired = shippingRequired || variant.product.requiresShipping;
+                shippingRequired =
+                  shippingRequired || variant.product.requiresShipping;
 
                 parsedItems.push({
                   item,
@@ -439,13 +442,16 @@ export class OrderService {
                 const maxTaxRate = Math.max(
                   0,
                   ...comboKit.items.map(
-                    (comboItem) => comboItem.productVariant?.product?.taxClass?.rate ?? 0
-                  )
+                    (comboItem) =>
+                      comboItem.productVariant?.product?.taxClass?.rate ?? 0,
+                  ),
                 );
 
                 const componentSnapshot = comboKit.items.map((comboItem) => {
                   if (!comboItem.productVariant) {
-                    throw new ValidationError("Combo kit contains invalid variant");
+                    throw new ValidationError(
+                      "Combo kit contains invalid variant",
+                    );
                   }
 
                   shippingRequired =
@@ -507,7 +513,9 @@ export class OrderService {
                   maxSubtotalValue = pItem.lineSubtotal;
                   maxSubtotalIndex = idx;
                 }
-                const alloc = Math.round((pItem.lineSubtotal / subtotalAmount) * discountAmount);
+                const alloc = Math.round(
+                  (pItem.lineSubtotal / subtotalAmount) * discountAmount,
+                );
                 itemDiscounts[idx] = alloc;
                 allocatedSum += alloc;
               });
@@ -515,7 +523,8 @@ export class OrderService {
               // Adjust any rounding residue (1-2 paise) on the item with highest subtotal
               const residue = discountAmount - allocatedSum;
               if (residue !== 0) {
-                itemDiscounts[maxSubtotalIndex] = (itemDiscounts[maxSubtotalIndex] ?? 0) + residue;
+                itemDiscounts[maxSubtotalIndex] =
+                  (itemDiscounts[maxSubtotalIndex] ?? 0) + residue;
               }
             }
 
@@ -530,7 +539,10 @@ export class OrderService {
 
             parsedItems.forEach((pItem, idx) => {
               const allocatedDisc = itemDiscounts[idx] ?? 0;
-              const netTaxable = Math.max(0, pItem.lineSubtotal - allocatedDisc);
+              const netTaxable = Math.max(
+                0,
+                pItem.lineSubtotal - allocatedDisc,
+              );
               const lineTax = Math.round((netTaxable * pItem.taxRate) / 100);
 
               taxAmount += lineTax;
@@ -547,10 +559,13 @@ export class OrderService {
                 const variant = pItem.variant;
                 const effectivePrice = variant.sellingPrice ?? variant.price;
                 const taxRate = variant.product?.taxClass?.rate ?? 0;
-                const priceWithTax = variant.price + Math.round((variant.price * taxRate) / 100);
-                const sellingPriceWithTax = variant.sellingPrice != null
-                  ? variant.sellingPrice + Math.round((variant.sellingPrice * taxRate) / 100)
-                  : null;
+                const priceWithTax =
+                  variant.price + Math.round((variant.price * taxRate) / 100);
+                const sellingPriceWithTax =
+                  variant.sellingPrice != null
+                    ? variant.sellingPrice +
+                      Math.round((variant.sellingPrice * taxRate) / 100)
+                    : null;
 
                 orderItems.push({
                   orderId: "",
@@ -579,7 +594,9 @@ export class OrderService {
               } else {
                 const comboKit = pItem.comboKit;
                 const maxTaxRate = pItem.taxRate;
-                const comboPriceWithTax = comboKit.price + Math.round((comboKit.price * maxTaxRate) / 100);
+                const comboPriceWithTax =
+                  comboKit.price +
+                  Math.round((comboKit.price * maxTaxRate) / 100);
 
                 orderItems.push({
                   orderId: "",
@@ -605,7 +622,10 @@ export class OrderService {
             // If shipping is required, charge 10000 paise (₹100)
             const shippingAmount = shippingRequired ? 10000 : 0;
             const netSubtotal = Math.max(0, subtotalAmount - discountAmount);
-            const totalAmount = Math.max(0, netSubtotal + taxAmount + shippingAmount);
+            const totalAmount = Math.max(
+              0,
+              netSubtotal + taxAmount + shippingAmount,
+            );
 
             const gstPercentage =
               netSubtotal > 0
@@ -712,15 +732,22 @@ export class OrderService {
             error?.meta?.modelName === "Order");
         const isSerializationError = error?.code === "P2034";
 
-        if ((isUniqueInvoiceError || isSerializationError) && attempt < MAX_RETRIES - 1) {
-          await new Promise((resolve) => setTimeout(resolve, 50 + Math.random() * 100));
+        if (
+          (isUniqueInvoiceError || isSerializationError) &&
+          attempt < MAX_RETRIES - 1
+        ) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, 50 + Math.random() * 100),
+          );
           continue;
         }
 
         throw error;
       }
     }
-    throw new ValidationError("Failed to process order due to high concurrency. Please try again.");
+    throw new ValidationError(
+      "Failed to process order due to high concurrency. Please try again.",
+    );
   }
 
   private async checkAndExpireOrderIfNeed(order: {
@@ -903,7 +930,8 @@ export class OrderService {
           );
         }
 
-        const isReserved = await this.stockReservationService.isReservationActive(orderId);
+        const isReserved =
+          await this.stockReservationService.isReservationActive(orderId);
         if (!isReserved) {
           let refundIssued = false;
           if (paymentData.paymentId && this.paymentService.refundPayment) {
@@ -919,7 +947,9 @@ export class OrderService {
             }
           }
 
-          const existingBreakup = isRecord(order.getBreakup) ? order.getBreakup : {};
+          const existingBreakup = isRecord(order.getBreakup)
+            ? order.getBreakup
+            : {};
           await tx.order.update({
             where: { id: orderId },
             data: {
@@ -1038,7 +1068,9 @@ export class OrderService {
         });
 
         if (!order) {
-          throw new NotFoundError(`Order not found for gatewayOrderId: ${gatewayOrderId}`);
+          throw new NotFoundError(
+            `Order not found for gatewayOrderId: ${gatewayOrderId}`,
+          );
         }
 
         if (order.paymentStatus === "COMPLETED") {
@@ -1046,10 +1078,13 @@ export class OrderService {
         }
 
         if (order.status === "CANCELLED") {
-          throw new ValidationError("Cancelled orders cannot be marked as paid");
+          throw new ValidationError(
+            "Cancelled orders cannot be marked as paid",
+          );
         }
 
-        const isReserved = await this.stockReservationService.isReservationActive(order.id);
+        const isReserved =
+          await this.stockReservationService.isReservationActive(order.id);
         if (!isReserved) {
           let refundIssued = false;
           if (paymentData.paymentId && this.paymentService.refundPayment) {
@@ -1065,7 +1100,9 @@ export class OrderService {
             }
           }
 
-          const existingBreakup = isRecord(order.getBreakup) ? order.getBreakup : {};
+          const existingBreakup = isRecord(order.getBreakup)
+            ? order.getBreakup
+            : {};
           await tx.order.update({
             where: { id: order.id },
             data: {
@@ -1095,8 +1132,10 @@ export class OrderService {
         await this.stockReservationService.confirmReservations(order.id, tx);
         await this.cartRepository.clearCartByUser(order.userId, tx);
 
-        const existingBreakup = isRecord(order.getBreakup) ? order.getBreakup : {};
-        
+        const existingBreakup = isRecord(order.getBreakup)
+          ? order.getBreakup
+          : {};
+
         await tx.order.update({
           where: { id: order.id },
           data: {
@@ -1116,14 +1155,20 @@ export class OrderService {
           },
         });
 
-        const updated = await this.orderRepository.findByIdWithItems(order.id, tx);
+        const updated = await this.orderRepository.findByIdWithItems(
+          order.id,
+          tx,
+        );
         return this.mapOrder(updated!);
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
     );
   }
 
-  async handlePaymentFailureByGatewayOrderId(gatewayOrderId: string, reason: string) {
+  async handlePaymentFailureByGatewayOrderId(
+    gatewayOrderId: string,
+    reason: string,
+  ) {
     return this.prisma.$transaction(
       async (tx) => {
         const order = await tx.order.findFirst({
@@ -1132,7 +1177,9 @@ export class OrderService {
         });
 
         if (!order) {
-          throw new NotFoundError(`Order not found for gatewayOrderId: ${gatewayOrderId}`);
+          throw new NotFoundError(
+            `Order not found for gatewayOrderId: ${gatewayOrderId}`,
+          );
         }
 
         if (order.status === "CANCELLED" && order.paymentStatus === "FAILED") {
@@ -1141,8 +1188,10 @@ export class OrderService {
 
         await this.stockReservationService.releaseReservations(order.id, tx);
 
-        const existingBreakup = isRecord(order.getBreakup) ? order.getBreakup : {};
-        
+        const existingBreakup = isRecord(order.getBreakup)
+          ? order.getBreakup
+          : {};
+
         await tx.order.update({
           where: { id: order.id },
           data: {
@@ -1158,7 +1207,10 @@ export class OrderService {
           },
         });
 
-        const updated = await this.orderRepository.findByIdWithItems(order.id, tx);
+        const updated = await this.orderRepository.findByIdWithItems(
+          order.id,
+          tx,
+        );
         return this.mapOrder(updated!);
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },

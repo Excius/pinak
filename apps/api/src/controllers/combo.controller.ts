@@ -391,7 +391,11 @@ export class ComboController {
   getAllImages = async (req: Request, res: Response) => {
     const { comboKitId } = req.params;
     const images = await this.comboService.getAllImages(comboKitId as string);
-    ResponseHandler.success(res, images, "Combo kit images retrieved successfully");
+    ResponseHandler.success(
+      res,
+      images,
+      "Combo kit images retrieved successfully",
+    );
   };
 
   addComboKitImage = async (req: Request, res: Response) => {

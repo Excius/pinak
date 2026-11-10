@@ -105,12 +105,21 @@ export class ProductController {
       page: parseInt(req.query.page as string) || 1,
       limit: parseInt(req.query.limit as string) || 10,
     };
-    const timeframe = (req.query.timeframe as "week" | "month" | "all_time") || "all_time";
+    const timeframe =
+      (req.query.timeframe as "week" | "month" | "all_time") || "all_time";
     const categoryId = req.query.categoryId as string;
 
-    const products = await this.productService.getBestSellers(pagination, timeframe, categoryId);
+    const products = await this.productService.getBestSellers(
+      pagination,
+      timeframe,
+      categoryId,
+    );
     const publicData = toPublicProductList(products);
-    ResponseHandler.success(res, publicData, "Best sellers fetched successfully");
+    ResponseHandler.success(
+      res,
+      publicData,
+      "Best sellers fetched successfully",
+    );
   };
 
   getBestSellersAdmin = async (req: Request, res: Response) => {
@@ -118,27 +127,44 @@ export class ProductController {
       page: parseInt(req.query.page as string) || 1,
       limit: parseInt(req.query.limit as string) || 10,
     };
-    const timeframe = (req.query.timeframe as "week" | "month" | "all_time") || "all_time";
+    const timeframe =
+      (req.query.timeframe as "week" | "month" | "all_time") || "all_time";
     const categoryId = req.query.categoryId as string;
 
-    const result = await this.productService.getBestSellersAdmin(pagination, timeframe, categoryId);
-    
+    const result = await this.productService.getBestSellersAdmin(
+      pagination,
+      timeframe,
+      categoryId,
+    );
+
     // Map the products to AdminProduct
     const adminData = {
-      items: (result.items as NonNullable<typeof result.items[0]>[]).map(item => ({
-        product: toAdminProduct(item.product as any),
-        salesMetrics: item.salesMetrics,
-      })),
+      items: (result.items as NonNullable<(typeof result.items)[0]>[]).map(
+        (item) => ({
+          product: toAdminProduct(item.product as any),
+          salesMetrics: item.salesMetrics,
+        }),
+      ),
       pagination: result.pagination,
     };
 
-    ResponseHandler.success(res, adminData, "Admin best sellers fetched successfully");
+    ResponseHandler.success(
+      res,
+      adminData,
+      "Admin best sellers fetched successfully",
+    );
   };
 
   getBestSellerAnalytics = async (req: Request, res: Response) => {
-    const timeframe = (req.query.timeframe as "week" | "month" | "all_time") || "month";
-    const analytics = await this.productService.getBestSellerAnalytics(timeframe);
-    ResponseHandler.success(res, analytics, "Best seller analytics fetched successfully");
+    const timeframe =
+      (req.query.timeframe as "week" | "month" | "all_time") || "month";
+    const analytics =
+      await this.productService.getBestSellerAnalytics(timeframe);
+    ResponseHandler.success(
+      res,
+      analytics,
+      "Best seller analytics fetched successfully",
+    );
   };
 
   getFeaturedProducts = async (req: Request, res: Response) => {
@@ -375,7 +401,11 @@ export class ProductController {
     const images = await this.productService.getAllVariantImages(
       variantId as string,
     );
-    ResponseHandler.success(res, images, "Product variant images retrieved successfully");
+    ResponseHandler.success(
+      res,
+      images,
+      "Product variant images retrieved successfully",
+    );
   };
 
   addProductImage = async (req: Request, res: Response) => {
@@ -537,7 +567,6 @@ export class ProductController {
       "Product variant permanently deleted successfully",
     );
   };
-
 
   // TODO: Implement bulk product operations
   // - Bulk create products

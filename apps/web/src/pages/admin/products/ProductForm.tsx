@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   getProductByIdAdmin,
   createProductAdmin,
@@ -14,48 +14,66 @@ import {
   getRelatedProductsAdmin,
   addRelatedProductAdmin,
   removeRelatedProductAdmin,
-  getAllProductsAdmin
-} from '../../../api/admin/admin.products.api'
-import type { AdminProduct, AdminProductVariant } from '../../../api/admin/admin.products.api'
-import { getAllCategoriesAdmin, getAllBrandsAdmin } from '../../../api/admin/admin.catalog.api'
-import type { AdminCategory, AdminBrand } from '../../../api/admin/admin.catalog.api'
-import { getOptions, type AdminOption } from '../../../api/admin/admin.options.api'
-import { formatPaise } from '../../../utils/currency'
+  getAllProductsAdmin,
+} from "../../../api/admin/admin.products.api";
+import type {
+  AdminProduct,
+  AdminProductVariant,
+} from "../../../api/admin/admin.products.api";
+import {
+  getAllCategoriesAdmin,
+  getAllBrandsAdmin,
+} from "../../../api/admin/admin.catalog.api";
+import type {
+  AdminCategory,
+  AdminBrand,
+} from "../../../api/admin/admin.catalog.api";
+import {
+  getOptions,
+  type AdminOption,
+} from "../../../api/admin/admin.options.api";
+import { formatPaise } from "../../../utils/currency";
 
 const ProductForm = () => {
-  const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
-  const isEdit = Boolean(id)
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const isEdit = Boolean(id);
 
-  const [loading, setLoading] = useState(isEdit)
-  const [saving, setSaving] = useState(false)
-  const [categories, setCategories] = useState<AdminCategory[]>([])
-  const [brands, setBrands] = useState<AdminBrand[]>([])
-  const [options, setOptions] = useState<AdminOption[]>([])
-  const [editingVariant, setEditingVariant] = useState<AdminProductVariant | null>(null)
-  const [showBrandDropdown, setShowBrandDropdown] = useState(false)
-  const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [loading, setLoading] = useState(isEdit);
+  const [saving, setSaving] = useState(false);
+  const [categories, setCategories] = useState<AdminCategory[]>([]);
+  const [brands, setBrands] = useState<AdminBrand[]>([]);
+  const [options, setOptions] = useState<AdminOption[]>([]);
+  const [editingVariant, setEditingVariant] =
+    useState<AdminProductVariant | null>(null);
+  const [showBrandDropdown, setShowBrandDropdown] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   const [formData, setFormData] = useState<Partial<AdminProduct>>({
-    name: '',
-    slug: '',
-    description: '',
+    name: "",
+    slug: "",
+    description: "",
     isActive: true,
     tags: [],
-    brandId: '',
-    metaTitle: '',
-    metaDescription: '',
-    keyIngredients: '',
+    brandId: "",
+    metaTitle: "",
+    metaDescription: "",
+    keyIngredients: "",
     categories: [],
-    variants: []
-  })
+    variants: [],
+  });
 
   // Related products state
-  const [relatedProducts, setRelatedProducts] = useState<any[]>([])
-  const [showAddRelated, setShowAddRelated] = useState(false)
-  const [relatedSearchQuery, setRelatedSearchQuery] = useState('')
-  const [relatedSearchResults, setRelatedSearchResults] = useState<AdminProduct[]>([])
-  const [isSearchingRelated, setIsSearchingRelated] = useState(false)
+  const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
+  const [showAddRelated, setShowAddRelated] = useState(false);
+  const [relatedSearchQuery, setRelatedSearchQuery] = useState("");
+  const [relatedSearchResults, setRelatedSearchResults] = useState<
+    AdminProduct[]
+  >([]);
+  const [isSearchingRelated, setIsSearchingRelated] = useState(false);
 
   // â”€â”€ Data Fetching â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -63,58 +81,77 @@ const ProductForm = () => {
     const fetchData = async () => {
       try {
         const [cats, brs, opts] = await Promise.all([
-          getAllCategoriesAdmin(), 
+          getAllCategoriesAdmin(),
           getAllBrandsAdmin(),
-          getOptions()
-        ])
-        setCategories(cats)
-        setBrands(brs)
-        setOptions(opts)
+          getOptions(),
+        ]);
+        setCategories(cats);
+        setBrands(brs);
+        setOptions(opts);
 
         if (isEdit && id) {
-          const product = await getProductByIdAdmin(id)
-          setFormData(product)
-          
-          const related = await getRelatedProductsAdmin(id)
-          setRelatedProducts(related)
+          const product = await getProductByIdAdmin(id);
+          setFormData(product);
+
+          const related = await getRelatedProductsAdmin(id);
+          setRelatedProducts(related);
         }
       } catch (err) {
-        console.error('Failed to fetch data', err)
+        console.error("Failed to fetch data", err);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
-    fetchData()
-  }, [id, isEdit])
+    };
+    fetchData();
+  }, [id, isEdit]);
 
   // â”€â”€ Handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-  }
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = async () => {
-    setSaving(true)
-    setSaveMessage(null)
+    setSaving(true);
+    setSaveMessage(null);
     try {
       // Extract only the fields the backend CreateProduct / UpdateProduct schemas accept
       const allowedFields = [
-        'name', 'slug', 'description', 'keyIngredients',
-        'metaTitle', 'metaDescription', 'metaKeywords', 'seoKeyword',
-        'model', 'ean', 'frontImageUrl',
-        'tags', 'brandId', 'requiresShipping', 'outOfStockStatus',
-        'dimensionLength', 'dimensionWidth', 'dimensionHeight', 'lengthClassId',
-        'weightGrams', 'weightClassId', 'taxClassId',
-        'sortOrder', 'isActive'
-      ]
+        "name",
+        "slug",
+        "description",
+        "keyIngredients",
+        "metaTitle",
+        "metaDescription",
+        "metaKeywords",
+        "seoKeyword",
+        "model",
+        "ean",
+        "frontImageUrl",
+        "tags",
+        "brandId",
+        "requiresShipping",
+        "outOfStockStatus",
+        "dimensionLength",
+        "dimensionWidth",
+        "dimensionHeight",
+        "lengthClassId",
+        "weightGrams",
+        "weightClassId",
+        "taxClassId",
+        "sortOrder",
+        "isActive",
+      ];
 
-      const cleanData: Record<string, unknown> = {}
+      const cleanData: Record<string, unknown> = {};
       for (const key of allowedFields) {
-        const val = (formData as Record<string, unknown>)[key]
+        const val = (formData as Record<string, unknown>)[key];
         // Skip empty strings, null, undefined â€” backend validates strictly
-        if (val !== '' && val !== null && val !== undefined) {
-          cleanData[key] = val
+        if (val !== "" && val !== null && val !== undefined) {
+          cleanData[key] = val;
         }
       }
 
@@ -122,75 +159,89 @@ const ProductForm = () => {
       // The API response may have categories as { id, name } or { categoryId, category: { id, name } }
       const categoryIds = (formData.categories || [])
         .map((c: any) => getCatId(c))
-        .filter((id: unknown): id is string => typeof id === 'string' && id.length > 0)
+        .filter(
+          (id: unknown): id is string =>
+            typeof id === "string" && id.length > 0,
+        );
 
       if (isEdit && id) {
-        await updateProductAdmin(id, cleanData)
+        await updateProductAdmin(id, cleanData);
         // Save categories separately â€” don't let it block the product save
         if (categoryIds.length > 0) {
           try {
-            await setProductCategoriesAdmin(id, categoryIds)
+            await setProductCategoriesAdmin(id, categoryIds);
           } catch (catErr) {
-            console.warn('Category assignment failed (non-blocking):', catErr)
+            console.warn("Category assignment failed (non-blocking):", catErr);
           }
         }
-        setSaveMessage({ type: 'success', text: 'Product updated successfully!' })
+        setSaveMessage({
+          type: "success",
+          text: "Product updated successfully!",
+        });
       } else {
         // name is required for creation
         if (!cleanData.name) {
-          setSaveMessage({ type: 'error', text: 'Product name is required.' })
-          setSaving(false)
-          return
+          setSaveMessage({ type: "error", text: "Product name is required." });
+          setSaving(false);
+          return;
         }
-        const newProd = await createProductAdmin(cleanData)
+        const newProd = await createProductAdmin(cleanData);
         if (categoryIds.length > 0) {
           try {
-            await setProductCategoriesAdmin(newProd.id, categoryIds)
+            await setProductCategoriesAdmin(newProd.id, categoryIds);
           } catch (catErr) {
-            console.warn('Category assignment failed (non-blocking):', catErr)
+            console.warn("Category assignment failed (non-blocking):", catErr);
           }
         }
-        navigate(`/admin/products/${newProd.id}`, { replace: true })
+        navigate(`/admin/products/${newProd.id}`, { replace: true });
       }
     } catch (err: any) {
-      const msg = err?.response?.data?.message || err?.message || 'Failed to save product'
-      console.error('Save failed', err)
-      setSaveMessage({ type: 'error', text: msg })
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to save product";
+      console.error("Save failed", err);
+      setSaveMessage({ type: "error", text: msg });
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   const openEditVariant = (variant: AdminProductVariant | null) => {
     if (!variant) {
-      setEditingVariant(null)
-      return
+      setEditingVariant(null);
+      return;
     }
-    
+
     // Map option values to IDs based on fetched options
-    let optionValueIds: string[] = []
+    let optionValueIds: string[] = [];
     if (variant.optionValues) {
-      optionValueIds = variant.optionValues.map(ov => {
-        const opt = options.find(o => o.name === ov.optionName)
-        const val = opt?.values.find(v => v.value === ov.valueName)
-        return val?.id || ''
-      }).filter(id => id !== '')
+      optionValueIds = variant.optionValues
+        .map((ov) => {
+          const opt = options.find((o) => o.name === ov.optionName);
+          const val = opt?.values.find((v) => v.value === ov.valueName);
+          return val?.id || "";
+        })
+        .filter((id) => id !== "");
     }
-    
-    setEditingVariant({ ...variant, optionValueIds })
-  }
+
+    setEditingVariant({ ...variant, optionValueIds });
+  };
 
   const handleUpdateVariant = async (variant: AdminProductVariant) => {
     try {
       // Validate sellingPrice
       if (variant.sellingPrice != null && variant.sellingPrice !== undefined) {
         if (variant.sellingPrice < 0) {
-          setSaveMessage({ type: 'error', text: 'Selling price must be >= 0' })
-          return
+          setSaveMessage({ type: "error", text: "Selling price must be >= 0" });
+          return;
         }
         if (variant.sellingPrice > variant.price) {
-          setSaveMessage({ type: 'error', text: 'Selling price cannot be higher than the main MRP price' })
-          return
+          setSaveMessage({
+            type: "error",
+            text: "Selling price cannot be higher than the main MRP price",
+          });
+          return;
         }
       }
 
@@ -200,165 +251,194 @@ const ProductForm = () => {
         const created = await createProductVariantAdmin(id, {
           sku: variant.sku,
           price: variant.price,
-          sellingPrice: variant.sellingPrice !== undefined ? variant.sellingPrice : null,
+          sellingPrice:
+            variant.sellingPrice !== undefined ? variant.sellingPrice : null,
           stock: variant.stock,
-          optionValueIds: variant.optionValueIds
-        })
-        setFormData(prev => ({
+          optionValueIds: variant.optionValueIds,
+        });
+        setFormData((prev) => ({
           ...prev,
-          variants: [...(prev.variants || []), created]
-        }))
+          variants: [...(prev.variants || []), created],
+        }));
       } else {
         // Update existing variant
         const updated = await updateProductVariantAdmin(variant.id, {
           price: variant.price,
-          sellingPrice: variant.sellingPrice !== undefined ? variant.sellingPrice : null,
+          sellingPrice:
+            variant.sellingPrice !== undefined ? variant.sellingPrice : null,
           stock: variant.stock,
           sku: variant.sku,
-          optionValueIds: variant.optionValueIds
-        })
-        setFormData(prev => ({
+          optionValueIds: variant.optionValueIds,
+        });
+        setFormData((prev) => ({
           ...prev,
-          variants: prev.variants?.map(v => v.id === variant.id ? { ...v, ...updated } : v)
-        }))
+          variants: prev.variants?.map((v) =>
+            v.id === variant.id ? { ...v, ...updated } : v,
+          ),
+        }));
       }
-      setEditingVariant(null)
+      setEditingVariant(null);
     } catch (err: any) {
-      console.error('Failed to save variant', err)
-      const msg = err?.response?.data?.message || err?.message || 'Failed to save variant'
-      setSaveMessage({ type: 'error', text: msg })
+      console.error("Failed to save variant", err);
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to save variant";
+      setSaveMessage({ type: "error", text: msg });
     }
-  }
+  };
 
   const handleDeleteVariant = async (variantId: string) => {
-    if (!window.confirm('Are you sure you want to delete this variant?')) return
+    if (!window.confirm("Are you sure you want to delete this variant?"))
+      return;
     try {
-      await deleteProductVariantAdmin(variantId)
-      setFormData(prev => ({
+      await deleteProductVariantAdmin(variantId);
+      setFormData((prev) => ({
         ...prev,
-        variants: prev.variants?.filter(v => v.id !== variantId)
-      }))
+        variants: prev.variants?.filter((v) => v.id !== variantId),
+      }));
     } catch (err) {
-      console.error('Failed to delete variant', err)
-      setSaveMessage({ type: 'error', text: 'Failed to delete variant.' })
+      console.error("Failed to delete variant", err);
+      setSaveMessage({ type: "error", text: "Failed to delete variant." });
     }
-  }
+  };
 
   const handleImageUpload = async (variantId: string, file: File) => {
-    const data = new FormData()
-    data.append('image', file)
-    data.append('isPrimary', 'false')
-    data.append('displayOrder', '0')
+    const data = new FormData();
+    data.append("image", file);
+    data.append("isPrimary", "false");
+    data.append("displayOrder", "0");
     try {
-      await addProductImageAdmin(variantId, data)
+      await addProductImageAdmin(variantId, data);
       // Refresh product data to see new image
       if (id) {
-        const product = await getProductByIdAdmin(id)
-        setFormData(product)
+        const product = await getProductByIdAdmin(id);
+        setFormData(product);
         // Also refresh the editing variant if it's the same one
         if (editingVariant?.id === variantId) {
-          const refreshedVariant = product.variants?.find(v => v.id === variantId)
-          if (refreshedVariant) setEditingVariant(refreshedVariant)
+          const refreshedVariant = product.variants?.find(
+            (v) => v.id === variantId,
+          );
+          if (refreshedVariant) setEditingVariant(refreshedVariant);
         }
       }
     } catch (err) {
-      console.error('Image upload failed', err)
+      console.error("Image upload failed", err);
     }
-  }
+  };
 
   const handleDeleteImage = async (imageId: string, variantId: string) => {
-    if (!window.confirm('Are you sure you want to delete this image?')) return
+    if (!window.confirm("Are you sure you want to delete this image?")) return;
     try {
-      await deleteProductImageAdmin(imageId)
+      await deleteProductImageAdmin(imageId);
       if (id) {
-        const product = await getProductByIdAdmin(id)
-        setFormData(product)
+        const product = await getProductByIdAdmin(id);
+        setFormData(product);
         if (editingVariant?.id === variantId) {
-          const refreshedVariant = product.variants?.find(v => v.id === variantId)
-          if (refreshedVariant) setEditingVariant(refreshedVariant)
+          const refreshedVariant = product.variants?.find(
+            (v) => v.id === variantId,
+          );
+          if (refreshedVariant) setEditingVariant(refreshedVariant);
         }
       }
     } catch (err) {
-      console.error('Image delete failed', err)
+      console.error("Image delete failed", err);
     }
-  }
+  };
 
   const handleSetPrimaryImage = async (imageId: string, variantId: string) => {
     try {
-      await setPrimaryImageAdmin(imageId)
+      await setPrimaryImageAdmin(imageId);
       if (id) {
-        const product = await getProductByIdAdmin(id)
-        setFormData(product)
+        const product = await getProductByIdAdmin(id);
+        setFormData(product);
         if (editingVariant?.id === variantId) {
-          const refreshedVariant = product.variants?.find(v => v.id === variantId)
-          if (refreshedVariant) setEditingVariant(refreshedVariant)
+          const refreshedVariant = product.variants?.find(
+            (v) => v.id === variantId,
+          );
+          if (refreshedVariant) setEditingVariant(refreshedVariant);
         }
       }
     } catch (err) {
-      console.error('Set primary image failed', err)
+      console.error("Set primary image failed", err);
     }
-  }
+  };
 
   // Helper: extract category ID from either API shape { categoryId, category } or flat { id }
-  const getCatId = (c: any): string => c.categoryId || c.category?.id || c.id || ''
+  const getCatId = (c: any): string =>
+    c.categoryId || c.category?.id || c.id || "";
 
   const toggleCategory = (cat: AdminCategory) => {
-    const exists = formData.categories?.some(c => getCatId(c) === cat.id)
-    setFormData(prev => ({
+    const exists = formData.categories?.some((c) => getCatId(c) === cat.id);
+    setFormData((prev) => ({
       ...prev,
       categories: exists
-        ? prev.categories?.filter(c => getCatId(c) !== cat.id)
-        : [...(prev.categories || []), { id: cat.id, name: cat.name, slug: cat.slug }]
-    }))
-  }
+        ? prev.categories?.filter((c) => getCatId(c) !== cat.id)
+        : [
+            ...(prev.categories || []),
+            { id: cat.id, name: cat.name, slug: cat.slug },
+          ],
+    }));
+  };
 
   // â”€â”€ Related Products Handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(async () => {
       if (relatedSearchQuery.trim().length > 1) {
-        setIsSearchingRelated(true)
+        setIsSearchingRelated(true);
         try {
-          const res = await getAllProductsAdmin({ search: relatedSearchQuery, limit: 10 })
-          setRelatedSearchResults(res.items.filter(p => p.id !== id)) // exclude self
+          const res = await getAllProductsAdmin({
+            search: relatedSearchQuery,
+            limit: 10,
+          });
+          setRelatedSearchResults(res.items.filter((p) => p.id !== id)); // exclude self
         } catch (err) {
-          console.error('Failed to search related products', err)
+          console.error("Failed to search related products", err);
         } finally {
-          setIsSearchingRelated(false)
+          setIsSearchingRelated(false);
         }
       } else {
-        setRelatedSearchResults([])
+        setRelatedSearchResults([]);
       }
-    }, 500)
+    }, 500);
 
-    return () => clearTimeout(delayDebounceFn)
-  }, [relatedSearchQuery, id])
+    return () => clearTimeout(delayDebounceFn);
+  }, [relatedSearchQuery, id]);
 
   const handleAddRelatedProduct = async (relatedProductId: string) => {
-    if (!id) return
+    if (!id) return;
     try {
-      await addRelatedProductAdmin(id, relatedProductId, 0)
-      const updatedRelated = await getRelatedProductsAdmin(id)
-      setRelatedProducts(updatedRelated)
-      setRelatedSearchQuery('')
-      setShowAddRelated(false)
+      await addRelatedProductAdmin(id, relatedProductId, 0);
+      const updatedRelated = await getRelatedProductsAdmin(id);
+      setRelatedProducts(updatedRelated);
+      setRelatedSearchQuery("");
+      setShowAddRelated(false);
     } catch (err) {
-      console.error('Failed to add related product', err)
-      setSaveMessage({ type: 'error', text: 'Failed to add related product.' })
+      console.error("Failed to add related product", err);
+      setSaveMessage({ type: "error", text: "Failed to add related product." });
     }
-  }
+  };
 
   const handleRemoveRelatedProduct = async (relatedProductId: string) => {
-    if (!id) return
-    if (!window.confirm('Are you sure you want to remove this related product?')) return
+    if (!id) return;
+    if (
+      !window.confirm("Are you sure you want to remove this related product?")
+    )
+      return;
     try {
-      await removeRelatedProductAdmin(id, relatedProductId)
-      setRelatedProducts(prev => prev.filter(rp => rp.relatedProductId !== relatedProductId))
+      await removeRelatedProductAdmin(id, relatedProductId);
+      setRelatedProducts((prev) =>
+        prev.filter((rp) => rp.relatedProductId !== relatedProductId),
+      );
     } catch (err) {
-      console.error('Failed to remove related product', err)
-      setSaveMessage({ type: 'error', text: 'Failed to remove related product.' })
+      console.error("Failed to remove related product", err);
+      setSaveMessage({
+        type: "error",
+        text: "Failed to remove related product.",
+      });
     }
-  }
+  };
 
   // â”€â”€ Loading State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -370,66 +450,104 @@ const ProductForm = () => {
           <p className="text-sm text-text-muted">Loading product data...</p>
         </div>
       </div>
-    )
+    );
   }
 
   // â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   return (
     <div className="space-y-6 animate-fade-in pb-20">
-
       {/* â”€â”€ Variant Edit Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {editingVariant && (
         <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setEditingVariant(null)} />
+          <div
+            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            onClick={() => setEditingVariant(null)}
+          />
           <div className="relative bg-background-light border border-primary/20 rounded-2xl p-8 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl">
             <h3 className="text-lg font-bold text-text-main-light mb-4">
-              {editingVariant.id ? `Edit Variant: ${editingVariant.sku}` : 'Add New Variant'}
+              {editingVariant.id
+                ? `Edit Variant: ${editingVariant.sku}`
+                : "Add New Variant"}
             </h3>
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-xs font-bold text-text-muted uppercase">SKU</label>
+                <label className="text-xs font-bold text-text-muted uppercase">
+                  SKU
+                </label>
                 <input
                   type="text"
                   value={editingVariant.sku}
-                  onChange={e => setEditingVariant({ ...editingVariant, sku: e.target.value })}
+                  onChange={(e) =>
+                    setEditingVariant({
+                      ...editingVariant,
+                      sku: e.target.value,
+                    })
+                  }
                   className="w-full bg-background-main border border-primary/20 rounded-xl px-4 py-3 text-text-main-light outline-none focus:border-primary"
                 />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-text-muted uppercase">Price / MRP (₹) *</label>
+                  <label className="text-xs font-bold text-text-muted uppercase">
+                    Price / MRP (₹) *
+                  </label>
                   <input
                     type="number"
-                    value={editingVariant.price !== undefined ? editingVariant.price / 100 : ''}
-                    onChange={e => setEditingVariant({ ...editingVariant, price: Math.round(Number(e.target.value) * 100) })}
+                    value={
+                      editingVariant.price !== undefined
+                        ? editingVariant.price / 100
+                        : ""
+                    }
+                    onChange={(e) =>
+                      setEditingVariant({
+                        ...editingVariant,
+                        price: Math.round(Number(e.target.value) * 100),
+                      })
+                    }
                     className="w-full bg-background-main border border-primary/20 rounded-xl px-4 py-3 text-text-main-light outline-none focus:border-primary"
                     placeholder="MRP (₹)"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-text-muted uppercase">Selling Price (₹)</label>
+                  <label className="text-xs font-bold text-text-muted uppercase">
+                    Selling Price (₹)
+                  </label>
                   <input
                     type="number"
-                    value={editingVariant.sellingPrice != null ? editingVariant.sellingPrice / 100 : ''}
-                    onChange={e => {
-                      const val = e.target.value.trim()
+                    value={
+                      editingVariant.sellingPrice != null
+                        ? editingVariant.sellingPrice / 100
+                        : ""
+                    }
+                    onChange={(e) => {
+                      const val = e.target.value.trim();
                       setEditingVariant({
                         ...editingVariant,
-                        sellingPrice: val === '' ? null : Math.round(Number(val) * 100)
-                      })
+                        sellingPrice:
+                          val === "" ? null : Math.round(Number(val) * 100),
+                      });
                     }}
                     className="w-full bg-background-main border border-primary/20 rounded-xl px-4 py-3 text-text-main-light outline-none focus:border-primary"
                     placeholder="Optional (Discounted)"
                   />
-                  <p className="text-[10px] text-text-muted">Empty to remove discount</p>
+                  <p className="text-[10px] text-text-muted">
+                    Empty to remove discount
+                  </p>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-text-muted uppercase">Stock *</label>
+                  <label className="text-xs font-bold text-text-muted uppercase">
+                    Stock *
+                  </label>
                   <input
                     type="number"
                     value={editingVariant.stock}
-                    onChange={e => setEditingVariant({ ...editingVariant, stock: Number(e.target.value) })}
+                    onChange={(e) =>
+                      setEditingVariant({
+                        ...editingVariant,
+                        stock: Number(e.target.value),
+                      })
+                    }
                     className="w-full bg-background-main border border-primary/20 rounded-xl px-4 py-3 text-text-main-light outline-none focus:border-primary"
                   />
                 </div>
@@ -438,58 +556,84 @@ const ProductForm = () => {
               {/* Options (Size, Shade, etc) */}
               {options.length > 0 && (
                 <div className="space-y-4 mt-4">
-                  {options.map(opt => {
-                    const selectedValId = editingVariant.optionValueIds?.find(id => opt.values.some(v => v.id === id)) || ''
+                  {options.map((opt) => {
+                    const selectedValId =
+                      editingVariant.optionValueIds?.find((id) =>
+                        opt.values.some((v) => v.id === id),
+                      ) || "";
                     return (
                       <div key={opt.id} className="space-y-2">
-                        <label className="text-xs font-bold text-text-muted uppercase">{opt.name}</label>
+                        <label className="text-xs font-bold text-text-muted uppercase">
+                          {opt.name}
+                        </label>
                         <select
                           value={selectedValId}
-                          onChange={e => {
-                            const newId = e.target.value
-                            const otherIds = (editingVariant.optionValueIds || []).filter(id => !opt.values.some(v => v.id === id))
-                            setEditingVariant({ 
-                              ...editingVariant, 
-                              optionValueIds: newId ? [...otherIds, newId] : otherIds 
-                            })
+                          onChange={(e) => {
+                            const newId = e.target.value;
+                            const otherIds = (
+                              editingVariant.optionValueIds || []
+                            ).filter(
+                              (id) => !opt.values.some((v) => v.id === id),
+                            );
+                            setEditingVariant({
+                              ...editingVariant,
+                              optionValueIds: newId
+                                ? [...otherIds, newId]
+                                : otherIds,
+                            });
                           }}
                           className="w-full bg-background-main border border-primary/20 rounded-xl px-4 py-3 text-text-main-light outline-none focus:border-primary"
                         >
                           <option value="">None / Not Applicable</option>
-                          {opt.values.map(val => (
-                            <option key={val.id} value={val.id}>{val.value}</option>
+                          {opt.values.map((val) => (
+                            <option key={val.id} value={val.id}>
+                              {val.value}
+                            </option>
                           ))}
                         </select>
                       </div>
-                    )
+                    );
                   })}
                 </div>
               )}
 
               {/* Image Upload */}
               <div className="space-y-2 mt-4">
-                <label className="text-xs font-bold text-text-muted uppercase">Variant Images</label>
+                <label className="text-xs font-bold text-text-muted uppercase">
+                  Variant Images
+                </label>
                 {editingVariant.id ? (
                   <>
                     <label className="flex items-center justify-center gap-2 px-4 py-3 bg-background-main border border-dashed border-primary/30 rounded-xl cursor-pointer hover:border-primary transition-all">
-                      <span className="material-icons-outlined text-primary">cloud_upload</span>
-                      <span className="text-sm text-text-muted">Upload Image</span>
+                      <span className="material-icons-outlined text-primary">
+                        cloud_upload
+                      </span>
+                      <span className="text-sm text-text-muted">
+                        Upload Image
+                      </span>
                       <input
                         type="file"
                         className="hidden"
                         accept="image/*"
-                        onChange={e => {
-                          const file = e.target.files?.[0]
-                          if (file) handleImageUpload(editingVariant.id, file)
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleImageUpload(editingVariant.id, file);
                         }}
                       />
                     </label>
                     {editingVariant.images?.length > 0 && (
                       <div className="grid grid-cols-3 gap-3 py-2">
-                        {editingVariant.images.map(img => (
-                          <div key={img.id} className={`relative group rounded-xl border-2 overflow-hidden ${img.isPrimary ? 'border-primary shadow-[0_0_8px_rgba(212,175,55,0.3)]' : 'border-primary/10'}`}>
+                        {editingVariant.images.map((img) => (
+                          <div
+                            key={img.id}
+                            className={`relative group rounded-xl border-2 overflow-hidden ${img.isPrimary ? "border-primary shadow-[0_0_8px_rgba(212,175,55,0.3)]" : "border-primary/10"}`}
+                          >
                             <div className="w-full aspect-square">
-                              <img src={img.url} className="w-full h-full object-cover" alt="" />
+                              <img
+                                src={img.url}
+                                className="w-full h-full object-cover"
+                                alt=""
+                              />
                             </div>
                             {img.isPrimary && (
                               <div className="absolute top-1.5 left-1.5 bg-primary text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider">
@@ -499,19 +643,30 @@ const ProductForm = () => {
                             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                               {!img.isPrimary && (
                                 <button
-                                  onClick={() => handleSetPrimaryImage(img.id, editingVariant.id)}
+                                  onClick={() =>
+                                    handleSetPrimaryImage(
+                                      img.id,
+                                      editingVariant.id,
+                                    )
+                                  }
                                   className="p-1.5 bg-primary/90 text-white rounded-lg hover:bg-primary transition-colors"
                                   title="Set as primary image"
                                 >
-                                  <span className="material-icons-outlined text-sm">star</span>
+                                  <span className="material-icons-outlined text-sm">
+                                    star
+                                  </span>
                                 </button>
                               )}
                               <button
-                                onClick={() => handleDeleteImage(img.id, editingVariant.id)}
+                                onClick={() =>
+                                  handleDeleteImage(img.id, editingVariant.id)
+                                }
                                 className="p-1.5 bg-red-500/90 text-white rounded-lg hover:bg-red-500 transition-colors"
                                 title="Delete image"
                               >
-                                <span className="material-icons-outlined text-sm">delete</span>
+                                <span className="material-icons-outlined text-sm">
+                                  delete
+                                </span>
                               </button>
                             </div>
                           </div>
@@ -521,7 +676,9 @@ const ProductForm = () => {
                   </>
                 ) : (
                   <div className="p-4 bg-background-main rounded-xl border border-primary/10 text-center">
-                    <p className="text-xs text-text-muted">Save this variant first to upload images.</p>
+                    <p className="text-xs text-text-muted">
+                      Save this variant first to upload images.
+                    </p>
                   </div>
                 )}
               </div>
@@ -547,12 +704,15 @@ const ProductForm = () => {
 
       {/* â”€â”€ Save Feedback Banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {saveMessage && (
-        <div className={`p-4 rounded-xl border text-sm font-medium flex items-center gap-2 ${saveMessage.type === 'success'
-            ? 'bg-green-500/10 border-green-500/20 text-green-400'
-            : 'bg-red-500/10 border-red-500/20 text-red-400'
-          }`}>
+        <div
+          className={`p-4 rounded-xl border text-sm font-medium flex items-center gap-2 ${
+            saveMessage.type === "success"
+              ? "bg-green-500/10 border-green-500/20 text-green-400"
+              : "bg-red-500/10 border-red-500/20 text-red-400"
+          }`}
+        >
           <span className="material-icons-outlined text-lg">
-            {saveMessage.type === 'success' ? 'check_circle' : 'error'}
+            {saveMessage.type === "success" ? "check_circle" : "error"}
           </span>
           {saveMessage.text}
         </div>
@@ -562,13 +722,15 @@ const ProductForm = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-display font-bold text-text-main-light">
-            {isEdit ? `Edit: ${formData.name}` : 'Create New Product'}
+            {isEdit ? `Edit: ${formData.name}` : "Create New Product"}
           </h1>
-          <p className="text-sm text-text-muted mt-1">Configure your product specifications and variants.</p>
+          <p className="text-sm text-text-muted mt-1">
+            Configure your product specifications and variants.
+          </p>
         </div>
         <div className="flex gap-3">
           <button
-            onClick={() => navigate('/admin/products')}
+            onClick={() => navigate("/admin/products")}
             className="px-5 py-2.5 rounded-xl font-bold text-sm border border-primary/20 text-text-muted hover:bg-primary/5 transition-all"
           >
             Cancel
@@ -578,26 +740,28 @@ const ProductForm = () => {
             disabled={saving}
             className="bg-primary text-white px-8 py-2.5 rounded-xl font-bold text-sm shadow-[0_0_15px_rgba(212,175,55,0.4)] hover:shadow-[0_0_25px_rgba(212,175,55,0.6)] transition-all disabled:opacity-50"
           >
-            {saving ? 'Saving...' : 'Save Product'}
+            {saving ? "Saving..." : "Save Product"}
           </button>
         </div>
       </div>
 
       {/* â”€â”€ Form Grid â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
         {/* Left Column â€” Main Info */}
         <div className="lg:col-span-2 space-y-6">
-
           {/* General Info */}
           <section className="bg-background-light rounded-2xl border border-primary/10 p-6 space-y-4">
-            <h2 className="text-sm font-bold tracking-widest text-primary/70 uppercase mb-4">General Information</h2>
+            <h2 className="text-sm font-bold tracking-widest text-primary/70 uppercase mb-4">
+              General Information
+            </h2>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-text-muted uppercase">Product Name</label>
+              <label className="text-xs font-bold text-text-muted uppercase">
+                Product Name
+              </label>
               <input
                 name="name"
-                value={formData.name || ''}
+                value={formData.name || ""}
                 onChange={handleChange}
                 placeholder="e.g. Hydrating Face Cream"
                 className="w-full bg-background-main border border-primary/20 rounded-xl px-4 py-3 text-text-main-light focus:border-primary/50 outline-none transition-all"
@@ -606,10 +770,12 @@ const ProductForm = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-xs font-bold text-text-muted uppercase">Slug</label>
+                <label className="text-xs font-bold text-text-muted uppercase">
+                  Slug
+                </label>
                 <input
                   name="slug"
-                  value={formData.slug || ''}
+                  value={formData.slug || ""}
                   onChange={handleChange}
                   placeholder="hydrating-face-cream"
                   className="w-full bg-background-main border border-primary/20 rounded-xl px-4 py-3 text-text-main-light focus:border-primary/50 outline-none transition-all"
@@ -618,39 +784,63 @@ const ProductForm = () => {
 
               {/* Custom Brand Dropdown */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-text-muted uppercase">Brand</label>
+                <label className="text-xs font-bold text-text-muted uppercase">
+                  Brand
+                </label>
                 <div className="relative">
                   <button
                     type="button"
                     onClick={() => setShowBrandDropdown(!showBrandDropdown)}
                     className="w-full bg-background-main border border-primary/20 rounded-xl px-4 py-3 text-text-main-light text-left flex justify-between items-center focus:border-primary/50 outline-none transition-all"
                   >
-                    <span className={formData.brandId ? 'text-text-main-light' : 'text-text-muted'}>
-                      {brands.find(b => b.id === formData.brandId)?.name || 'Select Brand'}
+                    <span
+                      className={
+                        formData.brandId
+                          ? "text-text-main-light"
+                          : "text-text-muted"
+                      }
+                    >
+                      {brands.find((b) => b.id === formData.brandId)?.name ||
+                        "Select Brand"}
                     </span>
-                    <span className={`material-icons-outlined text-text-muted transition-transform ${showBrandDropdown ? 'rotate-180' : ''}`}>
+                    <span
+                      className={`material-icons-outlined text-text-muted transition-transform ${showBrandDropdown ? "rotate-180" : ""}`}
+                    >
                       expand_more
                     </span>
                   </button>
 
                   {showBrandDropdown && (
                     <>
-                      <div className="fixed inset-0 z-40" onClick={() => setShowBrandDropdown(false)} />
+                      <div
+                        className="fixed inset-0 z-40"
+                        onClick={() => setShowBrandDropdown(false)}
+                      />
                       <div className="absolute top-full left-0 right-0 mt-2 z-50 bg-[#0a0a0a] border border-primary/20 rounded-xl shadow-2xl py-2 max-h-60 overflow-y-auto">
                         <div
                           className="px-4 py-2.5 hover:bg-primary/10 text-text-muted cursor-pointer text-sm"
-                          onClick={() => { setFormData(prev => ({ ...prev, brandId: '' })); setShowBrandDropdown(false) }}
+                          onClick={() => {
+                            setFormData((prev) => ({ ...prev, brandId: "" }));
+                            setShowBrandDropdown(false);
+                          }}
                         >
                           None
                         </div>
-                        {brands.map(b => (
+                        {brands.map((b) => (
                           <div
                             key={b.id}
-                            className={`px-4 py-2.5 cursor-pointer text-sm transition-colors ${formData.brandId === b.id
-                                ? 'text-primary font-bold bg-primary/5'
-                                : 'text-text-main-light hover:bg-primary/10'
-                              }`}
-                            onClick={() => { setFormData(prev => ({ ...prev, brandId: b.id })); setShowBrandDropdown(false) }}
+                            className={`px-4 py-2.5 cursor-pointer text-sm transition-colors ${
+                              formData.brandId === b.id
+                                ? "text-primary font-bold bg-primary/5"
+                                : "text-text-main-light hover:bg-primary/10"
+                            }`}
+                            onClick={() => {
+                              setFormData((prev) => ({
+                                ...prev,
+                                brandId: b.id,
+                              }));
+                              setShowBrandDropdown(false);
+                            }}
                           >
                             {b.name}
                           </div>
@@ -663,10 +853,12 @@ const ProductForm = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-text-muted uppercase">Description</label>
+              <label className="text-xs font-bold text-text-muted uppercase">
+                Description
+              </label>
               <textarea
                 name="description"
-                value={formData.description || ''}
+                value={formData.description || ""}
                 onChange={handleChange}
                 rows={5}
                 className="w-full bg-background-main border border-primary/20 rounded-xl px-4 py-3 text-text-main-light focus:border-primary/50 outline-none transition-all resize-y"
@@ -679,11 +871,30 @@ const ProductForm = () => {
             <section className="bg-background-light rounded-2xl border border-primary/10 p-6">
               <div className="flex justify-between items-center mb-6">
                 <div>
-                  <h2 className="text-sm font-bold tracking-widest text-primary/70 uppercase">Product Variants</h2>
-                  <span className="text-xs text-text-muted">{(formData.variants?.length || 0)} variant{(formData.variants?.length !== 1) ? 's' : ''}</span>
+                  <h2 className="text-sm font-bold tracking-widest text-primary/70 uppercase">
+                    Product Variants
+                  </h2>
+                  <span className="text-xs text-text-muted">
+                    {formData.variants?.length || 0} variant
+                    {formData.variants?.length !== 1 ? "s" : ""}
+                  </span>
                 </div>
                 <button
-                  onClick={() => openEditVariant({ id: '', sku: '', price: 0, sellingPrice: null, stock: 0, compareAtPrice: null, isActive: true, lowStockThreshold: null, optionValues: [], images: [], optionValueIds: [] })}
+                  onClick={() =>
+                    openEditVariant({
+                      id: "",
+                      sku: "",
+                      price: 0,
+                      sellingPrice: null,
+                      stock: 0,
+                      compareAtPrice: null,
+                      isActive: true,
+                      lowStockThreshold: null,
+                      optionValues: [],
+                      images: [],
+                      optionValueIds: [],
+                    })
+                  }
                   className="px-3 py-1.5 bg-primary/10 text-primary text-xs font-bold rounded-lg hover:bg-primary/20 transition-colors"
                 >
                   + Add Variant
@@ -692,24 +903,37 @@ const ProductForm = () => {
 
               {formData.variants && formData.variants.length > 0 ? (
                 <div className="space-y-3">
-                  {formData.variants.map(v => (
+                  {formData.variants.map((v) => (
                     <div
                       key={v.id}
                       className="p-4 bg-background-main rounded-xl border border-primary/5 flex items-center justify-between group hover:border-primary/30 transition-all"
                     >
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-lg bg-background-light flex items-center justify-center border border-primary/10 overflow-hidden">
-                          {v.images?.[0]?.url
-                            ? <img src={v.images[0].url} className="w-full h-full object-cover" alt="" />
-                            : <span className="material-icons-outlined text-text-muted text-sm">image</span>
-                          }
+                          {v.images?.[0]?.url ? (
+                            <img
+                              src={v.images[0].url}
+                              className="w-full h-full object-cover"
+                              alt=""
+                            />
+                          ) : (
+                            <span className="material-icons-outlined text-text-muted text-sm">
+                              image
+                            </span>
+                          )}
                         </div>
                         <div>
-                          <p className="text-sm font-bold text-text-main-light">{v.sku}</p>
+                          <p className="text-sm font-bold text-text-main-light">
+                            {v.sku}
+                          </p>
                           <p className="text-[10px] text-text-muted uppercase tracking-wider">
                             {v.optionValues?.length > 0
-                              ? v.optionValues.map(ov => `${ov.optionName}: ${ov.valueName}`).join(' / ')
-                              : 'Standard Variant'}
+                              ? v.optionValues
+                                  .map(
+                                    (ov) => `${ov.optionName}: ${ov.valueName}`,
+                                  )
+                                  .join(" / ")
+                              : "Standard Variant"}
                           </p>
                         </div>
                       </div>
@@ -717,14 +941,27 @@ const ProductForm = () => {
                         <div className="text-right">
                           {v.sellingPrice != null ? (
                             <div>
-                              <p className="text-sm font-bold text-primary">{formatPaise(v.sellingPrice)}</p>
-                              <p className="text-[10px] text-text-muted line-through">{formatPaise(v.price ?? 0)}</p>
+                              <p className="text-sm font-bold text-primary">
+                                {formatPaise(v.sellingPrice)}
+                              </p>
+                              <p className="text-[10px] text-text-muted line-through">
+                                {formatPaise(v.price ?? 0)}
+                              </p>
                             </div>
                           ) : (
-                            <p className="text-sm font-bold text-primary">{formatPaise(v.price ?? 0)}</p>
+                            <p className="text-sm font-bold text-primary">
+                              {formatPaise(v.price ?? 0)}
+                            </p>
                           )}
                           <p className="text-[10px] text-text-muted">
-                            Stock: <span className={v.stock < 10 ? 'text-red-400' : 'text-green-400'}>{v.stock}</span>
+                            Stock:{" "}
+                            <span
+                              className={
+                                v.stock < 10 ? "text-red-400" : "text-green-400"
+                              }
+                            >
+                              {v.stock}
+                            </span>
                           </p>
                         </div>
                         <div className="flex items-center gap-1">
@@ -733,14 +970,18 @@ const ProductForm = () => {
                             className="p-2 text-text-muted hover:text-primary transition-colors cursor-pointer rounded-lg hover:bg-primary/5"
                             title="Edit Variant"
                           >
-                            <span className="material-icons-outlined text-xl">settings</span>
+                            <span className="material-icons-outlined text-xl">
+                              settings
+                            </span>
                           </button>
                           <button
                             onClick={() => handleDeleteVariant(v.id)}
                             className="p-2 text-text-muted hover:text-red-500 transition-colors cursor-pointer rounded-lg hover:bg-red-500/5"
                             title="Delete Variant"
                           >
-                            <span className="material-icons-outlined text-xl">delete</span>
+                            <span className="material-icons-outlined text-xl">
+                              delete
+                            </span>
                           </button>
                         </div>
                       </div>
@@ -749,11 +990,30 @@ const ProductForm = () => {
                 </div>
               ) : (
                 <div className="p-8 text-center bg-background-main border border-primary/10 rounded-xl">
-                  <span className="material-icons-outlined text-text-muted text-4xl mb-2">inventory_2</span>
-                  <p className="text-sm text-text-main-light font-medium">No variants yet</p>
-                  <p className="text-xs text-text-muted mt-1 mb-4">You need at least one variant to sell this product.</p>
+                  <span className="material-icons-outlined text-text-muted text-4xl mb-2">
+                    inventory_2
+                  </span>
+                  <p className="text-sm text-text-main-light font-medium">
+                    No variants yet
+                  </p>
+                  <p className="text-xs text-text-muted mt-1 mb-4">
+                    You need at least one variant to sell this product.
+                  </p>
                   <button
-                    onClick={() => openEditVariant({ id: '', sku: '', price: 0, stock: 0, compareAtPrice: null, isActive: true, lowStockThreshold: null, optionValues: [], images: [], optionValueIds: [] })}
+                    onClick={() =>
+                      openEditVariant({
+                        id: "",
+                        sku: "",
+                        price: 0,
+                        stock: 0,
+                        compareAtPrice: null,
+                        isActive: true,
+                        lowStockThreshold: null,
+                        optionValues: [],
+                        images: [],
+                        optionValueIds: [],
+                      })
+                    }
                     className="px-4 py-2 bg-primary text-white text-xs font-bold rounded-lg shadow hover:bg-primary/90 transition-colors"
                   >
                     Add First Variant
@@ -767,12 +1027,14 @@ const ProductForm = () => {
           {isEdit && (
             <section className="bg-background-light rounded-2xl border border-primary/10 p-6 space-y-4">
               <div className="flex justify-between items-center mb-2">
-                <h2 className="text-sm font-bold tracking-widest text-primary/70 uppercase">Related Products</h2>
+                <h2 className="text-sm font-bold tracking-widest text-primary/70 uppercase">
+                  Related Products
+                </h2>
                 <button
                   onClick={() => setShowAddRelated(!showAddRelated)}
                   className="px-3 py-1.5 bg-primary/10 text-primary text-xs font-bold rounded-lg hover:bg-primary/20 transition-colors"
                 >
-                  {showAddRelated ? 'Cancel' : '+ Add Related'}
+                  {showAddRelated ? "Cancel" : "+ Add Related"}
                 </button>
               </div>
 
@@ -785,48 +1047,69 @@ const ProductForm = () => {
                     onChange={(e) => setRelatedSearchQuery(e.target.value)}
                     className="w-full bg-background-light border border-primary/20 rounded-xl px-4 py-2 text-text-main-light focus:border-primary/50 outline-none text-sm transition-all"
                   />
-                  {isSearchingRelated && <p className="text-xs text-text-muted">Searching...</p>}
+                  {isSearchingRelated && (
+                    <p className="text-xs text-text-muted">Searching...</p>
+                  )}
                   {!isSearchingRelated && relatedSearchResults.length > 0 && (
                     <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
-                      {relatedSearchResults.map(product => {
-                        const isAlreadyRelated = relatedProducts.some(rp => rp.relatedProductId === product.id)
+                      {relatedSearchResults.map((product) => {
+                        const isAlreadyRelated = relatedProducts.some(
+                          (rp) => rp.relatedProductId === product.id,
+                        );
                         return (
-                          <div key={product.id} className="flex justify-between items-center bg-background-light p-2 rounded-lg border border-primary/10">
+                          <div
+                            key={product.id}
+                            className="flex justify-between items-center bg-background-light p-2 rounded-lg border border-primary/10"
+                          >
                             <div className="flex items-center gap-3">
                               <div className="w-8 h-8 rounded bg-background-main overflow-hidden">
                                 {product.frontImageUrl ? (
-                                  <img src={product.frontImageUrl} alt={product.name} className="w-full h-full object-cover" />
+                                  <img
+                                    src={product.frontImageUrl}
+                                    alt={product.name}
+                                    className="w-full h-full object-cover"
+                                  />
                                 ) : (
-                                  <span className="material-icons-outlined text-text-muted text-xs flex items-center justify-center w-full h-full">image</span>
+                                  <span className="material-icons-outlined text-text-muted text-xs flex items-center justify-center w-full h-full">
+                                    image
+                                  </span>
                                 )}
                               </div>
-                              <span className="text-sm text-text-main-light">{product.name}</span>
+                              <span className="text-sm text-text-main-light">
+                                {product.name}
+                              </span>
                             </div>
                             <button
                               disabled={isAlreadyRelated}
-                              onClick={() => handleAddRelatedProduct(product.id)}
+                              onClick={() =>
+                                handleAddRelatedProduct(product.id)
+                              }
                               className={`px-3 py-1 rounded text-xs font-bold ${
-                                isAlreadyRelated 
-                                ? 'bg-background-main text-text-muted cursor-not-allowed' 
-                                : 'bg-primary text-white hover:bg-primary/90'
+                                isAlreadyRelated
+                                  ? "bg-background-main text-text-muted cursor-not-allowed"
+                                  : "bg-primary text-white hover:bg-primary/90"
                               }`}
                             >
-                              {isAlreadyRelated ? 'Added' : 'Add'}
+                              {isAlreadyRelated ? "Added" : "Add"}
                             </button>
                           </div>
-                        )
+                        );
                       })}
                     </div>
                   )}
-                  {!isSearchingRelated && relatedSearchQuery.length > 1 && relatedSearchResults.length === 0 && (
-                    <p className="text-xs text-text-muted">No products found.</p>
-                  )}
+                  {!isSearchingRelated &&
+                    relatedSearchQuery.length > 1 &&
+                    relatedSearchResults.length === 0 && (
+                      <p className="text-xs text-text-muted">
+                        No products found.
+                      </p>
+                    )}
                 </div>
               )}
 
               <div className="space-y-3">
                 {relatedProducts.length > 0 ? (
-                  relatedProducts.map(rp => (
+                  relatedProducts.map((rp) => (
                     <div
                       key={rp.relatedProductId}
                       className="p-3 bg-background-main rounded-xl border border-primary/5 flex items-center justify-between group hover:border-primary/30 transition-all"
@@ -834,27 +1117,46 @@ const ProductForm = () => {
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg bg-background-light flex items-center justify-center border border-primary/10 overflow-hidden">
                           {rp.relatedProduct?.frontImageUrl ? (
-                            <img src={rp.relatedProduct.frontImageUrl} alt={rp.relatedProduct.name} className="w-full h-full object-cover" />
+                            <img
+                              src={rp.relatedProduct.frontImageUrl}
+                              alt={rp.relatedProduct.name}
+                              className="w-full h-full object-cover"
+                            />
                           ) : (
-                            <span className="material-icons-outlined text-text-muted text-sm">image</span>
+                            <span className="material-icons-outlined text-text-muted text-sm">
+                              image
+                            </span>
                           )}
                         </div>
                         <div>
-                          <p className="text-sm font-bold text-text-main-light line-clamp-1">{rp.relatedProduct?.name}</p>
-                          <p className="text-xs text-text-muted">Status: {rp.relatedProduct?.isActive ? 'Active' : 'Inactive'}</p>
+                          <p className="text-sm font-bold text-text-main-light line-clamp-1">
+                            {rp.relatedProduct?.name}
+                          </p>
+                          <p className="text-xs text-text-muted">
+                            Status:{" "}
+                            {rp.relatedProduct?.isActive
+                              ? "Active"
+                              : "Inactive"}
+                          </p>
                         </div>
                       </div>
                       <button
-                        onClick={() => handleRemoveRelatedProduct(rp.relatedProductId)}
+                        onClick={() =>
+                          handleRemoveRelatedProduct(rp.relatedProductId)
+                        }
                         className="p-2 text-red-400/70 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors cursor-pointer"
                         title="Remove related product"
                       >
-                        <span className="material-icons-outlined text-lg">delete_outline</span>
+                        <span className="material-icons-outlined text-lg">
+                          delete_outline
+                        </span>
                       </button>
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-text-muted italic text-center py-4">No related products assigned.</p>
+                  <p className="text-sm text-text-muted italic text-center py-4">
+                    No related products assigned.
+                  </p>
                 )}
               </div>
             </section>
@@ -863,61 +1165,87 @@ const ProductForm = () => {
 
         {/* Right Column â€” Sidebar */}
         <div className="space-y-6">
-
           {/* Publishing */}
           <section className="bg-background-light rounded-2xl border border-primary/10 p-6 space-y-4">
-            <h2 className="text-sm font-bold tracking-widest text-primary/70 uppercase mb-2">Publishing</h2>
+            <h2 className="text-sm font-bold tracking-widest text-primary/70 uppercase mb-2">
+              Publishing
+            </h2>
             <div className="flex items-center justify-between">
               <span className="text-sm text-text-main-light">Status</span>
               <button
                 type="button"
-                onClick={() => setFormData(prev => ({ ...prev, isActive: !prev.isActive }))}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors outline-none ${formData.isActive ? 'bg-primary' : 'bg-gray-600'}`}
+                onClick={() =>
+                  setFormData((prev) => ({ ...prev, isActive: !prev.isActive }))
+                }
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors outline-none ${formData.isActive ? "bg-primary" : "bg-gray-600"}`}
               >
-                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.isActive ? 'translate-x-6' : 'translate-x-1'}`} />
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.isActive ? "translate-x-6" : "translate-x-1"}`}
+                />
               </button>
             </div>
             <p className="text-[10px] text-text-muted italic">
-              {formData.isActive ? 'Product is live on the storefront.' : 'Product is hidden (draft).'}
+              {formData.isActive
+                ? "Product is live on the storefront."
+                : "Product is hidden (draft)."}
             </p>
           </section>
 
           {/* Organization â€” Categories */}
           <section className="bg-background-light rounded-2xl border border-primary/10 p-6 space-y-4">
-            <h2 className="text-sm font-bold tracking-widest text-primary/70 uppercase mb-2">Categories</h2>
+            <h2 className="text-sm font-bold tracking-widest text-primary/70 uppercase mb-2">
+              Categories
+            </h2>
             <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto pr-2">
-              {categories.map(cat => (
-                <label key={cat.id} className="flex items-center gap-2 text-sm text-text-main-light cursor-pointer hover:text-primary transition-colors">
+              {categories.map((cat) => (
+                <label
+                  key={cat.id}
+                  className="flex items-center gap-2 text-sm text-text-main-light cursor-pointer hover:text-primary transition-colors"
+                >
                   <input
                     type="checkbox"
-                    checked={formData.categories?.some(c => getCatId(c) === cat.id) || false}
+                    checked={
+                      formData.categories?.some(
+                        (c) => getCatId(c) === cat.id,
+                      ) || false
+                    }
                     onChange={() => toggleCategory(cat)}
                     className="rounded border-primary/20 bg-background-main text-primary accent-amber-500"
                   />
                   {cat.name}
                 </label>
               ))}
-              {categories.length === 0 && <p className="text-xs text-text-muted italic">No categories found.</p>}
+              {categories.length === 0 && (
+                <p className="text-xs text-text-muted italic">
+                  No categories found.
+                </p>
+              )}
             </div>
           </section>
 
           {/* SEO */}
           <section className="bg-background-light rounded-2xl border border-primary/10 p-6 space-y-4">
-            <h2 className="text-sm font-bold tracking-widest text-primary/70 uppercase mb-2">SEO Details</h2>
+            <h2 className="text-sm font-bold tracking-widest text-primary/70 uppercase mb-2">
+              SEO Details
+            </h2>
             <div className="space-y-2">
-              <label className="text-xs font-bold text-text-muted uppercase">Meta Title</label>
+              <label className="text-xs font-bold text-text-muted uppercase">
+                Meta Title
+              </label>
               <input
                 name="metaTitle"
-                value={formData.metaTitle || ''}
+                value={formData.metaTitle || ""}
                 onChange={handleChange}
                 className="w-full bg-background-main border border-primary/20 rounded-xl px-3 py-2 text-sm text-text-main-light outline-none"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-bold text-text-muted uppercase">Meta Description</label>
+              <label className="text-xs font-bold text-text-muted uppercase">
+                Meta Description
+              </label>
               <textarea
                 name="metaDescription"
-                value={formData.metaDescription || ''}
+                value={formData.metaDescription || ""}
                 onChange={handleChange}
                 rows={3}
                 className="w-full bg-background-main border border-primary/20 rounded-xl px-3 py-2 text-sm text-text-main-light outline-none resize-y"
@@ -927,7 +1255,7 @@ const ProductForm = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ProductForm
+export default ProductForm;

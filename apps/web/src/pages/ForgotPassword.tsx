@@ -1,28 +1,31 @@
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { forgotPassword } from '../api/auth.api'
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { forgotPassword } from "../api/auth.api";
 
 const ForgotPassword: React.FC = () => {
-  const navigate = useNavigate()
-  const [email, setEmail] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState(false)
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
+    e.preventDefault();
+    setError("");
+    setLoading(true);
     try {
-      await forgotPassword({ email })
-      setSuccess(true)
+      await forgotPassword({ email });
+      setSuccess(true);
     } catch (err: any) {
-      const msg = err?.response?.data?.message || err?.message || 'Failed to send reset instructions'
-      setError(msg)
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to send reset instructions";
+      setError(msg);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row bg-background-light font-body">
@@ -49,7 +52,7 @@ const ForgotPassword: React.FC = () => {
         {/* Close button */}
         <button
           className="absolute top-6 right-6 text-text-muted hover:text-primary transition-colors cursor-pointer active:scale-95"
-          onClick={() => navigate('/auth')}
+          onClick={() => navigate("/auth")}
           aria-label="Back to Login"
         >
           <span className="material-icons-outlined text-2xl">close</span>
@@ -59,7 +62,9 @@ const ForgotPassword: React.FC = () => {
           {/* Logo */}
           <div className="text-center space-y-1">
             <div className="inline-flex justify-center items-center w-12 h-12 rounded-full bg-primary/10 border border-primary/20 text-primary mb-1">
-              <span className="material-icons-outlined text-2xl">lock_reset</span>
+              <span className="material-icons-outlined text-2xl">
+                lock_reset
+              </span>
             </div>
           </div>
 
@@ -71,7 +76,8 @@ const ForgotPassword: React.FC = () => {
                   Reset Password
                 </h2>
                 <p className="text-text-muted font-light">
-                  Enter your email address and we'll send you instructions to reset your password.
+                  Enter your email address and we'll send you instructions to
+                  reset your password.
                 </p>
               </div>
 
@@ -79,7 +85,10 @@ const ForgotPassword: React.FC = () => {
               <form className="space-y-4" onSubmit={handleSubmit}>
                 {/* Email */}
                 <div className="space-y-1">
-                  <label className="text-xs font-bold tracking-widest text-text-muted uppercase" htmlFor="email">
+                  <label
+                    className="text-xs font-bold tracking-widest text-text-muted uppercase"
+                    htmlFor="email"
+                  >
                     Email Address
                   </label>
                   <input
@@ -109,9 +118,11 @@ const ForgotPassword: React.FC = () => {
                   disabled={loading}
                 >
                   {loading ? (
-                    <span className="material-icons-outlined animate-spin text-xl">sync</span>
+                    <span className="material-icons-outlined animate-spin text-xl">
+                      sync
+                    </span>
                   ) : (
-                    'Send Instructions'
+                    "Send Instructions"
                   )}
                 </button>
               </form>
@@ -119,7 +130,9 @@ const ForgotPassword: React.FC = () => {
           ) : (
             <div className="text-center space-y-6 py-8">
               <div className="inline-flex justify-center items-center w-16 h-16 rounded-full bg-green-900/30 border border-green-800/50 text-green-400 mx-auto">
-                <span className="material-icons-outlined text-3xl">mark_email_read</span>
+                <span className="material-icons-outlined text-3xl">
+                  mark_email_read
+                </span>
               </div>
               <div className="space-y-2">
                 <h2 className="font-display text-2xl font-bold text-text-main-light">
@@ -130,12 +143,13 @@ const ForgotPassword: React.FC = () => {
                   <span className="text-primary font-medium">{email}</span>
                 </p>
                 <p className="text-xs text-text-muted mt-4">
-                  (Check your spam folder if you do not see it within a few minutes)
+                  (Check your spam folder if you do not see it within a few
+                  minutes)
                 </p>
               </div>
               <button
                 className="w-full py-3.5 mt-4 rounded-xl border border-primary/20 text-text-main-light hover:text-primary hover:border-primary transition-all font-bold text-sm cursor-pointer"
-                onClick={() => navigate('/auth')}
+                onClick={() => navigate("/auth")}
               >
                 Return to Login
               </button>
@@ -145,8 +159,11 @@ const ForgotPassword: React.FC = () => {
           {/* Back to Login link */}
           {!success && (
             <p className="text-center text-sm text-text-muted mt-8">
-              Remembered your password?{' '}
-              <a className="font-bold text-primary hover:text-primary-hover transition-colors cursor-pointer" onClick={() => navigate('/auth')}>
+              Remembered your password?{" "}
+              <a
+                className="font-bold text-primary hover:text-primary-hover transition-colors cursor-pointer"
+                onClick={() => navigate("/auth")}
+              >
                 Sign in
               </a>
             </p>
@@ -154,7 +171,7 @@ const ForgotPassword: React.FC = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ForgotPassword
+export default ForgotPassword;

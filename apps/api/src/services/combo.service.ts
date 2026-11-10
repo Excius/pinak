@@ -178,7 +178,7 @@ export class ComboService {
       sanitized.discountType,
       sanitized.discountValue,
       finalPrice,
-      normalizedItems
+      normalizedItems,
     );
 
     const createInput: Prisma.ComboKitCreateInput = {
@@ -245,7 +245,8 @@ export class ComboService {
       sanitized.pricingStrategy ??
       (existing.pricingStrategy as ComboKitPricingStrategy);
 
-    const effectiveItems = sanitized.items !== undefined
+    const effectiveItems =
+      sanitized.items !== undefined
         ? updatedItems
         : existing.items.map((item) => ({
             productVariantId: item.productVariantId,
@@ -276,7 +277,7 @@ export class ComboService {
       discountType ?? undefined,
       discountValue ?? undefined,
       effectivePrice,
-      effectiveItems
+      effectiveItems,
     );
 
     const updateInput: Prisma.ComboKitUpdateInput = {
@@ -365,7 +366,7 @@ export class ComboService {
       discountType ?? undefined,
       discountValue ?? undefined,
       computedPrice,
-      items
+      items,
     );
 
     return this.comboRepository.updateComboKitPricing(id, {
@@ -778,9 +779,7 @@ export class ComboService {
     }>,
   ): number {
     if (items.length === 0) {
-      throw new ValidationError(
-        "At least one item is required in a combo kit",
-      );
+      throw new ValidationError("At least one item is required in a combo kit");
     }
 
     const calculatedPrice = items.reduce((sum, item) => {
@@ -793,10 +792,14 @@ export class ComboService {
       if (!Number.isInteger(explicitPrice) || explicitPrice < 0) {
         throw new ValidationError("price must be an integer >= 0");
       }
-      
-      const hasItemLevelDiscounts = items.some(item => item.discountedPrice !== undefined);
+
+      const hasItemLevelDiscounts = items.some(
+        (item) => item.discountedPrice !== undefined,
+      );
       if (hasItemLevelDiscounts && explicitPrice !== calculatedPrice) {
-         throw new ValidationError(`Mathematical mismatch: The FIXED_PRICE of the kit is ${explicitPrice}, but the sum of the discounted items is ${calculatedPrice}. They must match exactly, or you should remove item-level discounts.`);
+        throw new ValidationError(
+          `Mathematical mismatch: The FIXED_PRICE of the kit is ${explicitPrice}, but the sum of the discounted items is ${calculatedPrice}. They must match exactly, or you should remove item-level discounts.`,
+        );
       }
       return explicitPrice;
     }
@@ -808,14 +811,18 @@ export class ComboService {
     discountType: ComboKitDiscountType | undefined,
     discountValue: number | undefined,
     price: number,
-    items: Array<{ discountedPrice?: number }>
+    items: Array<{ discountedPrice?: number }>,
   ) {
-    const hasItemLevelDiscounts = items.some(item => item.discountedPrice !== undefined);
+    const hasItemLevelDiscounts = items.some(
+      (item) => item.discountedPrice !== undefined,
+    );
 
     if (discountType !== undefined || discountValue !== undefined) {
-       if (hasItemLevelDiscounts) {
-         throw new ValidationError("You cannot apply a kit-level discount if you have already set custom discounted prices on individual items. Please use one or the other.");
-       }
+      if (hasItemLevelDiscounts) {
+        throw new ValidationError(
+          "You cannot apply a kit-level discount if you have already set custom discounted prices on individual items. Please use one or the other.",
+        );
+      }
     }
     if (discountType && discountValue === undefined) {
       throw new ValidationError(
@@ -873,7 +880,8 @@ export class ComboService {
 
     let ext = "bin";
     if (contentType) {
-      if (contentType.includes("jpeg") || contentType.includes("jpg")) ext = "jpg";
+      if (contentType.includes("jpeg") || contentType.includes("jpg"))
+        ext = "jpg";
       else if (contentType.includes("png")) ext = "png";
       else if (contentType.includes("webp")) ext = "webp";
       else if (contentType.includes("gif")) ext = "gif";
@@ -884,12 +892,7 @@ export class ComboService {
     const timestamp = Date.now();
     const key = `combos/${comboKitId}/${timestamp}-${rand}.${ext}`;
 
-    const publicUrl = await uploadBuffer(
-      fileBuffer,
-      key,
-      contentType,
-      true,
-    );
+    const publicUrl = await uploadBuffer(fileBuffer, key, contentType, true);
 
     const sanitizedData: Prisma.ComboKitImageCreateInput = {
       url: publicUrl,
@@ -898,10 +901,7 @@ export class ComboService {
       comboKit: { connect: { id: comboKitId } },
     };
 
-    return this.comboRepository.addComboKitImage(
-      comboKitId,
-      sanitizedData,
-    );
+    return this.comboRepository.addComboKitImage(comboKitId, sanitizedData);
   }
 
   async setPrimaryImage(imageId: string) {
@@ -936,7 +936,10 @@ export class ComboService {
           await deleteObject(key);
         }
       } catch (err) {
-        logger.warn({ id, err }, "Failed to delete S3 object for combo kit image");
+        logger.warn(
+          { id, err },
+          "Failed to delete S3 object for combo kit image",
+        );
       }
     }
 

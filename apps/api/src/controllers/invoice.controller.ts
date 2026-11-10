@@ -9,7 +9,11 @@ export class InvoiceController {
     const userId = req.user!.id;
     const orderId = req.params.orderId as string;
     const data = await this.invoiceService.getInvoiceData(orderId, userId);
-    return ResponseHandler.success(res, data, "Invoice data fetched successfully");
+    return ResponseHandler.success(
+      res,
+      data,
+      "Invoice data fetched successfully",
+    );
   };
 
   getInvoiceHtml = async (req: Request, res: Response) => {
@@ -23,7 +27,10 @@ export class InvoiceController {
   getInvoicePdf = async (req: Request, res: Response) => {
     const userId = req.user!.id;
     const orderId = req.params.orderId as string;
-    const pdfBuffer = await this.invoiceService.generateInvoicePdfBuffer(orderId, userId);
+    const pdfBuffer = await this.invoiceService.generateInvoicePdfBuffer(
+      orderId,
+      userId,
+    );
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(

@@ -25,12 +25,20 @@ export class CategoryController {
 
   listTopCategories = async (_req: Request, res: Response) => {
     const categories = await this.categoryService.listTopCategories();
-    ResponseHandler.success(res, categories, "Top-level categories fetched successfully");
+    ResponseHandler.success(
+      res,
+      categories,
+      "Top-level categories fetched successfully",
+    );
   };
 
   listTopCategoriesAdmin = async (_req: Request, res: Response) => {
     const categories = await this.categoryService.listTopCategoriesAdmin();
-    ResponseHandler.success(res, categories, "Top-level categories fetched successfully");
+    ResponseHandler.success(
+      res,
+      categories,
+      "Top-level categories fetched successfully",
+    );
   };
 
   getCategoryTree = async (_req: Request, res: Response) => {
@@ -115,8 +123,14 @@ export class CategoryController {
 
   getAllImages = async (req: Request, res: Response) => {
     const { categoryId } = req.params;
-    const images = await this.categoryService.getAllImages(categoryId as string);
-    ResponseHandler.success(res, images, "Category images retrieved successfully");
+    const images = await this.categoryService.getAllImages(
+      categoryId as string,
+    );
+    ResponseHandler.success(
+      res,
+      images,
+      "Category images retrieved successfully",
+    );
   };
 
   addCategoryImage = async (req: Request, res: Response) => {

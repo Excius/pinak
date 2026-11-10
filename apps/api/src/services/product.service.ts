@@ -333,7 +333,10 @@ export class ProductService {
           connectOrCreate: [
             {
               where: {
-                productId_categoryId: { productId: id, categoryId: catId.trim() },
+                productId_categoryId: {
+                  productId: id,
+                  categoryId: catId.trim(),
+                },
               },
               create: { category: { connect: { id: catId.trim() } } },
             },
@@ -449,14 +452,19 @@ export class ProductService {
     }
 
     // Validate sellingPrice
-    if (sanitizedData.sellingPrice !== undefined && sanitizedData.sellingPrice !== null) {
+    if (
+      sanitizedData.sellingPrice !== undefined &&
+      sanitizedData.sellingPrice !== null
+    ) {
       const sp = sanitizedData.sellingPrice as number;
       if (sp < 0) {
         throw new ValidationError("Selling price cannot be negative");
       }
       const basePrice = (sanitizedData.price as number) ?? 0;
       if (sp > basePrice) {
-        throw new ValidationError("Selling price cannot be greater than the main price");
+        throw new ValidationError(
+          "Selling price cannot be greater than the main price",
+        );
       }
     }
 
@@ -561,7 +569,10 @@ export class ProductService {
     }
 
     // Validate sellingPrice
-    if (sanitizedData.sellingPrice !== undefined && sanitizedData.sellingPrice !== null) {
+    if (
+      sanitizedData.sellingPrice !== undefined &&
+      sanitizedData.sellingPrice !== null
+    ) {
       const sp = sanitizedData.sellingPrice as number;
       if (sp < 0) {
         throw new ValidationError("Selling price cannot be negative");

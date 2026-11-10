@@ -13,7 +13,11 @@ export class TaxClassController {
 
   listPublic = async (req: Request, res: Response) => {
     const items = await this.service.listTaxClasses();
-    ResponseHandler.success(res, toPublicTaxClassList(items), "Tax classes fetched");
+    ResponseHandler.success(
+      res,
+      toPublicTaxClassList(items),
+      "Tax classes fetched",
+    );
   };
 
   getPublic = async (req: Request, res: Response) => {
@@ -25,7 +29,11 @@ export class TaxClassController {
 
   listAdmin = async (req: Request, res: Response) => {
     const items = await this.service.listTaxClasses();
-    ResponseHandler.success(res, toAdminTaxClassList(items), "Tax classes fetched");
+    ResponseHandler.success(
+      res,
+      toAdminTaxClassList(items),
+      "Tax classes fetched",
+    );
   };
 
   getAdmin = async (req: Request, res: Response) => {

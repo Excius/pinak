@@ -1,11 +1,12 @@
-import { prisma } from './src/lib/prisma.js';
+import { prisma } from "./src/lib/prisma.js";
 
 const defaultPages = [
   {
-    slug: 'about-us',
-    title: 'About Us',
-    metaTitle: 'About Us | Pinak Beauty',
-    metaDescription: 'Discover our story, craftsmanship and mission rooted in Indian traditions.',
+    slug: "about-us",
+    title: "About Us",
+    metaTitle: "About Us | Pinak Beauty",
+    metaDescription:
+      "Discover our story, craftsmanship and mission rooted in Indian traditions.",
     content: `# About Pinak Beauty
 
 Affordable luxury beauty rooted in rich Indian traditions and inspired by the timeless glow of nature.
@@ -23,10 +24,11 @@ To democratize luxury beauty by making premium, clean, and elegant cosmetic form
     isActive: true,
   },
   {
-    slug: 'privacy-policy',
-    title: 'Privacy Policy',
-    metaTitle: 'Privacy Policy | Pinak Beauty',
-    metaDescription: 'Learn how Pinak Beauty protects and respects your personal data.',
+    slug: "privacy-policy",
+    title: "Privacy Policy",
+    metaTitle: "Privacy Policy | Pinak Beauty",
+    metaDescription:
+      "Learn how Pinak Beauty protects and respects your personal data.",
     content: `# Privacy Policy
 
 *Last updated: November 2026*
@@ -52,10 +54,10 @@ If you have questions regarding this Privacy Policy, please email **support@pina
     isActive: true,
   },
   {
-    slug: 'terms-and-conditions',
-    title: 'Terms & Conditions',
-    metaTitle: 'Terms & Conditions | Pinak Beauty',
-    metaDescription: 'Terms governing the use of Pinak website and services.',
+    slug: "terms-and-conditions",
+    title: "Terms & Conditions",
+    metaTitle: "Terms & Conditions | Pinak Beauty",
+    metaDescription: "Terms governing the use of Pinak website and services.",
     content: `# Terms & Conditions
 
 *Last updated: November 2026*
@@ -76,10 +78,11 @@ You agree not to reproduce, duplicate, copy, sell, or exploit any portion of the
     isActive: true,
   },
   {
-    slug: 'shipping-policy',
-    title: 'Shipping & Delivery Policy',
-    metaTitle: 'Shipping & Delivery Policy | Pinak Beauty',
-    metaDescription: 'Everything you need to know about our shipping rates and delivery timelines.',
+    slug: "shipping-policy",
+    title: "Shipping & Delivery Policy",
+    metaTitle: "Shipping & Delivery Policy | Pinak Beauty",
+    metaDescription:
+      "Everything you need to know about our shipping rates and delivery timelines.",
     content: `# Shipping & Delivery Policy
 
 Thank you for choosing Pinak Beauty. Here are the details of our shipping policy:
@@ -99,10 +102,11 @@ Once your package is dispatched, you will receive an SMS and email notification 
     isActive: true,
   },
   {
-    slug: 'return-refund-policy',
-    title: 'Return & Refund Policy',
-    metaTitle: 'Return & Refund Policy | Pinak Beauty',
-    metaDescription: 'Our transparent 7-day return and hassle-free refund guidelines.',
+    slug: "return-refund-policy",
+    title: "Return & Refund Policy",
+    metaTitle: "Return & Refund Policy | Pinak Beauty",
+    metaDescription:
+      "Our transparent 7-day return and hassle-free refund guidelines.",
     content: `# Return & Refund Policy
 
 We want you to love your Pinak experience. If you are not completely satisfied, we are here to help.
@@ -121,37 +125,37 @@ We want you to love your Pinak experience. If you are not completely satisfied, 
 
 const defaultSettings = [
   {
-    key: 'WHATSAPP_NUMBER',
-    value: '+919876543210',
-    group: 'contact',
-    description: 'Customer support WhatsApp number for direct chat',
+    key: "WHATSAPP_NUMBER",
+    value: "+919876543210",
+    group: "contact",
+    description: "Customer support WhatsApp number for direct chat",
     isPublic: true,
   },
   {
-    key: 'WHATSAPP_DEFAULT_MESSAGE',
-    value: 'Hello! I would like to know more about Pinak products.',
-    group: 'contact',
-    description: 'Pre-filled WhatsApp greeting message',
+    key: "WHATSAPP_DEFAULT_MESSAGE",
+    value: "Hello! I would like to know more about Pinak products.",
+    group: "contact",
+    description: "Pre-filled WhatsApp greeting message",
     isPublic: true,
   },
   {
-    key: 'SUPPORT_EMAIL',
-    value: 'support@pinak.com',
-    group: 'contact',
-    description: 'Official customer support email',
+    key: "SUPPORT_EMAIL",
+    value: "support@pinak.com",
+    group: "contact",
+    description: "Official customer support email",
     isPublic: true,
   },
   {
-    key: 'SUPPORT_PHONE',
-    value: '+919876543210',
-    group: 'contact',
-    description: 'Customer support phone number',
+    key: "SUPPORT_PHONE",
+    value: "+919876543210",
+    group: "contact",
+    description: "Customer support phone number",
     isPublic: true,
   },
 ];
 
 async function seed() {
-  console.log('Seeding standard static pages...');
+  console.log("Seeding standard static pages...");
   for (const p of defaultPages) {
     const existing = await prisma.page.findFirst({ where: { slug: p.slug } });
     if (!existing) {
@@ -162,7 +166,7 @@ async function seed() {
     }
   }
 
-  console.log('Seeding default settings...');
+  console.log("Seeding default settings...");
   for (const s of defaultSettings) {
     const existing = await prisma.setting.findUnique({ where: { key: s.key } });
     if (!existing) {
@@ -173,12 +177,12 @@ async function seed() {
     }
   }
 
-  console.log('Seeding completed successfully!');
+  console.log("Seeding completed successfully!");
 }
 
 seed()
   .catch((e) => {
-    console.error('Seed error:', e);
+    console.error("Seed error:", e);
     process.exit(1);
   })
   .finally(async () => {

@@ -31,7 +31,9 @@ export const CouponTypes = {
       code: z
         .string("Coupon code must be a string")
         .min(1, { message: "Coupon code is required" }),
-      cartTotal: z.coerce.number().min(0, { message: "cartTotal must be >= 0" }),
+      cartTotal: z.coerce
+        .number()
+        .min(0, { message: "cartTotal must be >= 0" }),
     }),
     params: z.object({}),
     query: z.object({}),
@@ -64,7 +66,9 @@ export const CouponTypes = {
       code: z
         .string("Coupon code must be a string")
         .min(1, { message: "Coupon code is required" }),
-      cartTotal: z.coerce.number().min(0, { message: "cartTotal must be >= 0" }),
+      cartTotal: z.coerce
+        .number()
+        .min(0, { message: "cartTotal must be >= 0" }),
     }),
     params: z.object({}),
     query: z.object({}),

@@ -5,7 +5,12 @@ import type { ClassesRouteDeps } from "./index.js";
 
 export const registerClassesAdminRoutes = (
   router: Router,
-  { lengthController, weightController, authMiddleware, rateLimiter }: ClassesRouteDeps,
+  {
+    lengthController,
+    weightController,
+    authMiddleware,
+    rateLimiter,
+  }: ClassesRouteDeps,
 ) => {
   router.get(
     "/admin/length-classes",

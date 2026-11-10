@@ -17,7 +17,7 @@ A modern monorepo project built with Turborepo, featuring a Node.js API, Expo Re
 ### Apps
 
 - **`apps/api`**: Node.js REST API with Express, Prisma ORM, PostgreSQL database, rate limiting, logging, and input validation.
-  - **API Coverage**: 
+  - **API Coverage**:
     - **Authentication**: Login, register, email verification, password reset, refresh tokens, Google OAuth
     - **Products**: Full CRUD with variants, images, related products, and category management
     - **ComboKits**: Full CRUD with item management
@@ -101,14 +101,16 @@ npm run dev
 ### Individual Apps
 
 - **API**:
+
   ```bash
   npm run dev:api  # or cd apps/api && npm run dev
   ```
+
   API runs on `http://localhost:3000` (or configured PORT)
   - Base route: `/api/v1`
   - Health check: `GET /api/v1/health`
   - Swagger docs (if enabled): `/api/v1/docs`
-  
+
 - **Web**:
   ```bash
   npm run dev:web  # or cd apps/web && npm run dev
@@ -171,6 +173,7 @@ pinak/
 ### API Architecture
 
 The backend follows a layered architecture:
+
 - **Controller** → **Service** → **Repository** → **Prisma Client**
 - Controllers: Thin HTTP layer, parse requests, return standardized JSON responses
 - Services: Business logic, validation, orchestration

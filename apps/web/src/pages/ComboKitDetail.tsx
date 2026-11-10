@@ -1,83 +1,96 @@
-import React, { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import Layout from '../components/Layout'
-import { ProductDetailSkeleton } from '../components/Skeleton'
-import { getComboKitBySlug, getComboKitItems } from '../api/combos.api'
-import { useCart } from '../context/CartContext'
-import type { ComboKit, ComboKitItem } from '../api/combos.api'
-import { formatPaise } from '../utils/currency'
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import Layout from "../components/Layout";
+import { ProductDetailSkeleton } from "../components/Skeleton";
+import { getComboKitBySlug, getComboKitItems } from "../api/combos.api";
+import { useCart } from "../context/CartContext";
+import type { ComboKit, ComboKitItem } from "../api/combos.api";
+import { formatPaise } from "../utils/currency";
 
 const ComboKitDetail: React.FC = () => {
-  const { slug } = useParams<{ slug: string }>()
-  const navigate = useNavigate()
-  const { addItem } = useCart()
+  const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
+  const { addItem } = useCart();
 
-  const [combo, setCombo] = useState<ComboKit | null>(null)
-  const [items, setItems] = useState<ComboKitItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [selectedImage, setSelectedImage] = useState<string>('')
+  const [combo, setCombo] = useState<ComboKit | null>(null);
+  const [items, setItems] = useState<ComboKitItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [selectedImage, setSelectedImage] = useState<string>("");
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!slug) return
-      setLoading(true)
+      if (!slug) return;
+      setLoading(true);
       try {
-        const comboData = await getComboKitBySlug(slug)
-        setCombo(comboData)
+        const comboData = await getComboKitBySlug(slug);
+        setCombo(comboData);
 
         if (comboData?.id) {
-          const itemsData = await getComboKitItems(comboData.id)
-          setItems(Array.isArray(itemsData) ? itemsData : [])
+          const itemsData = await getComboKitItems(comboData.id);
+          setItems(Array.isArray(itemsData) ? itemsData : []);
         }
       } catch (err: any) {
-        setError(err?.response?.data?.message || err?.message || 'Failed to load combo kit')
+        setError(
+          err?.response?.data?.message ||
+            err?.message ||
+            "Failed to load combo kit",
+        );
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
-    fetchData()
-  }, [slug])
+    };
+    fetchData();
+  }, [slug]);
 
   const handleAddComboToCart = () => {
-    if (!combo) return
+    if (!combo) return;
     addItem({
       comboKitId: combo.id,
-      quantity: 1
-    })
-  }
+      quantity: 1,
+    });
+  };
 
   const totalOriginalPrice = items.reduce((acc, item) => {
-    return acc + (item.originalPriceWithTax || item.originalPrice || item.productVariant?.priceWithTax || item.productVariant?.price || 0) * item.quantity
-  }, 0)
+    return (
+      acc +
+      (item.originalPriceWithTax ||
+        item.originalPrice ||
+        item.productVariant?.priceWithTax ||
+        item.productVariant?.price ||
+        0) *
+        item.quantity
+    );
+  }, 0);
 
-  const savings = totalOriginalPrice > 0 && combo ? totalOriginalPrice - combo.price : 0
+  const savings =
+    totalOriginalPrice > 0 && combo ? totalOriginalPrice - combo.price : 0;
 
-  const allImages: string[] = []
-  if (combo?.imageUrl) allImages.push(combo.imageUrl)
-  items.forEach(item => {
-    const variant = item.productVariant
-    const product = variant?.product
-    const imageUrl = variant?.images?.[0]?.url || product?.frontImageUrl
+  const allImages: string[] = [];
+  if (combo?.imageUrl) allImages.push(combo.imageUrl);
+  items.forEach((item) => {
+    const variant = item.productVariant;
+    const product = variant?.product;
+    const imageUrl = variant?.images?.[0]?.url || product?.frontImageUrl;
     if (imageUrl && !allImages.includes(imageUrl)) {
-      allImages.push(imageUrl)
+      allImages.push(imageUrl);
     }
-  })
+  });
 
   useEffect(() => {
     if (combo?.imageUrl) {
-      setSelectedImage(combo.imageUrl)
+      setSelectedImage(combo.imageUrl);
     } else if (allImages.length > 0) {
-      setSelectedImage(allImages[0] ?? '')
+      setSelectedImage(allImages[0] ?? "");
     }
-  }, [combo, items.length])
+  }, [combo, items.length]);
 
   if (loading) {
     return (
       <Layout>
         <ProductDetailSkeleton />
       </Layout>
-    )
+    );
   }
 
   if (error || !combo) {
@@ -85,18 +98,22 @@ const ComboKitDetail: React.FC = () => {
       <Layout>
         <div className="max-w-7xl mx-auto px-6 py-24 text-center space-y-6">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-900/30 border border-red-800/50">
-            <span className="material-icons-outlined text-3xl text-red-400">error</span>
+            <span className="material-icons-outlined text-3xl text-red-400">
+              error
+            </span>
           </div>
-          <h2 className="font-display text-2xl font-bold">{error || 'Combo kit not found'}</h2>
+          <h2 className="font-display text-2xl font-bold">
+            {error || "Combo kit not found"}
+          </h2>
           <button
             className="bg-primary hover:bg-primary-hover text-black px-6 py-2.5 rounded-full text-sm font-bold transition-all cursor-pointer"
-            onClick={() => navigate('/combo-kits')}
+            onClick={() => navigate("/combo-kits")}
           >
             Back to Combo Kits
           </button>
         </div>
       </Layout>
-    )
+    );
   }
 
   return (
@@ -104,9 +121,19 @@ const ComboKitDetail: React.FC = () => {
       <div className="max-w-7xl mx-auto px-6 py-12">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm text-text-muted mb-8">
-          <a className="hover:text-primary cursor-pointer" onClick={() => navigate('/')}>Home</a>
+          <a
+            className="hover:text-primary cursor-pointer"
+            onClick={() => navigate("/")}
+          >
+            Home
+          </a>
           <span className="material-icons-outlined text-xs">chevron_right</span>
-          <a className="hover:text-primary cursor-pointer" onClick={() => navigate('/combo-kits')}>Combo Kits</a>
+          <a
+            className="hover:text-primary cursor-pointer"
+            onClick={() => navigate("/combo-kits")}
+          >
+            Combo Kits
+          </a>
           <span className="material-icons-outlined text-xs">chevron_right</span>
           <span className="text-text-main-light truncate">{combo.name}</span>
         </div>
@@ -116,10 +143,16 @@ const ComboKitDetail: React.FC = () => {
           <div className="w-full lg:w-1/2 space-y-4">
             <div className="aspect-square rounded-2xl overflow-hidden bg-surface-dark border border-primary/10 relative">
               {selectedImage ? (
-                <img src={selectedImage} alt={combo.name} className="w-full h-full object-cover" />
+                <img
+                  src={selectedImage}
+                  alt={combo.name}
+                  className="w-full h-full object-cover"
+                />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
-                  <span className="material-icons-outlined text-8xl text-text-muted/30">redeem</span>
+                  <span className="material-icons-outlined text-8xl text-text-muted/30">
+                    redeem
+                  </span>
                 </div>
               )}
               {combo.imageUrl === selectedImage && (
@@ -135,12 +168,16 @@ const ComboKitDetail: React.FC = () => {
                     key={i}
                     className={`w-20 h-20 rounded-xl overflow-hidden shrink-0 border-2 transition-all cursor-pointer ${
                       selectedImage === url
-                        ? 'border-primary shadow-lg shadow-primary/20'
-                        : 'border-primary/10 hover:border-primary/30'
+                        ? "border-primary shadow-lg shadow-primary/20"
+                        : "border-primary/10 hover:border-primary/30"
                     }`}
                     onClick={() => setSelectedImage(url)}
                   >
-                    <img src={url} alt="" className="w-full h-full object-cover" />
+                    <img
+                      src={url}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
                   </button>
                 ))}
               </div>
@@ -150,10 +187,16 @@ const ComboKitDetail: React.FC = () => {
           {/* Info */}
           <div className="w-full lg:w-1/2 space-y-8">
             <div>
-              <span className="text-primary text-sm uppercase tracking-widest font-bold">Value Bundle</span>
-              <h1 className="font-display text-3xl lg:text-4xl font-bold leading-tight mt-2">{combo.name}</h1>
+              <span className="text-primary text-sm uppercase tracking-widest font-bold">
+                Value Bundle
+              </span>
+              <h1 className="font-display text-3xl lg:text-4xl font-bold leading-tight mt-2">
+                {combo.name}
+              </h1>
               {combo.description && (
-                <p className="text-text-muted leading-relaxed mt-4">{combo.description}</p>
+                <p className="text-text-muted leading-relaxed mt-4">
+                  {combo.description}
+                </p>
               )}
             </div>
 
@@ -167,49 +210,90 @@ const ComboKitDetail: React.FC = () => {
                   {items
                     .sort((a, b) => a.sortOrder - b.sortOrder)
                     .map((item) => {
-                      const variant = item.productVariant
-                      const product = variant?.product
-                      const imageUrl = variant?.images?.[0]?.url || product?.frontImageUrl || ''
-                      const variantLabel = variant?.optionValues?.map((ov: any) => ov?.optionValue?.value || ov?.valueName || ov?.value).filter(Boolean).join(' / ') || ''
-                      
+                      const variant = item.productVariant;
+                      const product = variant?.product;
+                      const imageUrl =
+                        variant?.images?.[0]?.url ||
+                        product?.frontImageUrl ||
+                        "";
+                      const variantLabel =
+                        variant?.optionValues
+                          ?.map(
+                            (ov: any) =>
+                              ov?.optionValue?.value ||
+                              ov?.valueName ||
+                              ov?.value,
+                          )
+                          .filter(Boolean)
+                          .join(" / ") || "";
+
                       return (
-                        <div 
-                          key={item.id} 
+                        <div
+                          key={item.id}
                           className="flex gap-4 items-center p-3 bg-surface-dark rounded-xl border border-primary/5 hover:border-primary/20 transition-colors cursor-pointer"
-                          onClick={() => product?.slug && navigate(`/products/${product.slug}`)}
+                          onClick={() =>
+                            product?.slug &&
+                            navigate(`/products/${product.slug}`)
+                          }
                         >
                           <div className="w-16 h-16 rounded-lg overflow-hidden bg-surface-elevated shrink-0">
                             {imageUrl ? (
-                              <img src={imageUrl} alt={product?.name} className="w-full h-full object-cover" />
+                              <img
+                                src={imageUrl}
+                                alt={product?.name}
+                                className="w-full h-full object-cover"
+                              />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center">
-                                <span className="material-icons-outlined text-text-muted text-sm">image</span>
+                                <span className="material-icons-outlined text-text-muted text-sm">
+                                  image
+                                </span>
                               </div>
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-sm text-text-main-light truncate">{product?.name || 'Product'}</h4>
+                            <h4 className="font-semibold text-sm text-text-main-light truncate">
+                              {product?.name || "Product"}
+                            </h4>
                             <div className="flex items-center gap-2 mt-1">
-                              {variantLabel && <span className="text-xs text-text-muted">{variantLabel}</span>}
-                              <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">Qty: {item.quantity}</span>
+                              {variantLabel && (
+                                <span className="text-xs text-text-muted">
+                                  {variantLabel}
+                                </span>
+                              )}
+                              <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">
+                                Qty: {item.quantity}
+                              </span>
                             </div>
                           </div>
                           <div className="text-right">
-                            {(item.discountedPriceWithTax != null || item.discountedPrice != null) && (
+                            {(item.discountedPriceWithTax != null ||
+                              item.discountedPrice != null) && (
                               <p className="text-sm font-bold text-primary">
-                                {formatPaise((item.discountedPriceWithTax ?? item.discountedPrice)!)}
+                                {formatPaise(
+                                  (item.discountedPriceWithTax ??
+                                    item.discountedPrice)!,
+                                )}
                               </p>
                             )}
-                            {(item.originalPriceWithTax != null || item.originalPrice != null) &&
-                              (item.originalPriceWithTax ?? item.originalPrice)! > (item.discountedPriceWithTax ?? item.discountedPrice ?? 0) && (
-                              <p className="text-xs text-text-muted line-through">
-                                {formatPaise((item.originalPriceWithTax ?? item.originalPrice)!)}
-                              </p>
-                            )}
+                            {(item.originalPriceWithTax != null ||
+                              item.originalPrice != null) &&
+                              (item.originalPriceWithTax ??
+                                item.originalPrice)! >
+                                (item.discountedPriceWithTax ??
+                                  item.discountedPrice ??
+                                  0) && (
+                                <p className="text-xs text-text-muted line-through">
+                                  {formatPaise(
+                                    (item.originalPriceWithTax ??
+                                      item.originalPrice)!,
+                                  )}
+                                </p>
+                              )}
                           </div>
                         </div>
-                      )
-                  })}
+                      );
+                    })}
                 </div>
               </div>
             )}
@@ -218,15 +302,22 @@ const ComboKitDetail: React.FC = () => {
             <div className="bg-surface-dark rounded-2xl p-6 border border-primary/10 space-y-5">
               <div className="flex flex-col space-y-1">
                 <div className="flex items-center gap-4">
-                  <span className="text-3xl font-bold text-primary">{formatPaise(combo.price)}</span>
+                  <span className="text-3xl font-bold text-primary">
+                    {formatPaise(combo.price)}
+                  </span>
                   {totalOriginalPrice > combo.price && (
-                    <span className="text-lg text-text-muted line-through">{formatPaise(totalOriginalPrice)}</span>
+                    <span className="text-lg text-text-muted line-through">
+                      {formatPaise(totalOriginalPrice)}
+                    </span>
                   )}
                 </div>
                 {savings > 0 && (
                   <p className="text-sm text-green-400 font-bold flex items-center gap-1.5">
-                    <span className="material-icons-outlined text-sm">local_offer</span>
-                    Total value {formatPaise(totalOriginalPrice)} — You save {formatPaise(savings)}
+                    <span className="material-icons-outlined text-sm">
+                      local_offer
+                    </span>
+                    Total value {formatPaise(totalOriginalPrice)} — You save{" "}
+                    {formatPaise(savings)}
                   </p>
                 )}
               </div>
@@ -242,9 +333,12 @@ const ComboKitDetail: React.FC = () => {
             {combo.tags && combo.tags.length > 0 && (
               <div className="flex flex-wrap gap-2 pt-2">
                 {combo.tags.map((tag, i) => (
-                   <span key={i} className="px-3 py-1 rounded-full bg-surface-elevated text-text-muted text-xs border border-primary/5">
-                     #{tag}
-                   </span>
+                  <span
+                    key={i}
+                    className="px-3 py-1 rounded-full bg-surface-elevated text-text-muted text-xs border border-primary/5"
+                  >
+                    #{tag}
+                  </span>
                 ))}
               </div>
             )}
@@ -252,7 +346,7 @@ const ComboKitDetail: React.FC = () => {
         </div>
       </div>
     </Layout>
-  )
-}
+  );
+};
 
-export default ComboKitDetail
+export default ComboKitDetail;

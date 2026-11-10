@@ -50,7 +50,9 @@ export type AdminOption = {
   updatedAt?: Date;
 };
 
-export const toPublicOptionValue = (value: OptionValueRecord): PublicOptionValue => ({
+export const toPublicOptionValue = (
+  value: OptionValueRecord,
+): PublicOptionValue => ({
   id: value.id,
   value: value.value,
   sortOrder: value.sortOrder,
@@ -67,7 +69,9 @@ export const toPublicOption = (option: OptionRecord): PublicOption => ({
 export const toPublicOptionList = (options: OptionRecord[]): PublicOption[] =>
   options.map(toPublicOption);
 
-export const toAdminOptionValue = (value: OptionValueRecord): AdminOptionValue => ({
+export const toAdminOptionValue = (
+  value: OptionValueRecord,
+): AdminOptionValue => ({
   id: value.id,
   ...(value.optionId !== undefined && { optionId: value.optionId }),
   value: value.value,

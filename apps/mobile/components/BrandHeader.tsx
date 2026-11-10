@@ -31,7 +31,7 @@ export function BrandHeader() {
           <TouchableOpacity
             activeOpacity={1}
             onPressIn={() => {
-              menuScale.value = withTiming(0.90, {
+              menuScale.value = withTiming(0.9, {
                 duration: 100,
               });
             }}
@@ -46,11 +46,7 @@ export function BrandHeader() {
               style={menuButtonStyle}
               className="rounded-full bg-surface-light/80 p-2"
             >
-              <MaterialCommunityIcons
-                name="menu"
-                size={24}
-                color="#C9A962"
-              />
+              <MaterialCommunityIcons name="menu" size={24} color="#C9A962" />
             </Animated.View>
           </TouchableOpacity>
         </View>
@@ -72,26 +68,14 @@ export function BrandHeader() {
             className="mr-2 rounded-full bg-surface-light/80 p-2"
             activeOpacity={0.8}
           >
-            <MaterialCommunityIcons
-              name="magnify"
-              size={24}
-              color="#C9A962"
-            />
+            <MaterialCommunityIcons name="magnify" size={24} color="#C9A962" />
           </TouchableOpacity>
 
-          <CartIconButton
-            size={24}
-            iconColor="#C9A962"
-            variant="icon-only"
-          />
+          <CartIconButton size={24} iconColor="#C9A962" variant="icon-only" />
         </View>
       </View>
 
-      {menuVisible && (
-        <HamburgerMenu
-          onClose={() => setMenuVisible(false)}
-        />
-      )}
+      {menuVisible && <HamburgerMenu onClose={() => setMenuVisible(false)} />}
     </View>
   );
 }

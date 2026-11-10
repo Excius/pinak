@@ -1,5 +1,5 @@
-import { config } from '@repo/eslint-config/base'
-import globals from 'globals'
+import { config } from "@repo/eslint-config/base";
+import globals from "globals";
 
 export default [
   ...config,
@@ -8,4 +8,4 @@ export default [
       globals: globals.node,
     },
   },
-]
+];

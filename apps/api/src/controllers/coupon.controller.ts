@@ -55,7 +55,11 @@ export class CouponController {
       cartTotal,
     );
 
-    ResponseHandler.success(res, result, "Coupon validated successfully (Admin)");
+    ResponseHandler.success(
+      res,
+      result,
+      "Coupon validated successfully (Admin)",
+    );
   };
 
   getCouponAdmin = async (req: Request, res: Response) => {

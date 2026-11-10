@@ -3,7 +3,8 @@ import { ProductTypes } from "./product.js";
 
 // We extract the underlying schemas from ProductTypes
 const PublicProductListSchema = ProductTypes.GetProducts.response.shape.data;
-const AdminProductListSchema = ProductTypes.GetAllProductsAdmin.response.shape.data;
+const AdminProductListSchema =
+  ProductTypes.GetAllProductsAdmin.response.shape.data;
 const PaginationSchema = z.object({
   page: z.coerce.number().min(1).optional().default(1),
   limit: z.coerce.number().min(1).max(100).optional().default(10),

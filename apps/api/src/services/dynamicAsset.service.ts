@@ -108,10 +108,12 @@ export class DynamicAssetService {
     const updateInput: Prisma.DynamicAssetUpdateInput = {};
     if (data.slug !== undefined) updateInput.slug = data.slug;
     if (data.title !== undefined) updateInput.title = data.title;
-    if (data.description !== undefined) updateInput.description = data.description;
+    if (data.description !== undefined)
+      updateInput.description = data.description;
     if (data.type !== undefined) updateInput.type = data.type;
     if (data.isActive !== undefined) updateInput.isActive = data.isActive;
-    if (data.metadata !== undefined) updateInput.metadata = data.metadata as Prisma.InputJsonValue;
+    if (data.metadata !== undefined)
+      updateInput.metadata = data.metadata as Prisma.InputJsonValue;
 
     return this.repository.update(id, updateInput);
   }
@@ -188,7 +190,8 @@ export class DynamicAssetService {
 
   private getExtension(contentType?: string): string {
     if (!contentType) return "bin";
-    if (contentType.includes("jpeg") || contentType.includes("jpg")) return "jpg";
+    if (contentType.includes("jpeg") || contentType.includes("jpg"))
+      return "jpg";
     if (contentType.includes("png")) return "png";
     if (contentType.includes("webp")) return "webp";
     if (contentType.includes("gif")) return "gif";

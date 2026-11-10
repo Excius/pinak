@@ -65,7 +65,7 @@ export function OrderSummary({ cart }: OrderSummaryProps) {
         </Text>
       </View>
 
-       <View className="mb-3 flex-row justify-between">
+      <View className="mb-3 flex-row justify-between">
         <Text className="text-xs text-text-secondary">Items</Text>
         <Text className="text-xs font-medium text-text-primary">
           {cart.totalQuantity}
@@ -82,8 +82,6 @@ export function OrderSummary({ cart }: OrderSummaryProps) {
           </Text>
         </View>
       )}
-
-     
 
       {/* Total */}
       <View className="flex-row justify-between">

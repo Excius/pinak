@@ -56,15 +56,15 @@ export class SettingRepository {
       update: {
         value: data.value,
         ...(data.group !== undefined ? { group: data.group } : {}),
-        ...(data.description !== undefined ? { description: data.description } : {}),
+        ...(data.description !== undefined
+          ? { description: data.description }
+          : {}),
         ...(data.isPublic !== undefined ? { isPublic: data.isPublic } : {}),
       },
     });
   }
 
-  async upsertMany(
-    entries: Record<string, string>,
-  ): Promise<SettingRecord[]> {
+  async upsertMany(entries: Record<string, string>): Promise<SettingRecord[]> {
     const keys = Object.keys(entries);
     return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const results: SettingRecord[] = [];

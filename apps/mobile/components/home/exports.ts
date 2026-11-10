@@ -1,11 +1,11 @@
 /**
  * Home Screen Component Exports
- * 
+ *
  * This file provides convenient exports for all home screen components.
- * 
+ *
  * Usage:
  * import { HomeScreen } from "@/components/home";
- * 
+ *
  * Or import specific components:
  * import { BestSellers, Testimonials } from "@/components/home/[component]";
  */

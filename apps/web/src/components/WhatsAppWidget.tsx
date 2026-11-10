@@ -1,39 +1,39 @@
-import React, { useEffect, useState } from 'react'
-import { getWhatsAppContact, type WhatsAppContact } from '../api/settings.api'
+import React, { useEffect, useState } from "react";
+import { getWhatsAppContact, type WhatsAppContact } from "../api/settings.api";
 
 export const WhatsAppWidget: React.FC = () => {
-  const [contact, setContact] = useState<WhatsAppContact | null>(null)
-  const [hovered, setHovered] = useState(false)
+  const [contact, setContact] = useState<WhatsAppContact | null>(null);
+  const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
-    let mounted = true
+    let mounted = true;
     getWhatsAppContact()
       .then((data) => {
         if (mounted && data?.whatsappNumber) {
-          setContact(data)
+          setContact(data);
         }
       })
       .catch((err) => {
-        console.warn('Failed to load WhatsApp contact details', err)
-      })
+        console.warn("Failed to load WhatsApp contact details", err);
+      });
     return () => {
-      mounted = false
-    }
-  }, [])
+      mounted = false;
+    };
+  }, []);
 
   if (!contact || !contact.whatsappNumber) {
-    return null
+    return null;
   }
 
   const handleClick = () => {
-    const cleanNumber = contact.whatsappNumber.replace(/[^0-9]/g, '')
+    const cleanNumber = contact.whatsappNumber.replace(/[^0-9]/g, "");
     const defaultMsg =
       contact.defaultMessage ||
-      'Hello! I would like to know more about Pinak products.'
-    const encodedText = encodeURIComponent(defaultMsg)
-    const whatsappUrl = `https://wa.me/${cleanNumber}?text=${encodedText}`
-    window.open(whatsappUrl, '_blank', 'noopener,noreferrer')
-  }
+      "Hello! I would like to know more about Pinak products.";
+    const encodedText = encodeURIComponent(defaultMsg);
+    const whatsappUrl = `https://wa.me/${cleanNumber}?text=${encodedText}`;
+    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+  };
 
   return (
     <div className="fixed bottom-20 right-6 z-40 flex items-center gap-3">
@@ -65,7 +65,7 @@ export const WhatsAppWidget: React.FC = () => {
         </svg>
       </button>
     </div>
-  )
-}
+  );
+};
 
-export default WhatsAppWidget
+export default WhatsAppWidget;

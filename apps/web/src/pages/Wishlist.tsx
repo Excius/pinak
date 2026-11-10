@@ -1,70 +1,83 @@
-import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import Layout from '../components/Layout'
-import { ProductGridSkeleton } from '../components/Skeleton'
-import { getWishlist, removeFromWishlist, clearWishlist as apiClearWishlist } from '../api/wishlist.api'
-import { useCart } from '../context/CartContext'
-import type { WishlistItem } from '../api/wishlist.api'
-import { formatPaise } from '../utils/currency'
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Layout from "../components/Layout";
+import { ProductGridSkeleton } from "../components/Skeleton";
+import {
+  getWishlist,
+  removeFromWishlist,
+  clearWishlist as apiClearWishlist,
+} from "../api/wishlist.api";
+import { useCart } from "../context/CartContext";
+import type { WishlistItem } from "../api/wishlist.api";
+import { formatPaise } from "../utils/currency";
 
 const Wishlist: React.FC = () => {
-  const navigate = useNavigate()
-  const { addItem } = useCart()
-  const [items, setItems] = useState<WishlistItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const navigate = useNavigate();
+  const { addItem } = useCart();
+  const [items, setItems] = useState<WishlistItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const fetchWishlist = async () => {
-    setLoading(true)
-    setError('')
+    setLoading(true);
+    setError("");
     try {
-      const data = await getWishlist()
-      setItems(data?.items || [])
+      const data = await getWishlist();
+      setItems(data?.items || []);
     } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || 'Failed to load wishlist')
+      setError(
+        err?.response?.data?.message ||
+          err?.message ||
+          "Failed to load wishlist",
+      );
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchWishlist()
-  }, [])
+    fetchWishlist();
+  }, []);
 
   const handleRemove = async (itemId: string) => {
     try {
-      await removeFromWishlist(itemId)
-      setItems((prev) => prev.filter((i) => i.id !== itemId))
+      await removeFromWishlist(itemId);
+      setItems((prev) => prev.filter((i) => i.id !== itemId));
     } catch {
       // silently fail
     }
-  }
+  };
 
   const handleClear = async () => {
     try {
-      await apiClearWishlist()
-      setItems([])
+      await apiClearWishlist();
+      setItems([]);
     } catch {
       // silently fail
     }
-  }
+  };
 
   const handleMoveToBag = (item: WishlistItem) => {
-    const variant = item.productVariant
-    if (!variant) return
+    const variant = item.productVariant;
+    if (!variant) return;
     addItem({
       productVariantId: variant.id,
-      quantity: 1
-    })
-    handleRemove(item.id)
-  }
+      quantity: 1,
+    });
+    handleRemove(item.id);
+  };
 
   return (
     <Layout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm text-text-muted mb-8">
-          <a className="hover:text-primary cursor-pointer" onClick={() => navigate('/')}>Home</a>
+          <a
+            className="hover:text-primary cursor-pointer"
+            onClick={() => navigate("/")}
+          >
+            Home
+          </a>
           <span className="material-icons-outlined text-xs">chevron_right</span>
           <span className="text-text-main-light">Wishlist</span>
         </div>
@@ -72,8 +85,12 @@ const Wishlist: React.FC = () => {
         {/* Header */}
         <div className="flex items-end justify-between mb-12">
           <div>
-            <h1 className="font-display text-2xl sm:text-4xl md:text-5xl font-bold">My Wishlist</h1>
-            <p className="text-text-muted mt-2">{items.length} saved item{items.length !== 1 ? 's' : ''}</p>
+            <h1 className="font-display text-2xl sm:text-4xl md:text-5xl font-bold">
+              My Wishlist
+            </h1>
+            <p className="text-text-muted mt-2">
+              {items.length} saved item{items.length !== 1 ? "s" : ""}
+            </p>
           </div>
           {items.length > 0 && (
             <button
@@ -91,7 +108,9 @@ const Wishlist: React.FC = () => {
         ) : error ? (
           <div className="text-center py-20 space-y-4">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-900/30 border border-red-800/50">
-              <span className="material-icons-outlined text-3xl text-red-400">error</span>
+              <span className="material-icons-outlined text-3xl text-red-400">
+                error
+              </span>
             </div>
             <p className="text-text-muted">{error}</p>
             <button
@@ -104,15 +123,21 @@ const Wishlist: React.FC = () => {
         ) : items.length === 0 ? (
           <div className="text-center py-20 space-y-6">
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 border border-primary/20">
-              <span className="material-icons-outlined text-4xl text-primary animate-float">favorite_border</span>
+              <span className="material-icons-outlined text-4xl text-primary animate-float">
+                favorite_border
+              </span>
             </div>
             <div>
-              <h3 className="font-display text-xl font-bold mb-2">Your wishlist is empty</h3>
-              <p className="text-text-muted">Save your favorite products to come back to them later</p>
+              <h3 className="font-display text-xl font-bold mb-2">
+                Your wishlist is empty
+              </h3>
+              <p className="text-text-muted">
+                Save your favorite products to come back to them later
+              </p>
             </div>
             <button
               className="bg-primary hover:bg-primary-hover text-black px-8 py-3 rounded-full text-sm font-bold uppercase tracking-wider transition-all cursor-pointer"
-              onClick={() => navigate('/shop')}
+              onClick={() => navigate("/shop")}
             >
               Start Shopping
             </button>
@@ -120,19 +145,21 @@ const Wishlist: React.FC = () => {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 lg:gap-8">
             {items.map((item) => {
-              const variant = item.productVariant
-              const product = variant?.product
+              const variant = item.productVariant;
+              const product = variant?.product;
               const imageUrl =
                 variant?.images?.find((img) => img.isPrimary)?.url ||
                 variant?.images?.[0]?.url ||
                 product?.frontImageUrl ||
-                ''
+                "";
 
               return (
                 <div key={item.id} className="group card-lift">
                   <div
                     className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-surface-dark aspect-[3/4] mb-3 sm:mb-4 shadow-sm hover:shadow-xl hover:shadow-primary/10 transition-all border border-primary/5 hover:border-primary/20 cursor-pointer img-zoom"
-                    onClick={() => product?.slug && navigate(`/products/${product.slug}`)}
+                    onClick={() =>
+                      product?.slug && navigate(`/products/${product.slug}`)
+                    }
                   >
                     {imageUrl ? (
                       <img
@@ -142,42 +169,58 @@ const Wishlist: React.FC = () => {
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <span className="material-icons-outlined text-6xl text-text-muted/30">image</span>
+                        <span className="material-icons-outlined text-6xl text-text-muted/30">
+                          image
+                        </span>
                       </div>
                     )}
                     <button
                       className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/50 backdrop-blur flex items-center justify-center text-red-400 hover:bg-red-500/20 transition-colors cursor-pointer"
                       onClick={(e) => {
-                        e.stopPropagation()
-                        handleRemove(item.id)
+                        e.stopPropagation();
+                        handleRemove(item.id);
                       }}
                     >
-                      <span className="material-icons-outlined text-lg">close</span>
+                      <span className="material-icons-outlined text-lg">
+                        close
+                      </span>
                     </button>
                   </div>
                   <h3
                     className="font-display text-lg font-semibold cursor-pointer hover:text-primary transition-colors truncate"
-                    onClick={() => product?.slug && navigate(`/products/${product.slug}`)}
+                    onClick={() =>
+                      product?.slug && navigate(`/products/${product.slug}`)
+                    }
                   >
-                    {product?.name || 'Product'}
+                    {product?.name || "Product"}
                   </h3>
                   {variant?.optionValues && variant.optionValues.length > 0 && (
                     <p className="text-sm text-text-muted mb-2">
-                      {variant.optionValues.map((ov) => ov.optionValue.value).join(' / ')}
+                      {variant.optionValues
+                        .map((ov) => ov.optionValue.value)
+                        .join(" / ")}
                     </p>
                   )}
                   <div className="flex items-center justify-between mb-3">
-                    {variant && (
-                      variant.sellingPrice != null ? (
+                    {variant &&
+                      (variant.sellingPrice != null ? (
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-bold text-lg text-primary">
-                            {formatPaise(variant.sellingPriceWithTax ?? variant.sellingPrice)}
+                            {formatPaise(
+                              variant.sellingPriceWithTax ??
+                                variant.sellingPrice,
+                            )}
                           </span>
                           <span className="text-sm text-text-muted line-through">
                             {formatPaise(variant.priceWithTax ?? variant.price)}
                           </span>
                           <span className="text-xs font-semibold text-green-400 bg-green-500/10 px-1.5 py-0.5 rounded">
-                            {Math.round(((variant.price - variant.sellingPrice) / variant.price) * 100)}% OFF
+                            {Math.round(
+                              ((variant.price - variant.sellingPrice) /
+                                variant.price) *
+                                100,
+                            )}
+                            % OFF
                           </span>
                         </div>
                       ) : (
@@ -185,15 +228,20 @@ const Wishlist: React.FC = () => {
                           <span className="font-bold text-lg text-primary">
                             {formatPaise(variant.priceWithTax ?? variant.price)}
                           </span>
-                          {(variant?.comparePriceWithTax ?? variant?.comparePrice) && 
-                           (variant.comparePriceWithTax ?? variant.comparePrice)! > (variant.priceWithTax ?? variant.price) && (
-                            <span className="text-sm text-text-muted line-through">
-                              {formatPaise((variant.comparePriceWithTax ?? variant.comparePrice)!)}
-                            </span>
-                          )}
+                          {(variant?.comparePriceWithTax ??
+                            variant?.comparePrice) &&
+                            (variant.comparePriceWithTax ??
+                              variant.comparePrice)! >
+                              (variant.priceWithTax ?? variant.price) && (
+                              <span className="text-sm text-text-muted line-through">
+                                {formatPaise(
+                                  (variant.comparePriceWithTax ??
+                                    variant.comparePrice)!,
+                                )}
+                              </span>
+                            )}
                         </div>
-                      )
-                    )}
+                      ))}
                   </div>
                   <button
                     className="w-full py-2.5 rounded-xl border border-primary/30 text-primary hover:bg-primary hover:text-black text-sm font-semibold transition-all cursor-pointer active:scale-95"
@@ -202,13 +250,13 @@ const Wishlist: React.FC = () => {
                     Move to Bag
                   </button>
                 </div>
-              )
+              );
             })}
           </div>
         )}
       </div>
     </Layout>
-  )
-}
+  );
+};
 
-export default Wishlist
+export default Wishlist;

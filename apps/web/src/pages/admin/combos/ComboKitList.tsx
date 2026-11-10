@@ -1,51 +1,51 @@
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
   getAllComboKitsAdmin,
   softDeleteComboKitAdmin,
-  restoreComboKitAdmin
-} from '../../../api/admin/admin.combos.api'
-import type { AdminComboKit } from '../../../api/admin/admin.combos.api'
-import { formatPaise } from '../../../utils/currency'
+  restoreComboKitAdmin,
+} from "../../../api/admin/admin.combos.api";
+import type { AdminComboKit } from "../../../api/admin/admin.combos.api";
+import { formatPaise } from "../../../utils/currency";
 
 const ComboKitList = () => {
-  const [combos, setCombos] = useState<AdminComboKit[]>([])
-  const [loading, setLoading] = useState(true)
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [combos, setCombos] = useState<AdminComboKit[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   const fetchCombos = async () => {
     try {
-      const { items } = await getAllComboKitsAdmin()
-      setCombos(items)
+      const { items } = await getAllComboKitsAdmin();
+      setCombos(items);
     } catch (err) {
-      console.error('Failed to fetch combo kits', err)
+      console.error("Failed to fetch combo kits", err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  useEffect(() => { fetchCombos() }, [])
-
-
+  useEffect(() => {
+    fetchCombos();
+  }, []);
 
   const handleDelete = async (id: string) => {
     try {
-      await softDeleteComboKitAdmin(id)
-      setDeleteConfirm(null)
-      await fetchCombos()
+      await softDeleteComboKitAdmin(id);
+      setDeleteConfirm(null);
+      await fetchCombos();
     } catch (err) {
-      console.error('Failed to delete combo kit', err)
+      console.error("Failed to delete combo kit", err);
     }
-  }
+  };
 
   const handleRestore = async (id: string) => {
     try {
-      await restoreComboKitAdmin(id)
-      await fetchCombos()
+      await restoreComboKitAdmin(id);
+      await fetchCombos();
     } catch (err) {
-      console.error('Failed to restore combo kit', err)
+      console.error("Failed to restore combo kit", err);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -55,20 +55,28 @@ const ComboKitList = () => {
           <p className="text-sm text-text-muted">Loading combo kits...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <div className="space-y-6 animate-fade-in">
-
       {/* Delete Confirmation */}
       {deleteConfirm && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setDeleteConfirm(null)} />
+          <div
+            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            onClick={() => setDeleteConfirm(null)}
+          />
           <div className="relative bg-background-light border border-red-500/20 rounded-2xl p-8 w-full max-w-sm shadow-2xl text-center">
-            <span className="material-icons-outlined text-4xl text-red-500 mb-4">warning</span>
-            <h3 className="text-lg font-display font-bold text-text-main-light mb-2">Delete Combo Kit?</h3>
-            <p className="text-sm text-text-muted mb-6">This will soft-delete the combo kit. It can be restored later.</p>
+            <span className="material-icons-outlined text-4xl text-red-500 mb-4">
+              warning
+            </span>
+            <h3 className="text-lg font-display font-bold text-text-main-light mb-2">
+              Delete Combo Kit?
+            </h3>
+            <p className="text-sm text-text-muted mb-6">
+              This will soft-delete the combo kit. It can be restored later.
+            </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
@@ -90,8 +98,12 @@ const ComboKitList = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-display font-bold text-text-main-light">Combo Kits</h1>
-          <p className="text-sm text-text-muted mt-1">Manage curated product bundles and offers.</p>
+          <h1 className="text-2xl font-display font-bold text-text-main-light">
+            Combo Kits
+          </h1>
+          <p className="text-sm text-text-muted mt-1">
+            Manage curated product bundles and offers.
+          </p>
         </div>
         <Link
           to="/admin/combos/new"
@@ -105,8 +117,12 @@ const ComboKitList = () => {
       {/* Table */}
       {combos.length === 0 ? (
         <div className="bg-background-light rounded-2xl border border-primary/10 p-12 text-center">
-          <span className="material-icons-outlined text-4xl text-primary/20 mb-3 block">auto_awesome_mosaic</span>
-          <p className="text-sm text-text-muted">No combo kits yet. Create one to get started.</p>
+          <span className="material-icons-outlined text-4xl text-primary/20 mb-3 block">
+            auto_awesome_mosaic
+          </span>
+          <p className="text-sm text-text-muted">
+            No combo kits yet. Create one to get started.
+          </p>
         </div>
       ) : (
         <div className="bg-background-light rounded-2xl border border-primary/10 overflow-hidden">
@@ -121,40 +137,53 @@ const ComboKitList = () => {
               </tr>
             </thead>
             <tbody>
-              {combos.map(combo => (
-                <tr key={combo.id} className="border-b border-primary/5 hover:bg-background-light/30 transition-colors">
+              {combos.map((combo) => (
+                <tr
+                  key={combo.id}
+                  className="border-b border-primary/5 hover:bg-background-light/30 transition-colors"
+                >
                   {/* Name + Image */}
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-lg bg-background-main border border-primary/10 overflow-hidden shrink-0 flex items-center justify-center">
                         {(() => {
-                          const displayImg = combo.images?.find(img => img.isPrimary)?.url || combo.images?.[0]?.url || combo.imageUrl
+                          const displayImg =
+                            combo.images?.find((img) => img.isPrimary)?.url ||
+                            combo.images?.[0]?.url ||
+                            combo.imageUrl;
                           return displayImg ? (
                             <img
                               src={displayImg}
                               alt={combo.name}
                               className="w-full h-full object-cover"
-                              onError={e => {
-                                (e.target as HTMLImageElement).src = 'https://placehold.co/100x100?text=No+Image'
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src =
+                                  "https://placehold.co/100x100?text=No+Image";
                               }}
                             />
                           ) : (
-                            <span className="material-icons-outlined text-text-muted">auto_awesome_mosaic</span>
-                          )
+                            <span className="material-icons-outlined text-text-muted">
+                              auto_awesome_mosaic
+                            </span>
+                          );
                         })()}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-bold text-text-main-light truncate">{combo.name}</p>
-                        <p className="text-xs text-text-muted font-mono mt-0.5">{combo.slug}</p>
+                        <p className="text-sm font-bold text-text-main-light truncate">
+                          {combo.name}
+                        </p>
+                        <p className="text-xs text-text-muted font-mono mt-0.5">
+                          {combo.slug}
+                        </p>
                       </div>
                     </div>
                   </td>
 
-
-
                   {/* Items Count */}
                   <td className="px-6 py-4">
-                    <span className="text-sm text-text-main-light font-medium">{combo.items?.length || 0}</span>
+                    <span className="text-sm text-text-main-light font-medium">
+                      {combo.items?.length || 0}
+                    </span>
                     <span className="text-xs text-text-muted ml-1">items</span>
                   </td>
 
@@ -166,7 +195,7 @@ const ComboKitList = () => {
                   {/* Strategy */}
                   <td className="px-6 py-4">
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-primary/10 text-primary border border-primary/20">
-                      {combo.pricingStrategy?.replace('_', ' ') || 'FIXED'}
+                      {combo.pricingStrategy?.replace("_", " ") || "FIXED"}
                     </span>
                   </td>
 
@@ -178,7 +207,9 @@ const ComboKitList = () => {
                         className="p-2 text-text-muted hover:text-primary transition-colors rounded-lg hover:bg-primary/5"
                         title="Edit"
                       >
-                        <span className="material-icons-outlined text-lg">edit</span>
+                        <span className="material-icons-outlined text-lg">
+                          edit
+                        </span>
                       </Link>
                       {combo.isDeleted ? (
                         <button
@@ -186,7 +217,9 @@ const ComboKitList = () => {
                           className="p-2 text-text-muted hover:text-green-500 transition-colors rounded-lg hover:bg-green-500/5 cursor-pointer"
                           title="Restore"
                         >
-                          <span className="material-icons-outlined text-lg">restore</span>
+                          <span className="material-icons-outlined text-lg">
+                            restore
+                          </span>
                         </button>
                       ) : (
                         <button
@@ -194,7 +227,9 @@ const ComboKitList = () => {
                           className="p-2 text-text-muted hover:text-red-500 transition-colors rounded-lg hover:bg-red-500/5 cursor-pointer"
                           title="Delete"
                         >
-                          <span className="material-icons-outlined text-lg">delete</span>
+                          <span className="material-icons-outlined text-lg">
+                            delete
+                          </span>
                         </button>
                       )}
                     </div>
@@ -206,7 +241,7 @@ const ComboKitList = () => {
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default ComboKitList
+export default ComboKitList;

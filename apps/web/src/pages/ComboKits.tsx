@@ -1,48 +1,62 @@
-import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import Layout from '../components/Layout'
-import { Skeleton } from '../components/Skeleton'
-import { getComboKits } from '../api/combos.api'
-import type { ComboKit } from '../api/combos.api'
-import { formatPaise } from '../utils/currency'
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Layout from "../components/Layout";
+import { Skeleton } from "../components/Skeleton";
+import { getComboKits } from "../api/combos.api";
+import type { ComboKit } from "../api/combos.api";
+import { formatPaise } from "../utils/currency";
 
 const ComboKits: React.FC = () => {
-  const navigate = useNavigate()
-  const [combos, setCombos] = useState<ComboKit[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const navigate = useNavigate();
+  const [combos, setCombos] = useState<ComboKit[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchCombos = async () => {
-      setLoading(true)
+      setLoading(true);
       try {
-        const data = await getComboKits()
-        setCombos(Array.isArray(data) ? data : [])
+        const data = await getComboKits();
+        setCombos(Array.isArray(data) ? data : []);
       } catch (err: any) {
-        setError(err?.response?.data?.message || err?.message || 'Failed to load combo kits')
+        setError(
+          err?.response?.data?.message ||
+            err?.message ||
+            "Failed to load combo kits",
+        );
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
-    fetchCombos()
-  }, [])
+    };
+    fetchCombos();
+  }, []);
 
   return (
     <Layout>
       <div className="max-w-7xl mx-auto px-6 py-12">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm text-text-muted mb-8">
-          <a className="hover:text-primary cursor-pointer" onClick={() => navigate('/')}>Home</a>
+          <a
+            className="hover:text-primary cursor-pointer"
+            onClick={() => navigate("/")}
+          >
+            Home
+          </a>
           <span className="material-icons-outlined text-xs">chevron_right</span>
           <span className="text-text-main-light">Combo Kits</span>
         </div>
 
         {/* Header */}
         <div className="text-center mb-16">
-          <span className="text-primary text-sm uppercase tracking-widest font-bold block mb-2">Save More</span>
-          <h1 className="font-display text-3xl md:text-5xl font-bold mb-4">Combo Kits</h1>
+          <span className="text-primary text-sm uppercase tracking-widest font-bold block mb-2">
+            Save More
+          </span>
+          <h1 className="font-display text-3xl md:text-5xl font-bold mb-4">
+            Combo Kits
+          </h1>
           <p className="text-text-muted max-w-xl mx-auto">
-            Curated bundles of our best products, specially priced for the ultimate beauty ritual.
+            Curated bundles of our best products, specially priced for the
+            ultimate beauty ritual.
           </p>
         </div>
 
@@ -61,14 +75,18 @@ const ComboKits: React.FC = () => {
         ) : error ? (
           <div className="text-center py-20 space-y-4">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-900/30 border border-red-800/50">
-              <span className="material-icons-outlined text-3xl text-red-400">error</span>
+              <span className="material-icons-outlined text-3xl text-red-400">
+                error
+              </span>
             </div>
             <p className="text-text-muted">{error}</p>
           </div>
         ) : combos.length === 0 ? (
           <div className="text-center py-20 space-y-4">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 border border-primary/20">
-              <span className="material-icons-outlined text-3xl text-primary">inventory_2</span>
+              <span className="material-icons-outlined text-3xl text-primary">
+                inventory_2
+              </span>
             </div>
             <p className="text-text-muted">No combo kits available yet</p>
           </div>
@@ -90,12 +108,17 @@ const ComboKits: React.FC = () => {
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-surface-elevated">
-                      <span className="material-icons-outlined text-6xl text-text-muted/30">redeem</span>
+                      <span className="material-icons-outlined text-6xl text-text-muted/30">
+                        redeem
+                      </span>
                     </div>
                   )}
                   {combo.discountValue && (
                     <div className="absolute top-4 left-4 bg-red-500/90 backdrop-blur px-3 py-1 rounded-full text-white text-xs font-bold animate-soft-pulse shadow-[0_0_10px_rgba(239,68,68,0.3)]">
-                      Save {combo.discountType === 'PERCENTAGE' ? `${combo.discountValue}%` : formatPaise(combo.discountValue)}
+                      Save{" "}
+                      {combo.discountType === "PERCENTAGE"
+                        ? `${combo.discountValue}%`
+                        : formatPaise(combo.discountValue)}
                     </div>
                   )}
                   <div className="absolute top-4 right-4 bg-primary/90 backdrop-blur px-3 py-1 rounded-full text-black text-xs font-bold badge-shimmer">
@@ -109,12 +132,17 @@ const ComboKits: React.FC = () => {
                     {combo.name}
                   </h3>
                   {combo.description && (
-                    <p className="text-sm text-text-muted line-clamp-2">{combo.description}</p>
+                    <p className="text-sm text-text-muted line-clamp-2">
+                      {combo.description}
+                    </p>
                   )}
                   <div className="flex items-center justify-between pt-2">
-                    <span className="text-2xl font-bold text-primary price-glow">{formatPaise(combo.price)}</span>
+                    <span className="text-2xl font-bold text-primary price-glow">
+                      {formatPaise(combo.price)}
+                    </span>
                     <span className="text-xs text-text-muted">
-                      {combo.purchasedCount > 0 && `${combo.purchasedCount} sold`}
+                      {combo.purchasedCount > 0 &&
+                        `${combo.purchasedCount} sold`}
                     </span>
                   </div>
                 </div>
@@ -124,7 +152,7 @@ const ComboKits: React.FC = () => {
         )}
       </div>
     </Layout>
-  )
-}
+  );
+};
 
-export default ComboKits
+export default ComboKits;

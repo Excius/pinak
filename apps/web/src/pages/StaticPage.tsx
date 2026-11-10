@@ -1,19 +1,20 @@
-import React, { useEffect, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
-import Navbar from '../components/Navbar'
-import Footer from '../components/Footer'
-import MarkdownRenderer from '../components/MarkdownRenderer'
-import { getPageBySlug, type PublicPageDetail } from '../api/pages.api'
+import React, { useEffect, useState } from "react";
+import { useParams, Link } from "react-router-dom";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
+import MarkdownRenderer from "../components/MarkdownRenderer";
+import { getPageBySlug, type PublicPageDetail } from "../api/pages.api";
 
 interface StaticPageProps {
-  defaultSlug?: string
+  defaultSlug?: string;
 }
 
 const FALLBACK_PAGES: Record<string, Partial<PublicPageDetail>> = {
-  'about-us': {
-    title: 'About Us',
-    metaTitle: 'About Us | Pinak Beauty',
-    metaDescription: 'Discover our story, craftsmanship and mission rooted in Indian traditions.',
+  "about-us": {
+    title: "About Us",
+    metaTitle: "About Us | Pinak Beauty",
+    metaDescription:
+      "Discover our story, craftsmanship and mission rooted in Indian traditions.",
     content: `# About Pinak Beauty
 
 Affordable luxury beauty rooted in rich Indian traditions and inspired by the timeless glow of nature.
@@ -29,10 +30,11 @@ At Pinak, we believe that true beauty begins with authenticity. Our formulations
 ## Our Mission
 To democratize luxury beauty by making premium, clean, and elegant cosmetic formulations accessible to everyone.`,
   },
-  'privacy-policy': {
-    title: 'Privacy Policy',
-    metaTitle: 'Privacy Policy | Pinak Beauty',
-    metaDescription: 'Learn how Pinak Beauty protects and respects your personal data.',
+  "privacy-policy": {
+    title: "Privacy Policy",
+    metaTitle: "Privacy Policy | Pinak Beauty",
+    metaDescription:
+      "Learn how Pinak Beauty protects and respects your personal data.",
     content: `# Privacy Policy
 
 Pinak Beauty ("we", "our", or "us") is dedicated to protecting your privacy and safeguarding your personal information.
@@ -51,10 +53,10 @@ Pinak Beauty ("we", "our", or "us") is dedicated to protecting your privacy and 
 ## Contact Us
 If you have questions regarding this Privacy Policy, please email **support@pinak.com**.`,
   },
-  'terms-and-conditions': {
-    title: 'Terms & Conditions',
-    metaTitle: 'Terms & Conditions | Pinak Beauty',
-    metaDescription: 'Terms governing the use of Pinak website and services.',
+  "terms-and-conditions": {
+    title: "Terms & Conditions",
+    metaTitle: "Terms & Conditions | Pinak Beauty",
+    metaDescription: "Terms governing the use of Pinak website and services.",
     content: `# Terms & Conditions
 
 Welcome to Pinak Beauty. By accessing or using our website, you agree to comply with and be bound by the following terms.
@@ -71,10 +73,11 @@ Your receipt of an order confirmation does not signify our acceptance of your or
 ## 4. User Conduct
 You agree not to reproduce, duplicate, copy, sell, or exploit any portion of the service or website content without express written permission from Pinak Beauty.`,
   },
-  'shipping-policy': {
-    title: 'Shipping & Delivery Policy',
-    metaTitle: 'Shipping & Delivery Policy | Pinak Beauty',
-    metaDescription: 'Everything you need to know about our shipping rates and delivery timelines.',
+  "shipping-policy": {
+    title: "Shipping & Delivery Policy",
+    metaTitle: "Shipping & Delivery Policy | Pinak Beauty",
+    metaDescription:
+      "Everything you need to know about our shipping rates and delivery timelines.",
     content: `# Shipping & Delivery Policy
 
 Thank you for choosing Pinak Beauty. Here are the details of our shipping policy:
@@ -92,10 +95,11 @@ Thank you for choosing Pinak Beauty. Here are the details of our shipping policy
 ## Order Tracking
 Once your package is dispatched, you will receive an SMS and email notification with your tracking link. You can also track your orders live in your **My Orders** dashboard.`,
   },
-  'return-refund-policy': {
-    title: 'Return & Refund Policy',
-    metaTitle: 'Return & Refund Policy | Pinak Beauty',
-    metaDescription: 'Our transparent 7-day return and hassle-free refund guidelines.',
+  "return-refund-policy": {
+    title: "Return & Refund Policy",
+    metaTitle: "Return & Refund Policy | Pinak Beauty",
+    metaDescription:
+      "Our transparent 7-day return and hassle-free refund guidelines.",
     content: `# Return & Refund Policy
 
 We want you to love your Pinak experience. If you are not completely satisfied, we are here to help.
@@ -109,26 +113,26 @@ We want you to love your Pinak experience. If you are not completely satisfied, 
 - Once inspected and approved, refunds are processed within 5-7 business days to your original payment method.
 - For COD orders, refunds are credited via NEFT / UPI to your provided account details.`,
   },
-}
+};
 
 export const StaticPage: React.FC<StaticPageProps> = ({ defaultSlug }) => {
-  const { slug: paramSlug } = useParams<{ slug: string }>()
-  const slug = defaultSlug || paramSlug || ''
+  const { slug: paramSlug } = useParams<{ slug: string }>();
+  const slug = defaultSlug || paramSlug || "";
 
-  const [page, setPage] = useState<PublicPageDetail | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [page, setPage] = useState<PublicPageDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!slug) return
+    if (!slug) return;
 
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
 
     getPageBySlug(slug)
       .then((data) => {
-        setPage(data)
-        updateMeta(data)
+        setPage(data);
+        updateMeta(data);
       })
       .catch((err) => {
         // Fallback to built-in default page if available
@@ -136,41 +140,41 @@ export const StaticPage: React.FC<StaticPageProps> = ({ defaultSlug }) => {
           const fallback = {
             id: slug,
             slug,
-            title: FALLBACK_PAGES[slug].title || 'Page',
-            content: FALLBACK_PAGES[slug].content || '',
+            title: FALLBACK_PAGES[slug].title || "Page",
+            content: FALLBACK_PAGES[slug].content || "",
             metaTitle: FALLBACK_PAGES[slug].metaTitle,
             metaDescription: FALLBACK_PAGES[slug].metaDescription,
             updatedAt: new Date().toISOString(),
-          }
-          setPage(fallback)
-          updateMeta(fallback)
+          };
+          setPage(fallback);
+          updateMeta(fallback);
         } else {
-          console.error('Failed to load page content', err)
-          setError('Page not found or is currently unavailable.')
+          console.error("Failed to load page content", err);
+          setError("Page not found or is currently unavailable.");
         }
       })
       .finally(() => {
-        setLoading(false)
-      })
-  }, [slug])
+        setLoading(false);
+      });
+  }, [slug]);
 
   const updateMeta = (data: Partial<PublicPageDetail>) => {
     if (data.metaTitle) {
-      document.title = data.metaTitle
+      document.title = data.metaTitle;
     } else if (data.title) {
-      document.title = `${data.title} | Pinak Beauty`
+      document.title = `${data.title} | Pinak Beauty`;
     }
 
     if (data.metaDescription) {
-      let metaDesc = document.querySelector('meta[name="description"]')
+      let metaDesc = document.querySelector('meta[name="description"]');
       if (!metaDesc) {
-        metaDesc = document.createElement('meta')
-        metaDesc.setAttribute('name', 'description')
-        document.head.appendChild(metaDesc)
+        metaDesc = document.createElement("meta");
+        metaDesc.setAttribute("name", "description");
+        document.head.appendChild(metaDesc);
       }
-      metaDesc.setAttribute('content', data.metaDescription)
+      metaDesc.setAttribute("content", data.metaDescription);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-background-light flex flex-col text-text-main-light">
@@ -182,9 +186,11 @@ export const StaticPage: React.FC<StaticPageProps> = ({ defaultSlug }) => {
           <Link to="/" className="hover:text-primary transition-colors">
             Home
           </Link>
-          <span className="material-icons-outlined text-xs text-primary/40">chevron_right</span>
+          <span className="material-icons-outlined text-xs text-primary/40">
+            chevron_right
+          </span>
           <span className="text-primary font-medium truncate">
-            {loading ? 'Loading...' : page?.title || 'Legal & Policy'}
+            {loading ? "Loading..." : page?.title || "Legal & Policy"}
           </span>
         </div>
 
@@ -202,11 +208,16 @@ export const StaticPage: React.FC<StaticPageProps> = ({ defaultSlug }) => {
         ) : error || !page ? (
           <div className="text-center py-20 px-4 bg-surface-dark/40 rounded-3xl border border-primary/10">
             <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-4">
-              <span className="material-icons-outlined text-3xl text-primary">article</span>
+              <span className="material-icons-outlined text-3xl text-primary">
+                article
+              </span>
             </div>
-            <h2 className="text-2xl font-display font-bold text-text-main-light mb-2">Page Not Found</h2>
+            <h2 className="text-2xl font-display font-bold text-text-main-light mb-2">
+              Page Not Found
+            </h2>
             <p className="text-text-muted text-sm max-w-md mx-auto mb-8">
-              {error || "The page you are looking for doesn't exist or has been moved."}
+              {error ||
+                "The page you are looking for doesn't exist or has been moved."}
             </p>
             <Link
               to="/"
@@ -225,11 +236,11 @@ export const StaticPage: React.FC<StaticPageProps> = ({ defaultSlug }) => {
               </h1>
               {page.updatedAt && (
                 <p className="text-xs text-text-muted">
-                  Last updated:{' '}
-                  {new Date(page.updatedAt).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
+                  Last updated:{" "}
+                  {new Date(page.updatedAt).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
                   })}
                 </p>
               )}
@@ -243,7 +254,7 @@ export const StaticPage: React.FC<StaticPageProps> = ({ defaultSlug }) => {
 
       <Footer />
     </div>
-  )
-}
+  );
+};
 
-export default StaticPage
+export default StaticPage;

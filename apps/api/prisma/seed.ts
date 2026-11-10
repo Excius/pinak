@@ -27,13 +27,19 @@ async function cleanup() {
   await prisma.auditLog.deleteMany();
 
   // Featured
-  try { await prisma.featuredSectionImage.deleteMany(); } catch {}
+  try {
+    await prisma.featuredSectionImage.deleteMany();
+  } catch {}
   await prisma.featuredProduct.deleteMany();
   await prisma.featuredSection.deleteMany();
 
   // Product-related (images, combo kits, variants, products)
-  try { await prisma.categoryImage.deleteMany(); } catch {}
-  try { await prisma.comboKitImage.deleteMany(); } catch {}
+  try {
+    await prisma.categoryImage.deleteMany();
+  } catch {}
+  try {
+    await prisma.comboKitImage.deleteMany();
+  } catch {}
   await prisma.productImage.deleteMany();
   await prisma.comboKitItem.deleteMany();
   await prisma.comboKit.deleteMany();
@@ -74,7 +80,10 @@ async function main() {
   // Load product image URLs from file
   const imagesPath = path.join(__dirname, "../../../productimage.txt");
   const imagesContent = await fs.readFile(imagesPath, "utf-8");
-  const productImages = imagesContent.split("\n").map(line => line.trim()).filter(Boolean);
+  const productImages = imagesContent
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
   let imageCounter = 0;
 
   // -------------------------------------------------------------------------
@@ -821,7 +830,9 @@ async function main() {
         else console.warn(`⚠️  Missing OptionValue Shade='${variant.shade}'`);
       }
 
-      const imageUrl = productImages[imageCounter] || `https://example.com/images/${productData.slug}-${variant.sku.toLowerCase()}.jpg`;
+      const imageUrl =
+        productImages[imageCounter] ||
+        `https://example.com/images/${productData.slug}-${variant.sku.toLowerCase()}.jpg`;
       imageCounter++;
 
       await prisma.productImage.create({
@@ -965,7 +976,10 @@ async function main() {
       },
     });
   } catch (err: any) {
-    console.warn("⚠️  Skipping seeding featured section images:", err?.message ?? err);
+    console.warn(
+      "⚠️  Skipping seeding featured section images:",
+      err?.message ?? err,
+    );
   }
 
   const featuredEntries = [
@@ -1129,7 +1143,8 @@ async function main() {
         "A beginner-friendly makeup combo with foundation, lipstick and eyeshadow.",
       metaKeywords: "makeup kit, starter combo, foundation lipstick palette",
       seoKeyword: "starter-makeup-kit",
-      imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuB_j8yD9DHW29mHnnddf_ulUuyvgRSlVpd7WOvHqGzyrI2P0WjITqrHksEYsluf9wuc50_DDVGm7Y92OFIc_nh4ul5cddIS7BVPwYwTlDoEjb9WG7JxzXuJiSyB7mOVXnxDVVfoMBthI3A00RrHKxUemB6OauNwcgYlIAcAbA_S4XCU2rs4LPGxRvSHTBzpVo-Cahzif-q28vx9eRzuvD446uP7ykBD_wH5LNioMbgOtU8zIqhyfiYn2KoW_LrhR19GjAnr1vXal40",
+      imageUrl:
+        "https://lh3.googleusercontent.com/aida-public/AB6AXuB_j8yD9DHW29mHnnddf_ulUuyvgRSlVpd7WOvHqGzyrI2P0WjITqrHksEYsluf9wuc50_DDVGm7Y92OFIc_nh4ul5cddIS7BVPwYwTlDoEjb9WG7JxzXuJiSyB7mOVXnxDVVfoMBthI3A00RrHKxUemB6OauNwcgYlIAcAbA_S4XCU2rs4LPGxRvSHTBzpVo-Cahzif-q28vx9eRzuvD446uP7ykBD_wH5LNioMbgOtU8zIqhyfiYn2KoW_LrhR19GjAnr1vXal40",
       pricingStrategy: "FIXED_PRICE" as const,
       discountType: "PERCENTAGE" as const,
       discountValue: 15,
@@ -1154,7 +1169,8 @@ async function main() {
         "Hydrating skincare and dewy complexion essentials for daily glow.",
       metaKeywords: "hydration set, moisturizer combo, glow foundation",
       seoKeyword: "hydration-glow-set",
-      imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuCaWD1o8rPaCqIIYQWiyXek5dflUIWwfu6alVBAeo0r6QVpEG7jzDoMw5TpEKblRFcGlCon95s1pf7cP98rOJ8AA0NlzPON01ri8pESYrpFecC0Lzh57MQdB5WqQgBq1GbkWmlHhqtE4KLcrhzJBj7q4f32RqIb3T7MdYVfBy2oz9_aaJrFAMEqrprMWu9KnXAri3Yp_UngO-vqO6Mf2IjfQawRxBe-6Nh_xeZGsgWQYM1Y402abel6RJYRZAoJtfhsrC7BP_W-Bm8",
+      imageUrl:
+        "https://lh3.googleusercontent.com/aida-public/AB6AXuCaWD1o8rPaCqIIYQWiyXek5dflUIWwfu6alVBAeo0r6QVpEG7jzDoMw5TpEKblRFcGlCon95s1pf7cP98rOJ8AA0NlzPON01ri8pESYrpFecC0Lzh57MQdB5WqQgBq1GbkWmlHhqtE4KLcrhzJBj7q4f32RqIb3T7MdYVfBy2oz9_aaJrFAMEqrprMWu9KnXAri3Yp_UngO-vqO6Mf2IjfQawRxBe-6Nh_xeZGsgWQYM1Y402abel6RJYRZAoJtfhsrC7BP_W-Bm8",
       pricingStrategy: "CALCULATED" as const,
       discountType: "PERCENTAGE" as const,
       discountValue: 10,
@@ -1178,7 +1194,8 @@ async function main() {
         "Two high-performance mascaras for volume, definition and all-day hold.",
       metaKeywords: "mascara duo, lash combo, waterproof mascara",
       seoKeyword: "lash-define-duo",
-      imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuDXyLARo_crd7_eX9zhZBJa2Qpc5zunXEYVYSk2oNdSe3Tvch0tLSEQ6yNMoP8qOssEfwRn96shGGxdUOoOAPM4sbYXgHEz3scw_OjkMqN2j6-Li2Qg2S7YhH5YEXgR38Bx4cvSZGXDl3u59gvGCqg5xsu-4w7UANueDQmTXenFzFKdqlOkEnizufdBS7hN7Tj2Dnofqb9dR4hCRfqiushIcq5KjUAbYHx3JgxMHoei2ZUuYEswHFYfRcINd0xWJiAQXnMpt9A0mgw",
+      imageUrl:
+        "https://lh3.googleusercontent.com/aida-public/AB6AXuDXyLARo_crd7_eX9zhZBJa2Qpc5zunXEYVYSk2oNdSe3Tvch0tLSEQ6yNMoP8qOssEfwRn96shGGxdUOoOAPM4sbYXgHEz3scw_OjkMqN2j6-Li2Qg2S7YhH5YEXgR38Bx4cvSZGXDl3u59gvGCqg5xsu-4w7UANueDQmTXenFzFKdqlOkEnizufdBS7hN7Tj2Dnofqb9dR4hCRfqiushIcq5KjUAbYHx3JgxMHoei2ZUuYEswHFYfRcINd0xWJiAQXnMpt9A0mgw",
       pricingStrategy: "DYNAMIC" as const,
       discountType: "FIXED_AMOUNT" as const,
       discountValue: 30000,
@@ -1575,7 +1592,7 @@ async function main() {
   // --- Historical Orders for Best-Sellers Timeframe Testing ---
   const oneWeekAgo = new Date();
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 10); // > 1 week, < 1 month
-  
+
   const oneMonthAgo = new Date();
   oneMonthAgo.setDate(oneMonthAgo.getDate() - 40); // > 1 month
 
@@ -1585,9 +1602,9 @@ async function main() {
       status: "DELIVERED",
       paymentStatus: "COMPLETED",
       subtotalAmount: rgf001.price * 5,
-      taxAmount: Math.round((rgf001.price * 5) * 0.12),
+      taxAmount: Math.round(rgf001.price * 5 * 0.12),
       shippingAmount: 0,
-      totalAmount: Math.round((rgf001.price * 5) * 1.12),
+      totalAmount: Math.round(rgf001.price * 5 * 1.12),
       createdAt: oneWeekAgo,
     },
   });
@@ -1611,9 +1628,9 @@ async function main() {
       status: "DELIVERED",
       paymentStatus: "COMPLETED",
       subtotalAmount: vml001.price * 10,
-      taxAmount: Math.round((vml001.price * 10) * 0.12),
+      taxAmount: Math.round(vml001.price * 10 * 0.12),
       shippingAmount: 0,
-      totalAmount: Math.round((vml001.price * 10) * 1.12),
+      totalAmount: Math.round(vml001.price * 10 * 1.12),
       createdAt: oneMonthAgo,
     },
   });
@@ -1885,7 +1902,8 @@ async function main() {
       url: "https://via.placeholder.com/1200x400/FF6B6B/FFFFFF?text=Home+Banner",
       type: "IMAGE" as const,
       title: "Mobile Home Banner (Top)",
-      description: "The hero banner displayed at the top of the mobile home screen",
+      description:
+        "The hero banner displayed at the top of the mobile home screen",
       metadata: { linkUrl: "/products", aspectRatio: "3:1" },
     },
     {
@@ -1893,7 +1911,8 @@ async function main() {
       url: "https://via.placeholder.com/1200x400/4ECDC4/FFFFFF?text=Bottom+Banner",
       type: "IMAGE" as const,
       title: "Mobile Home Banner (Bottom)",
-      description: "The secondary banner displayed near the bottom of the mobile home screen",
+      description:
+        "The secondary banner displayed near the bottom of the mobile home screen",
       metadata: { linkUrl: "/combo-kits", aspectRatio: "3:1" },
     },
     {

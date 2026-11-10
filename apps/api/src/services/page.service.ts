@@ -118,7 +118,9 @@ export class PageService {
       slug,
       content: input.content,
       metaTitle: input.metaTitle ? input.metaTitle.trim() : null,
-      metaDescription: input.metaDescription ? input.metaDescription.trim() : null,
+      metaDescription: input.metaDescription
+        ? input.metaDescription.trim()
+        : null,
       isActive: input.isActive !== undefined ? input.isActive : true,
     };
 
@@ -143,13 +145,17 @@ export class PageService {
 
     const data: Prisma.PageUpdateInput = {
       ...(input.title !== undefined && { title: input.title.trim() }),
-      ...(input.slug !== undefined && { slug: input.slug.trim().toLowerCase() }),
+      ...(input.slug !== undefined && {
+        slug: input.slug.trim().toLowerCase(),
+      }),
       ...(input.content !== undefined && { content: input.content }),
       ...(input.metaTitle !== undefined && {
         metaTitle: input.metaTitle ? input.metaTitle.trim() : null,
       }),
       ...(input.metaDescription !== undefined && {
-        metaDescription: input.metaDescription ? input.metaDescription.trim() : null,
+        metaDescription: input.metaDescription
+          ? input.metaDescription.trim()
+          : null,
       }),
       ...(input.isActive !== undefined && { isActive: input.isActive }),
     };

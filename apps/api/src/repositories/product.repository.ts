@@ -91,7 +91,9 @@ export class ProductRepository {
           take,
           orderBy,
           include: {
-            brand: { select: { id: true, name: true, slug: true, logoUrl: true } },
+            brand: {
+              select: { id: true, name: true, slug: true, logoUrl: true },
+            },
             taxClass: { select: { id: true, name: true, rate: true } },
             lengthClass: { select: { id: true, name: true, unit: true } },
             weightClass: { select: { id: true, name: true, unit: true } },
@@ -253,7 +255,9 @@ export class ProductRepository {
           take,
           orderBy,
           include: {
-            brand: { select: { id: true, name: true, slug: true, logoUrl: true } },
+            brand: {
+              select: { id: true, name: true, slug: true, logoUrl: true },
+            },
             taxClass: { select: { id: true, name: true, rate: true } },
             lengthClass: { select: { id: true, name: true, unit: true } },
             weightClass: { select: { id: true, name: true, unit: true } },
@@ -310,10 +314,12 @@ export class ProductRepository {
         include: {
           product: {
             include: {
-              brand: { select: { id: true, name: true, slug: true, logoUrl: true } };
-              taxClass: { select: { id: true, name: true, rate: true } };
-              lengthClass: { select: { id: true, name: true, unit: true } };
-              weightClass: { select: { id: true, name: true, unit: true } };
+              brand: {
+                select: { id: true; name: true; slug: true; logoUrl: true };
+              };
+              taxClass: { select: { id: true; name: true; rate: true } };
+              lengthClass: { select: { id: true; name: true; unit: true } };
+              weightClass: { select: { id: true; name: true; unit: true } };
               categories: { include: { category: true } };
               filterValues: { include: { filterValue: true } };
               variants: {
@@ -350,7 +356,9 @@ export class ProductRepository {
           include: {
             product: {
               include: {
-                brand: { select: { id: true, name: true, slug: true, logoUrl: true } },
+                brand: {
+                  select: { id: true, name: true, slug: true, logoUrl: true },
+                },
                 taxClass: { select: { id: true, name: true, rate: true } },
                 lengthClass: { select: { id: true, name: true, unit: true } },
                 weightClass: { select: { id: true, name: true, unit: true } },
@@ -437,7 +445,9 @@ export class ProductRepository {
           include: {
             product: {
               include: {
-                brand: { select: { id: true, name: true, slug: true, logoUrl: true } },
+                brand: {
+                  select: { id: true, name: true, slug: true, logoUrl: true },
+                },
                 taxClass: { select: { id: true, name: true, rate: true } },
                 categories: { include: { category: true } },
                 variants: {
@@ -1278,9 +1288,9 @@ export class ProductRepository {
       where: whereCondition,
       _sum: {
         quantity: true,
-        price: true, // we can sum up price*quantity by doing custom query or doing it in code, 
-                     // but prisma doesn't support sum of multiplication easily without raw SQL.
-                     // For now, we'll just sort by units sold.
+        price: true, // we can sum up price*quantity by doing custom query or doing it in code,
+        // but prisma doesn't support sum of multiplication easily without raw SQL.
+        // For now, we'll just sort by units sold.
       },
       orderBy: {
         _sum: {
@@ -1296,8 +1306,10 @@ export class ProductRepository {
     // grouped by productId.
 
     let timeFilter = "";
-    if (timeframe === "week") timeFilter = `AND oi."createdAt" >= NOW() - INTERVAL '7 days'`;
-    if (timeframe === "month") timeFilter = `AND oi."createdAt" >= NOW() - INTERVAL '1 month'`;
+    if (timeframe === "week")
+      timeFilter = `AND oi."createdAt" >= NOW() - INTERVAL '7 days'`;
+    if (timeframe === "month")
+      timeFilter = `AND oi."createdAt" >= NOW() - INTERVAL '1 month'`;
 
     let categoryFilter = "";
     if (categoryId) {
@@ -1346,7 +1358,7 @@ export class ProductRepository {
     );
 
     const productIds = topSellingData.map((d) => d.productId);
-    
+
     // If no sales in timeframe
     if (productIds.length === 0) {
       return {
@@ -1396,7 +1408,9 @@ export class ProductRepository {
       .filter(Boolean) as typeof products;
 
     // For total count, we'd theoretically need a count query. We'll use raw for total.
-    const totalCountQuery = await this.prisma.$queryRawUnsafe<{ count: number }[]>(`
+    const totalCountQuery = await this.prisma.$queryRawUnsafe<
+      { count: number }[]
+    >(`
       SELECT COUNT(DISTINCT oi."productId")::int as count
       FROM "OrderItem" oi
       WHERE oi."productId" IS NOT NULL
@@ -1444,7 +1458,7 @@ export class ProductRepository {
     );
 
     const productIds = topSellingData.map((d) => d.productId);
-    
+
     if (productIds.length === 0) {
       return {
         items: [],
@@ -1501,7 +1515,9 @@ export class ProductRepository {
       })
       .filter(Boolean);
 
-    const totalCountQuery = await this.prisma.$queryRawUnsafe<{ count: number }[]>(`
+    const totalCountQuery = await this.prisma.$queryRawUnsafe<
+      { count: number }[]
+    >(`
       SELECT COUNT(DISTINCT oi."productId")::int as count
       FROM "OrderItem" oi
       WHERE oi."productId" IS NOT NULL
@@ -1533,12 +1549,18 @@ export class ProductRepository {
     };
   }
 
-  async getBestSellerAnalytics(timeframe: "week" | "month" | "all_time" = "month") {
+  async getBestSellerAnalytics(
+    timeframe: "week" | "month" | "all_time" = "month",
+  ) {
     let timeFilter = "";
-    if (timeframe === "week") timeFilter = `AND oi."createdAt" >= NOW() - INTERVAL '7 days'`;
-    if (timeframe === "month") timeFilter = `AND oi."createdAt" >= NOW() - INTERVAL '1 month'`;
+    if (timeframe === "week")
+      timeFilter = `AND oi."createdAt" >= NOW() - INTERVAL '7 days'`;
+    if (timeframe === "month")
+      timeFilter = `AND oi."createdAt" >= NOW() - INTERVAL '1 month'`;
 
-    const rawData = await this.prisma.$queryRawUnsafe<{ totalUnitsSold: number; grossRevenue: number }[]>(`
+    const rawData = await this.prisma.$queryRawUnsafe<
+      { totalUnitsSold: number; grossRevenue: number }[]
+    >(`
       SELECT 
         COALESCE(SUM(oi.quantity), 0)::int as "totalUnitsSold", 
         COALESCE(SUM(oi.price * oi.quantity), 0)::int as "grossRevenue"

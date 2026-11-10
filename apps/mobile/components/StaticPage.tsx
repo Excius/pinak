@@ -113,7 +113,11 @@ function MarkdownContent({ content }: { content: string }) {
     } else if (heading) {
       flushParagraph();
       flushList();
-      blocks.push({ type: "heading", level: Math.min(heading[1].length, 3), text: heading[2] });
+      blocks.push({
+        type: "heading",
+        level: Math.min(heading[1].length, 3),
+        text: heading[2],
+      });
     } else if (/^([-*_])(?:\s*\1){2,}$/.test(line)) {
       flushParagraph();
       flushList();
@@ -168,7 +172,9 @@ function MarkdownContent({ content }: { content: string }) {
           );
         }
         if (block.type === "rule") {
-          return <View key={index} className="my-5 border-t border-surface-border" />;
+          return (
+            <View key={index} className="my-5 border-t border-surface-border" />
+          );
         }
         return (
           <View key={index} className="my-1">
@@ -201,7 +207,9 @@ export function StaticPage({ slug }: { slug: string }) {
       })
       .catch((reason) => {
         if (active) {
-          setError(reason instanceof Error ? reason.message : "Unable to load page");
+          setError(
+            reason instanceof Error ? reason.message : "Unable to load page",
+          );
         }
       });
 
@@ -228,8 +236,14 @@ export function StaticPage({ slug }: { slug: string }) {
 
       {error ? (
         <View className="flex-1 items-center justify-center px-6">
-          <MaterialCommunityIcons name="alert-circle-outline" size={52} color="#C9A962" />
-          <Text className="mt-4 text-center text-base text-text-secondary">{error}</Text>
+          <MaterialCommunityIcons
+            name="alert-circle-outline"
+            size={52}
+            color="#C9A962"
+          />
+          <Text className="mt-4 text-center text-base text-text-secondary">
+            {error}
+          </Text>
         </View>
       ) : page ? (
         <ScrollView

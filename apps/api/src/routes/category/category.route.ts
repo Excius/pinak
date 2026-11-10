@@ -36,7 +36,6 @@ const deps: CategoryRouteDeps = {
   rateLimiter,
 };
 
-
 registerCategoryAdminRoutes(router, deps);
 registerCategoryPublicRoutes(router, deps);
 

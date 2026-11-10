@@ -32,7 +32,8 @@ export class BrandService {
       }
       let ext = "png";
       if (contentType) {
-        if (contentType.includes("jpeg") || contentType.includes("jpg")) ext = "jpg";
+        if (contentType.includes("jpeg") || contentType.includes("jpg"))
+          ext = "jpg";
         else if (contentType.includes("png")) ext = "png";
         else if (contentType.includes("webp")) ext = "webp";
         else if (contentType.includes("svg")) ext = "svg";
@@ -76,7 +77,8 @@ export class BrandService {
       }
       let ext = "png";
       if (contentType) {
-        if (contentType.includes("jpeg") || contentType.includes("jpg")) ext = "jpg";
+        if (contentType.includes("jpeg") || contentType.includes("jpg"))
+          ext = "jpg";
         else if (contentType.includes("png")) ext = "png";
         else if (contentType.includes("webp")) ext = "webp";
         else if (contentType.includes("svg")) ext = "svg";
@@ -94,7 +96,10 @@ export class BrandService {
             await deleteObject(oldKey);
           }
         } catch (err) {
-          logger.warn({ id, err }, "Failed to delete old S3 object for brand logo");
+          logger.warn(
+            { id, err },
+            "Failed to delete old S3 object for brand logo",
+          );
         }
       }
     }

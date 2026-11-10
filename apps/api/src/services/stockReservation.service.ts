@@ -10,11 +10,14 @@ export type ReservationRequirement = {
 };
 
 export class StockReservationService {
-  private readonly reservationDurationMs = appConfig.STOCK_RESERVATION_EXPIRE_SECONDS * 1000;
+  private readonly reservationDurationMs =
+    appConfig.STOCK_RESERVATION_EXPIRE_SECONDS * 1000;
 
   constructor(private prisma: PrismaClient) {}
 
-  private getDb(tx?: Prisma.TransactionClient): PrismaClient | Prisma.TransactionClient {
+  private getDb(
+    tx?: Prisma.TransactionClient,
+  ): PrismaClient | Prisma.TransactionClient {
     return tx ?? this.prisma;
   }
 
@@ -58,10 +61,10 @@ export class StockReservationService {
     const pipeline = redis.pipeline();
     pipeline.zremrangebyscore(key, 0, now);
     pipeline.zrange(key, "0", "-1");
-    
+
     const results = await pipeline.exec();
     if (!results || results.length < 2) return 0;
-    
+
     const members = (results[1]?.[1] as string[]) || [];
     let total = 0;
     for (const member of members) {
@@ -98,24 +101,31 @@ export class StockReservationService {
     }
 
     // Direct active reservations for this variant in Redis
-    const directReserved = await this.getRedisReservedQuantity(`reservations:variant:${productVariantId}`);
+    const directReserved = await this.getRedisReservedQuantity(
+      `reservations:variant:${productVariantId}`,
+    );
 
     // Active reservations for combos that include this variant
     const combosWithVariant = await db.comboKitItem.findMany({
       where: { productVariantId },
-      select: { comboKitId: true, quantity: true }
+      select: { comboKitId: true, quantity: true },
     });
 
     let comboReserved = 0;
     for (const comboItem of combosWithVariant) {
-      const comboQtyReserved = await this.getRedisReservedQuantity(`reservations:combo:${comboItem.comboKitId}`);
-      comboReserved += (comboQtyReserved * comboItem.quantity);
+      const comboQtyReserved = await this.getRedisReservedQuantity(
+        `reservations:combo:${comboItem.comboKitId}`,
+      );
+      comboReserved += comboQtyReserved * comboItem.quantity;
     }
 
     return Math.max(0, variant.stock - directReserved - comboReserved);
   }
 
-  async getAvailableStockForCombo(comboKitId: string, tx?: Prisma.TransactionClient) {
+  async getAvailableStockForCombo(
+    comboKitId: string,
+    tx?: Prisma.TransactionClient,
+  ) {
     const db = this.getDb(tx);
     const comboKit = await db.comboKit.findFirst({
       where: {
@@ -193,8 +203,12 @@ export class StockReservationService {
 
     for (const requirement of normalizedRequirements) {
       if (requirement.productVariantId) {
-        const current = totalVariantCheckMap.get(requirement.productVariantId) ?? 0;
-        totalVariantCheckMap.set(requirement.productVariantId, current + requirement.quantity);
+        const current =
+          totalVariantCheckMap.get(requirement.productVariantId) ?? 0;
+        totalVariantCheckMap.set(
+          requirement.productVariantId,
+          current + requirement.quantity,
+        );
       } else if (requirement.comboKitId) {
         const comboItems = await db.comboKitItem.findMany({
           where: { comboKitId: requirement.comboKitId },
@@ -229,7 +243,11 @@ export class StockReservationService {
 
     // Save reservations to Redis
     const pipeline = redis.pipeline();
-    pipeline.setex(`reservations:order:${orderId}`, Math.ceil(this.reservationDurationMs / 1000), JSON.stringify(normalizedRequirements));
+    pipeline.setex(
+      `reservations:order:${orderId}`,
+      Math.ceil(this.reservationDurationMs / 1000),
+      JSON.stringify(normalizedRequirements),
+    );
 
     for (const req of normalizedRequirements) {
       const member = `${orderId}|${req.quantity}`;
@@ -255,7 +273,7 @@ export class StockReservationService {
 
   async confirmReservations(orderId: string, tx?: Prisma.TransactionClient) {
     const db = this.getDb(tx);
-    
+
     let activeReservations: ReservationRequirement[] = [];
 
     // Fetch active reservations from Redis
@@ -270,7 +288,9 @@ export class StockReservationService {
       });
 
       if (orderItems.length === 0) {
-        throw new NotFoundError("No active reservations or order items found for this order");
+        throw new NotFoundError(
+          "No active reservations or order items found for this order",
+        );
       }
 
       activeReservations = orderItems.map((item) => ({
@@ -284,11 +304,15 @@ export class StockReservationService {
 
     for (const reservation of activeReservations) {
       if (reservation.productVariantId) {
-        const current = variantDeductions.get(reservation.productVariantId) ?? 0;
-        variantDeductions.set(reservation.productVariantId, current + reservation.quantity);
+        const current =
+          variantDeductions.get(reservation.productVariantId) ?? 0;
+        variantDeductions.set(
+          reservation.productVariantId,
+          current + reservation.quantity,
+        );
       } else if (reservation.comboKitId) {
         const comboItems = await db.comboKitItem.findMany({
-          where: { comboKitId: reservation.comboKitId }
+          where: { comboKitId: reservation.comboKitId },
         });
         for (const item of comboItems) {
           const deductionQty = item.quantity * reservation.quantity;
@@ -335,8 +359,10 @@ export class StockReservationService {
     const orderData = await redis.get(`reservations:order:${orderId}`);
     if (!orderData) return 0;
 
-    const activeReservations = JSON.parse(orderData) as ReservationRequirement[];
-    
+    const activeReservations = JSON.parse(
+      orderData,
+    ) as ReservationRequirement[];
+
     // Cleanup Redis keys
     const pipeline = redis.pipeline();
     pipeline.del(`reservations:order:${orderId}`);

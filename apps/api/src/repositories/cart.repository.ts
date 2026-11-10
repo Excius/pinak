@@ -68,7 +68,9 @@ export class CartRepository {
     },
   } satisfies Prisma.CartInclude;
 
-  private getDb(tx?: Prisma.TransactionClient): PrismaClient | Prisma.TransactionClient {
+  private getDb(
+    tx?: Prisma.TransactionClient,
+  ): PrismaClient | Prisma.TransactionClient {
     return tx ?? this.prisma;
   }
 
@@ -124,7 +126,11 @@ export class CartRepository {
     });
   }
 
-  async addItem(cartId: string, input: AddCartItemInput, tx?: Prisma.TransactionClient) {
+  async addItem(
+    cartId: string,
+    input: AddCartItemInput,
+    tx?: Prisma.TransactionClient,
+  ) {
     const db = this.getDb(tx);
     return db.cartItem.create({
       data: {
@@ -137,7 +143,11 @@ export class CartRepository {
     });
   }
 
-  async updateItemQuantity(itemId: string, quantity: number, tx?: Prisma.TransactionClient) {
+  async updateItemQuantity(
+    itemId: string,
+    quantity: number,
+    tx?: Prisma.TransactionClient,
+  ) {
     const db = this.getDb(tx);
     return db.cartItem.update({
       where: { id: itemId },
@@ -146,7 +156,11 @@ export class CartRepository {
     });
   }
 
-  async incrementItemQuantity(itemId: string, by: number, tx?: Prisma.TransactionClient) {
+  async incrementItemQuantity(
+    itemId: string,
+    by: number,
+    tx?: Prisma.TransactionClient,
+  ) {
     const db = this.getDb(tx);
     return db.cartItem.update({
       where: { id: itemId },

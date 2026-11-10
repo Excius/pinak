@@ -1,11 +1,11 @@
-import React from 'react'
-import Navbar from './Navbar'
-import Footer from './Footer'
-import CartDrawer from './CartDrawer'
+import React from "react";
+import Navbar from "./Navbar";
+import Footer from "./Footer";
+import CartDrawer from "./CartDrawer";
 
 interface LayoutProps {
-  children: React.ReactNode
-  hideFooter?: boolean
+  children: React.ReactNode;
+  hideFooter?: boolean;
 }
 
 const Layout: React.FC<LayoutProps> = ({ children, hideFooter }) => {
@@ -16,7 +16,7 @@ const Layout: React.FC<LayoutProps> = ({ children, hideFooter }) => {
       {!hideFooter && <Footer />}
       <CartDrawer />
     </div>
-  )
-}
+  );
+};
 
-export default Layout
+export default Layout;

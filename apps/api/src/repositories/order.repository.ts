@@ -1,4 +1,9 @@
-import { Prisma, PrismaClient, OrderStatus, PaymentStatus } from "../generated/prisma/client.js";
+import {
+  Prisma,
+  PrismaClient,
+  OrderStatus,
+  PaymentStatus,
+} from "../generated/prisma/client.js";
 
 export type OrderFilters = {
   page: number;
@@ -70,7 +75,9 @@ const adminOrderInclude = {
 export class OrderRepository {
   constructor(private prisma: PrismaClient) {}
 
-  private getDb(tx?: Prisma.TransactionClient): PrismaClient | Prisma.TransactionClient {
+  private getDb(
+    tx?: Prisma.TransactionClient,
+  ): PrismaClient | Prisma.TransactionClient {
     return tx ?? this.prisma;
   }
 
@@ -82,13 +89,17 @@ export class OrderRepository {
     });
   }
 
-  async createItems(items: CreateOrderItemInput[], tx?: Prisma.TransactionClient) {
+  async createItems(
+    items: CreateOrderItemInput[],
+    tx?: Prisma.TransactionClient,
+  ) {
     if (items.length === 0) return;
     const db = this.getDb(tx);
     await db.orderItem.createMany({
-      data: items.map(item => ({
+      data: items.map((item) => ({
         ...item,
-        variantDetails: item.variantDetails === null ? Prisma.JsonNull : item.variantDetails
+        variantDetails:
+          item.variantDetails === null ? Prisma.JsonNull : item.variantDetails,
       })),
     });
   }
@@ -121,7 +132,11 @@ export class OrderRepository {
     });
   }
 
-  async findUserOrders(userId: string, filters: OrderFilters, tx?: Prisma.TransactionClient) {
+  async findUserOrders(
+    userId: string,
+    filters: OrderFilters,
+    tx?: Prisma.TransactionClient,
+  ) {
     const db = this.getDb(tx);
     const page = Math.max(1, filters.page);
     const limit = Math.max(1, filters.limit);
@@ -130,7 +145,9 @@ export class OrderRepository {
       userId,
       isDeleted: false,
       ...(filters.status ? { status: filters.status } : {}),
-      ...(filters.paymentStatus ? { paymentStatus: filters.paymentStatus } : {}),
+      ...(filters.paymentStatus
+        ? { paymentStatus: filters.paymentStatus }
+        : {}),
     };
 
     const [items, total] = await db.$transaction([
@@ -159,7 +176,10 @@ export class OrderRepository {
     };
   }
 
-  async findAllOrders(filters: AdminOrderFilters, tx?: Prisma.TransactionClient) {
+  async findAllOrders(
+    filters: AdminOrderFilters,
+    tx?: Prisma.TransactionClient,
+  ) {
     const db = this.getDb(tx);
     const page = Math.max(1, filters.page);
     const limit = Math.max(1, filters.limit);
@@ -169,7 +189,9 @@ export class OrderRepository {
       isDeleted: false,
       ...(filters.userId ? { userId: filters.userId } : {}),
       ...(filters.status ? { status: filters.status } : {}),
-      ...(filters.paymentStatus ? { paymentStatus: filters.paymentStatus } : {}),
+      ...(filters.paymentStatus
+        ? { paymentStatus: filters.paymentStatus }
+        : {}),
     };
 
     const [items, total] = await db.$transaction([
@@ -198,7 +220,11 @@ export class OrderRepository {
     };
   }
 
-  async updateStatus(orderId: string, status: OrderStatus, tx?: Prisma.TransactionClient) {
+  async updateStatus(
+    orderId: string,
+    status: OrderStatus,
+    tx?: Prisma.TransactionClient,
+  ) {
     const db = this.getDb(tx);
     return db.order.update({
       where: { id: orderId },
@@ -240,7 +266,7 @@ export class OrderRepository {
       // Manually delete related records to bypass potential constraint issues
       await dtx.orderItem.deleteMany({ where: { orderId } });
       await dtx.couponUsage.deleteMany({ where: { oderId: orderId } });
-      
+
       return dtx.order.delete({
         where: { id: orderId },
       });

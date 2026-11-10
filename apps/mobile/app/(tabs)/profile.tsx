@@ -1,10 +1,7 @@
-
 import ProfileLayout from "@/components/profile";
 
 const Profile = () => {
-  return (
-    <ProfileLayout />
-  );
+  return <ProfileLayout />;
 };
 
 export default Profile;

@@ -3,7 +3,8 @@ import { SettingRepository } from "../repositories/setting.repository.js";
 import type { SettingRecord } from "../lib/mappers/setting.mapper.js";
 
 const DEFAULT_WHATSAPP_NUMBER = "+919876543210";
-const DEFAULT_WHATSAPP_MESSAGE = "Hello! I would like to know more about Pinak products.";
+const DEFAULT_WHATSAPP_MESSAGE =
+  "Hello! I would like to know more about Pinak products.";
 const DEFAULT_SUPPORT_EMAIL = "support@pinak.com";
 const DEFAULT_SUPPORT_PHONE = "+919876543210";
 
@@ -57,7 +58,10 @@ export class SettingService {
     };
   }
 
-  async getByKey(key: string, onlyPublic = true): Promise<{ key: string; value: string }> {
+  async getByKey(
+    key: string,
+    onlyPublic = true,
+  ): Promise<{ key: string; value: string }> {
     const setting = await this.repo.getByKey(key);
     if (!setting) {
       throw new NotFoundError(`Setting '${key}' not found`);

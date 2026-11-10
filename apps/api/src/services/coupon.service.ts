@@ -90,7 +90,10 @@ export class CouponService {
     }
 
     if (coupon.maxTotalUsers !== null) {
-      const totalUsage = await this.couponRepository.countTotalUsage(coupon.id, tx);
+      const totalUsage = await this.couponRepository.countTotalUsage(
+        coupon.id,
+        tx,
+      );
       if (totalUsage >= coupon.maxTotalUsers) {
         throw new ValidationError("Coupon usage limit exceeded");
       }
@@ -103,7 +106,9 @@ export class CouponService {
         tx,
       );
       if (userUsage >= coupon.maxUsesPerUser) {
-        throw new ValidationError("You have reached the usage limit for this coupon");
+        throw new ValidationError(
+          "You have reached the usage limit for this coupon",
+        );
       }
     }
 
@@ -149,7 +154,12 @@ export class CouponService {
     cartTotal: number,
     tx?: Prisma.TransactionClient,
   ) {
-    const validation = await this.validateCoupon(couponCode, userId, cartTotal, tx);
+    const validation = await this.validateCoupon(
+      couponCode,
+      userId,
+      cartTotal,
+      tx,
+    );
     await this.couponRepository.createUsage(
       {
         couponId: validation.coupon.id,

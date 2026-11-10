@@ -5,7 +5,12 @@ import type { OrderRouteDeps } from "./index.js";
 
 export const registerOrderPublicRoutes = (
   router: Router,
-  { controller, invoiceController, authMiddleware, rateLimiter }: OrderRouteDeps,
+  {
+    controller,
+    invoiceController,
+    authMiddleware,
+    rateLimiter,
+  }: OrderRouteDeps,
 ) => {
   router.post(
     "/",

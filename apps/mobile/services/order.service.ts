@@ -1,86 +1,86 @@
 import { apiRequest } from "./api";
-import type { OrderApi } from '@repo/types';
+import type { OrderApi } from "@repo/types";
 
 // Type imports for order service
-type CreateOrderRequest = OrderApi.BodyTypes['CreateOrder'];
-type CreateOrderResponse = OrderApi.ResponseTypes['CreateOrder'];
-type VerifyPaymentRequest = OrderApi.BodyTypes['VerifyPayment'];
-type VerifyPaymentResponse = OrderApi.ResponseTypes['VerifyPayment'];
-type GetOrdersResponse = OrderApi.ResponseTypes['GetOrders'];
-type GetOrderByIdResponse = OrderApi.ResponseTypes['GetOrderById'];
-type CancelOrderResponse = OrderApi.ResponseTypes['CancelOrder'];
+type CreateOrderRequest = OrderApi.BodyTypes["CreateOrder"];
+type CreateOrderResponse = OrderApi.ResponseTypes["CreateOrder"];
+type VerifyPaymentRequest = OrderApi.BodyTypes["VerifyPayment"];
+type VerifyPaymentResponse = OrderApi.ResponseTypes["VerifyPayment"];
+type GetOrdersResponse = OrderApi.ResponseTypes["GetOrders"];
+type GetOrderByIdResponse = OrderApi.ResponseTypes["GetOrderById"];
+type CancelOrderResponse = OrderApi.ResponseTypes["CancelOrder"];
 
 // Create order from cart
 export async function createOrder(payload: CreateOrderRequest) {
-    const response = await apiRequest<CreateOrderResponse>(
-        'post',
-        '/orders',
-        payload
-    );
-    return response;
+  const response = await apiRequest<CreateOrderResponse>(
+    "post",
+    "/orders",
+    payload,
+  );
+  return response;
 }
 
 export async function verifyPayment(payload: VerifyPaymentRequest) {
-    const response = await apiRequest<VerifyPaymentResponse>(
-        'post',
-        '/payments/verify',
-        payload
-    );
-    return response;
+  const response = await apiRequest<VerifyPaymentResponse>(
+    "post",
+    "/payments/verify",
+    payload,
+  );
+  return response;
 }
 
 // Get user's orders with optional filters
 export async function getOrders(
-    page: number = 1,
-    limit: number = 10,
-    filters?: {
-        status?: 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
-        paymentStatus?: 'PENDING' | 'COMPLETED' | 'FAILED';
-    }
+  page: number = 1,
+  limit: number = 10,
+  filters?: {
+    status?: "PENDING" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED";
+    paymentStatus?: "PENDING" | "COMPLETED" | "FAILED";
+  },
 ) {
-    const params = new URLSearchParams();
-    params.append('page', page.toString());
-    params.append('limit', limit.toString());
+  const params = new URLSearchParams();
+  params.append("page", page.toString());
+  params.append("limit", limit.toString());
 
-    if (filters?.status) {
-        params.append('status', filters.status);
-    }
-    if (filters?.paymentStatus) {
-        params.append('paymentStatus', filters.paymentStatus);
-    }
+  if (filters?.status) {
+    params.append("status", filters.status);
+  }
+  if (filters?.paymentStatus) {
+    params.append("paymentStatus", filters.paymentStatus);
+  }
 
-    const queryString = params.toString();
-    const url = queryString ? `/orders?${queryString}` : '/orders';
+  const queryString = params.toString();
+  const url = queryString ? `/orders?${queryString}` : "/orders";
 
-    const response = await apiRequest<GetOrdersResponse>('get', url);
-    return response;
+  const response = await apiRequest<GetOrdersResponse>("get", url);
+  return response;
 }
 
 // Get specific order by ID
 export async function getOrderById(orderId: string) {
-    const response = await apiRequest<GetOrderByIdResponse>(
-        'get',
-        `/orders/${orderId}`
-    );
-    return response;
+  const response = await apiRequest<GetOrderByIdResponse>(
+    "get",
+    `/orders/${orderId}`,
+  );
+  return response;
 }
 
 // Cancel order
 export async function cancelOrder(orderId: string) {
-    const response = await apiRequest<CancelOrderResponse>(
-        'put',
-        `/orders/${orderId}/cancel`,
-        {}
-    );
-    return response;
+  const response = await apiRequest<CancelOrderResponse>(
+    "put",
+    `/orders/${orderId}/cancel`,
+    {},
+  );
+  return response;
 }
 
 export async function getInvoicePdf(orderId: string) {
-    return apiRequest<ArrayBuffer>('get', `/orders/${orderId}/invoice/pdf`, {
-        responseType: 'arraybuffer',
-    });
+  return apiRequest<ArrayBuffer>("get", `/orders/${orderId}/invoice/pdf`, {
+    responseType: "arraybuffer",
+  });
 }
 
 export async function getInvoiceHtml(orderId: string) {
-    return apiRequest<string>('get', `/orders/${orderId}/invoice`);
+  return apiRequest<string>("get", `/orders/${orderId}/invoice`);
 }

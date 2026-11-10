@@ -26,14 +26,19 @@ export class FeaturedSectionRepository {
     });
   }
 
-  getById(id: string, includeDeleted = false): Promise<FeaturedSectionWithCount | null> {
+  getById(
+    id: string,
+    includeDeleted = false,
+  ): Promise<FeaturedSectionWithCount | null> {
     return this.prisma.featuredSection.findFirst({
       where: { id, ...(includeDeleted ? {} : { isDeleted: false }) },
       include: featuredSectionWithCountInclude,
     });
   }
 
-  create(data: Prisma.FeaturedSectionCreateInput): Promise<FeaturedSectionWithCount> {
+  create(
+    data: Prisma.FeaturedSectionCreateInput,
+  ): Promise<FeaturedSectionWithCount> {
     return this.prisma.featuredSection.create({
       data,
       include: featuredSectionWithCountInclude,

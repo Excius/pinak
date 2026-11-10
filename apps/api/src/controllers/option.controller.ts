@@ -45,7 +45,11 @@ export class OptionController {
     const { id } = req.params;
     const option = await this.optionService.getOptionById(id as string);
     if (!option) return ResponseHandler.notFound(res, "Option not found");
-    ResponseHandler.success(res, toAdminOption(option), "Option fetched successfully");
+    ResponseHandler.success(
+      res,
+      toAdminOption(option),
+      "Option fetched successfully",
+    );
   };
 
   create = async (req: Request, res: Response) => {

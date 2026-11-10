@@ -43,12 +43,22 @@ export const StoreTypes = {
       city: z.string().optional(),
       state: z.string().optional(),
       zipCode: z.string().optional(),
-      latitude: z.coerce.number().min(-90, "Latitude must be >= -90").max(90, "Latitude must be <= 90").optional(),
-      longitude: z.coerce.number().min(-180, "Longitude must be >= -180").max(180, "Longitude must be <= 180").optional(),
+      latitude: z.coerce
+        .number()
+        .min(-90, "Latitude must be >= -90")
+        .max(90, "Latitude must be <= 90")
+        .optional(),
+      longitude: z.coerce
+        .number()
+        .min(-180, "Longitude must be >= -180")
+        .max(180, "Longitude must be <= 180")
+        .optional(),
       radius: z.coerce.number().positive("Radius must be positive").optional(),
       page: z.coerce.number().int().min(1).default(1).optional(),
       limit: z.coerce.number().int().min(1).max(100).default(20).optional(),
-      sortBy: z.enum(["name", "city", "state", "distance", "createdAt"]).optional(),
+      sortBy: z
+        .enum(["name", "city", "state", "distance", "createdAt"])
+        .optional(),
       sortOrder: z.enum(["asc", "desc"]).optional(),
     }),
     response: z.object({
@@ -101,7 +111,9 @@ export const StoreAdminTypes = {
       includeDeleted: z.coerce.boolean().optional(),
       page: z.coerce.number().int().min(1).default(1).optional(),
       limit: z.coerce.number().int().min(1).max(100).default(20).optional(),
-      sortBy: z.enum(["name", "city", "state", "createdAt", "updatedAt"]).optional(),
+      sortBy: z
+        .enum(["name", "city", "state", "createdAt", "updatedAt"])
+        .optional(),
       sortOrder: z.enum(["asc", "desc"]).optional(),
     }),
     response: z.object({
@@ -131,14 +143,24 @@ export const StoreAdminTypes = {
 
   CreateStore: {
     body: z.object({
-      name: z.string().trim().min(1, { message: "Store name is required" }).max(200),
+      name: z
+        .string()
+        .trim()
+        .min(1, { message: "Store name is required" })
+        .max(200),
       address: z.string().trim().min(1, { message: "Address is required" }),
       city: z.string().trim().min(1, { message: "City is required" }),
       state: z.string().trim().min(1, { message: "State is required" }),
       zipCode: z.string().trim().min(1, { message: "Zip code is required" }),
       phone: z.string().trim().optional().nullable(),
-      latitude: z.coerce.number().min(-90, "Latitude must be >= -90").max(90, "Latitude must be <= 90"),
-      longitude: z.coerce.number().min(-180, "Longitude must be >= -180").max(180, "Longitude must be <= 180"),
+      latitude: z.coerce
+        .number()
+        .min(-90, "Latitude must be >= -90")
+        .max(90, "Latitude must be <= 90"),
+      longitude: z.coerce
+        .number()
+        .min(-180, "Longitude must be >= -180")
+        .max(180, "Longitude must be <= 180"),
       isActive: z.coerce.boolean().optional().default(true),
     }),
     params: z.object({}),
@@ -158,8 +180,16 @@ export const StoreAdminTypes = {
       state: z.string().trim().min(1).optional(),
       zipCode: z.string().trim().min(1).optional(),
       phone: z.string().trim().optional().nullable(),
-      latitude: z.coerce.number().min(-90, "Latitude must be >= -90").max(90, "Latitude must be <= 90").optional(),
-      longitude: z.coerce.number().min(-180, "Longitude must be >= -180").max(180, "Longitude must be <= 180").optional(),
+      latitude: z.coerce
+        .number()
+        .min(-90, "Latitude must be >= -90")
+        .max(90, "Latitude must be <= 90")
+        .optional(),
+      longitude: z.coerce
+        .number()
+        .min(-180, "Longitude must be >= -180")
+        .max(180, "Longitude must be <= 180")
+        .optional(),
       isActive: z.coerce.boolean().optional(),
     }),
     params: z.object({

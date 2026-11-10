@@ -10,7 +10,9 @@ type CreateCouponUsageInput = {
 export class CouponRepository {
   constructor(private prisma: PrismaClient) {}
 
-  private getDb(tx?: Prisma.TransactionClient): PrismaClient | Prisma.TransactionClient {
+  private getDb(
+    tx?: Prisma.TransactionClient,
+  ): PrismaClient | Prisma.TransactionClient {
     return tx ?? this.prisma;
   }
 
@@ -24,7 +26,11 @@ export class CouponRepository {
     });
   }
 
-  async countUserUsage(couponId: string, userId: string, tx?: Prisma.TransactionClient) {
+  async countUserUsage(
+    couponId: string,
+    userId: string,
+    tx?: Prisma.TransactionClient,
+  ) {
     const db = this.getDb(tx);
     return db.couponUsage.count({
       where: { couponId, userId },
@@ -38,7 +44,10 @@ export class CouponRepository {
     });
   }
 
-  async createUsage(input: CreateCouponUsageInput, tx?: Prisma.TransactionClient) {
+  async createUsage(
+    input: CreateCouponUsageInput,
+    tx?: Prisma.TransactionClient,
+  ) {
     const db = this.getDb(tx);
     return db.couponUsage.create({
       data: {
