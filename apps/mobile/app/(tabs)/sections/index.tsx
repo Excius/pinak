@@ -194,8 +194,8 @@ export default function FeaturedSectionsScreen() {
           <SectionCard section={item} onPress={handleSectionPress} />
         )}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingVertical: 8, paddingBottom: 40 }}
-        scrollIndicatorInsets={{ right: 1 }}
+        contentContainerStyle={{ paddingVertical: 8, paddingBottom: 160 }}
+        scrollIndicatorInsets={{ bottom: 160, right: 1 }}
       />
     </SafeAreaView>
   );
