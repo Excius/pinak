@@ -28,7 +28,11 @@ export class TaxClassRepository {
     return this.prisma.taxClass.delete({ where: { id } });
   }
 
-  countProductsByTaxClass(id: string) {
-    return this.prisma.product.count({ where: { taxClassId: id } });
+  async countProductsByTaxClass(id: string) {
+    const [products, variants] = await Promise.all([
+      this.prisma.product.count({ where: { taxClassId: id } }),
+      this.prisma.productVariant.count({ where: { taxClassId: id } }),
+    ]);
+    return products + variants;
   }
 }

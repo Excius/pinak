@@ -12,6 +12,12 @@ import type {
   AdminOption,
   AdminOptionValue,
 } from "../../../api/admin/admin.options.api";
+import {
+  getAllWeightClasses,
+  getAllLengthClasses,
+  type WeightClass,
+  type LengthClass,
+} from "../../../api/admin/admin.settings.api";
 
 // ── Form types ──────────────────────────────────────────────────────────
 
@@ -23,7 +29,17 @@ interface ValueFormData {
   value: string;
   sortOrder: number;
   swatchColorHex: string | null;
+  // Optional measurements (kept as text while typing; blank = not set)
+  weightGrams: string;
+  weightClassId: string;
+  dimensionLength: string;
+  dimensionWidth: string;
+  dimensionHeight: string;
+  lengthClassId: string;
 }
+
+// 6- or 8-digit hex, as the API requires (e.g. #C96C7D or #C98F7280)
+const SWATCH_HEX = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{8})$/;
 
 const getApiErrorMessage = (err: unknown, fallback: string): string => {
   const data = (
@@ -45,8 +61,16 @@ const emptyValueForm: ValueFormData = {
   value: "",
   sortOrder: 0,
   swatchColorHex: null,
+  weightGrams: "",
+  weightClassId: "",
+  dimensionLength: "",
+  dimensionWidth: "",
+  dimensionHeight: "",
+  lengthClassId: "",
 };
-const SWATCH_COLOR_PATTERN = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{8})$/;
+
+const numOrNull = (v: string): number | null =>
+  v.trim() === "" ? null : Number(v);
 
 // ── Component ───────────────────────────────────────────────────────────
 
@@ -67,7 +91,6 @@ const OptionList = () => {
     null,
   );
   const [valueForm, setValueForm] = useState<ValueFormData>(emptyValueForm);
-  const [valueFormError, setValueFormError] = useState<string | null>(null);
   const [savingValue, setSavingValue] = useState(false);
 
   // Delete confirmation
@@ -82,6 +105,10 @@ const OptionList = () => {
     scope: "option" | "value" | "delete";
     message: string;
   } | null>(null);
+
+  // Weight / length classes for the optional measurements
+  const [weightClasses, setWeightClasses] = useState<WeightClass[]>([]);
+  const [lengthClasses, setLengthClasses] = useState<LengthClass[]>([]);
 
   // Expanded options
   const [expandedOptions, setExpandedOptions] = useState<Set<string>>(
@@ -103,6 +130,14 @@ const OptionList = () => {
 
   useEffect(() => {
     fetchOptions();
+  }, []);
+  useEffect(() => {
+    getAllWeightClasses()
+      .then(setWeightClasses)
+      .catch(() => setWeightClasses([]));
+    getAllLengthClasses()
+      .then(setLengthClasses)
+      .catch(() => setLengthClasses([]));
   }, []);
 
   // ── Option CRUD ───────────────────────────────────────────────────────
@@ -166,7 +201,6 @@ const OptionList = () => {
     setValueParentId(optionId);
     setEditingValue(null);
     setValueForm(emptyValueForm);
-    setValueFormError(null);
     setShowValueModal(true);
   };
 
@@ -178,28 +212,44 @@ const OptionList = () => {
       value: val.value,
       sortOrder: val.sortOrder,
       swatchColorHex: val.swatchColorHex ?? null,
+      weightGrams: val.weightGrams != null ? String(val.weightGrams) : "",
+      weightClassId: val.weightClassId ?? "",
+      dimensionLength:
+        val.dimensionLength != null ? String(val.dimensionLength) : "",
+      dimensionWidth:
+        val.dimensionWidth != null ? String(val.dimensionWidth) : "",
+      dimensionHeight:
+        val.dimensionHeight != null ? String(val.dimensionHeight) : "",
+      lengthClassId: val.lengthClassId ?? "",
     });
-    setValueFormError(null);
     setShowValueModal(true);
   };
 
   const handleSaveValue = async () => {
     if (!valueForm.value.trim() || !valueParentId) return;
-    const swatchColorHex = valueForm.swatchColorHex?.trim() || null;
-    if (swatchColorHex && !SWATCH_COLOR_PATTERN.test(swatchColorHex)) {
-      setValueFormError(
-        "Use a 6- or 8-digit hex color, such as #C96C7D or #C98F7280.",
-      );
+    const swatch = valueForm.swatchColorHex?.trim();
+    if (swatch && !SWATCH_HEX.test(swatch)) {
+      setActionError({
+        scope: "value",
+        message:
+          "Swatch color must be a hex value like #C96C7D (6 or 8 digits).",
+      });
       return;
     }
-    setValueFormError(null);
     setSavingValue(true);
     setActionError(null);
     try {
       const payload = {
         value: valueForm.value.trim(),
         sortOrder: valueForm.sortOrder,
-        swatchColorHex,
+        swatchColorHex: valueForm.swatchColorHex?.trim() || null,
+        // null clears a measurement so variants stop inheriting it
+        weightGrams: numOrNull(valueForm.weightGrams),
+        weightClassId: valueForm.weightClassId || null,
+        dimensionLength: numOrNull(valueForm.dimensionLength),
+        dimensionWidth: numOrNull(valueForm.dimensionWidth),
+        dimensionHeight: numOrNull(valueForm.dimensionHeight),
+        lengthClassId: valueForm.lengthClassId || null,
       };
       if (editingValue) {
         await updateOptionValue(editingValue.id, payload);
@@ -389,7 +439,7 @@ const OptionList = () => {
                       type="color"
                       value={
                         valueForm.swatchColorHex &&
-                        SWATCH_COLOR_PATTERN.test(valueForm.swatchColorHex)
+                        SWATCH_HEX.test(valueForm.swatchColorHex)
                           ? valueForm.swatchColorHex
                           : "#C96C7D"
                       }
@@ -440,13 +490,99 @@ const OptionList = () => {
                     )}
                   </div>
                 </div>
-                {valueFormError && (
-                  <p className="text-[11px] text-red-400">{valueFormError}</p>
-                )}
                 <p className="text-[11px] text-text-muted">
                   Use for colors/shades. Clear for non-color options (e.g. 50ml,
                   Pack of 2).
                 </p>
+              </div>
+
+              {/* Optional physical measurements: variants using this value inherit them */}
+              <div className="space-y-3 p-4 rounded-xl border border-primary/10 bg-background-main/40">
+                <div>
+                  <label className="text-xs font-bold text-text-muted uppercase">
+                    Package weight &amp; dimensions — Optional
+                  </label>
+                  <p className="text-[11px] text-text-muted mt-0.5">
+                    Shipping measurements of the packed product for this choice
+                    (e.g. the 50ml bottle in its box). Variants that use this
+                    value inherit them; a variant can still set its own.
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <input
+                    type="number"
+                    min={0}
+                    step="any"
+                    placeholder="Weight"
+                    value={valueForm.weightGrams}
+                    onChange={(e) =>
+                      setValueForm((prev) => ({
+                        ...prev,
+                        weightGrams: e.target.value,
+                      }))
+                    }
+                    className="bg-background-main border border-primary/20 rounded-xl px-3 py-2.5 text-sm text-text-main-light outline-none focus:border-primary"
+                  />
+                  <select
+                    value={valueForm.weightClassId}
+                    onChange={(e) =>
+                      setValueForm((prev) => ({
+                        ...prev,
+                        weightClassId: e.target.value,
+                      }))
+                    }
+                    className="bg-background-main border border-primary/20 rounded-xl px-3 py-2.5 text-sm text-text-main-light outline-none focus:border-primary"
+                  >
+                    <option value="">Weight class</option>
+                    {weightClasses.map((w) => (
+                      <option key={w.id} value={w.id}>
+                        {w.name} ({w.unit})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="grid grid-cols-4 gap-3">
+                  {(
+                    [
+                      "dimensionLength",
+                      "dimensionWidth",
+                      "dimensionHeight",
+                    ] as const
+                  ).map((key, i) => (
+                    <input
+                      key={key}
+                      type="number"
+                      min={0}
+                      step="any"
+                      placeholder={["Length", "Width", "Height"][i]}
+                      value={valueForm[key]}
+                      onChange={(e) =>
+                        setValueForm((prev) => ({
+                          ...prev,
+                          [key]: e.target.value,
+                        }))
+                      }
+                      className="bg-background-main border border-primary/20 rounded-xl px-3 py-2.5 text-sm text-text-main-light outline-none focus:border-primary min-w-0"
+                    />
+                  ))}
+                  <select
+                    value={valueForm.lengthClassId}
+                    onChange={(e) =>
+                      setValueForm((prev) => ({
+                        ...prev,
+                        lengthClassId: e.target.value,
+                      }))
+                    }
+                    className="bg-background-main border border-primary/20 rounded-xl px-2 py-2.5 text-sm text-text-main-light outline-none focus:border-primary min-w-0"
+                  >
+                    <option value="">Unit</option>
+                    {lengthClasses.map((l) => (
+                      <option key={l.id} value={l.id}>
+                        {l.unit}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <div className="space-y-2">

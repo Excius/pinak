@@ -16,6 +16,9 @@ interface CartContextType {
   subtotal: number;
   taxTotal: number;
   totalWithTax: number;
+  shippingFee: number;
+  shippingRequired: boolean;
+  grandTotal: number;
   loading: boolean;
   isOpen: boolean;
   openCart: () => void;
@@ -55,6 +58,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
   const subtotal = cart?.subtotal ?? 0;
   const taxTotal = cart?.taxTotal ?? 0;
   const totalWithTax = cart?.totalWithTax ?? subtotal;
+  const shippingFee = cart?.shippingFee ?? 0;
+  const shippingRequired = cart?.shippingRequired ?? false;
+  const grandTotal = cart?.grandTotal ?? totalWithTax + shippingFee;
 
   const openCart = useCallback(() => setIsOpen(true), []);
   const closeCart = useCallback(() => setIsOpen(false), []);
@@ -145,6 +151,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         subtotal,
         taxTotal,
         totalWithTax,
+        shippingFee,
+        shippingRequired,
+        grandTotal,
         loading,
         isOpen,
         openCart,

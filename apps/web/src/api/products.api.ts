@@ -81,6 +81,8 @@ export interface VariantDetail {
   sellingPriceWithTax?: number | null;
   compareAtPrice?: number;
   compareAtPriceWithTax?: number | null;
+  taxRate?: number;
+  taxClass?: { name?: string; rate: number; overridden?: boolean } | null;
   stock: number;
   lowStockThreshold?: number;
   isActive: boolean;

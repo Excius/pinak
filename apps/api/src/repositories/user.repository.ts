@@ -1,4 +1,4 @@
-import { AuthProviderType, PrismaClient } from "../generated/prisma/client.js";
+import { AuthProviderType, Prisma, PrismaClient } from "../generated/prisma/client.js";
 import { InternalServerError, NotFoundError } from "../lib/error.js";
 import logger from "../lib/logger.js";
 import { normalizeEmail } from "../lib/email.js";
@@ -221,6 +221,101 @@ export class UserRespository {
     return this.primsa.user.update({
       where: { id: userId },
       data: { status },
+    });
+  }
+
+  // ── Admin directory (never selects hashPassword) ─────────────────────
+
+  private readonly adminUserSelect = {
+    id: true,
+    email: true,
+    username: true,
+    name: true,
+    role: true,
+    status: true,
+    isEmailVerified: true,
+    createdAt: true,
+    updatedAt: true,
+  } satisfies Prisma.UserSelect;
+
+  async listUsersAdmin(opts: {
+    page: number;
+    limit: number;
+    search?: string;
+    role?: "ADMIN" | "MODERATOR" | "USER";
+    status?: "ACTIVE" | "INACTIVE" | "DELETED";
+    sortBy: "createdAt" | "name" | "email";
+    sortOrder: "asc" | "desc";
+  }) {
+    const where: Prisma.UserWhereInput = {
+      // Soft-deleted accounts are hidden unless explicitly requested
+      status: opts.status ?? { not: "DELETED" },
+      ...(opts.role ? { role: opts.role } : {}),
+      ...(opts.search
+        ? {
+            OR: [
+              { email: { contains: opts.search, mode: "insensitive" } },
+              { username: { contains: opts.search, mode: "insensitive" } },
+              { name: { contains: opts.search, mode: "insensitive" } },
+            ],
+          }
+        : {}),
+    };
+    const [items, total] = await Promise.all([
+      this.primsa.user.findMany({
+        where,
+        select: this.adminUserSelect,
+        orderBy: { [opts.sortBy]: opts.sortOrder },
+        skip: (opts.page - 1) * opts.limit,
+        take: opts.limit,
+      }),
+      this.primsa.user.count({ where }),
+    ]);
+    return { items, total };
+  }
+
+  getUserDetailAdmin(id: string) {
+    return this.primsa.user.findUnique({
+      where: { id },
+      select: {
+        ...this.adminUserSelect,
+        addresses: { orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }] },
+        authProviders: { select: { provider: true, createdAt: true } },
+        orders: {
+          where: { isDeleted: false },
+          orderBy: { createdAt: "desc" },
+          take: 10,
+          select: {
+            id: true,
+            status: true,
+            paymentStatus: true,
+            totalAmount: true,
+            createdAt: true,
+          },
+        },
+      },
+    });
+  }
+
+  /** Any user, including soft-deleted ones. */
+  getUserAnyStatus(id: string) {
+    return this.primsa.user.findUnique({
+      where: { id },
+      select: { id: true, email: true, role: true, status: true },
+    });
+  }
+
+  countActiveAdmins(excludeUserId: string) {
+    return this.primsa.user.count({
+      where: { role: "ADMIN", status: "ACTIVE", id: { not: excludeUserId } },
+    });
+  }
+
+  setStatus(id: string, status: "ACTIVE" | "INACTIVE" | "DELETED") {
+    return this.primsa.user.update({
+      where: { id },
+      data: { status },
+      select: { id: true, status: true },
     });
   }
 }

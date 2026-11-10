@@ -6,6 +6,9 @@
  * - Admin DTOs: Full responses with all fields for admin/moderator use
  */
 
+import { variantTaxClass } from "../taxRates.js";
+import { resolveVariantMeasurements } from "../measurements.js";
+
 type ProductWithRelations = any; // Type will be inferred from Prisma
 
 /**
@@ -77,6 +80,9 @@ export const toPublicProduct = (product: ProductWithRelations) => {
     variants:
       product.variants?.map((v: any) => {
         const price = v.price;
+        // Variant-level tax class overrides the product's
+        const variantTax = variantTaxClass(v, product.taxClass);
+        const taxRate = variantTax?.rate ?? 0;
         const sellingPrice = v.sellingPrice != null ? v.sellingPrice : null;
         const effectivePrice = sellingPrice ?? price;
         const compareAtPrice = v.compareAtPrice ?? v.comparePrice ?? null;
@@ -96,6 +102,14 @@ export const toPublicProduct = (product: ProductWithRelations) => {
           price: v.price,
           sellingPrice,
           taxAmount,
+          taxRate,
+          taxClass: variantTax
+            ? {
+                name: variantTax.name,
+                rate: variantTax.rate,
+                overridden: variantTax.overridden,
+              }
+            : null,
           priceWithTax,
           sellingPriceWithTax,
           compareAtPrice: v.compareAtPrice,
@@ -232,6 +246,9 @@ export const toAdminProduct = (product: ProductWithRelations) => {
     variants:
       product.variants?.map((v: any) => {
         const price = v.price;
+        // Variant-level tax class overrides the product's
+        const variantTax = variantTaxClass(v, product.taxClass);
+        const taxRate = variantTax?.rate ?? 0;
         const sellingPrice = v.sellingPrice != null ? v.sellingPrice : null;
         const effectivePrice = sellingPrice ?? price;
         const comparePrice = v.comparePrice ?? v.compareAtPrice ?? null;
@@ -251,6 +268,14 @@ export const toAdminProduct = (product: ProductWithRelations) => {
           price: v.price,
           sellingPrice,
           taxAmount,
+          taxRate,
+          taxClass: variantTax
+            ? {
+                name: variantTax.name,
+                rate: variantTax.rate,
+                overridden: variantTax.overridden,
+              }
+            : null,
           priceWithTax,
           sellingPriceWithTax,
           compareAtPrice: v.compareAtPrice,
@@ -263,6 +288,15 @@ export const toAdminProduct = (product: ProductWithRelations) => {
           isDeleted: v.isDeleted,
           sortOrder: v.sortOrder,
           tags: v.tags,
+
+          // Own measurements + what actually applies (own, else from option values, else product)
+          weightGrams: v.weightGrams ?? null,
+          weightClassId: v.weightClassId ?? null,
+          dimensionLength: v.dimensionLength ?? null,
+          dimensionWidth: v.dimensionWidth ?? null,
+          dimensionHeight: v.dimensionHeight ?? null,
+          lengthClassId: v.lengthClassId ?? null,
+          measurements: resolveVariantMeasurements(v, product),
 
           // All images
           images: v.images || [],
@@ -310,7 +344,8 @@ export const toAdminProductList = (result: {
 export const toPublicVariant = (variant: any) => {
   if (!variant) return null;
 
-  const taxRate = variant.product?.taxClass?.rate ?? 0;
+  const variantTax = variantTaxClass(variant);
+  const taxRate = variantTax?.rate ?? 0;
   const price = variant.price;
   const sellingPrice =
     variant.sellingPrice != null ? variant.sellingPrice : null;
@@ -332,6 +367,14 @@ export const toPublicVariant = (variant: any) => {
     price: variant.price,
     sellingPrice,
     taxAmount,
+    taxRate,
+    taxClass: variantTax
+      ? {
+          name: variantTax.name,
+          rate: variantTax.rate,
+          overridden: variantTax.overridden,
+        }
+      : null,
     priceWithTax,
     sellingPriceWithTax,
     compareAtPrice: variant.compareAtPrice,
@@ -388,7 +431,8 @@ const toVariantOptionValues = (rows: any[] | undefined) =>
 export const toAdminVariant = (variant: any) => {
   if (!variant) return null;
 
-  const taxRate = variant.product?.taxClass?.rate ?? 0;
+  const variantTax = variantTaxClass(variant);
+  const taxRate = variantTax?.rate ?? 0;
   const price = variant.price;
   const sellingPrice =
     variant.sellingPrice != null ? variant.sellingPrice : null;
@@ -406,9 +450,18 @@ export const toAdminVariant = (variant: any) => {
   return {
     // All fields
     ...variant,
+    measurements: resolveVariantMeasurements(variant, variant.product),
     optionValues: toVariantOptionValues(variant.optionValues),
     sellingPrice,
     taxAmount,
+    taxRate,
+    taxClass: variantTax
+      ? {
+          name: variantTax.name,
+          rate: variantTax.rate,
+          overridden: variantTax.overridden,
+        }
+      : null,
     priceWithTax,
     sellingPriceWithTax,
     comparePriceWithTax,

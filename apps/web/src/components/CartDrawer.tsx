@@ -11,7 +11,9 @@ const CartDrawer: React.FC = () => {
     itemCount,
     subtotal,
     taxTotal,
-    totalWithTax,
+    shippingFee,
+    shippingRequired,
+    grandTotal,
     isOpen,
     closeCart,
     updateQuantity,
@@ -222,10 +224,16 @@ const CartDrawer: React.FC = () => {
                 </span>
               </div>
             )}
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-text-muted font-medium">Shipping</span>
+              <span className="font-bold text-text-main-light">
+                {shippingRequired ? formatPaise(shippingFee) : "Not required"}
+              </span>
+            </div>
             <div className="flex justify-between items-center pt-2 border-t border-primary/5">
               <span className="text-text-muted font-medium">Total</span>
               <span className="text-xl font-bold text-primary">
-                {formatPaise(totalWithTax ?? subtotal)}
+                {formatPaise(grandTotal)}
               </span>
             </div>
             <button
@@ -235,7 +243,7 @@ const CartDrawer: React.FC = () => {
                 navigate("/checkout");
               }}
             >
-              Proceed to Checkout — {formatPaise(totalWithTax ?? subtotal)}
+              Proceed to Checkout — {formatPaise(grandTotal)}
             </button>
             <button
               className="w-full text-text-muted hover:text-red-400 text-sm font-medium transition-colors cursor-pointer"
