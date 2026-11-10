@@ -67,29 +67,10 @@ export default function ProfileLayout() {
               Help & Support
             </Text>
             <View className="bg-surface rounded-xl overflow-hidden border border-surface-border">
-              <Pressable className="flex-row items-center justify-between p-4 border-b border-surface-border">
-                <View className="flex-row items-center gap-3">
-                  <MaterialIcons
-                    name="help-outline"
-                    size={22}
-                    color="#8A8A8A"
-                  />
-                  <Text className="text-text-primary">FAQs</Text>
-                </View>
-                <MaterialIcons name="chevron-right" size={22} color="#6B6B6B" />
-              </Pressable>
-              <Pressable className="flex-row items-center justify-between p-4 border-b border-surface-border">
-                <View className="flex-row items-center gap-3">
-                  <MaterialIcons
-                    name="local-shipping"
-                    size={22}
-                    color="#8A8A8A"
-                  />
-                  <Text className="text-text-primary">Shipping Info</Text>
-                </View>
-                <MaterialIcons name="chevron-right" size={22} color="#6B6B6B" />
-              </Pressable>
-              <Pressable className="flex-row items-center justify-between p-4">
+              <Pressable
+                onPress={() => router.push("/contact")}
+                className="flex-row items-center justify-between p-4"
+              >
                 <View className="flex-row items-center gap-3">
                   <MaterialIcons name="headset-mic" size={22} color="#8A8A8A" />
                   <Text className="text-text-primary">Contact Us</Text>
@@ -165,13 +146,6 @@ export default function ProfileLayout() {
               </View>
               <MaterialIcons name="chevron-right" size={22} color="#6B6B6B" />
             </Pressable>
-            <Pressable className="flex-row items-center justify-between p-4">
-              <View className="flex-row items-center gap-3">
-                <MaterialIcons name="settings" size={22} color="#C9A962" />
-                <Text className="text-text-primary">Settings</Text>
-              </View>
-              <MaterialIcons name="chevron-right" size={22} color="#6B6B6B" />
-            </Pressable>
           </View>
         </View>
 
@@ -181,14 +155,10 @@ export default function ProfileLayout() {
             Help & Support
           </Text>
           <View className="bg-surface rounded-xl overflow-hidden border border-surface-border">
-            <Pressable className="flex-row items-center justify-between p-4 border-b border-surface-border">
-              <View className="flex-row items-center gap-3">
-                <MaterialIcons name="help-outline" size={22} color="#8A8A8A" />
-                <Text className="text-text-primary">FAQs</Text>
-              </View>
-              <MaterialIcons name="chevron-right" size={22} color="#6B6B6B" />
-            </Pressable>
-            <Pressable className="flex-row items-center justify-between p-4">
+            <Pressable
+              onPress={() => router.push("/contact")}
+              className="flex-row items-center justify-between p-4"
+            >
               <View className="flex-row items-center gap-3">
                 <MaterialIcons name="headset-mic" size={22} color="#8A8A8A" />
                 <Text className="text-text-primary">Contact Us</Text>

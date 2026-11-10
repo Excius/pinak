@@ -7,8 +7,6 @@ import { ShopByCategory } from "./ShopByCategory";
 import { ShopByNeed } from "./ShopByNeed";
 import { BestSellers } from "./BestSellers";
 import { ComboKits } from "./ComboKits";
-import { BeautyAdvisor } from "./BeautyAdvisor";
-import { Testimonials } from "./Testimonials";
 import { WhatsAppAndStoreCTA } from "./WhatsAppCTA";
 
 export function HomeScreen() {
@@ -40,11 +38,11 @@ export function HomeScreen() {
         {/* Combo Kits */}
         <ComboKits />
 
-        {/* Beauty Advisor Quiz */}
-        <BeautyAdvisor />
+        {/* Beauty Advisor Quiz temporarily disabled. */}
+        {/* <BeautyAdvisor /> */}
 
-        {/* Testimonials */}
-        <Testimonials />
+        {/* Testimonials temporarily disabled. */}
+        {/* <Testimonials /> */}
 
         {/* WhatsApp CTA */}
         <WhatsAppAndStoreCTA />

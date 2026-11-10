@@ -55,7 +55,13 @@
         }
       ],
       "expo-font",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow Pinak to use your location to find nearby stores."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
