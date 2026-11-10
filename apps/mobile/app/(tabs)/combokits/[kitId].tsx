@@ -135,7 +135,6 @@ function ComboKitItemCard({ item }: { item: ComboKitItem }) {
             ) : null}
           </View>
         </View>
-
       </View>
     </View>
   );

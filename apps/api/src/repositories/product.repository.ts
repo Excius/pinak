@@ -63,12 +63,12 @@ export class ProductRepository {
       ...(pagination.brand && {
         brand: { OR: [{ slug: pagination.brand }, { name: pagination.brand }] },
       }),
-      // Filter by faceted filter values (AND across multiple values)
+      // Match products containing any selected faceted filter value.
       ...(pagination.filterValueIds &&
         pagination.filterValueIds.length > 0 && {
-          AND: pagination.filterValueIds.map((fvId) => ({
-            filterValues: { some: { filterValueId: fvId } },
-          })),
+          filterValues: {
+            some: { filterValueId: { in: pagination.filterValueIds } },
+          },
         }),
       // Price / stock / tags filtering through variants
       ...((pagination.minPrice ||
@@ -227,12 +227,12 @@ export class ProductRepository {
       ...(pagination.brand && {
         brand: { OR: [{ slug: pagination.brand }, { name: pagination.brand }] },
       }),
-      // Faceted filter values (AND across all selected values)
+      // Match products containing any selected faceted filter value.
       ...(pagination.filterValueIds &&
         pagination.filterValueIds.length > 0 && {
-          AND: pagination.filterValueIds.map((fvId) => ({
-            filterValues: { some: { filterValueId: fvId } },
-          })),
+          filterValues: {
+            some: { filterValueId: { in: pagination.filterValueIds } },
+          },
         }),
       // Price / stock / tags filtering through variants
       ...((pagination.minPrice ||
