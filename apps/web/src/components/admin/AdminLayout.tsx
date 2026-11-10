@@ -16,6 +16,7 @@ const AdminLayout = () => {
     { label: 'Options', path: '/admin/options', icon: 'tune' },
     { label: 'Featured', path: '/admin/featured', icon: 'star' },
     { label: 'Orders', path: '/admin/orders', icon: 'receipt_long' },
+    { label: 'Users', path: '/admin/users', icon: 'group' },
     { label: 'Coupons', path: '/admin/coupons', icon: 'local_offer' },
     { label: 'Stores', path: '/admin/stores', icon: 'storefront' },
     { label: 'Pages (CMS)', path: '/admin/pages', icon: 'article' },

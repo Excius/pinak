@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { Skeleton } from '../components/Skeleton'
-import { getComboKits } from '../api/combos.api'
+import { getComboKits, getComboKitImageUrl } from '../api/combos.api'
 import type { ComboKit } from '../api/combos.api'
 import { formatPaise } from '../utils/currency'
 
@@ -82,9 +82,9 @@ const ComboKits: React.FC = () => {
               >
                 {/* Image */}
                 <div className="aspect-[4/3] overflow-hidden relative">
-                  {combo.imageUrl ? (
+                  {getComboKitImageUrl(combo) ? (
                     <img
-                      src={combo.imageUrl}
+                      src={getComboKitImageUrl(combo)}
                       alt={combo.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                     />
@@ -103,19 +103,22 @@ const ComboKits: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Info Overlay */}
-                <div className="absolute bottom-0 left-0 right-0 p-6 space-y-3 glass-card rounded-t-none border-x-0 border-b-0 border-t border-primary/10 transition-colors group-hover:bg-black/80">
+                {/* Info Overlay: just the name until hovered, so the picture stays visible */}
+                <div className="absolute bottom-0 left-0 right-0 px-6 py-4 glass-card rounded-t-none border-x-0 border-b-0 border-t border-primary/10 transition-colors duration-300 group-hover:bg-black/80">
                   <h3 className="font-display text-xl font-bold text-text-main-light group-hover:text-primary transition-colors text-gold-gradient">
                     {combo.name}
                   </h3>
-                  {combo.description && (
-                    <p className="text-sm text-text-muted line-clamp-2">{combo.description}</p>
-                  )}
-                  <div className="flex items-center justify-between pt-2">
-                    <span className="text-2xl font-bold text-primary price-glow">{formatPaise(combo.price)}</span>
-                    <span className="text-xs text-text-muted">
-                      {combo.purchasedCount > 0 && `${combo.purchasedCount} sold`}
-                    </span>
+                  {/* Details slide open on hover (desktop); on touch screens tapping opens the kit */}
+                  <div className="max-h-0 opacity-0 overflow-hidden transition-all duration-300 ease-out group-hover:max-h-48 group-hover:opacity-100 group-hover:pt-3 space-y-3">
+                    {combo.description && (
+                      <p className="text-sm text-text-muted line-clamp-2">{combo.description}</p>
+                    )}
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="text-2xl font-bold text-primary price-glow">{formatPaise(combo.priceWithTax ?? combo.price)}</span>
+                      <span className="text-xs text-text-muted">
+                        {combo.purchasedCount > 0 && `${combo.purchasedCount} sold`}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>

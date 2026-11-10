@@ -19,8 +19,9 @@ import {
   type LengthClass,
 } from '../../../api/admin/admin.settings.api'
 import toast from 'react-hot-toast'
+import { ShippingSettingsTab, SupplierSettingsTab } from './StoreSettingsTabs'
 
-type Tab = 'tax' | 'weight' | 'length' | 'contact'
+type Tab = 'tax' | 'weight' | 'length' | 'contact' | 'shipping' | 'supplier'
 
 // Generic editable table section
 function ConfigTable<T extends { id: string }>({
@@ -433,6 +434,8 @@ const SettingsPage = () => {
     { key: 'weight', label: 'Weight Classes', icon: 'scale', count: weightClasses.length },
     { key: 'length', label: 'Length Classes', icon: 'straighten', count: lengthClasses.length },
     { key: 'contact', label: 'WhatsApp & Contacts', icon: 'support_agent' },
+    { key: 'shipping', label: 'Shipping', icon: 'local_shipping' },
+    { key: 'supplier', label: 'Supplier Details', icon: 'business' },
   ]
 
   if (loading) {
@@ -451,7 +454,7 @@ const SettingsPage = () => {
       <div>
         <h1 className="text-2xl font-display font-bold text-text-main-light">Store Settings</h1>
         <p className="text-sm text-text-muted mt-1">
-          Configure tax rates, measurement units, and customer contact endpoints.
+          Configure tax rates, measurement units, shipping, invoice supplier details, and customer contact endpoints.
         </p>
       </div>
 
@@ -548,6 +551,8 @@ const SettingsPage = () => {
       )}
 
       {tab === 'contact' && <ContactSettingsTab />}
+      {tab === 'shipping' && <ShippingSettingsTab />}
+      {tab === 'supplier' && <SupplierSettingsTab />}
     </div>
   )
 }

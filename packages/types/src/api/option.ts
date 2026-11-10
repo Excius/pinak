@@ -18,6 +18,12 @@ const PublicOptionSchema = z.object({
 
 const AdminOptionValueSchema = PublicOptionValueSchema.extend({
   optionId: z.string().optional(),
+  weightGrams: z.number().nullable().optional(),
+  weightClassId: z.string().nullable().optional(),
+  dimensionLength: z.number().nullable().optional(),
+  dimensionWidth: z.number().nullable().optional(),
+  dimensionHeight: z.number().nullable().optional(),
+  lengthClassId: z.string().nullable().optional(),
   createdAt: z.date().optional(),
   updatedAt: z.date().optional(),
 });
@@ -106,6 +112,12 @@ export const OptionTypes = {
         )
         .nullable()
         .optional(),
+      weightGrams: z.coerce.number().min(0).optional().nullable(),
+      weightClassId: z.string().min(1).optional().nullable(),
+      dimensionLength: z.coerce.number().min(0).optional().nullable(),
+      dimensionWidth: z.coerce.number().min(0).optional().nullable(),
+      dimensionHeight: z.coerce.number().min(0).optional().nullable(),
+      lengthClassId: z.string().min(1).optional().nullable(),
     }),
     params: z.object({
       optionId: z
@@ -132,6 +144,12 @@ export const OptionTypes = {
         )
         .nullable()
         .optional(),
+      weightGrams: z.coerce.number().min(0).optional().nullable(),
+      weightClassId: z.string().min(1).optional().nullable(),
+      dimensionLength: z.coerce.number().min(0).optional().nullable(),
+      dimensionWidth: z.coerce.number().min(0).optional().nullable(),
+      dimensionHeight: z.coerce.number().min(0).optional().nullable(),
+      lengthClassId: z.string().min(1).optional().nullable(),
     }),
     params: z.object({ id: z.string() }),
     query: z.object({}),

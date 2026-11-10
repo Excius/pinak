@@ -1,4 +1,7 @@
+import type { PrismaClient } from "../generated/prisma/client.js";
 import { NotFoundError, ValidationError } from "../lib/error.js";
+import { getShippingFeePaise } from "../lib/storeSettings.js";
+import { ensureTaxRates, variantTaxRate } from "../lib/taxRates.js";
 import { CartRepository, CartWithItems } from "../repositories/cart.repository.js";
 import { StockReservationService } from "./stockReservation.service.js";
 
@@ -66,6 +69,7 @@ export type CartItemResponse = {
     name: string;
     slug: string;
     price: number;
+    imageUrl: string | null;
     isActive: boolean;
     metaTitle: string | null;
     metaDescription: string | null;
@@ -120,6 +124,7 @@ export class CartService {
   constructor(
     private cartRepository: CartRepository,
     private stockReservationService: StockReservationService,
+    private prisma: PrismaClient,
   ) {}
 
   private validateAddInput(input: AddToCartInput) {
@@ -172,6 +177,8 @@ export class CartService {
   }
 
   private async mapCart(cart: CartWithItems): Promise<CartResponse> {
+    // Variant-level tax classes: make sure the rate map is current before pricing
+    await ensureTaxRates(this.prisma);
     const items: CartItemResponse[] = await Promise.all(
       cart.items.map(async (item) => {
         if (item.productVariantId && item.productVariant) {
@@ -180,7 +187,7 @@ export class CartService {
               item.productVariantId,
             );
 
-          const taxRate = item.productVariant.product.taxClass?.rate ?? 0;
+          const taxRate = variantTaxRate(item.productVariant);
           const mainPrice = item.productVariant.price;
           const sellingPrice =
             item.productVariant.sellingPrice != null
@@ -259,7 +266,7 @@ export class CartService {
           const maxTaxRate = Math.max(
             0,
             ...item.comboKit.items.map(
-              (comboItem) => comboItem.productVariant?.product?.taxClass?.rate ?? 0
+              (comboItem) => variantTaxRate(comboItem.productVariant)
             )
           );
           
@@ -273,8 +280,7 @@ export class CartService {
               componentVariant?.sellingPrice != null
                 ? componentVariant.sellingPrice
                 : null;
-            const compTaxRate =
-              componentVariant?.product?.taxClass?.rate ?? 0;
+            const compTaxRate = variantTaxRate(componentVariant);
             const compPriceWithTax =
               compMainPrice + Math.round((compMainPrice * compTaxRate) / 100);
             const compSellingPriceWithTax =
@@ -329,6 +335,7 @@ export class CartService {
               name: item.comboKit.name,
               slug: item.comboKit.slug,
               price: item.comboKit.price,
+              imageUrl: item.comboKit.images?.[0]?.url ?? null,
               isActive: item.comboKit.isActive,
               metaTitle: item.comboKit.metaTitle,
               metaDescription: item.comboKit.metaDescription,
@@ -359,7 +366,9 @@ export class CartService {
       return false;
     });
 
-    const shippingFee = shippingRequired && items.length > 0 ? 10000 : 0;
+    // Flat fee is admin-configurable (Settings → Shipping); orders use the same value.
+    const shippingFee =
+      shippingRequired && items.length > 0 ? await getShippingFeePaise(this.prisma) : 0;
     const grandTotal = totalWithTax + shippingFee;
 
     return {

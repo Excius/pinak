@@ -26,6 +26,22 @@ export interface AdminProductVariant {
   images: AdminProductImage[]
   optionValues: { optionName: string; valueName: string; optionId?: string; optionValueId?: string; swatchColorHex?: string | null }[]
   optionValueIds?: string[]
+  /** Variant-level tax class override; null/absent means it uses the product's tax class. */
+  taxClassId?: string | null
+  /** Variant weight override in grams; null/absent means it uses the product's weight. */
+  weightGrams?: number | null
+  weightClassId?: string | null
+  dimensionLength?: number | null
+  dimensionWidth?: number | null
+  dimensionHeight?: number | null
+  lengthClassId?: string | null
+  /** What applies after inheritance (own value, else option value, else product). */
+  measurements?: {
+    weight: { grams: number; weightClassId: string | null; source: string } | null
+    dimensions: { length: number | null; width: number | null; height: number | null; lengthClassId: string | null; source: string } | null
+  }
+  taxRate?: number
+  taxClass?: { name?: string; rate: number; overridden?: boolean } | null
   filterValues?: { variantId: string; filterValueId: string }[]
   // Client-side only: filter values selected in the variant editor
   filterValueIds?: string[]
@@ -49,6 +65,15 @@ export interface AdminProduct {
   metaTitle: string | null
   metaDescription: string | null
   brandId: string | null
+  taxClassId?: string | null
+  taxClass?: { id?: string; name: string; rate: number } | null
+  requiresShipping?: boolean
+  weightGrams?: number | null
+  weightClassId?: string | null
+  dimensionLength?: number | null
+  dimensionWidth?: number | null
+  dimensionHeight?: number | null
+  lengthClassId?: string | null
   brand: { id: string; name: string; slug: string } | null
   categories: { id: string; name: string; slug: string }[]
   variants: AdminProductVariant[]
@@ -133,7 +158,7 @@ export const setProductCategoriesAdmin = async (productId: string, categoryIds: 
 
 export const createProductVariantAdmin = async (
   productId: string,
-  payload: { sku: string; price: number; sellingPrice?: number | null; stock: number; comparePrice?: number; optionValueIds?: string[] }
+  payload: { sku: string; price: number; sellingPrice?: number | null; stock: number; comparePrice?: number; optionValueIds?: string[]; taxClassId?: string | null; weightGrams?: number | null; weightClassId?: string | null; dimensionLength?: number | null; dimensionWidth?: number | null; dimensionHeight?: number | null; lengthClassId?: string | null }
 ): Promise<AdminProductVariant> => {
   const { data: resp } = await axiosInstance.post(`/products/admin/${productId}/variants`, payload)
   return resp?.data as AdminProductVariant
@@ -141,7 +166,7 @@ export const createProductVariantAdmin = async (
 
 export const updateProductVariantAdmin = async (
   id: string,
-  payload: { sku?: string; price?: number; sellingPrice?: number | null; stock?: number; optionValueIds?: string[] }
+  payload: { sku?: string; price?: number; sellingPrice?: number | null; stock?: number; optionValueIds?: string[]; taxClassId?: string | null; weightGrams?: number | null; weightClassId?: string | null; dimensionLength?: number | null; dimensionWidth?: number | null; dimensionHeight?: number | null; lengthClassId?: string | null }
 ): Promise<AdminProductVariant> => {
   const { data: resp } = await axiosInstance.put(`/products/admin/variants/${id}`, payload)
   return resp?.data as AdminProductVariant
@@ -164,6 +189,16 @@ export const hardDeleteProductVariantAdmin = async (id: string) => {
 export const addProductImageAdmin = async (variantId: string, formData: FormData) => {
   const { data: resp } = await axiosInstance.post(
     `/products/admin/variants/${variantId}/images`,
+    formData,
+    { headers: { 'Content-Type': 'multipart/form-data' } }
+  )
+  return resp?.data
+}
+
+/** Replace an image's file and/or edit its alt text / primary flag (multipart: image?, altText?, isPrimary?). */
+export const updateProductImageAdmin = async (imageId: string, formData: FormData) => {
+  const { data: resp } = await axiosInstance.put(
+    `/products/admin/images/${imageId}`,
     formData,
     { headers: { 'Content-Type': 'multipart/form-data' } }
   )

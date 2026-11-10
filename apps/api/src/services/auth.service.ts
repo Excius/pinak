@@ -36,6 +36,13 @@ export class AuthService {
     role: UserRoles,
     authMethod: AuthMethod = AuthMethod.PASSWORD,
   ): Promise<{ accessToken: string; refreshToken: string }> {
+    // Every sign-in path (password, Google, e-mail verification) ends here: inactive or deleted
+    // accounts must not receive tokens.
+    const account = await this.user.getUserById(userId);
+    if (!account || account.status !== "ACTIVE") {
+      throw new UnauthorizedError("This account is not active. Please contact support.");
+    }
+
     const session = await this.sessions.create({
       userId,
       refreshHash: "",
@@ -252,6 +259,9 @@ export class AuthService {
         const user = await tx.user.findUnique({ where: { id: userId } });
         if (!user) {
           return { ok: false, message: "Invalid or expired refresh token" };
+        }
+        if (user.status !== "ACTIVE") {
+          return { ok: false, message: "This account is not active" };
         }
 
         const newSession = await tx.session.create({

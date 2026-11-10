@@ -12,6 +12,7 @@ import {
   generateInventoryXLSX,
   type InventoryExportRow,
 } from "../lib/spreadsheet.js";
+import { variantTaxClass } from "../lib/taxRates.js";
 
 // Input types that extend Prisma types with additional fields for API input
 type ProductCreateInputWithExtras = Prisma.ProductCreateInput & {
@@ -48,6 +49,7 @@ type ProductUpdateDTO = ProductUpdateInputWithExtras & {
 };
 
 type VariantCreateDTO = Prisma.ProductVariantCreateInput & {
+  taxClassId?: string | null;
   optionValueIds?: string[];
   optionValues?: unknown;
   size?: string;
@@ -55,6 +57,7 @@ type VariantCreateDTO = Prisma.ProductVariantCreateInput & {
 };
 
 type VariantUpdateDTO = Prisma.ProductVariantUpdateInput & {
+  taxClassId?: string | null;
   optionValueIds?: string[];
   optionValues?: unknown;
   size?: string;
@@ -643,12 +646,14 @@ export class ProductService {
 
       if (p.variants && p.variants.length > 0) {
         for (const v of p.variants) {
+          // A variant's own tax class (if set) overrides the product's
+          const variantTax = variantTaxClass(v, p.taxClass);
           rows.push({
             name: p.name,
             mrp: v.price / 100, // paise to Rupees
             hsn,
             parentGroup: brandName,
-            taxRate,
+            taxRate: variantTax ? Math.round(variantTax.rate * 100) / 10000 : taxRate,
             sku: v.sku,
             sellingPrice:
               v.sellingPrice !== null && v.sellingPrice !== undefined
@@ -809,6 +814,14 @@ export class ProductService {
     // Set default stock if not provided
     sanitizedData.stock = sanitizedData.stock ?? 0;
 
+    // Optional per-variant tax class (otherwise the variant uses its product's tax class)
+    const newTaxClassId = sanitizedData.taxClassId;
+    delete sanitizedData.taxClassId;
+    if (newTaxClassId) {
+      await this.assertTaxClassExists(newTaxClassId);
+      sanitizedData.taxClass = { connect: { id: newTaxClassId } };
+    }
+
     // Set productId
     sanitizedData.product = {
       connect: { id: productId },
@@ -818,6 +831,13 @@ export class ProductService {
       productId,
       sanitizedData,
     );
+  }
+
+  private async assertTaxClassExists(taxClassId: string) {
+    const taxClass = await this.productRepository.findTaxClassById(taxClassId);
+    if (!taxClass) {
+      throw new ValidationError("Tax class not found");
+    }
   }
 
   async updateProductVariant(
@@ -931,6 +951,18 @@ export class ProductService {
     // Validate stock (cannot be negative)
     if (sanitizedData.stock && (sanitizedData.stock as number) < 0) {
       throw new ValidationError("Stock cannot be negative");
+    }
+
+    // Per-variant tax class: a string overrides, null clears (inherit from the product)
+    if ("taxClassId" in sanitizedData) {
+      const taxClassId = sanitizedData.taxClassId;
+      delete sanitizedData.taxClassId;
+      if (taxClassId) {
+        await this.assertTaxClassExists(taxClassId);
+        sanitizedData.taxClass = { connect: { id: taxClassId } };
+      } else if (taxClassId === null) {
+        sanitizedData.taxClass = { disconnect: true };
+      }
     }
 
     return this.productRepository.updateProductVariant(id, sanitizedData);

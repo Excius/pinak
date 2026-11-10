@@ -2,23 +2,9 @@ import PDFDocument from "pdfkit";
 import { INDIAN_STATES_AND_CODES } from "@repo/types";
 import { PrismaClient, Prisma } from "../generated/prisma/client.js";
 import { NotFoundError, ValidationError } from "../lib/error.js";
+import { getSupplierDetails } from "../lib/storeSettings.js";
 
 const STATE_CODES = INDIAN_STATES_AND_CODES;
-
-export const SUPPLIER_CONFIG = {
-  companyName: "Pinak Beauty & Care Pvt. Ltd.",
-  brandName: "Pinak",
-  gstin: "27AAACP1234A1Z5", // 15-digit GSTIN for Maharashtra
-  pan: "AAACP1234A",
-  state: "Maharashtra",
-  stateCode: "27",
-  addressLine1: "Building A, Tech Park, BKC",
-  addressLine2: "Bandra East",
-  city: "Mumbai",
-  pincode: "400051",
-  email: "support@pinak.com",
-  phone: "+91-22-4000-1000",
-};
 
 export function convertNumberToIndianWords(amountInPaise: number): string {
   const rupees = Math.floor(amountInPaise / 100);
@@ -166,7 +152,8 @@ export class InvoiceService {
 
     const customerState = shippingAddress.state || billingAddress.state || "Maharashtra";
     const customerStateCode = getStateCode(customerState);
-    const isSameState = customerStateCode === SUPPLIER_CONFIG.stateCode;
+    const supplier = await getSupplierDetails(this.prisma, (state) => STATE_CODES[state.trim().toUpperCase()]);
+    const isSameState = customerStateCode === supplier.stateCode;
 
     // Format line items with CGST/SGST or IGST bifurcation
     const formattedItems = order.items.map((item, idx) => {
@@ -230,7 +217,7 @@ export class InvoiceService {
     const amountInWords = convertNumberToIndianWords(order.totalAmount);
 
     return {
-      supplier: SUPPLIER_CONFIG,
+      supplier,
       customer: {
         name: shippingAddress.fullName || order.user.name || "Valued Customer",
         email: order.user.email,
@@ -347,7 +334,7 @@ export class InvoiceService {
         <td class="meta-box">
           <div class="meta-title">Supplier Details</div>
           <strong>${data.supplier.companyName}</strong><br/>
-          ${data.supplier.addressLine1}, ${data.supplier.addressLine2}<br/>
+          ${[data.supplier.addressLine1, data.supplier.addressLine2].filter(Boolean).join(', ')}<br/>
           ${data.supplier.city}, ${data.supplier.state} - ${data.supplier.pincode}<br/>
           State Code: <strong>${data.supplier.stateCode}</strong> | PAN: <strong>${data.supplier.pan}</strong><br/>
           Email: ${data.supplier.email} | Phone: ${data.supplier.phone}
@@ -497,7 +484,7 @@ export class InvoiceService {
       doc.fontSize(10).fillColor("#111827").text("Supplier Details:", 40, y);
       doc.fontSize(9).fillColor("#4b5563")
         .text(`${data.supplier.companyName}`, 40, y + 15)
-        .text(`${data.supplier.addressLine1}, ${data.supplier.city}, ${data.supplier.state} - ${data.supplier.pincode}`)
+        .text(`${[data.supplier.addressLine1, data.supplier.addressLine2].filter(Boolean).join(', ')}, ${data.supplier.city}, ${data.supplier.state} - ${data.supplier.pincode}`)
         .text(`State Code: ${data.supplier.stateCode} | PAN: ${data.supplier.pan}`)
         .text(`Email: ${data.supplier.email}`);
 

@@ -3,11 +3,13 @@ import { ResponseHandler } from "../lib/response.js";
 import JWTService from "../lib/jwt.js";
 import logger from "../lib/logger.js";
 import { UserRoles } from "@repo/types";
+import { prisma } from "../lib/prisma.js";
+import { getUserStatus } from "../lib/userStatus.js";
 
 export class AuthMiddleware {
   constructor(private jwt: JWTService) {}
 
-  authenticate = (req: Request, res: Response, next: NextFunction) => {
+  authenticate = async (req: Request, res: Response, next: NextFunction) => {
     const token =
       req.headers.authorization?.split(" ")[1] || req.cookies?.accessToken;
     if (!token) {
@@ -19,6 +21,16 @@ export class AuthMiddleware {
       if (!payload) {
         return ResponseHandler.unauthorized(res, "Invalid token");
       }
+
+      // A deactivated or deleted account must stop working immediately, not when its token expires
+      const status = await getUserStatus(prisma, payload.sub);
+      if (status !== "ACTIVE") {
+        return ResponseHandler.unauthorized(
+          res,
+          status === null ? "Invalid token" : "This account is not active",
+        );
+      }
+
       req.user = {
         id: payload.sub,
         role: payload.role,

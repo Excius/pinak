@@ -41,7 +41,17 @@ export class OptionRepository {
   // OptionValue helpers
   createOptionValue(
     optionId: string,
-    data: { value: string; sortOrder?: number; swatchColorHex?: string | null },
+    data: {
+      value: string;
+      sortOrder?: number;
+      swatchColorHex?: string | null;
+      weightGrams?: number | null;
+      weightClassId?: string | null;
+      dimensionLength?: number | null;
+      dimensionWidth?: number | null;
+      dimensionHeight?: number | null;
+      lengthClassId?: string | null;
+    },
   ) {
     return this.prisma.optionValue.create({
       data: {
@@ -49,6 +59,12 @@ export class OptionRepository {
         value: data.value,
         sortOrder: data.sortOrder ?? 0,
         swatchColorHex: data.swatchColorHex ?? null,
+        weightGrams: data.weightGrams ?? null,
+        weightClassId: data.weightClassId ?? null,
+        dimensionLength: data.dimensionLength ?? null,
+        dimensionWidth: data.dimensionWidth ?? null,
+        dimensionHeight: data.dimensionHeight ?? null,
+        lengthClassId: data.lengthClassId ?? null,
       },
     });
   }

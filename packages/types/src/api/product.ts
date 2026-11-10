@@ -735,6 +735,12 @@ export const ProductTypes = {
         .default(0),
       weightGrams: z.coerce.number().min(0).optional(),
       weightClassId: z.string().optional(),
+      // Optional: overrides the product's tax class for this variant
+      taxClassId: z.string().min(1).optional().nullable(),
+      dimensionLength: z.coerce.number().min(0).optional().nullable(),
+      dimensionWidth: z.coerce.number().min(0).optional().nullable(),
+      dimensionHeight: z.coerce.number().min(0).optional().nullable(),
+      lengthClassId: z.string().min(1).optional().nullable(),
       tags: z.array(z.string()).default([]),
       // Dynamic option values — list of OptionValue IDs (e.g. ["30ml-id", "rose-id"])
       optionValueIds: z.array(z.string()).optional(),
@@ -799,6 +805,12 @@ export const ProductTypes = {
         .optional(),
       weightGrams: z.coerce.number().min(0).optional().nullable(),
       weightClassId: z.string().optional().nullable(),
+      // Set to override the product's tax class; null clears it (inherit from product)
+      taxClassId: z.string().min(1).optional().nullable(),
+      dimensionLength: z.coerce.number().min(0).optional().nullable(),
+      dimensionWidth: z.coerce.number().min(0).optional().nullable(),
+      dimensionHeight: z.coerce.number().min(0).optional().nullable(),
+      lengthClassId: z.string().min(1).optional().nullable(),
       tags: z.array(z.string()).optional(),
       // Append new OptionValue links; use dedicated endpoint to remove
       optionValueIds: z.array(z.string()).optional(),

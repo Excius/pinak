@@ -25,6 +25,43 @@ export const registerSettingAdminRoutes = (
     settingController.updateSettings,
   );
 
+  // Typed store settings. Registered before "/admin/:key" so they are not captured by it.
+  router.get(
+    "/admin/shipping",
+    rateLimiter,
+    authMiddleware.authenticate,
+    authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(SettingAdminTypes.GetShippingConfig),
+    settingController.getShippingConfig,
+  );
+
+  router.put(
+    "/admin/shipping",
+    rateLimiter,
+    authMiddleware.authenticate,
+    authMiddleware.requireAdmin,
+    validateMultiple(SettingAdminTypes.UpdateShippingConfig),
+    settingController.updateShippingConfig,
+  );
+
+  router.get(
+    "/admin/supplier",
+    rateLimiter,
+    authMiddleware.authenticate,
+    authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(SettingAdminTypes.GetSupplierDetails),
+    settingController.getSupplierDetails,
+  );
+
+  router.put(
+    "/admin/supplier",
+    rateLimiter,
+    authMiddleware.authenticate,
+    authMiddleware.requireAdmin,
+    validateMultiple(SettingAdminTypes.UpdateSupplierDetails),
+    settingController.updateSupplierDetails,
+  );
+
   router.put(
     "/admin/:key",
     rateLimiter,

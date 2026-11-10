@@ -9,6 +9,8 @@ import {
   OrderRepository,
 } from "../repositories/order.repository.js";
 import { CouponService } from "./coupon.service.js";
+import { getShippingFeePaise } from "../lib/storeSettings.js";
+import { ensureTaxRates, variantTaxRate } from "../lib/taxRates.js";
 import { StockReservationService } from "./stockReservation.service.js";
 import {
   IPaymentGateway,
@@ -404,12 +406,15 @@ export class OrderService {
             let subtotalAmount = 0;
             let shippingRequired = false;
 
+            // Variant-level tax classes: make sure the rate map is current before pricing
+            await ensureTaxRates(this.prisma);
+
             for (const item of cart.items) {
               if (item.productVariantId && item.productVariant) {
                 const variant = item.productVariant;
                 const effectivePrice = variant.sellingPrice ?? variant.price;
                 const lineSubtotal = effectivePrice * item.quantity;
-                const taxRate = variant.product.taxClass?.rate ?? 0;
+                const taxRate = variantTaxRate(variant);
 
                 subtotalAmount += lineSubtotal;
                 shippingRequired = shippingRequired || variant.product.requiresShipping;
@@ -439,7 +444,7 @@ export class OrderService {
                 const maxTaxRate = Math.max(
                   0,
                   ...comboKit.items.map(
-                    (comboItem) => comboItem.productVariant?.product?.taxClass?.rate ?? 0
+                    (comboItem) => variantTaxRate(comboItem.productVariant)
                   )
                 );
 
@@ -546,7 +551,7 @@ export class OrderService {
               if (pItem.itemType === "PRODUCT_VARIANT") {
                 const variant = pItem.variant;
                 const effectivePrice = variant.sellingPrice ?? variant.price;
-                const taxRate = variant.product?.taxClass?.rate ?? 0;
+                const taxRate = variantTaxRate(variant);
                 const priceWithTax = variant.price + Math.round((variant.price * taxRate) / 100);
                 const sellingPriceWithTax = variant.sellingPrice != null
                   ? variant.sellingPrice + Math.round((variant.sellingPrice * taxRate) / 100)
@@ -602,8 +607,10 @@ export class OrderService {
               }
             });
 
-            // If shipping is required, charge 10000 paise (₹100)
-            const shippingAmount = shippingRequired ? 10000 : 0;
+            // Flat shipping fee (admin-configurable, same value the cart shows)
+            const shippingAmount = shippingRequired
+              ? await getShippingFeePaise(this.prisma)
+              : 0;
             const netSubtotal = Math.max(0, subtotalAmount - discountAmount);
             const totalAmount = Math.max(0, netSubtotal + taxAmount + shippingAmount);
 

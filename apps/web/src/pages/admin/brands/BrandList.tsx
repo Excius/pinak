@@ -77,10 +77,9 @@ const BrandList = () => {
       formData.append('name', form.name)
       formData.append('isActive', String(form.isActive))
       if (form.slug.trim()) formData.append('slug', form.slug)
+      // Logos are uploaded as a file (field `logo`); when no new file is chosen the existing logo is kept.
       if (logoFile) {
         formData.append('logo', logoFile)
-      } else if (form.logoUrl.trim()) {
-        formData.append('logoUrl', form.logoUrl)
       }
 
       if (editing) {
