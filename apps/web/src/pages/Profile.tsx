@@ -565,7 +565,7 @@ const Profile: React.FC = () => {
                   <div
                     key={order.id}
                     className="profile-order-item"
-                    onClick={() => navigate(`/order-confirmation/${order.id}`)}
+                    onClick={() => navigate(`/orders/${order.id}`)}
                   >
                     <div
                       className={`profile-order-dot ${getStatusColor(order.status)}`}

@@ -22,18 +22,18 @@ export const registerProductAdminRelatedRoutes = (
   router.post(
     "/admin/:productId/related",
     rateLimiter,
-    validateMultiple(RelatedProductTypes.AddRelatedProduct),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(RelatedProductTypes.AddRelatedProduct),
     relatedProductController.add,
   );
 
   router.delete(
     "/admin/:productId/related/:relatedProductId",
     rateLimiter,
-    validateMultiple(RelatedProductTypes.RemoveRelatedProduct),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(RelatedProductTypes.RemoveRelatedProduct),
     relatedProductController.remove,
   );
 };

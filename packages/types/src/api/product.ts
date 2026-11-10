@@ -554,6 +554,35 @@ export const ProductTypes = {
     }),
   },
 
+  GetProductsByStatusAdmin: {
+    body: z.object({}),
+    params: z.object({
+      status: z
+        .string()
+        .transform((v) => v.toUpperCase())
+        .pipe(
+          z.enum(["ACTIVE", "INACTIVE"], {
+            message: "status must be 'ACTIVE' or 'INACTIVE'",
+          }),
+        ),
+    }),
+    query: z.object({
+      page: z.coerce.number().min(1).default(1),
+      limit: z.coerce.number().min(1).max(100).default(10),
+      sortBy: z
+        .enum(["createdAt", "sortOrder", "viewCount", "purchasedCount"])
+        .optional(),
+      sortOrder: z.enum(["asc", "desc"]).optional(),
+      search: z.string().optional(),
+      brand: z.string().optional(),
+    }),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.any(),
+    }),
+  },
+
   CreateProduct: {
     body: z.object({
       name: z
@@ -719,6 +748,12 @@ export const ProductTypes = {
         .default(0),
       weightGrams: z.coerce.number().min(0).optional(),
       weightClassId: z.string().optional(),
+      // Optional: overrides the product's tax class for this variant
+      taxClassId: z.string().min(1).optional().nullable(),
+      dimensionLength: z.coerce.number().min(0).optional().nullable(),
+      dimensionWidth: z.coerce.number().min(0).optional().nullable(),
+      dimensionHeight: z.coerce.number().min(0).optional().nullable(),
+      lengthClassId: z.string().min(1).optional().nullable(),
       tags: z.array(z.string()).default([]),
       // Dynamic option values — list of OptionValue IDs (e.g. ["30ml-id", "rose-id"])
       optionValueIds: z.array(z.string()).optional(),
@@ -783,6 +818,12 @@ export const ProductTypes = {
         .optional(),
       weightGrams: z.coerce.number().min(0).optional().nullable(),
       weightClassId: z.string().optional().nullable(),
+      // Set to override the product's tax class; null clears it (inherit from product)
+      taxClassId: z.string().min(1).optional().nullable(),
+      dimensionLength: z.coerce.number().min(0).optional().nullable(),
+      dimensionWidth: z.coerce.number().min(0).optional().nullable(),
+      dimensionHeight: z.coerce.number().min(0).optional().nullable(),
+      lengthClassId: z.string().min(1).optional().nullable(),
       tags: z.array(z.string()).optional(),
       // Append new OptionValue links; use dedicated endpoint to remove
       optionValueIds: z.array(z.string()).optional(),
@@ -1113,6 +1154,70 @@ export const ProductTypes = {
       message: z.string(),
       success: z.boolean(),
       data: z.object({}),
+    }),
+  },
+
+  ImportInventory: {
+    body: z.object({
+      csv: z.string().optional(),
+    }).passthrough(),
+    params: z.object({}),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({
+        totalProcessed: z.number(),
+        createdProducts: z.number(),
+        updatedProducts: z.number(),
+        createdVariants: z.number(),
+        updatedVariants: z.number(),
+        skippedCount: z.number(),
+        errors: z.array(
+          z.object({
+            row: z.number(),
+            name: z.string().optional(),
+            error: z.string(),
+          }),
+        ),
+      }),
+    }),
+  },
+
+  ExportInventory: {
+    body: z.object({}),
+    params: z.object({}),
+    query: z.object({
+      status: z.enum(["ALL", "ACTIVE", "INACTIVE"]).optional().default("ALL"),
+      brandId: z.string().optional(),
+      categoryId: z.string().optional(),
+      search: z.string().optional(),
+      format: z.enum(["csv", "xlsx", "json"]).optional().default("csv"),
+    }),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.any(),
+    }),
+  },
+
+  BulkUpdateProductStatus: {
+    body: z.object({
+      productIds: z
+        .array(z.string().min(1, { message: "Product ID cannot be empty" }))
+        .min(1, { message: "At least one product ID is required" })
+        .max(500, { message: "At most 500 products can be updated at once" }),
+      isActive: z.boolean(),
+    }),
+    params: z.object({}),
+    query: z.object({}),
+    response: z.object({
+      message: z.string(),
+      success: z.boolean(),
+      data: z.object({
+        updatedCount: z.number(),
+        isActive: z.boolean(),
+      }),
     }),
   },
 };

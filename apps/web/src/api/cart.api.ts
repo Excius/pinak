@@ -74,6 +74,12 @@ export interface Cart {
   total: number;
   taxTotal?: number;
   totalWithTax?: number;
+  /** Shipping charge in paise (0 when nothing needs shipping). */
+  shippingFee?: number;
+  /** True if any item requires physical shipping. */
+  shippingRequired?: boolean;
+  /** Final total in paise: totalWithTax + shippingFee. */
+  grandTotal?: number;
 }
 
 // ── Cart API ───────────────────────────────────────────────────────────
@@ -124,6 +130,16 @@ export interface ShippingAddress {
   phone: string;
 }
 
+export interface OrderAddress {
+  fullName: string;
+  addressLine1: string;
+  addressLine2?: string | null;
+  city: string;
+  state: string;
+  pincode: string;
+  phone: string;
+}
+
 export interface OrderItem {
   id: string;
   productId: string | null;
@@ -158,6 +174,11 @@ export interface Order {
   totalAmount: number;
   items: OrderItem[];
   totalItems: number;
+  couponCode?: string | null;
+  invoiceNumber?: string | null;
+  invoiceDate?: string | null;
+  shippingAddress?: OrderAddress | null;
+  billingAddress?: OrderAddress | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -188,6 +209,14 @@ export const getOrderById = async (orderId: string): Promise<Order> => {
 export const cancelOrder = async (orderId: string): Promise<Order> => {
   const { data: resp } = await axiosInstance.put(`/orders/${orderId}/cancel`);
   return resp?.data as Order;
+};
+
+/** Receipt / tax invoice as a PDF (requires auth, so it is fetched as a blob). */
+export const getOrderReceiptPdf = async (orderId: string): Promise<Blob> => {
+  const { data } = await axiosInstance.get(`/orders/${orderId}/invoice/pdf`, {
+    responseType: "blob",
+  });
+  return data as Blob;
 };
 
 // ── Payment Verification ──────────────────────────────────────────────

@@ -1,4 +1,5 @@
 import { PrismaClient, Prisma } from "../generated/prisma/client.js";
+import { syncProductFilterIndex } from "../lib/filterIndex.js";
 
 export class FilterRepository {
   constructor(private prisma: PrismaClient) {}
@@ -73,33 +74,40 @@ export class FilterRepository {
   }
 
   countProductFilterRefs(filterValueId: string) {
-    return this.prisma.productFilterValue.count({ where: { filterValueId } });
+    return this.prisma.variantFilterValue.count({ where: { filterValueId } });
   }
 
   deleteFilterValue(id: string) {
     return this.prisma.filterValue.delete({ where: { id } });
   }
 
-  // product-filter linking
-  getProductById(productId: string) {
-    return this.prisma.product.findUnique({ where: { id: productId } });
+  // variant-filter linking (variants are the source of truth)
+  getVariantById(variantId: string) {
+    return this.prisma.productVariant.findUnique({ where: { id: variantId } });
   }
 
-  existsProductFilterRef(productId: string, filterValueId: string) {
-    return this.prisma.productFilterValue.findUnique({
-      where: { productId_filterValueId: { productId, filterValueId } },
+  existsVariantFilterRef(variantId: string, filterValueId: string) {
+    return this.prisma.variantFilterValue.findUnique({
+      where: { variantId_filterValueId: { variantId, filterValueId } },
     });
   }
 
-  addFilterToProduct(productId: string, filterValueId: string) {
-    return this.prisma.productFilterValue.create({
-      data: { productId, filterValueId },
+  addFilterToVariant(productId: string, variantId: string, filterValueId: string) {
+    return this.prisma.$transaction(async (tx) => {
+      const rel = await tx.variantFilterValue.create({
+        data: { variantId, filterValueId },
+      });
+      await syncProductFilterIndex(tx, productId);
+      return rel;
     });
   }
 
-  removeFilterFromProduct(productId: string, filterValueId: string) {
-    return this.prisma.productFilterValue.delete({
-      where: { productId_filterValueId: { productId, filterValueId } },
+  removeFilterFromVariant(productId: string, variantId: string, filterValueId: string) {
+    return this.prisma.$transaction(async (tx) => {
+      await tx.variantFilterValue.deleteMany({
+        where: { variantId, filterValueId },
+      });
+      await syncProductFilterIndex(tx, productId);
     });
   }
 }

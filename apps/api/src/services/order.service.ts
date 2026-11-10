@@ -9,6 +9,8 @@ import {
   OrderRepository,
 } from "../repositories/order.repository.js";
 import { CouponService } from "./coupon.service.js";
+import { getShippingFeePaise } from "../lib/storeSettings.js";
+import { ensureTaxRates, variantTaxRate } from "../lib/taxRates.js";
 import { StockReservationService } from "./stockReservation.service.js";
 import {
   IPaymentGateway,
@@ -406,12 +408,15 @@ export class OrderService {
             let subtotalAmount = 0;
             let shippingRequired = false;
 
+            // Variant-level tax classes: make sure the rate map is current before pricing
+            await ensureTaxRates(this.prisma);
+
             for (const item of cart.items) {
               if (item.productVariantId && item.productVariant) {
                 const variant = item.productVariant;
                 const effectivePrice = variant.sellingPrice ?? variant.price;
                 const lineSubtotal = effectivePrice * item.quantity;
-                const taxRate = variant.product.taxClass?.rate ?? 0;
+                const taxRate = variantTaxRate(variant);
 
                 subtotalAmount += lineSubtotal;
                 shippingRequired =
@@ -441,9 +446,8 @@ export class OrderService {
 
                 const maxTaxRate = Math.max(
                   0,
-                  ...comboKit.items.map(
-                    (comboItem) =>
-                      comboItem.productVariant?.product?.taxClass?.rate ?? 0,
+                  ...comboKit.items.map((comboItem) =>
+                    variantTaxRate(comboItem.productVariant),
                   ),
                 );
 
@@ -558,7 +562,7 @@ export class OrderService {
               if (pItem.itemType === "PRODUCT_VARIANT") {
                 const variant = pItem.variant;
                 const effectivePrice = variant.sellingPrice ?? variant.price;
-                const taxRate = variant.product?.taxClass?.rate ?? 0;
+                const taxRate = variantTaxRate(variant);
                 const priceWithTax =
                   variant.price + Math.round((variant.price * taxRate) / 100);
                 const sellingPriceWithTax =
@@ -619,8 +623,10 @@ export class OrderService {
               }
             });
 
-            // If shipping is required, charge 10000 paise (₹100)
-            const shippingAmount = shippingRequired ? 10000 : 0;
+            // Flat shipping fee (admin-configurable, same value the cart shows)
+            const shippingAmount = shippingRequired
+              ? await getShippingFeePaise(this.prisma)
+              : 0;
             const netSubtotal = Math.max(0, subtotalAmount - discountAmount);
             const totalAmount = Math.max(
               0,
@@ -913,7 +919,8 @@ export class OrderService {
   }
 
   async confirmPayment(orderId: string, paymentData: PaymentWebhookPayload) {
-    return this.prisma.$transaction(
+    let expiredMessage: string | null = null;
+    const result = await this.prisma.$transaction(
       async (tx) => {
         const order = await this.orderRepository.findByIdWithItems(orderId, tx);
         if (!order) {
@@ -966,11 +973,12 @@ export class OrderService {
             },
           });
 
-          throw new ValidationError(
-            refundIssued
-              ? "Stock reservation for this order expired. Your payment has been automatically refunded."
-              : "Stock reservation for this order has expired. Payment cannot be processed.",
-          );
+          // Do not throw here: throwing inside the transaction would roll back the
+          // CANCELLED update above even though the refund was already issued.
+          expiredMessage = refundIssued
+            ? "Stock reservation for this order expired. Your payment has been automatically refunded."
+            : "Stock reservation for this order has expired. Payment cannot be processed.";
+          return this.mapOrder(order);
         }
 
         await this.stockReservationService.confirmReservations(orderId, tx);
@@ -1004,6 +1012,11 @@ export class OrderService {
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
     );
+
+    if (expiredMessage) {
+      throw new ValidationError(expiredMessage);
+    }
+    return result;
   }
 
   async handlePaymentFailure(orderId: string, reason: string) {
@@ -1060,7 +1073,8 @@ export class OrderService {
     gatewayOrderId: string,
     paymentData: { paymentId: string; signature: string; method?: string },
   ) {
-    return this.prisma.$transaction(
+    let expiredMessage: string | null = null;
+    const result = await this.prisma.$transaction(
       async (tx) => {
         const order = await tx.order.findFirst({
           where: { gatewayOrderId },
@@ -1122,11 +1136,12 @@ export class OrderService {
             },
           });
 
-          throw new ValidationError(
-            refundIssued
-              ? "Stock reservation for this order expired. Your payment has been automatically refunded."
-              : "Stock reservation for this order has expired. Payment cannot be processed.",
-          );
+          // Do not throw here: throwing inside the transaction would roll back the
+          // CANCELLED update above even though the refund was already issued.
+          expiredMessage = refundIssued
+            ? "Stock reservation for this order expired. Your payment has been automatically refunded."
+            : "Stock reservation for this order has expired. Payment cannot be processed.";
+          return this.mapOrder(order);
         }
 
         await this.stockReservationService.confirmReservations(order.id, tx);
@@ -1163,6 +1178,11 @@ export class OrderService {
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
     );
+
+    if (expiredMessage) {
+      throw new ValidationError(expiredMessage);
+    }
+    return result;
   }
 
   async handlePaymentFailureByGatewayOrderId(

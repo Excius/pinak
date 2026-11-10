@@ -1,5 +1,6 @@
 import { Prisma } from "../generated/prisma/client.js";
-import { NotFoundError, ValidationError } from "../lib/error.js";
+import { ConflictError, NotFoundError, ValidationError } from "../lib/error.js";
+import { isPrismaP2002 } from "../lib/prisma-errors.js";
 import { CouponRepository } from "../repositories/coupon.repository.js";
 
 export type CouponValidationResult = {
@@ -171,5 +172,144 @@ export class CouponService {
     );
 
     return validation;
+  }
+
+  // ── Admin CRUD ──────────────────────────────────────────────────────
+
+  private assertCouponRules(c: {
+    discountType: "PERCENTAGE" | "FLAT";
+    discountValue: number;
+    validFrom: Date;
+    validUntil: Date;
+  }) {
+    if (c.discountType === "PERCENTAGE" && c.discountValue > 100) {
+      throw new ValidationError("Percentage discount cannot exceed 100");
+    }
+    if (c.validUntil <= c.validFrom) {
+      throw new ValidationError("validUntil must be after validFrom");
+    }
+  }
+
+  async listCouponsAdmin(query: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    isActive?: string;
+    deleted?: string;
+  }) {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 20;
+    const { items, total } = await this.couponRepository.listAdmin({
+      page,
+      limit,
+      search: query.search || undefined,
+      isActive: query.isActive === undefined ? undefined : query.isActive === "true",
+      deleted: query.deleted === "true",
+    });
+    return {
+      items,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.max(1, Math.ceil(total / limit)),
+      },
+    };
+  }
+
+  private async getCouponByIdOrThrow(id: string) {
+    const coupon = await this.couponRepository.findById(id);
+    if (!coupon) {
+      throw new NotFoundError("Coupon not found");
+    }
+    return coupon;
+  }
+
+  async createCouponAdmin(data: {
+    code: string;
+    discountType: "PERCENTAGE" | "FLAT";
+    discountValue: number;
+    minOderValue: number | null;
+    maxDiscountValue: number | null;
+    validFrom: Date;
+    validUntil: Date;
+    maxTotalUsers: number | null;
+    maxUsesPerUser: number | null;
+    isActive: boolean;
+  }) {
+    this.assertCouponRules(data);
+    try {
+      return await this.couponRepository.create(data);
+    } catch (err) {
+      if (isPrismaP2002(err)) {
+        throw new ConflictError("A coupon with this code already exists");
+      }
+      throw err;
+    }
+  }
+
+  async updateCouponAdmin(
+    id: string,
+    data: Partial<{
+      code: string;
+      discountType: "PERCENTAGE" | "FLAT";
+      discountValue: number;
+      minOderValue: number | null;
+      maxDiscountValue: number | null;
+      validFrom: Date;
+      validUntil: Date;
+      maxTotalUsers: number | null;
+      maxUsesPerUser: number | null;
+      isActive: boolean;
+    }>,
+  ) {
+    const existing = await this.getCouponByIdOrThrow(id);
+    this.assertCouponRules({
+      discountType: data.discountType ?? existing.discountType,
+      discountValue: data.discountValue ?? existing.discountValue,
+      validFrom: data.validFrom ?? existing.validFrom,
+      validUntil: data.validUntil ?? existing.validUntil,
+    });
+    try {
+      return await this.couponRepository.update(id, data);
+    } catch (err) {
+      if (isPrismaP2002(err)) {
+        throw new ConflictError("A coupon with this code already exists");
+      }
+      throw err;
+    }
+  }
+
+  async setCouponActiveAdmin(id: string, isActive: boolean) {
+    await this.getCouponByIdOrThrow(id);
+    return this.couponRepository.update(id, { isActive });
+  }
+
+  async softDeleteCouponAdmin(id: string) {
+    await this.getCouponByIdOrThrow(id);
+    await this.couponRepository.update(id, { isDeleted: true, isActive: false });
+  }
+
+  async restoreCouponAdmin(id: string) {
+    await this.getCouponByIdOrThrow(id);
+    await this.couponRepository.update(id, { isDeleted: false });
+  }
+
+  async hardDeleteCouponAdmin(id: string) {
+    await this.getCouponByIdOrThrow(id);
+    try {
+      await this.couponRepository.hardDelete(id);
+    } catch (err) {
+      if (
+        typeof err === "object" &&
+        err !== null &&
+        (err as { code?: unknown }).code === "P2003"
+      ) {
+        throw new ConflictError(
+          "This coupon has been used on orders and cannot be permanently deleted. Deactivate or archive it instead.",
+        );
+      }
+      throw err;
+    }
   }
 }

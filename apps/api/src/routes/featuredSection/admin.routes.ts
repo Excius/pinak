@@ -15,63 +15,63 @@ export const registerFeaturedSectionAdminRoutes = (
   router.get(
     "/admin/all",
     rateLimiter,
-    validateMultiple(FeaturedSectionTypes.AdminListFeaturedSections),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(FeaturedSectionTypes.AdminListFeaturedSections),
     controller.listAdmin,
   );
 
   router.get(
     "/admin/:id",
     rateLimiter,
-    validateMultiple(FeaturedSectionTypes.AdminGetFeaturedSectionById),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(FeaturedSectionTypes.AdminGetFeaturedSectionById),
     controller.getByIdAdmin,
   );
 
   router.post(
     "/admin",
     rateLimiter,
-    validateMultiple(FeaturedSectionTypes.CreateFeaturedSection),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(FeaturedSectionTypes.CreateFeaturedSection),
     controller.create,
   );
 
   router.put(
     "/admin/:id",
     rateLimiter,
-    validateMultiple(FeaturedSectionTypes.UpdateFeaturedSection),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(FeaturedSectionTypes.UpdateFeaturedSection),
     controller.update,
   );
 
   router.delete(
     "/admin/:id",
     rateLimiter,
-    validateMultiple(FeaturedSectionTypes.DeleteFeaturedSection),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(FeaturedSectionTypes.DeleteFeaturedSection),
     controller.delete,
   );
 
   router.patch(
     "/admin/:id/restore",
     rateLimiter,
-    validateMultiple(FeaturedSectionTypes.RestoreFeaturedSection),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(FeaturedSectionTypes.RestoreFeaturedSection),
     controller.restore,
   );
 
   router.delete(
     "/admin/:id/hard",
     rateLimiter,
-    validateMultiple(FeaturedSectionTypes.HardDeleteFeaturedSection),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(FeaturedSectionTypes.HardDeleteFeaturedSection),
     controller.hardDelete,
   );
 
@@ -79,9 +79,9 @@ export const registerFeaturedSectionAdminRoutes = (
   router.get(
     "/admin/:sectionId/images",
     rateLimiter,
-    validateMultiple(FeaturedSectionAdminTypes.AdminGetFeaturedSectionImages),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(FeaturedSectionAdminTypes.AdminGetFeaturedSectionImages),
     controller.getAllImages,
   );
 
@@ -98,18 +98,18 @@ export const registerFeaturedSectionAdminRoutes = (
   router.patch(
     "/admin/images/:imageId/primary",
     rateLimiter,
-    validateMultiple(FeaturedSectionAdminTypes.SetPrimaryFeaturedSectionImage),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(FeaturedSectionAdminTypes.SetPrimaryFeaturedSectionImage),
     controller.setPrimaryImage,
   );
 
   router.delete(
     "/admin/images/:id",
     rateLimiter,
-    validateMultiple(FeaturedSectionAdminTypes.DeleteFeaturedSectionImage),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(FeaturedSectionAdminTypes.DeleteFeaturedSectionImage),
     controller.deleteImage,
   );
 };

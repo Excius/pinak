@@ -39,19 +39,33 @@ export class RazorpayPaymentService implements IPaymentGateway {
     };
   }
 
-  async verifyPayment(payload: PaymentWebhookPayload): Promise<boolean> {
-    if (!payload.signature) {
+  /**
+   * Compares two hex signatures in constant time.
+   */
+  private signaturesMatch(expected: string, actual: string): boolean {
+    const a = Buffer.from(expected, "utf8");
+    const b = Buffer.from(actual, "utf8");
+    return a.length === b.length && crypto.timingSafeEqual(a, b);
+  }
+
+  /**
+   * Verifies a Razorpay webhook signature over the exact raw request body.
+   */
+  verifyWebhookSignature(rawBody: Buffer | string, signature: string): boolean {
+    if (!signature) {
       return false;
     }
-
-    // Razorpay webhook signature verification
-    // Payload should contain the raw stringified body of the webhook
     const expectedSignature = crypto
       .createHmac("sha256", appConfig.RAZORPAY_WEBHOOK_SECRET)
-      .update(payload.orderId) // In webhook context, orderId here is the raw body string passed by the controller
+      .update(rawBody)
       .digest("hex");
+    return this.signaturesMatch(expectedSignature, signature);
+  }
 
-    return expectedSignature === payload.signature;
+  async verifyPayment(payload: PaymentWebhookPayload): Promise<boolean> {
+    // Webhook callers should use verifyWebhookSignature with the raw body. This
+    // remains for the IPaymentGateway contract: `orderId` carries the raw body.
+    return this.verifyWebhookSignature(payload.orderId, payload.signature ?? "");
   }
 
   /**
@@ -67,7 +81,7 @@ export class RazorpayPaymentService implements IPaymentGateway {
       .createHmac("sha256", appConfig.RAZORPAY_KEY_SECRET)
       .update(text)
       .digest("hex");
-    return expectedSignature === razorpaySignature;
+    return this.signaturesMatch(expectedSignature, razorpaySignature);
   }
 
   /**

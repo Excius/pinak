@@ -8,6 +8,7 @@ import { registerProductAdminRelatedRoutes } from "./related.routes.js";
 import { registerProductAdminStockRoutes } from "./admin-stock.routes.js";
 import { registerProductAdminVariantRoutes } from "./admin-variant.routes.js";
 import { registerProductAdminBestSellerRoutes } from "./admin-bestseller.routes.js";
+import { registerProductAdminInventoryRoutes } from "./admin-inventory.routes.js";
 
 export const registerProductAdminRoutes = (
   router: Router,
@@ -19,6 +20,7 @@ export const registerProductAdminRoutes = (
   registerProductAdminImageRoutes(router, deps);
   registerProductAdminFeaturedRoutes(router, deps);
   registerProductAdminStockRoutes(router, deps);
+  registerProductAdminInventoryRoutes(router, deps);
   registerProductAdminCategoryRoutes(router, deps);
   registerProductAdminRelatedRoutes(router, deps);
 };

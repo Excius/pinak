@@ -37,7 +37,7 @@ export class TaxClassService {
     const referenced = await this.repo.countProductsByTaxClass(id);
     if (referenced > 0)
       throw new ValidationError(
-        "Cannot delete tax class while products reference it",
+        "Cannot delete tax class while products or variants reference it",
       );
     return this.repo.delete(id);
   }

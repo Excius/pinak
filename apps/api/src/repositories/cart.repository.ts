@@ -24,6 +24,12 @@ const variantInclude = {
 } satisfies Prisma.ProductVariantInclude;
 
 const comboInclude = {
+  // Primary picture, shown in the cart drawer and checkout
+  images: {
+    where: { isDeleted: false },
+    orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }],
+    take: 1,
+  },
   items: {
     orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
     include: {

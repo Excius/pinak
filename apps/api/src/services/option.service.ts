@@ -45,7 +45,7 @@ export class OptionService {
   // OptionValue helpers
   async createOptionValue(
     optionId: string,
-    data: { value: string; sortOrder?: number; swatchColorHex?: string | null },
+    data: Parameters<OptionRepository["createOptionValue"]>[1],
   ) {
     const option = await this.repo.getOptionById(optionId);
     if (!option) throw new NotFoundError("Option not found");

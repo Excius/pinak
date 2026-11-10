@@ -1,5 +1,12 @@
 import "./index.css";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useEffect } from "react";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 import { Toaster } from "react-hot-toast";
@@ -36,6 +43,7 @@ import AdminSettings from "./pages/admin/settings/SettingsPage";
 import AdminFilterGroupList from "./pages/admin/filters/FilterGroupList";
 import AdminOptionList from "./pages/admin/options/OptionList";
 import AdminCouponList from "./pages/admin/coupons/CouponList";
+import AdminUserList from "./pages/admin/users/UserList";
 import AdminDynamicAssetList from "./pages/admin/dynamicAssets/DynamicAssetList";
 import StoreLocator from "./pages/StoreLocator";
 import AdminStoreList from "./pages/admin/stores/StoreList";
@@ -97,6 +105,15 @@ function AdminProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   return <>{children}</>;
+}
+
+// Always start a newly opened page at the top instead of keeping the previous scroll position.
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
 }
 
 function AppRoutes() {
@@ -208,6 +225,7 @@ function AppRoutes() {
         <Route path="combos/:id" element={<AdminComboKitForm />} />
         <Route path="featured" element={<AdminFeaturedSections />} />
         <Route path="orders" element={<AdminOrderList />} />
+        <Route path="users" element={<AdminUserList />} />
         <Route path="filters" element={<AdminFilterGroupList />} />
         <Route path="options" element={<AdminOptionList />} />
         <Route path="coupons" element={<AdminCouponList />} />
@@ -240,6 +258,7 @@ function App() {
               },
             }}
           />
+          <ScrollToTop />
           <AppRoutes />
           <WhatsAppWidget />
         </CartProvider>

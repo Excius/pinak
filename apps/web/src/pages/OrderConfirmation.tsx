@@ -96,42 +96,56 @@ const OrderConfirmation: React.FC = () => {
           <div className="md:col-span-2 space-y-6">
             <div className="bg-surface-dark border border-primary/10 rounded-2xl overflow-hidden">
               <div className="p-6 border-b border-primary/10 flex justify-between items-center">
-                <h2 className="font-bold text-text-main-light">Order Items</h2>
+                <h2 className="font-bold text-text-main-light">
+                  Order Items{" "}
+                  <span className="text-xs font-normal text-text-muted">
+                    (prices include tax)
+                  </span>
+                </h2>
                 <span className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-full font-bold uppercase tracking-wider">
                   {order.status}
                 </span>
               </div>
               <div className="p-6 space-y-4">
-                {order.items.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex justify-between items-center py-2"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-text-main-light truncate">
-                        {item.productName}
-                      </p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <p className="text-xs text-text-muted">
-                          Quantity: {item.quantity}
+                {order.items.map((item) => {
+                  // Charged unit price including GST (selling price if discounted, else MRP)
+                  const unitWithTax =
+                    item.sellingPrice != null
+                      ? (item.sellingPriceWithTax ?? item.price)
+                      : (item.priceWithTax ?? item.price);
+                  return (
+                    <div
+                      key={item.id}
+                      className="flex justify-between items-center py-2"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-text-main-light truncate">
+                          {item.productName}
                         </p>
-                        {item.price && (
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <p className="text-xs text-text-muted">
+                            Quantity: {item.quantity}
+                          </p>
                           <span className="text-xs text-text-muted">
-                            × {formatPaise(item.price)}
+                            × {formatPaise(unitWithTax)}
                           </span>
-                        )}
-                        {item.basePrice && item.basePrice > item.price && (
-                          <span className="text-xs text-text-muted line-through">
-                            {formatPaise(item.priceWithTax ?? item.basePrice)}
-                          </span>
-                        )}
+                          {item.sellingPrice != null && (
+                            <span className="text-xs text-text-muted line-through">
+                              {formatPaise(
+                                item.priceWithTax ??
+                                  item.basePrice ??
+                                  item.price,
+                              )}
+                            </span>
+                          )}
+                        </div>
                       </div>
+                      <p className="text-sm font-bold text-primary font-mono ml-4">
+                        {formatPaise(unitWithTax * item.quantity)}
+                      </p>
                     </div>
-                    <p className="text-sm font-bold text-primary font-mono ml-4">
-                      {formatPaise(item.lineTotal)}
-                    </p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
               <div className="p-6 bg-background-light/30 border-t border-primary/10 space-y-3">
                 <div className="flex justify-between text-sm text-text-muted">

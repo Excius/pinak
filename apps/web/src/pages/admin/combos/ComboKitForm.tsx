@@ -42,6 +42,8 @@ const ComboKitForm = () => {
   const [uploadingImage, setUploadingImage] = useState(false);
 
   const [imageError, setImageError] = useState<string | null>(null);
+  // Create mode: the image is chosen now and uploaded (as a file) right after the kit is created
+  const [pendingImage, setPendingImage] = useState<File | null>(null);
 
   const [form, setForm] = useState<Partial<AdminComboKit>>({
     name: "",
@@ -53,7 +55,6 @@ const ComboKitForm = () => {
     discountType: null,
     discountValue: null,
     tags: [],
-    imageUrl: "",
     isActive: true,
     sortOrder: 0,
     items: [],
@@ -146,7 +147,6 @@ const ComboKitForm = () => {
         "discountType",
         "discountValue",
         "tags",
-        "imageUrl",
         "isActive",
         "sortOrder",
         "metaTitle",
@@ -173,6 +173,19 @@ const ComboKitForm = () => {
           return;
         }
         const created = await createComboKitAdmin(payload);
+        if (pendingImage) {
+          try {
+            const imageData = new FormData();
+            imageData.append("image", pendingImage);
+            imageData.append("isPrimary", "true");
+            await addComboKitImageAdmin(created.id, imageData);
+          } catch (imgErr) {
+            console.error(
+              "Combo kit created, but the image upload failed",
+              imgErr,
+            );
+          }
+        }
         navigate(`/admin/combos/${created.id}`, { replace: true });
       }
     } catch (err: any) {
@@ -365,13 +378,32 @@ const ComboKitForm = () => {
               />
             </div>
             {!isEdit && (
-              <Field
-                label="Primary Image URL"
-                name="imageUrl"
-                value={form.imageUrl || ""}
-                onChange={(v) => set("imageUrl", v)}
-                placeholder="https://example.com/image.jpg (Optional - you can manage full image gallery after saving)"
-              />
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-text-muted uppercase">
+                  Primary Image (optional)
+                </label>
+                <label className="flex items-center gap-3 px-4 py-3 bg-background-main border border-dashed border-primary/20 rounded-xl cursor-pointer hover:border-primary/60 transition-all">
+                  <span className="material-icons-outlined text-primary">
+                    cloud_upload
+                  </span>
+                  <span className="text-sm text-text-muted truncate">
+                    {pendingImage
+                      ? pendingImage.name
+                      : "Choose an image file (PNG, JPG, WebP up to 10MB)"}
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) =>
+                      setPendingImage(e.target.files?.[0] ?? null)
+                    }
+                  />
+                </label>
+                <p className="text-[11px] text-text-muted">
+                  You can manage the full image gallery after saving.
+                </p>
+              </div>
             )}
           </section>
 

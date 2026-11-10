@@ -16,54 +16,54 @@ export const registerComboAdminRoutes = (
   router.get(
     "/admin/all",
     rateLimiter,
-    validateMultiple(ComboKitTypes.GetComboKitsAdmin),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ComboKitTypes.GetComboKitsAdmin),
     comboController.getAllComboKitsAdmin,
   );
 
   router.get(
     "/admin/deleted",
     rateLimiter,
-    validateMultiple(ComboKitTypes.GetComboKitsAdmin),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ComboKitTypes.GetComboKitsAdmin),
     comboController.getDeletedComboKitsAdmin,
   );
 
   router.get(
     "/admin/inactive",
     rateLimiter,
-    validateMultiple(ComboKitTypes.GetComboKitsAdmin),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ComboKitTypes.GetComboKitsAdmin),
     comboController.getInactiveComboKitsAdmin,
   );
 
   router.get(
     "/admin/:id",
     rateLimiter,
-    validateMultiple(ComboKitTypes.GetComboKitAdminById),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ComboKitTypes.GetComboKitAdminById),
     comboController.getComboKitByIdAdmin,
   );
 
   router.get(
     "/admin/:id/dependencies",
     rateLimiter,
-    validateMultiple(ComboKitTypes.GetComboKitDependencies),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ComboKitTypes.GetComboKitDependencies),
     comboController.getComboKitDependencies,
   );
 
   router.get(
     "/admin/:id/analytics",
     rateLimiter,
-    validateMultiple(ComboKitTypes.GetComboKitAnalytics),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ComboKitTypes.GetComboKitAnalytics),
     comboController.getComboKitAnalytics,
   );
 
@@ -71,117 +71,117 @@ export const registerComboAdminRoutes = (
   router.post(
     "/admin",
     rateLimiter,
-    validateMultiple(ComboKitTypes.CreateComboKit),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ComboKitTypes.CreateComboKit),
     comboController.createComboKit,
   );
 
   router.put(
     "/admin/:id",
     rateLimiter,
-    validateMultiple(ComboKitTypes.UpdateComboKit),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ComboKitTypes.UpdateComboKit),
     comboController.updateComboKit,
   );
 
   router.patch(
     "/admin/:id/status",
     rateLimiter,
-    validateMultiple(ComboKitTypes.UpdateComboKitStatus),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ComboKitTypes.UpdateComboKitStatus),
     comboController.updateComboKitStatus,
   );
 
   router.patch(
     "/admin/:id/pricing",
     rateLimiter,
-    validateMultiple(ComboKitTypes.UpdateComboKitPricing),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ComboKitTypes.UpdateComboKitPricing),
     comboController.updateComboKitPricing,
   );
 
   router.patch(
     "/admin/:id/metadata",
     rateLimiter,
-    validateMultiple(ComboKitTypes.UpdateComboKitMetadata),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ComboKitTypes.UpdateComboKitMetadata),
     comboController.updateComboKitMetadata,
   );
 
   router.post(
     "/admin/:comboKitId/items",
     rateLimiter,
-    validateMultiple(ComboKitTypes.AddComboKitItem),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ComboKitTypes.AddComboKitItem),
     comboController.addComboKitItem,
   );
 
   router.put(
     "/admin/:comboKitId/items/:itemId",
     rateLimiter,
-    validateMultiple(ComboKitTypes.UpdateComboKitItem),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ComboKitTypes.UpdateComboKitItem),
     comboController.updateComboKitItem,
   );
 
   router.delete(
     "/admin/:comboKitId/items/:itemId",
     rateLimiter,
-    validateMultiple(ComboKitTypes.RemoveComboKitItem),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ComboKitTypes.RemoveComboKitItem),
     comboController.removeComboKitItem,
   );
 
   router.post(
     "/admin/:comboKitId/items/reorder",
     rateLimiter,
-    validateMultiple(ComboKitTypes.ReorderComboKitItems),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ComboKitTypes.ReorderComboKitItems),
     comboController.reorderComboKitItems,
   );
 
   router.post(
     "/admin/:comboKitId/items/bulk-set",
     rateLimiter,
-    validateMultiple(ComboKitTypes.BulkSetComboKitItems),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ComboKitTypes.BulkSetComboKitItems),
     comboController.bulkSetComboKitItems,
   );
 
   router.patch(
     "/admin/:id/soft-delete",
     rateLimiter,
-    validateMultiple(ComboKitTypes.SoftDeleteComboKit),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ComboKitTypes.SoftDeleteComboKit),
     comboController.softDeleteComboKit,
   );
 
   router.patch(
     "/admin/:id/restore",
     rateLimiter,
-    validateMultiple(ComboKitTypes.RestoreComboKit),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ComboKitTypes.RestoreComboKit),
     comboController.restoreComboKit,
   );
 
   router.delete(
     "/admin/:id/hard",
     rateLimiter,
-    validateMultiple(ComboKitTypes.HardDeleteComboKit),
     authMiddleware.authenticate,
     authMiddleware.requireAdmin,
+    validateMultiple(ComboKitTypes.HardDeleteComboKit),
     comboController.hardDeleteComboKit,
   );
 
@@ -189,9 +189,9 @@ export const registerComboAdminRoutes = (
   router.get(
     "/admin/:comboKitId/images",
     rateLimiter,
-    validateMultiple(ComboKitAdminTypes.AdminGetComboKitImages),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ComboKitAdminTypes.AdminGetComboKitImages),
     comboController.getAllImages,
   );
 
@@ -208,18 +208,18 @@ export const registerComboAdminRoutes = (
   router.patch(
     "/admin/images/:imageId/primary",
     rateLimiter,
-    validateMultiple(ComboKitAdminTypes.SetPrimaryComboKitImage),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ComboKitAdminTypes.SetPrimaryComboKitImage),
     comboController.setPrimaryImage,
   );
 
   router.delete(
     "/admin/images/:id",
     rateLimiter,
-    validateMultiple(ComboKitAdminTypes.DeleteComboKitImage),
     authMiddleware.authenticate,
     authMiddleware.requireModeratorOrAdmin,
+    validateMultiple(ComboKitAdminTypes.DeleteComboKitImage),
     comboController.deleteImage,
   );
 };

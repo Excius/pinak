@@ -39,6 +39,7 @@ export { DynamicAssetAdminTypes } from "./api/dynamicAsset.js";
 export { StoreTypes, StoreAdminTypes } from "./api/store.js";
 export { PageTypes, PageAdminTypes } from "./api/page.js";
 export { SettingTypes, SettingAdminTypes } from "./api/setting.js";
+export { UserAdminTypes } from "./api/adminUser.js";
 
 // Namespaced exports avoid collisions for generic type names
 // like BodyTypes / ParamsTypes across different API modules.

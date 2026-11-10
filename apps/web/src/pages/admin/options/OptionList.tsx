@@ -12,6 +12,12 @@ import type {
   AdminOption,
   AdminOptionValue,
 } from "../../../api/admin/admin.options.api";
+import {
+  getAllWeightClasses,
+  getAllLengthClasses,
+  type WeightClass,
+  type LengthClass,
+} from "../../../api/admin/admin.settings.api";
 
 // ── Form types ──────────────────────────────────────────────────────────
 
@@ -23,15 +29,48 @@ interface ValueFormData {
   value: string;
   sortOrder: number;
   swatchColorHex: string | null;
+  // Optional measurements (kept as text while typing; blank = not set)
+  weightGrams: string;
+  weightClassId: string;
+  dimensionLength: string;
+  dimensionWidth: string;
+  dimensionHeight: string;
+  lengthClassId: string;
 }
+
+// 6- or 8-digit hex, as the API requires (e.g. #C96C7D or #C98F7280)
+const SWATCH_HEX = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{8})$/;
+
+const getApiErrorMessage = (err: unknown, fallback: string): string => {
+  const data = (
+    err as {
+      response?: {
+        data?: { message?: string; errors?: { message?: string }[] };
+      };
+    }
+  )?.response?.data;
+  const detail = data?.errors
+    ?.map((e) => e.message)
+    .filter(Boolean)
+    .join(". ");
+  return [data?.message, detail].filter(Boolean).join(": ") || fallback;
+};
 
 const emptyOptionForm: OptionFormData = { name: "", sortOrder: 0 };
 const emptyValueForm: ValueFormData = {
   value: "",
   sortOrder: 0,
   swatchColorHex: null,
+  weightGrams: "",
+  weightClassId: "",
+  dimensionLength: "",
+  dimensionWidth: "",
+  dimensionHeight: "",
+  lengthClassId: "",
 };
-const SWATCH_COLOR_PATTERN = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{8})$/;
+
+const numOrNull = (v: string): number | null =>
+  v.trim() === "" ? null : Number(v);
 
 // ── Component ───────────────────────────────────────────────────────────
 
@@ -52,7 +91,6 @@ const OptionList = () => {
     null,
   );
   const [valueForm, setValueForm] = useState<ValueFormData>(emptyValueForm);
-  const [valueFormError, setValueFormError] = useState<string | null>(null);
   const [savingValue, setSavingValue] = useState(false);
 
   // Delete confirmation
@@ -61,6 +99,16 @@ const OptionList = () => {
     id: string;
     label: string;
   } | null>(null);
+
+  // Last API error, scoped to the modal it belongs to so it is never shown in the wrong place
+  const [actionError, setActionError] = useState<{
+    scope: "option" | "value" | "delete";
+    message: string;
+  } | null>(null);
+
+  // Weight / length classes for the optional measurements
+  const [weightClasses, setWeightClasses] = useState<WeightClass[]>([]);
+  const [lengthClasses, setLengthClasses] = useState<LengthClass[]>([]);
 
   // Expanded options
   const [expandedOptions, setExpandedOptions] = useState<Set<string>>(
@@ -83,16 +131,26 @@ const OptionList = () => {
   useEffect(() => {
     fetchOptions();
   }, []);
+  useEffect(() => {
+    getAllWeightClasses()
+      .then(setWeightClasses)
+      .catch(() => setWeightClasses([]));
+    getAllLengthClasses()
+      .then(setLengthClasses)
+      .catch(() => setLengthClasses([]));
+  }, []);
 
   // ── Option CRUD ───────────────────────────────────────────────────────
 
   const openCreateOption = () => {
+    setActionError(null);
     setEditingOption(null);
     setOptionForm(emptyOptionForm);
     setShowOptionModal(true);
   };
 
   const openEditOption = (option: AdminOption) => {
+    setActionError(null);
     setEditingOption(option);
     setOptionForm({ name: option.name, sortOrder: option.sortOrder });
     setShowOptionModal(true);
@@ -101,6 +159,7 @@ const OptionList = () => {
   const handleSaveOption = async () => {
     if (!optionForm.name.trim()) return;
     setSaving(true);
+    setActionError(null);
     try {
       if (editingOption) {
         await updateOption(editingOption.id, optionForm);
@@ -111,59 +170,86 @@ const OptionList = () => {
       await fetchOptions();
     } catch (err) {
       console.error("Failed to save option", err);
+      setActionError({
+        scope: "option",
+        message: getApiErrorMessage(err, "Failed to save option."),
+      });
     } finally {
       setSaving(false);
     }
   };
 
   const handleDeleteOption = async (id: string) => {
+    setActionError(null);
     try {
       await deleteOption(id);
       setDeleteConfirm(null);
       await fetchOptions();
     } catch (err) {
       console.error("Failed to delete option", err);
+      setActionError({
+        scope: "delete",
+        message: getApiErrorMessage(err, "Failed to delete option."),
+      });
     }
   };
 
   // ── Value CRUD ────────────────────────────────────────────────────────
 
   const openCreateValue = (optionId: string) => {
+    setActionError(null);
     setValueParentId(optionId);
     setEditingValue(null);
     setValueForm(emptyValueForm);
-    setValueFormError(null);
     setShowValueModal(true);
   };
 
   const openEditValue = (optionId: string, val: AdminOptionValue) => {
+    setActionError(null);
     setValueParentId(optionId);
     setEditingValue(val);
     setValueForm({
       value: val.value,
       sortOrder: val.sortOrder,
       swatchColorHex: val.swatchColorHex ?? null,
+      weightGrams: val.weightGrams != null ? String(val.weightGrams) : "",
+      weightClassId: val.weightClassId ?? "",
+      dimensionLength:
+        val.dimensionLength != null ? String(val.dimensionLength) : "",
+      dimensionWidth:
+        val.dimensionWidth != null ? String(val.dimensionWidth) : "",
+      dimensionHeight:
+        val.dimensionHeight != null ? String(val.dimensionHeight) : "",
+      lengthClassId: val.lengthClassId ?? "",
     });
-    setValueFormError(null);
     setShowValueModal(true);
   };
 
   const handleSaveValue = async () => {
     if (!valueForm.value.trim() || !valueParentId) return;
-    const swatchColorHex = valueForm.swatchColorHex?.trim() || null;
-    if (swatchColorHex && !SWATCH_COLOR_PATTERN.test(swatchColorHex)) {
-      setValueFormError(
-        "Use a 6- or 8-digit hex color, such as #C96C7D or #C98F7280.",
-      );
+    const swatch = valueForm.swatchColorHex?.trim();
+    if (swatch && !SWATCH_HEX.test(swatch)) {
+      setActionError({
+        scope: "value",
+        message:
+          "Swatch color must be a hex value like #C96C7D (6 or 8 digits).",
+      });
       return;
     }
-    setValueFormError(null);
     setSavingValue(true);
+    setActionError(null);
     try {
       const payload = {
         value: valueForm.value.trim(),
         sortOrder: valueForm.sortOrder,
-        swatchColorHex,
+        swatchColorHex: valueForm.swatchColorHex?.trim() || null,
+        // null clears a measurement so variants stop inheriting it
+        weightGrams: numOrNull(valueForm.weightGrams),
+        weightClassId: valueForm.weightClassId || null,
+        dimensionLength: numOrNull(valueForm.dimensionLength),
+        dimensionWidth: numOrNull(valueForm.dimensionWidth),
+        dimensionHeight: numOrNull(valueForm.dimensionHeight),
+        lengthClassId: valueForm.lengthClassId || null,
       };
       if (editingValue) {
         await updateOptionValue(editingValue.id, payload);
@@ -174,18 +260,27 @@ const OptionList = () => {
       await fetchOptions();
     } catch (err) {
       console.error("Failed to save option value", err);
+      setActionError({
+        scope: "value",
+        message: getApiErrorMessage(err, "Failed to save option value."),
+      });
     } finally {
       setSavingValue(false);
     }
   };
 
   const handleDeleteValue = async (valueId: string) => {
+    setActionError(null);
     try {
       await deleteOptionValue(valueId);
       setDeleteConfirm(null);
       await fetchOptions();
     } catch (err) {
       console.error("Failed to delete option value", err);
+      setActionError({
+        scope: "delete",
+        message: getApiErrorMessage(err, "Failed to delete option value."),
+      });
     }
   };
 
@@ -255,6 +350,17 @@ const OptionList = () => {
                   className="w-full bg-background-main border border-primary/20 rounded-xl px-4 py-3 text-text-main-light outline-none focus:border-primary"
                 />
               </div>
+              {actionError?.scope === "option" && (
+                <div
+                  className="mt-4 p-3 rounded-xl text-sm bg-red-500/10 border border-red-500/20 text-red-400 flex items-start gap-2 text-left"
+                  role="alert"
+                >
+                  <span className="material-icons-outlined text-base">
+                    error_outline
+                  </span>
+                  <span>{actionError.message}</span>
+                </div>
+              )}
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={() => setShowOptionModal(false)}
@@ -333,7 +439,7 @@ const OptionList = () => {
                       type="color"
                       value={
                         valueForm.swatchColorHex &&
-                        SWATCH_COLOR_PATTERN.test(valueForm.swatchColorHex)
+                        SWATCH_HEX.test(valueForm.swatchColorHex)
                           ? valueForm.swatchColorHex
                           : "#C96C7D"
                       }
@@ -384,13 +490,99 @@ const OptionList = () => {
                     )}
                   </div>
                 </div>
-                {valueFormError && (
-                  <p className="text-[11px] text-red-400">{valueFormError}</p>
-                )}
                 <p className="text-[11px] text-text-muted">
                   Use for colors/shades. Clear for non-color options (e.g. 50ml,
                   Pack of 2).
                 </p>
+              </div>
+
+              {/* Optional physical measurements: variants using this value inherit them */}
+              <div className="space-y-3 p-4 rounded-xl border border-primary/10 bg-background-main/40">
+                <div>
+                  <label className="text-xs font-bold text-text-muted uppercase">
+                    Package weight &amp; dimensions — Optional
+                  </label>
+                  <p className="text-[11px] text-text-muted mt-0.5">
+                    Shipping measurements of the packed product for this choice
+                    (e.g. the 50ml bottle in its box). Variants that use this
+                    value inherit them; a variant can still set its own.
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <input
+                    type="number"
+                    min={0}
+                    step="any"
+                    placeholder="Weight"
+                    value={valueForm.weightGrams}
+                    onChange={(e) =>
+                      setValueForm((prev) => ({
+                        ...prev,
+                        weightGrams: e.target.value,
+                      }))
+                    }
+                    className="bg-background-main border border-primary/20 rounded-xl px-3 py-2.5 text-sm text-text-main-light outline-none focus:border-primary"
+                  />
+                  <select
+                    value={valueForm.weightClassId}
+                    onChange={(e) =>
+                      setValueForm((prev) => ({
+                        ...prev,
+                        weightClassId: e.target.value,
+                      }))
+                    }
+                    className="bg-background-main border border-primary/20 rounded-xl px-3 py-2.5 text-sm text-text-main-light outline-none focus:border-primary"
+                  >
+                    <option value="">Weight class</option>
+                    {weightClasses.map((w) => (
+                      <option key={w.id} value={w.id}>
+                        {w.name} ({w.unit})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="grid grid-cols-4 gap-3">
+                  {(
+                    [
+                      "dimensionLength",
+                      "dimensionWidth",
+                      "dimensionHeight",
+                    ] as const
+                  ).map((key, i) => (
+                    <input
+                      key={key}
+                      type="number"
+                      min={0}
+                      step="any"
+                      placeholder={["Length", "Width", "Height"][i]}
+                      value={valueForm[key]}
+                      onChange={(e) =>
+                        setValueForm((prev) => ({
+                          ...prev,
+                          [key]: e.target.value,
+                        }))
+                      }
+                      className="bg-background-main border border-primary/20 rounded-xl px-3 py-2.5 text-sm text-text-main-light outline-none focus:border-primary min-w-0"
+                    />
+                  ))}
+                  <select
+                    value={valueForm.lengthClassId}
+                    onChange={(e) =>
+                      setValueForm((prev) => ({
+                        ...prev,
+                        lengthClassId: e.target.value,
+                      }))
+                    }
+                    className="bg-background-main border border-primary/20 rounded-xl px-2 py-2.5 text-sm text-text-main-light outline-none focus:border-primary min-w-0"
+                  >
+                    <option value="">Unit</option>
+                    {lengthClasses.map((l) => (
+                      <option key={l.id} value={l.id}>
+                        {l.unit}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -410,6 +602,17 @@ const OptionList = () => {
                 />
               </div>
 
+              {actionError?.scope === "value" && (
+                <div
+                  className="mt-4 p-3 rounded-xl text-sm bg-red-500/10 border border-red-500/20 text-red-400 flex items-start gap-2 text-left"
+                  role="alert"
+                >
+                  <span className="material-icons-outlined text-base">
+                    error_outline
+                  </span>
+                  <span>{actionError.message}</span>
+                </div>
+              )}
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={() => setShowValueModal(false)}
@@ -435,7 +638,10 @@ const OptionList = () => {
         <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
           <div
             className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-            onClick={() => setDeleteConfirm(null)}
+            onClick={() => {
+              setActionError(null);
+              setDeleteConfirm(null);
+            }}
           />
           <div className="relative bg-background-light border border-red-500/20 rounded-2xl p-8 w-full max-w-sm shadow-2xl text-center">
             <span className="material-icons-outlined text-4xl text-red-500 mb-4">
@@ -451,12 +657,34 @@ const OptionList = () => {
                 {deleteConfirm.label}
               </strong>
               {deleteConfirm.type === "option"
-                ? " and all its values. This may affect product variants."
-                : "."}
+                ? ". An option can only be deleted once all of its values have been removed."
+                : ". This may affect product variants that use it."}
             </p>
+            {actionError?.scope === "delete" && (
+              <div
+                className="mb-6 p-3 rounded-xl text-sm bg-red-500/10 border border-red-500/20 text-red-400 text-left"
+                role="alert"
+              >
+                <div className="flex items-start gap-2">
+                  <span className="material-icons-outlined text-base">
+                    error_outline
+                  </span>
+                  <span>{actionError.message}</span>
+                </div>
+                {/still has values/i.test(actionError.message) && (
+                  <p className="mt-2 text-xs text-red-300">
+                    Delete each value under this option first (expand the option
+                    and remove its values), then delete the option.
+                  </p>
+                )}
+              </div>
+            )}
             <div className="flex gap-3">
               <button
-                onClick={() => setDeleteConfirm(null)}
+                onClick={() => {
+                  setActionError(null);
+                  setDeleteConfirm(null);
+                }}
                 className="flex-1 px-5 py-2.5 rounded-xl font-bold text-sm border border-primary/20 text-text-muted hover:bg-primary/5 transition-all cursor-pointer"
               >
                 Cancel

@@ -1,12 +1,13 @@
 import { ValidationError, NotFoundError } from "../lib/error.js";
 import { WishlistRepository } from "../repositories/wishlist.repository.js";
+import { variantTaxRate } from "../lib/taxRates.js";
 
 export class WishlistService {
   constructor(private repo: WishlistRepository) {}
 
   private mapWishlistVariant(variant: any) {
     if (!variant) return null;
-    const taxRate = variant.product?.taxClass?.rate ?? 0;
+    const taxRate = variantTaxRate(variant);
     const price = variant.price;
     const sellingPrice =
       variant.sellingPrice != null ? variant.sellingPrice : null;

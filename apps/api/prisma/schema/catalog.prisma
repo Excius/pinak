@@ -21,6 +21,7 @@ model TaxClass {
   rate Float
 
   products Product[]
+  variants ProductVariant[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -102,6 +103,7 @@ model FilterValue {
 
   filterGroup FilterGroup          @relation(fields: [filterGroupId], references: [id], onDelete: Cascade)
   products    ProductFilterValue[]
+  variants    VariantFilterValue[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -110,6 +112,22 @@ model FilterValue {
   @@index([filterGroupId])
 }
 
+// Source of truth for filters: each variant carries its own filter values.
+model VariantFilterValue {
+  variantId     String
+  filterValueId String
+
+  variant     ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  filterValue FilterValue    @relation(fields: [filterValueId], references: [id], onDelete: Cascade)
+
+  @@id([variantId, filterValueId])
+  @@index([variantId])
+  @@index([filterValueId])
+}
+
+// Derived index: the union of a product's (non-deleted) variants' filter values,
+// kept in sync by `syncProductFilterIndex`. It powers product-level faceted search.
+// Do not write to it directly.
 model ProductFilterValue {
   productId     String
   filterValueId String
@@ -140,6 +158,15 @@ model OptionValue {
   sortOrder Int    @default(0)
 
   swatchColorHex String?
+
+  // Optional physical measurements for this choice (e.g. Size "50ml"). Variants using this
+  // option value inherit them unless the variant sets its own.
+  weightGrams     Float?
+  weightClassId   String?
+  dimensionLength Float?
+  dimensionWidth  Float?
+  dimensionHeight Float?
+  lengthClassId   String?
 
   option         Option               @relation(fields: [optionId], references: [id], onDelete: Cascade)
   variantOptions VariantOptionValue[]
@@ -246,8 +273,17 @@ model ProductVariant {
   comparePrice Int?
   stock        Int  @default(0)
 
-  weightGrams   Float?
-  weightClassId String?
+  // Per-variant measurements. Blank values fall back to the variant's option values, then the product.
+  weightGrams     Float?
+  weightClassId   String?
+  dimensionLength Float?
+  dimensionWidth  Float?
+  dimensionHeight Float?
+  lengthClassId   String?
+
+  // Optional per-variant tax class. When null, the variant uses its product's tax class.
+  taxClassId String?
+  taxClass   TaxClass? @relation(fields: [taxClassId], references: [id])
 
   isActive  Boolean @default(true)
   isDeleted Boolean @default(false)
@@ -255,6 +291,7 @@ model ProductVariant {
   product Product @relation(fields: [productId], references: [id])
 
   optionValues VariantOptionValue[]
+  filterValues VariantFilterValue[]
 
   images                ProductImage[]
   orderItems            OrderItem[]
@@ -266,6 +303,7 @@ model ProductVariant {
   updatedAt DateTime @updatedAt
 
   @@index([productId])
+  @@index([taxClassId])
 }
 
 model VariantOptionValue {

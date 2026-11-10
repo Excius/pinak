@@ -19,10 +19,7 @@ export const createTaxClass = async (payload: {
   name: string;
   rate: number;
 }): Promise<TaxClass> => {
-  const { data: resp } = await axiosInstance.post(
-    "/tax-classes/admin",
-    payload,
-  );
+  const { data: resp } = await axiosInstance.post("/tax-classes", payload);
   return resp?.data as TaxClass;
 };
 
@@ -30,15 +27,12 @@ export const updateTaxClass = async (
   id: string,
   payload: { name?: string; rate?: number },
 ): Promise<TaxClass> => {
-  const { data: resp } = await axiosInstance.put(
-    `/tax-classes/admin/${id}`,
-    payload,
-  );
+  const { data: resp } = await axiosInstance.put(`/tax-classes/${id}`, payload);
   return resp?.data as TaxClass;
 };
 
 export const deleteTaxClass = async (id: string) => {
-  await axiosInstance.delete(`/tax-classes/admin/${id}`);
+  await axiosInstance.delete(`/tax-classes/${id}`);
 };
 
 // ── Weight Classes ─────────────────────────────────────────────────────
@@ -60,10 +54,7 @@ export const createWeightClass = async (payload: {
   name: string;
   unit: string;
 }): Promise<WeightClass> => {
-  const { data: resp } = await axiosInstance.post(
-    "/weight-classes/admin",
-    payload,
-  );
+  const { data: resp } = await axiosInstance.post("/weight-classes", payload);
   return resp?.data as WeightClass;
 };
 
@@ -72,14 +63,14 @@ export const updateWeightClass = async (
   payload: { name?: string; unit?: string },
 ): Promise<WeightClass> => {
   const { data: resp } = await axiosInstance.put(
-    `/weight-classes/admin/${id}`,
+    `/weight-classes/${id}`,
     payload,
   );
   return resp?.data as WeightClass;
 };
 
 export const deleteWeightClass = async (id: string) => {
-  await axiosInstance.delete(`/weight-classes/admin/${id}`);
+  await axiosInstance.delete(`/weight-classes/${id}`);
 };
 
 // ── Length Classes ──────────────────────────────────────────────────────
@@ -101,10 +92,7 @@ export const createLengthClass = async (payload: {
   name: string;
   unit: string;
 }): Promise<LengthClass> => {
-  const { data: resp } = await axiosInstance.post(
-    "/length-classes/admin",
-    payload,
-  );
+  const { data: resp } = await axiosInstance.post("/length-classes", payload);
   return resp?.data as LengthClass;
 };
 
@@ -113,14 +101,14 @@ export const updateLengthClass = async (
   payload: { name?: string; unit?: string },
 ): Promise<LengthClass> => {
   const { data: resp } = await axiosInstance.put(
-    `/length-classes/admin/${id}`,
+    `/length-classes/${id}`,
     payload,
   );
   return resp?.data as LengthClass;
 };
 
 export const deleteLengthClass = async (id: string) => {
-  await axiosInstance.delete(`/length-classes/admin/${id}`);
+  await axiosInstance.delete(`/length-classes/${id}`);
 };
 
 // ── Contact & General Settings ──────────────────────────────────────────
@@ -166,4 +154,60 @@ export const setAdminSetting = async (
     payload,
   );
   return resp?.data as AdminSettingItem;
+};
+
+// ── Shipping & supplier (typed store settings) ──────────────────────────
+
+export interface ShippingConfig {
+  /** Flat shipping charge in paise. */
+  shippingFee: number;
+}
+
+export interface SupplierDetails {
+  companyName: string;
+  brandName: string;
+  gstin: string;
+  pan: string;
+  state: string;
+  stateCode: string;
+  addressLine1: string;
+  addressLine2: string;
+  city: string;
+  pincode: string;
+  email: string;
+  phone: string;
+}
+
+export type SupplierDetailsInput = Omit<
+  SupplierDetails,
+  "brandName" | "stateCode"
+>;
+
+export const getShippingConfig = async (): Promise<ShippingConfig> => {
+  const { data: resp } = await axiosInstance.get("/settings/admin/shipping");
+  return resp?.data as ShippingConfig;
+};
+
+export const updateShippingConfig = async (
+  shippingFee: number,
+): Promise<ShippingConfig> => {
+  const { data: resp } = await axiosInstance.put("/settings/admin/shipping", {
+    shippingFee,
+  });
+  return resp?.data as ShippingConfig;
+};
+
+export const getSupplierDetails = async (): Promise<SupplierDetails> => {
+  const { data: resp } = await axiosInstance.get("/settings/admin/supplier");
+  return resp?.data as SupplierDetails;
+};
+
+export const updateSupplierDetails = async (
+  payload: SupplierDetailsInput,
+): Promise<SupplierDetails> => {
+  const { data: resp } = await axiosInstance.put(
+    "/settings/admin/supplier",
+    payload,
+  );
+  return resp?.data as SupplierDetails;
 };

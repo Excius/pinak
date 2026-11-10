@@ -28,8 +28,14 @@ export class LengthClassRepository {
     return this.prisma.lengthClass.delete({ where: { id } });
   }
 
-  countProductsByLengthClass(id: string) {
-    return this.prisma.product.count({ where: { lengthClassId: id } });
+  async countProductsByLengthClass(id: string) {
+    // products, variants and option values can all reference a length class
+    const [products, variants, optionValues] = await Promise.all([
+      this.prisma.product.count({ where: { lengthClassId: id } }),
+      this.prisma.productVariant.count({ where: { lengthClassId: id } }),
+      this.prisma.optionValue.count({ where: { lengthClassId: id } }),
+    ]);
+    return products + variants + optionValues;
   }
 }
 
@@ -61,7 +67,12 @@ export class WeightClassRepository {
     return this.prisma.weightClass.delete({ where: { id } });
   }
 
-  countProductsByWeightClass(id: string) {
-    return this.prisma.product.count({ where: { weightClassId: id } });
+  async countProductsByWeightClass(id: string) {
+    const [products, variants, optionValues] = await Promise.all([
+      this.prisma.product.count({ where: { weightClassId: id } }),
+      this.prisma.productVariant.count({ where: { weightClassId: id } }),
+      this.prisma.optionValue.count({ where: { weightClassId: id } }),
+    ]);
+    return products + variants + optionValues;
   }
 }
