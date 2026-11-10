@@ -168,27 +168,44 @@ export const SettingAdminTypes = {
   UpdateSupplierDetails: {
     // The state code is derived from `state` on the server so it can never disagree with it.
     body: z.object({
-      companyName: z.string().trim().min(1, "Company name is required").max(150),
+      companyName: z
+        .string()
+        .trim()
+        .min(1, "Company name is required")
+        .max(150),
       gstin: z
         .string()
         .trim()
         .toUpperCase()
-        .regex(/^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/, "GSTIN must be a valid 15-character GSTIN"),
+        .regex(
+          /^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/,
+          "GSTIN must be a valid 15-character GSTIN",
+        ),
       pan: z
         .string()
         .trim()
         .toUpperCase()
-        .regex(/^[A-Z]{5}\d{4}[A-Z]$/, "PAN must be 10 characters, e.g. AAACP1234A"),
+        .regex(
+          /^[A-Z]{5}\d{4}[A-Z]$/,
+          "PAN must be 10 characters, e.g. AAACP1234A",
+        ),
       state: z
         .string()
         .trim()
         .refine((v) => Boolean(INDIAN_STATES_AND_CODES[v.toUpperCase()]), {
           message: "Must be a valid Indian state or union territory",
         }),
-      addressLine1: z.string().trim().min(1, "Address line 1 is required").max(200),
+      addressLine1: z
+        .string()
+        .trim()
+        .min(1, "Address line 1 is required")
+        .max(200),
       addressLine2: z.string().trim().max(200).optional().default(""),
       city: z.string().trim().min(1, "City is required").max(100),
-      pincode: z.string().trim().regex(/^\d{6}$/, "Pincode must be exactly 6 digits"),
+      pincode: z
+        .string()
+        .trim()
+        .regex(/^\d{6}$/, "Pincode must be exactly 6 digits"),
       email: z.string().trim().email("Enter a valid email address"),
       phone: z
         .string()

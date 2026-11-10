@@ -394,10 +394,7 @@ export class ProductService {
    * Imports products and variants from spreadsheet buffer or CSV string.
    * All newly imported products are created with isActive: false so admin can verify them.
    */
-  async importInventory(
-    bufferOrString: Buffer | string,
-    filename?: string,
-  ) {
+  async importInventory(bufferOrString: Buffer | string, filename?: string) {
     const parseResult = parseSpreadsheet(bufferOrString, filename);
     const { items, skippedRows } = parseResult;
 
@@ -445,7 +442,8 @@ export class ProductService {
           if (brandCache.has(lowerBrand)) {
             brandId = brandCache.get(lowerBrand);
           } else {
-            let brand = await this.productRepository.findBrandBySlugOrName(brandName);
+            let brand =
+              await this.productRepository.findBrandBySlugOrName(brandName);
             if (!brand) {
               brand = await this.productRepository.createBrand(
                 brandName,
@@ -463,7 +461,8 @@ export class ProductService {
         if (taxCache.has(taxRate)) {
           taxClassId = taxCache.get(taxRate);
         } else {
-          let taxClass = await this.productRepository.findTaxClassByRate(taxRate);
+          let taxClass =
+            await this.productRepository.findTaxClassByRate(taxRate);
           if (!taxClass) {
             taxClass = await this.productRepository.createTaxClass(
               `GST ${taxRate}%`,
@@ -505,7 +504,9 @@ export class ProductService {
           : null;
 
         let existingProduct: any = existingVariant?.productId
-          ? await this.productRepository.getProductByIdAdmin(existingVariant.productId)
+          ? await this.productRepository.getProductByIdAdmin(
+              existingVariant.productId,
+            )
           : await this.productRepository.findProductByNameOrSlug(
               item.name,
               this.generateSlug(item.name),
@@ -641,9 +642,14 @@ export class ProductService {
 
     for (const p of products) {
       const categoryNames =
-        p.categories?.map((c: any) => c.category?.name).filter(Boolean).join("; ") || "";
+        p.categories
+          ?.map((c: any) => c.category?.name)
+          .filter(Boolean)
+          .join("; ") || "";
       const brandName = p.brand?.name ?? "";
-      const taxRate = p.taxClass ? Math.round(p.taxClass.rate * 100) / 10000 : 0.18;
+      const taxRate = p.taxClass
+        ? Math.round(p.taxClass.rate * 100) / 10000
+        : 0.18;
       const hsn = p.model ?? "";
       const isProductActive = p.isActive;
 
@@ -656,7 +662,9 @@ export class ProductService {
             mrp: v.price / 100, // paise to Rupees
             hsn,
             parentGroup: brandName,
-            taxRate: variantTax ? Math.round(variantTax.rate * 100) / 10000 : taxRate,
+            taxRate: variantTax
+              ? Math.round(variantTax.rate * 100) / 10000
+              : taxRate,
             sku: v.sku,
             sellingPrice:
               v.sellingPrice !== null && v.sellingPrice !== undefined
@@ -1375,7 +1383,10 @@ export class ProductService {
           const key = extractS3KeyFromUrl(url);
           if (key) await deleteObject(key);
         } catch (err) {
-          logger.warn({ productId: id, err }, "Failed to delete S3 object for hard-deleted product");
+          logger.warn(
+            { productId: id, err },
+            "Failed to delete S3 object for hard-deleted product",
+          );
         }
       }
     }

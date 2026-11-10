@@ -76,7 +76,8 @@ export class CouponController {
     const limit = Number.parseInt(q.limit ?? "", 10);
     const data = await this.couponService.listCouponsAdmin({
       page: Number.isFinite(page) && page > 0 ? page : undefined,
-      limit: Number.isFinite(limit) && limit > 0 ? Math.min(limit, 100) : undefined,
+      limit:
+        Number.isFinite(limit) && limit > 0 ? Math.min(limit, 100) : undefined,
       search: q.search,
       isActive: q.isActive,
       deleted: q.deleted,

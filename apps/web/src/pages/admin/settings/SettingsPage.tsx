@@ -17,11 +17,11 @@ import {
   type TaxClass,
   type WeightClass,
   type LengthClass,
-} from '../../../api/admin/admin.settings.api'
-import toast from 'react-hot-toast'
-import { ShippingSettingsTab, SupplierSettingsTab } from './StoreSettingsTabs'
+} from "../../../api/admin/admin.settings.api";
+import toast from "react-hot-toast";
+import { ShippingSettingsTab, SupplierSettingsTab } from "./StoreSettingsTabs";
 
-type Tab = 'tax' | 'weight' | 'length' | 'contact' | 'shipping' | 'supplier'
+type Tab = "tax" | "weight" | "length" | "contact" | "shipping" | "supplier";
 
 // Generic editable table section
 function ConfigTable<T extends { id: string }>({
@@ -472,13 +472,28 @@ const SettingsPage = () => {
   }, []);
 
   const tabs: { key: Tab; label: string; icon: string; count?: number }[] = [
-    { key: 'tax', label: 'Tax Classes', icon: 'receipt_long', count: taxClasses.length },
-    { key: 'weight', label: 'Weight Classes', icon: 'scale', count: weightClasses.length },
-    { key: 'length', label: 'Length Classes', icon: 'straighten', count: lengthClasses.length },
-    { key: 'contact', label: 'WhatsApp & Contacts', icon: 'support_agent' },
-    { key: 'shipping', label: 'Shipping', icon: 'local_shipping' },
-    { key: 'supplier', label: 'Supplier Details', icon: 'business' },
-  ]
+    {
+      key: "tax",
+      label: "Tax Classes",
+      icon: "receipt_long",
+      count: taxClasses.length,
+    },
+    {
+      key: "weight",
+      label: "Weight Classes",
+      icon: "scale",
+      count: weightClasses.length,
+    },
+    {
+      key: "length",
+      label: "Length Classes",
+      icon: "straighten",
+      count: lengthClasses.length,
+    },
+    { key: "contact", label: "WhatsApp & Contacts", icon: "support_agent" },
+    { key: "shipping", label: "Shipping", icon: "local_shipping" },
+    { key: "supplier", label: "Supplier Details", icon: "business" },
+  ];
 
   if (loading) {
     return (
@@ -498,7 +513,8 @@ const SettingsPage = () => {
           Store Settings
         </h1>
         <p className="text-sm text-text-muted mt-1">
-          Configure tax rates, measurement units, shipping, invoice supplier details, and customer contact endpoints.
+          Configure tax rates, measurement units, shipping, invoice supplier
+          details, and customer contact endpoints.
         </p>
       </div>
 
@@ -614,9 +630,9 @@ const SettingsPage = () => {
         />
       )}
 
-      {tab === 'contact' && <ContactSettingsTab />}
-      {tab === 'shipping' && <ShippingSettingsTab />}
-      {tab === 'supplier' && <SupplierSettingsTab />}
+      {tab === "contact" && <ContactSettingsTab />}
+      {tab === "shipping" && <ShippingSettingsTab />}
+      {tab === "supplier" && <SupplierSettingsTab />}
     </div>
   );
 };

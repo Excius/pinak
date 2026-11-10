@@ -35,7 +35,7 @@ export async function getOrders(
   limit: number = 10,
   filters?: {
     status?: "PENDING" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED";
-    paymentStatus?: "PENDING" | "COMPLETED" | "FAILED";
+    paymentStatus?: "PENDING" | "COMPLETED" | "FAILED" | "REFUNDING" | "REFUNDED" | "REFUND_FAILED";
   },
 ) {
   const params = new URLSearchParams();

@@ -92,7 +92,11 @@ export class FilterRepository {
     });
   }
 
-  addFilterToVariant(productId: string, variantId: string, filterValueId: string) {
+  addFilterToVariant(
+    productId: string,
+    variantId: string,
+    filterValueId: string,
+  ) {
     return this.prisma.$transaction(async (tx) => {
       const rel = await tx.variantFilterValue.create({
         data: { variantId, filterValueId },
@@ -102,7 +106,11 @@ export class FilterRepository {
     });
   }
 
-  removeFilterFromVariant(productId: string, variantId: string, filterValueId: string) {
+  removeFilterFromVariant(
+    productId: string,
+    variantId: string,
+    filterValueId: string,
+  ) {
     return this.prisma.$transaction(async (tx) => {
       await tx.variantFilterValue.deleteMany({
         where: { variantId, filterValueId },

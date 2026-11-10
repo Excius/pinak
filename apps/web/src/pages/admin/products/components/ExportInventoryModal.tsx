@@ -1,50 +1,52 @@
-import React, { useState } from 'react'
-import toast from 'react-hot-toast'
-import { exportInventorySpreadsheetAdmin } from '../../../../api/admin/admin.products.api'
+import React, { useState } from "react";
+import toast from "react-hot-toast";
+import { exportInventorySpreadsheetAdmin } from "../../../../api/admin/admin.products.api";
 
 interface ExportInventoryModalProps {
-  isOpen: boolean
-  onClose: () => void
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 export const ExportInventoryModal: React.FC<ExportInventoryModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  const [format, setFormat] = useState<'csv' | 'xlsx'>('xlsx')
-  const [status, setStatus] = useState<'ALL' | 'ACTIVE' | 'INACTIVE'>('ALL')
-  const [isExporting, setIsExporting] = useState(false)
+  const [format, setFormat] = useState<"csv" | "xlsx">("xlsx");
+  const [status, setStatus] = useState<"ALL" | "ACTIVE" | "INACTIVE">("ALL");
+  const [isExporting, setIsExporting] = useState(false);
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   const handleExport = async () => {
     try {
-      setIsExporting(true)
+      setIsExporting(true);
       const { blob, filename } = await exportInventorySpreadsheetAdmin({
         format,
         status,
-      })
+      });
 
       // Trigger browser download
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = filename
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      URL.revokeObjectURL(url)
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
 
-      toast.success(`Inventory exported as ${filename}`)
-      onClose()
+      toast.success(`Inventory exported as ${filename}`);
+      onClose();
     } catch (err: any) {
       const msg =
-        err?.response?.data?.message || err?.message || 'Failed to export inventory'
-      toast.error(msg)
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to export inventory";
+      toast.error(msg);
     } finally {
-      setIsExporting(false)
+      setIsExporting(false);
     }
-  }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
@@ -53,14 +55,17 @@ export const ExportInventoryModal: React.FC<ExportInventoryModalProps> = ({
         <div className="px-6 py-5 border-b border-primary/10 flex items-center justify-between bg-background-light/40">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
-              <span className="material-icons-outlined text-[22px]">download</span>
+              <span className="material-icons-outlined text-[22px]">
+                download
+              </span>
             </div>
             <div>
               <h2 className="text-lg font-bold font-display text-text-main-light">
                 Export Inventory Sheet
               </h2>
               <p className="text-xs text-text-muted mt-0.5">
-                Download current catalog data into a spreadsheet for editing or offline analysis.
+                Download current catalog data into a spreadsheet for editing or
+                offline analysis.
               </p>
             </div>
           </div>
@@ -82,15 +87,17 @@ export const ExportInventoryModal: React.FC<ExportInventoryModalProps> = ({
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
-                onClick={() => setFormat('xlsx')}
+                onClick={() => setFormat("xlsx")}
                 className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
-                  format === 'xlsx'
-                    ? 'border-primary bg-primary/10 text-primary shadow-sm'
-                    : 'border-primary/10 hover:border-primary/30 bg-background-light/30 text-text-muted'
+                  format === "xlsx"
+                    ? "border-primary bg-primary/10 text-primary shadow-sm"
+                    : "border-primary/10 hover:border-primary/30 bg-background-light/30 text-text-muted"
                 }`}
               >
                 <div className="flex items-center gap-2 font-bold text-sm text-text-main-light">
-                  <span className="material-icons-outlined text-green-500 text-[20px]">table_view</span>
+                  <span className="material-icons-outlined text-green-500 text-[20px]">
+                    table_view
+                  </span>
                   Excel Workbook (.xlsx)
                 </div>
                 <p className="text-[11px] text-text-muted mt-1">
@@ -99,15 +106,17 @@ export const ExportInventoryModal: React.FC<ExportInventoryModalProps> = ({
               </button>
               <button
                 type="button"
-                onClick={() => setFormat('csv')}
+                onClick={() => setFormat("csv")}
                 className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
-                  format === 'csv'
-                    ? 'border-primary bg-primary/10 text-primary shadow-sm'
-                    : 'border-primary/10 hover:border-primary/30 bg-background-light/30 text-text-muted'
+                  format === "csv"
+                    ? "border-primary bg-primary/10 text-primary shadow-sm"
+                    : "border-primary/10 hover:border-primary/30 bg-background-light/30 text-text-muted"
                 }`}
               >
                 <div className="flex items-center gap-2 font-bold text-sm text-text-main-light">
-                  <span className="material-icons-outlined text-blue-400 text-[20px]">description</span>
+                  <span className="material-icons-outlined text-blue-400 text-[20px]">
+                    description
+                  </span>
                   CSV (.csv)
                 </div>
                 <p className="text-[11px] text-text-muted mt-1">
@@ -125,27 +134,27 @@ export const ExportInventoryModal: React.FC<ExportInventoryModalProps> = ({
             <div className="space-y-2">
               {[
                 {
-                  value: 'ALL',
-                  label: 'All Products',
-                  desc: 'Export complete catalog (active and inactive)',
+                  value: "ALL",
+                  label: "All Products",
+                  desc: "Export complete catalog (active and inactive)",
                 },
                 {
-                  value: 'ACTIVE',
-                  label: 'Active Only',
-                  desc: 'Only products currently live on the store',
+                  value: "ACTIVE",
+                  label: "Active Only",
+                  desc: "Only products currently live on the store",
                 },
                 {
-                  value: 'INACTIVE',
-                  label: 'Inactive Only (Pending Verification)',
-                  desc: 'Only products awaiting verification or draft items',
+                  value: "INACTIVE",
+                  label: "Inactive Only (Pending Verification)",
+                  desc: "Only products awaiting verification or draft items",
                 },
               ].map((opt) => (
                 <label
                   key={opt.value}
                   className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
                     status === opt.value
-                      ? 'border-primary/40 bg-primary/5'
-                      : 'border-primary/10 hover:border-primary/20 bg-background-light/20'
+                      ? "border-primary/40 bg-primary/5"
+                      : "border-primary/10 hover:border-primary/20 bg-background-light/20"
                   }`}
                 >
                   <input
@@ -186,12 +195,16 @@ export const ExportInventoryModal: React.FC<ExportInventoryModalProps> = ({
           >
             {isExporting ? (
               <>
-                <span className="material-icons-outlined text-[18px] animate-spin">refresh</span>
+                <span className="material-icons-outlined text-[18px] animate-spin">
+                  refresh
+                </span>
                 Exporting...
               </>
             ) : (
               <>
-                <span className="material-icons-outlined text-[18px]">file_download</span>
+                <span className="material-icons-outlined text-[18px]">
+                  file_download
+                </span>
                 Download Spreadsheet
               </>
             )}
@@ -199,5 +212,5 @@ export const ExportInventoryModal: React.FC<ExportInventoryModalProps> = ({
         </div>
       </div>
     </div>
-  )
-}
+  );
+};

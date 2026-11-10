@@ -1,12 +1,12 @@
-import React, { useEffect, useState, useCallback } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import Layout from '../components/Layout'
-import toast from 'react-hot-toast'
-import { getOrderById, cancelOrder, getOrderReceiptPdf } from '../api/cart.api'
-import type { Order, OrderAddress, OrderItem } from '../api/cart.api'
-import { formatPaise } from '../utils/currency'
+import React, { useEffect, useState, useCallback } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import Layout from "../components/Layout";
+import toast from "react-hot-toast";
+import { getOrderById, cancelOrder, getOrderReceiptPdf } from "../api/cart.api";
+import type { Order, OrderAddress, OrderItem } from "../api/cart.api";
+import { formatPaise } from "../utils/currency";
 
-const statusSteps = ['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED']
+const statusSteps = ["PENDING", "PROCESSING", "SHIPPED", "DELIVERED"];
 const statusColors: Record<string, string> = {
   PENDING: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
   PROCESSING: "bg-blue-500/10 text-blue-400 border-blue-500/20",
@@ -70,44 +70,17 @@ const AddressBlock: React.FC<{
   </div>
 );
 
-// Charged unit price including GST: the selling price if the item was discounted, else the MRP
-const unitPriceWithTax = (item: OrderItem) =>
-  item.sellingPrice != null
-    ? (item.sellingPriceWithTax ?? item.price)
-    : (item.priceWithTax ?? item.price)
-
-const formatAddress = (a: OrderAddress) =>
-  [a.addressLine1, a.addressLine2, `${a.city}, ${a.state} - ${a.pincode}`].filter(Boolean)
-
-const sameAddress = (a: OrderAddress, b: OrderAddress) =>
-  a.fullName === b.fullName && a.addressLine1 === b.addressLine1 && (a.addressLine2 ?? '') === (b.addressLine2 ?? '') &&
-  a.city === b.city && a.state === b.state && a.pincode === b.pincode && a.phone === b.phone
-
-const AddressBlock: React.FC<{ title: string; icon: string; address: OrderAddress }> = ({ title, icon, address }) => (
-  <div className="flex gap-3">
-    <div className="w-9 h-9 rounded-lg bg-primary/10 border border-primary/15 flex items-center justify-center shrink-0">
-      <span className="material-icons-outlined text-primary text-lg">{icon}</span>
-    </div>
-    <div className="min-w-0 text-sm">
-      <p className="text-[11px] font-bold uppercase tracking-widest text-primary/70 mb-1">{title}</p>
-      <p className="font-semibold text-text-main-light">{address.fullName}</p>
-      {formatAddress(address).map((line) => (
-        <p key={line} className="text-text-muted">{line}</p>
-      ))}
-      <p className="text-text-muted mt-1">Phone: {address.phone}</p>
-    </div>
-  </div>
-)
-
 const OrderDetail: React.FC = () => {
-  const { orderId } = useParams<{ orderId: string }>()
-  const navigate = useNavigate()
-  const [order, setOrder] = useState<Order | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [cancelling, setCancelling] = useState(false)
-  const [showCancelConfirm, setShowCancelConfirm] = useState(false)
-  const [error, setError] = useState('')
-  const [receiptBusy, setReceiptBusy] = useState<'view' | 'download' | null>(null)
+  const { orderId } = useParams<{ orderId: string }>();
+  const navigate = useNavigate();
+  const [order, setOrder] = useState<Order | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [cancelling, setCancelling] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [error, setError] = useState("");
+  const [receiptBusy, setReceiptBusy] = useState<"view" | "download" | null>(
+    null,
+  );
 
   const fetchOrder = useCallback(async () => {
     if (!orderId) return;
@@ -141,35 +114,35 @@ const OrderDetail: React.FC = () => {
   };
 
   // The receipt endpoint needs the login token, so it is fetched as a file and opened locally.
-  const handleReceipt = async (mode: 'view' | 'download') => {
-    if (!orderId || receiptBusy) return
-    setReceiptBusy(mode)
+  const handleReceipt = async (mode: "view" | "download") => {
+    if (!orderId || receiptBusy) return;
+    setReceiptBusy(mode);
     // Open the tab right away (inside the click) so popup blockers allow it.
-    const viewTab = mode === 'view' ? window.open('', '_blank') : null
+    const viewTab = mode === "view" ? window.open("", "_blank") : null;
     try {
-      const blob = await getOrderReceiptPdf(orderId)
-      const url = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }))
-      if (mode === 'view') {
-        if (viewTab) viewTab.location.href = url
-        else window.location.assign(url)
+      const blob = await getOrderReceiptPdf(orderId);
+      const url = URL.createObjectURL(
+        new Blob([blob], { type: "application/pdf" }),
+      );
+      if (mode === "view") {
+        if (viewTab) viewTab.location.href = url;
+        else window.location.assign(url);
       } else {
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `Receipt-${order?.invoiceNumber?.replace(/\//g, '-') ?? orderId.slice(-8).toUpperCase()}.pdf`
-        document.body.appendChild(a)
-        a.click()
-        a.remove()
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `Receipt-${order?.invoiceNumber?.replace(/\//g, "-") ?? orderId.slice(-8).toUpperCase()}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
       }
-      setTimeout(() => URL.revokeObjectURL(url), 60_000)
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
     } catch {
-      viewTab?.close()
-      toast.error('Could not load the receipt. Please try again.')
+      viewTab?.close();
+      toast.error("Could not load the receipt. Please try again.");
     } finally {
-      setReceiptBusy(null)
+      setReceiptBusy(null);
     }
-  }
-
-  const formatDate = (d: string) => new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+  };
 
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString("en-IN", {
@@ -298,7 +271,12 @@ const OrderDetail: React.FC = () => {
 
           {/* Order Items */}
           <div className="bg-surface-dark rounded-2xl border border-primary/10 p-5 sm:p-6">
-            <h3 className="font-display font-bold text-text-main-light mb-4 text-sm sm:text-base">Items Ordered <span className="text-xs font-normal text-text-muted">(prices include tax)</span></h3>
+            <h3 className="font-display font-bold text-text-main-light mb-4 text-sm sm:text-base">
+              Items Ordered{" "}
+              <span className="text-xs font-normal text-text-muted">
+                (prices include tax)
+              </span>
+            </h3>
             <div className="space-y-3">
               {order.items.map((item) => (
                 <div
@@ -316,14 +294,21 @@ const OrderDetail: React.FC = () => {
                     </p>
                     <div className="flex items-center justify-between mt-1">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-xs text-text-muted">Qty: {item.quantity} × {formatPaise(unitPriceWithTax(item))}</span>
+                        <span className="text-xs text-text-muted">
+                          Qty: {item.quantity} ×{" "}
+                          {formatPaise(unitPriceWithTax(item))}
+                        </span>
                         {item.sellingPrice != null && (
                           <span className="text-xs text-text-muted line-through">
-                            {formatPaise(item.priceWithTax ?? item.basePrice ?? item.price)}
+                            {formatPaise(
+                              item.priceWithTax ?? item.basePrice ?? item.price,
+                            )}
                           </span>
                         )}
                       </div>
-                      <span className="text-sm font-bold text-primary">{formatPaise(unitPriceWithTax(item) * item.quantity)}</span>
+                      <span className="text-sm font-bold text-primary">
+                        {formatPaise(unitPriceWithTax(item) * item.quantity)}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -334,18 +319,36 @@ const OrderDetail: React.FC = () => {
           {/* Delivery Address */}
           {(order.shippingAddress || order.billingAddress) && (
             <div className="bg-surface-dark rounded-2xl border border-primary/10 p-5 sm:p-6">
-              <h3 className="font-display font-bold text-text-main-light mb-4 text-sm sm:text-base">Delivery Address</h3>
+              <h3 className="font-display font-bold text-text-main-light mb-4 text-sm sm:text-base">
+                Delivery Address
+              </h3>
               <div className="grid gap-5 sm:grid-cols-2">
                 {order.shippingAddress && (
-                  <AddressBlock title="Shipping Address" icon="local_shipping" address={order.shippingAddress} />
+                  <AddressBlock
+                    title="Shipping Address"
+                    icon="local_shipping"
+                    address={order.shippingAddress}
+                  />
                 )}
-                {order.billingAddress && !(order.shippingAddress && sameAddress(order.shippingAddress, order.billingAddress)) && (
-                  <AddressBlock title="Billing Address" icon="receipt_long" address={order.billingAddress} />
-                )}
+                {order.billingAddress &&
+                  !(
+                    order.shippingAddress &&
+                    sameAddress(order.shippingAddress, order.billingAddress)
+                  ) && (
+                    <AddressBlock
+                      title="Billing Address"
+                      icon="receipt_long"
+                      address={order.billingAddress}
+                    />
+                  )}
               </div>
-              {order.shippingAddress && order.billingAddress && sameAddress(order.shippingAddress, order.billingAddress) && (
-                <p className="text-xs text-text-muted mt-4">Billing address is the same as the shipping address.</p>
-              )}
+              {order.shippingAddress &&
+                order.billingAddress &&
+                sameAddress(order.shippingAddress, order.billingAddress) && (
+                  <p className="text-xs text-text-muted mt-4">
+                    Billing address is the same as the shipping address.
+                  </p>
+                )}
             </div>
           )}
 
@@ -388,39 +391,54 @@ const OrderDetail: React.FC = () => {
               <div className="flex justify-between pt-2">
                 <span className="text-text-muted">Payment Status</span>
                 <span
-                  className={`font-bold text-xs uppercase tracking-wider ${order.paymentStatus === "COMPLETED" ? "text-green-400" : order.paymentStatus === "FAILED" ? "text-red-400" : "text-yellow-400"}`}
+                  className={`font-bold text-xs uppercase tracking-wider ${order.paymentStatus === "COMPLETED" ? "text-green-400" : order.paymentStatus === "FAILED" ? "text-red-400" : (order.paymentStatus === "REFUNDING" || order.paymentStatus === "REFUND_FAILED") ? "text-orange-400" : order.paymentStatus === "REFUNDED" ? "text-blue-400" : "text-yellow-400"}`}
                 >
-                  {order.paymentStatus}
+                  {order.paymentStatus === "REFUNDING" ||
+                  order.paymentStatus === "REFUND_FAILED"
+                    ? "Refund in progress"
+                    : order.paymentStatus}
                 </span>
               </div>
             </div>
           </div>
 
           {/* Receipt */}
-          {order.paymentStatus === 'COMPLETED' && (
+          {order.paymentStatus === "COMPLETED" && (
             <div className="bg-surface-dark rounded-2xl border border-primary/10 p-5 sm:p-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                  <h3 className="font-display font-bold text-text-main-light text-sm sm:text-base">Receipt</h3>
+                  <h3 className="font-display font-bold text-text-main-light text-sm sm:text-base">
+                    Receipt
+                  </h3>
                   <p className="text-xs text-text-muted mt-1">
-                    {order.invoiceNumber ? `Tax invoice ${order.invoiceNumber}` : 'Tax invoice for this order'}
+                    {order.invoiceNumber
+                      ? `Tax invoice ${order.invoiceNumber}`
+                      : "Tax invoice for this order"}
                   </p>
                 </div>
                 <div className="flex gap-3">
                   <button
-                    onClick={() => handleReceipt('view')}
+                    onClick={() => handleReceipt("view")}
                     disabled={receiptBusy !== null}
                     className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl border border-primary/30 text-primary font-bold text-sm hover:bg-primary/10 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                   >
-                    <span className="material-icons-outlined text-lg">{receiptBusy === 'view' ? 'hourglass_empty' : 'visibility'}</span>
+                    <span className="material-icons-outlined text-lg">
+                      {receiptBusy === "view"
+                        ? "hourglass_empty"
+                        : "visibility"}
+                    </span>
                     View Receipt
                   </button>
                   <button
-                    onClick={() => handleReceipt('download')}
+                    onClick={() => handleReceipt("download")}
                     disabled={receiptBusy !== null}
                     className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-primary text-black font-bold text-sm hover:bg-primary-hover transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                   >
-                    <span className="material-icons-outlined text-lg">{receiptBusy === 'download' ? 'hourglass_empty' : 'download'}</span>
+                    <span className="material-icons-outlined text-lg">
+                      {receiptBusy === "download"
+                        ? "hourglass_empty"
+                        : "download"}
+                    </span>
                     Download PDF
                   </button>
                 </div>

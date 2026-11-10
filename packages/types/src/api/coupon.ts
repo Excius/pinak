@@ -41,7 +41,10 @@ const nullableNonNegativeInt = z.number().int().min(0).nullable();
 const AdminCouponBodyShape = {
   code: couponCodeSchema,
   discountType: CouponDiscountTypeSchema,
-  discountValue: z.number().int().min(1, { message: "discountValue must be >= 1" }),
+  discountValue: z
+    .number()
+    .int()
+    .min(1, { message: "discountValue must be >= 1" }),
   // NOTE: `minOderValue` mirrors the (misspelled) database column name.
   minOderValue: nullableNonNegativeInt,
   maxDiscountValue: nullableNonNegativeInt,
@@ -67,6 +70,12 @@ const AdminCouponRecordSchema = z.object({
   isDeleted: z.boolean(),
   createdAt: z.date(),
   updatedAt: z.date(),
+});
+
+const AdminCouponListItemSchema = AdminCouponRecordSchema.extend({
+  usageCount: z.number(),
+  totalDiscountGiven: z.number(),
+  uniqueUsers: z.number(),
 });
 
 const CouponIdParams = z.object({
@@ -158,7 +167,7 @@ export const CouponTypes = {
       message: z.string(),
       success: z.boolean(),
       data: z.object({
-        items: z.array(AdminCouponRecordSchema),
+        items: z.array(AdminCouponListItemSchema),
         pagination: z.object({
           total: z.number(),
           page: z.number(),
@@ -172,9 +181,15 @@ export const CouponTypes = {
     body: z.object({
       ...AdminCouponBodyShape,
       minOderValue: AdminCouponBodyShape.minOderValue.optional().default(null),
-      maxDiscountValue: AdminCouponBodyShape.maxDiscountValue.optional().default(null),
-      maxTotalUsers: AdminCouponBodyShape.maxTotalUsers.optional().default(null),
-      maxUsesPerUser: AdminCouponBodyShape.maxUsesPerUser.optional().default(null),
+      maxDiscountValue: AdminCouponBodyShape.maxDiscountValue
+        .optional()
+        .default(null),
+      maxTotalUsers: AdminCouponBodyShape.maxTotalUsers
+        .optional()
+        .default(null),
+      maxUsesPerUser: AdminCouponBodyShape.maxUsesPerUser
+        .optional()
+        .default(null),
       isActive: AdminCouponBodyShape.isActive.optional().default(true),
     }),
     params: z.object({}),

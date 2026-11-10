@@ -71,22 +71,22 @@ export interface ProductImage {
 
 // Variant from /products/:id/variants endpoint (different shape from toPublicVariant)
 export interface VariantDetail {
-  id: string
-  sku: string
-  tags?: string[]
-  price: number
-  taxAmount?: number
-  priceWithTax?: number
-  sellingPrice?: number | null
-  sellingPriceWithTax?: number | null
-  compareAtPrice?: number
-  compareAtPriceWithTax?: number | null
-  taxRate?: number
-  taxClass?: { name?: string; rate: number; overridden?: boolean } | null
-  stock: number
-  lowStockThreshold?: number
-  isActive: boolean
-  images?: ProductImage[]
+  id: string;
+  sku: string;
+  tags?: string[];
+  price: number;
+  taxAmount?: number;
+  priceWithTax?: number;
+  sellingPrice?: number | null;
+  sellingPriceWithTax?: number | null;
+  compareAtPrice?: number;
+  compareAtPriceWithTax?: number | null;
+  taxRate?: number;
+  taxClass?: { name?: string; rate: number; overridden?: boolean } | null;
+  stock: number;
+  lowStockThreshold?: number;
+  isActive: boolean;
+  images?: ProductImage[];
   optionValues?: Array<{
     optionId?: string;
     optionValueId?: string;

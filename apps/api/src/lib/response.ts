@@ -261,10 +261,7 @@ export const errorHandler = (
     anyErr &&
     (anyErr.code === "LIMIT_FILE_SIZE" || anyErr.name === "MulterError")
   ) {
-    ResponseHandler.badRequest(
-      res,
-      "Uploaded file is too large.",
-    );
+    ResponseHandler.badRequest(res, "Uploaded file is too large.");
     return;
   }
   let statusCode: number = 500;

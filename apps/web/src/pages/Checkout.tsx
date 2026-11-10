@@ -25,9 +25,17 @@ const emptyAddress: CreateAddressPayload = {
 const steps = ["Address", "Review & Pay"];
 
 const Checkout: React.FC = () => {
-  const navigate = useNavigate()
-  const { isAuthenticated, user } = useAuth()
-  const { items, subtotal, taxTotal, shippingFee, shippingRequired, grandTotal, refreshCart } = useCart()
+  const navigate = useNavigate();
+  const { isAuthenticated, user } = useAuth();
+  const {
+    items,
+    subtotal,
+    taxTotal,
+    shippingFee,
+    shippingRequired,
+    grandTotal,
+    refreshCart,
+  } = useCart();
 
   // State
   const [currentStep, setCurrentStep] = useState(0);
@@ -53,9 +61,11 @@ const Checkout: React.FC = () => {
   const [placing, setPlacing] = useState(false);
   const [orderError, setOrderError] = useState("");
 
-  const discountAmount = couponResult?.valid ? (couponResult.discountAmount || 0) : 0
+  const discountAmount = couponResult?.valid
+    ? couponResult.discountAmount || 0
+    : 0;
   // grandTotal already includes tax and shipping (computed by the API)
-  const finalTotal = Math.max(0, grandTotal - discountAmount)
+  const finalTotal = Math.max(0, grandTotal - discountAmount);
 
   // Redirect if empty cart
   useEffect(() => {
@@ -156,7 +166,8 @@ const Checkout: React.FC = () => {
       const { order, payment } = result;
 
       // Step 2: Open Razorpay checkout modal
-      const razorpayKeyId = import.meta.env.VITE_RAZORPAY_KEY_ID as string | undefined
+      const razorpayKeyId = import.meta.env.VITE_RAZORPAY_KEY_ID as
+        string | undefined;
       if (!razorpayKeyId) {
         setOrderError("Payment configuration error. Please contact support.");
         setPlacing(false);
@@ -167,15 +178,15 @@ const Checkout: React.FC = () => {
 
       const options: RazorpayOptions = {
         key: razorpayKeyId,
-        amount: payment.amount,            // Already in paise from backend
-        currency: payment.currency || 'INR',
-        name: 'Pinak',
-        description: 'Order Payment',
+        amount: payment.amount, // Already in paise from backend
+        currency: payment.currency || "INR",
+        name: "Pinak",
+        description: "Order Payment",
         // Razorpay Order ID e.g. order_Pabc12345 (the API sends it as `id`; the guide calls it `paymentId`)
         order_id: payment.paymentId ?? payment.id,
-        timeout: payment.timeout,   // Closes the modal automatically before stock reservation expires
+        timeout: payment.timeout, // Closes the modal automatically before stock reservation expires
         handler: async function (sdkResponse: any) {
-          paymentAttemptedOrSuccess = true
+          paymentAttemptedOrSuccess = true;
           // Step 3: Verify payment synchronously
           try {
             await verifyPayment({
@@ -191,9 +202,9 @@ const Checkout: React.FC = () => {
           } catch (verifyErr: any) {
             setOrderError(
               verifyErr?.response?.data?.message ||
-              'We could not confirm your payment yet. If money was deducted, your order will be confirmed automatically — check My Orders in a few minutes.'
-            )
-            toast.error('Payment verification failed')
+                "We could not confirm your payment yet. If money was deducted, your order will be confirmed automatically — check My Orders in a few minutes.",
+            );
+            toast.error("Payment verification failed");
           } finally {
             setPlacing(false);
           }
@@ -219,17 +230,17 @@ const Checkout: React.FC = () => {
           },
           confirm_close: true,
         },
-      }
+      };
 
-      const rzp = new window.Razorpay(options)
-      rzp.on('payment.failed', function (response) {
+      const rzp = new window.Razorpay(options);
+      rzp.on("payment.failed", function (response) {
         // Razorpay lets the shopper retry inside the same modal, so don't cancel the
         // order here: a later successful retry must still be able to complete it.
-        paymentAttemptedOrSuccess = true
-        setOrderError('Payment failed: ' + response.error.description)
-        toast.error('Payment failed: ' + response.error.description)
-      })
-      rzp.open()
+        paymentAttemptedOrSuccess = true;
+        setOrderError("Payment failed: " + response.error.description);
+        toast.error("Payment failed: " + response.error.description);
+      });
+      rzp.open();
     } catch (err: any) {
       setOrderError(
         err?.response?.data?.message ||
@@ -595,10 +606,17 @@ const Checkout: React.FC = () => {
                                 Qty: {item.quantity}
                               </span>
                               <div className="flex items-center gap-2">
-                                <span className="text-sm font-bold text-primary">{formatPaise(item.lineTotalWithTax ?? item.lineTotal)}</span>
+                                <span className="text-sm font-bold text-primary">
+                                  {formatPaise(
+                                    item.lineTotalWithTax ?? item.lineTotal,
+                                  )}
+                                </span>
                                 {item.sellingPrice != null && (
                                   <span className="text-xs text-text-muted line-through">
-                                    {formatPaise((item.priceWithTax ?? item.price ?? 0) * item.quantity)}
+                                    {formatPaise(
+                                      (item.priceWithTax ?? item.price ?? 0) *
+                                        item.quantity,
+                                    )}
                                   </span>
                                 )}
                               </div>
@@ -683,7 +701,9 @@ const Checkout: React.FC = () => {
                   <div className="flex justify-between">
                     <span className="text-text-muted">Shipping</span>
                     <span className="text-text-main-light font-medium">
-                      {shippingRequired ? formatPaise(shippingFee) : 'Not required'}
+                      {shippingRequired
+                        ? formatPaise(shippingFee)
+                        : "Not required"}
                     </span>
                   </div>
                   {discountAmount > 0 && (
@@ -695,8 +715,12 @@ const Checkout: React.FC = () => {
                     </div>
                   )}
                   <div className="border-t border-primary/10 pt-3 mt-3 flex justify-between items-center">
-                    <span className="font-bold text-text-main-light">Total</span>
-                    <span className="text-xl font-bold text-primary">{formatPaise(finalTotal)}</span>
+                    <span className="font-bold text-text-main-light">
+                      Total
+                    </span>
+                    <span className="text-xl font-bold text-primary">
+                      {formatPaise(finalTotal)}
+                    </span>
                   </div>
                 </div>
 

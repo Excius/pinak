@@ -75,36 +75,52 @@ export const getAllComboKitsAdmin = async () => {
   return {
     items: (resp?.data?.items || []) as AdminComboKit[],
     total: resp?.data?.pagination?.total || 0,
-  }
-}
+  };
+};
 
-export const getComboKitByIdAdmin = async (id: string): Promise<AdminComboKit> => {
-  const { data: resp } = await axiosInstance.get(`/combo-kits/admin/${id}`)
-  return resp?.data as AdminComboKit
-}
+export const getComboKitByIdAdmin = async (
+  id: string,
+): Promise<AdminComboKit> => {
+  const { data: resp } = await axiosInstance.get(`/combo-kits/admin/${id}`);
+  return resp?.data as AdminComboKit;
+};
 
-export const createComboKitAdmin = async (payload: Record<string, unknown>): Promise<AdminComboKit> => {
-  const { data: resp } = await axiosInstance.post('/combo-kits/admin', payload)
-  return resp?.data as AdminComboKit
-}
+export const createComboKitAdmin = async (
+  payload: Record<string, unknown>,
+): Promise<AdminComboKit> => {
+  const { data: resp } = await axiosInstance.post("/combo-kits/admin", payload);
+  return resp?.data as AdminComboKit;
+};
 
-export const updateComboKitAdmin = async (id: string, payload: Record<string, unknown>): Promise<AdminComboKit> => {
-  const { data: resp } = await axiosInstance.put(`/combo-kits/admin/${id}`, payload)
-  return resp?.data as AdminComboKit
-}
+export const updateComboKitAdmin = async (
+  id: string,
+  payload: Record<string, unknown>,
+): Promise<AdminComboKit> => {
+  const { data: resp } = await axiosInstance.put(
+    `/combo-kits/admin/${id}`,
+    payload,
+  );
+  return resp?.data as AdminComboKit;
+};
 
 export const softDeleteComboKitAdmin = async (id: string) => {
-  await axiosInstance.patch(`/combo-kits/admin/${id}/soft-delete`)
-}
+  await axiosInstance.patch(`/combo-kits/admin/${id}/soft-delete`);
+};
 
 export const restoreComboKitAdmin = async (id: string) => {
-  await axiosInstance.patch(`/combo-kits/admin/${id}/restore`)
-}
+  await axiosInstance.patch(`/combo-kits/admin/${id}/restore`);
+};
 
-export const updateComboKitStatusAdmin = async (id: string, isActive: boolean) => {
-  const { data: resp } = await axiosInstance.patch(`/combo-kits/admin/${id}/status`, { isActive })
-  return resp?.data as AdminComboKit
-}
+export const updateComboKitStatusAdmin = async (
+  id: string,
+  isActive: boolean,
+) => {
+  const { data: resp } = await axiosInstance.patch(
+    `/combo-kits/admin/${id}/status`,
+    { isActive },
+  );
+  return resp?.data as AdminComboKit;
+};
 
 // ── Combo Kit Items CRUD ─────────────────────────────────────────────────────
 
@@ -116,22 +132,31 @@ export const addComboKitItemAdmin = async (
     isRequired?: boolean;
   },
 ): Promise<ComboKitItem> => {
-  const { data: resp } = await axiosInstance.post(`/combo-kits/admin/${comboKitId}/items`, payload)
-  return resp?.data as ComboKitItem
-}
+  const { data: resp } = await axiosInstance.post(
+    `/combo-kits/admin/${comboKitId}/items`,
+    payload,
+  );
+  return resp?.data as ComboKitItem;
+};
 
 export const updateComboKitItemAdmin = async (
   comboKitId: string,
   itemId: string,
   payload: { quantity?: number; isRequired?: boolean; sortOrder?: number },
 ): Promise<ComboKitItem> => {
-  const { data: resp } = await axiosInstance.put(`/combo-kits/admin/${comboKitId}/items/${itemId}`, payload)
-  return resp?.data as ComboKitItem
-}
+  const { data: resp } = await axiosInstance.put(
+    `/combo-kits/admin/${comboKitId}/items/${itemId}`,
+    payload,
+  );
+  return resp?.data as ComboKitItem;
+};
 
-export const removeComboKitItemAdmin = async (comboKitId: string, itemId: string) => {
-  await axiosInstance.delete(`/combo-kits/admin/${comboKitId}/items/${itemId}`)
-}
+export const removeComboKitItemAdmin = async (
+  comboKitId: string,
+  itemId: string,
+) => {
+  await axiosInstance.delete(`/combo-kits/admin/${comboKitId}/items/${itemId}`);
+};
 
 // ── Combo Kit Images ───────────────────────────────────────────────────
 

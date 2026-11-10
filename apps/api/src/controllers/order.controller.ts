@@ -66,7 +66,7 @@ export class OrderController {
         | "CANCELLED"
         | undefined,
       paymentStatus: paymentStatus as
-        "PENDING" | "COMPLETED" | "FAILED" | undefined,
+        "PENDING" | "COMPLETED" | "FAILED" | "REFUNDING" | "REFUNDED" | "REFUND_FAILED" | undefined,
     });
     ResponseHandler.success(res, result, "Orders fetched successfully");
   };
@@ -113,7 +113,7 @@ export class OrderController {
         | "CANCELLED"
         | undefined,
       paymentStatus: paymentStatus as
-        "PENDING" | "COMPLETED" | "FAILED" | undefined,
+        "PENDING" | "COMPLETED" | "FAILED" | "REFUNDING" | "REFUNDED" | "REFUND_FAILED" | undefined,
     });
     ResponseHandler.success(res, result, "Orders fetched successfully");
   };
@@ -130,7 +130,7 @@ export class OrderController {
   updatePaymentStatusAdmin = async (req: Request, res: Response) => {
     const { id } = req.params as { id: string };
     const { paymentStatus } = req.body as {
-      paymentStatus: "PENDING" | "COMPLETED" | "FAILED";
+      paymentStatus: "PENDING" | "COMPLETED" | "FAILED" | "REFUNDING" | "REFUNDED" | "REFUND_FAILED";
     };
     const order = await this.orderService.updatePaymentStatusAdmin(
       id,

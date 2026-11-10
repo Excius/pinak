@@ -5,8 +5,21 @@ import toast from "react-hot-toast";
 import { formatPaise } from "../utils/currency";
 
 const CartDrawer: React.FC = () => {
-  const navigate = useNavigate()
-  const { items, itemCount, subtotal, taxTotal, shippingFee, shippingRequired, grandTotal, isOpen, closeCart, updateQuantity, removeItem, clearCart } = useCart()
+  const navigate = useNavigate();
+  const {
+    items,
+    itemCount,
+    subtotal,
+    taxTotal,
+    shippingFee,
+    shippingRequired,
+    grandTotal,
+    isOpen,
+    closeCart,
+    updateQuantity,
+    removeItem,
+    clearCart,
+  } = useCart();
 
   if (!isOpen) return null;
 
@@ -214,12 +227,14 @@ const CartDrawer: React.FC = () => {
             <div className="flex justify-between items-center text-sm">
               <span className="text-text-muted font-medium">Shipping</span>
               <span className="font-bold text-text-main-light">
-                {shippingRequired ? formatPaise(shippingFee) : 'Not required'}
+                {shippingRequired ? formatPaise(shippingFee) : "Not required"}
               </span>
             </div>
             <div className="flex justify-between items-center pt-2 border-t border-primary/5">
               <span className="text-text-muted font-medium">Total</span>
-              <span className="text-xl font-bold text-primary">{formatPaise(grandTotal)}</span>
+              <span className="text-xl font-bold text-primary">
+                {formatPaise(grandTotal)}
+              </span>
             </div>
             <button
               className="w-full bg-primary hover:bg-primary-hover text-black py-3.5 rounded-xl font-bold text-sm uppercase tracking-wider transition-all glow-gold cursor-pointer active:scale-[0.98] mt-2"

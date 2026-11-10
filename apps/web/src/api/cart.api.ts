@@ -65,21 +65,21 @@ export interface CartItem {
 }
 
 export interface Cart {
-  id: string
-  userId: string
-  items: CartItem[]
-  totalItems: number
-  totalQuantity: number
-  subtotal: number
-  total: number
-  taxTotal?: number
-  totalWithTax?: number
+  id: string;
+  userId: string;
+  items: CartItem[];
+  totalItems: number;
+  totalQuantity: number;
+  subtotal: number;
+  total: number;
+  taxTotal?: number;
+  totalWithTax?: number;
   /** Shipping charge in paise (0 when nothing needs shipping). */
-  shippingFee?: number
+  shippingFee?: number;
   /** True if any item requires physical shipping. */
-  shippingRequired?: boolean
+  shippingRequired?: boolean;
   /** Final total in paise: totalWithTax + shippingFee. */
-  grandTotal?: number
+  grandTotal?: number;
 }
 
 // ── Cart API ───────────────────────────────────────────────────────────
@@ -140,16 +140,6 @@ export interface OrderAddress {
   phone: string;
 }
 
-export interface OrderAddress {
-  fullName: string
-  addressLine1: string
-  addressLine2?: string | null
-  city: string
-  state: string
-  pincode: string
-  phone: string
-}
-
 export interface OrderItem {
   id: string;
   productId: string | null;
@@ -173,24 +163,24 @@ export interface OrderItem {
 }
 
 export interface Order {
-  id: string
-  userId: string
-  status: 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED'
-  paymentStatus: 'PENDING' | 'COMPLETED' | 'FAILED'
-  subtotalAmount: number
-  taxAmount: number
-  discountAmount: number
-  shippingAmount: number
-  totalAmount: number
-  items: OrderItem[]
-  totalItems: number
-  couponCode?: string | null
-  invoiceNumber?: string | null
-  invoiceDate?: string | null
-  shippingAddress?: OrderAddress | null
-  billingAddress?: OrderAddress | null
-  createdAt: string
-  updatedAt: string
+  id: string;
+  userId: string;
+  status: "PENDING" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED";
+  paymentStatus: "PENDING" | "COMPLETED" | "FAILED" | "REFUNDING" | "REFUNDED" | "REFUND_FAILED";
+  subtotalAmount: number;
+  taxAmount: number;
+  discountAmount: number;
+  shippingAmount: number;
+  totalAmount: number;
+  items: OrderItem[];
+  totalItems: number;
+  couponCode?: string | null;
+  invoiceNumber?: string | null;
+  invoiceDate?: string | null;
+  shippingAddress?: OrderAddress | null;
+  billingAddress?: OrderAddress | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // ── Order API ──────────────────────────────────────────────────────────
@@ -228,12 +218,6 @@ export const getOrderReceiptPdf = async (orderId: string): Promise<Blob> => {
   });
   return data as Blob;
 };
-
-/** Receipt / tax invoice as a PDF (requires auth, so it is fetched as a blob). */
-export const getOrderReceiptPdf = async (orderId: string): Promise<Blob> => {
-  const { data } = await axiosInstance.get(`/orders/${orderId}/invoice/pdf`, { responseType: 'blob' })
-  return data as Blob
-}
 
 // ── Payment Verification ──────────────────────────────────────────────
 

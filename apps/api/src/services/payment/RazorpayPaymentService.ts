@@ -65,7 +65,10 @@ export class RazorpayPaymentService implements IPaymentGateway {
   async verifyPayment(payload: PaymentWebhookPayload): Promise<boolean> {
     // Webhook callers should use verifyWebhookSignature with the raw body. This
     // remains for the IPaymentGateway contract: `orderId` carries the raw body.
-    return this.verifyWebhookSignature(payload.orderId, payload.signature ?? "");
+    return this.verifyWebhookSignature(
+      payload.orderId,
+      payload.signature ?? "",
+    );
   }
 
   /**
@@ -97,5 +100,13 @@ export class RazorpayPaymentService implements IPaymentGateway {
     if (reason) refundData.notes = { reason };
 
     return this.razorpay.payments.refund(paymentId, refundData);
+  }
+
+  async fetchPaymentRefunds(paymentId: string): Promise<any> {
+    return this.razorpay.payments.fetchMultipleRefund(paymentId);
+  }
+
+  async fetchRefund(refundId: string): Promise<any> {
+    return this.razorpay.refunds.fetch(refundId);
   }
 }

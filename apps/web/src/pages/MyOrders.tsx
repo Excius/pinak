@@ -28,6 +28,9 @@ const paymentColors: Record<string, string> = {
   PENDING: "text-yellow-400",
   COMPLETED: "text-green-400",
   FAILED: "text-red-400",
+  REFUNDING: "text-orange-400",
+  REFUNDED: "text-blue-400",
+  REFUND_FAILED: "text-orange-400",
 };
 
 const MyOrders: React.FC = () => {
@@ -195,7 +198,13 @@ const MyOrders: React.FC = () => {
                             ? "💳 Paid"
                             : order.paymentStatus === "FAILED"
                               ? "❌ Failed"
-                              : "⏳ Pending"}
+                              : order.paymentStatus === "REFUNDING"
+                                ? "🔄 Refund in progress"
+                                : order.paymentStatus === "REFUNDED"
+                                  ? "✅ Refunded"
+                                  : order.paymentStatus === "REFUND_FAILED"
+                                    ? "🔄 Refund in progress"
+                                    : "⏳ Pending"}
                         </span>
                       </div>
                     </div>
