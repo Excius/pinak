@@ -16,6 +16,8 @@ export interface CartVariant {
   price: number
   taxAmount?: number
   priceWithTax?: number
+  sellingPrice?: number | null
+  sellingPriceWithTax?: number | null
   isActive: boolean
   image: CartVariantImage | null
   optionValues: { optionName: string; valueName: string }[]
@@ -43,6 +45,10 @@ export interface CartItem {
   quantity: number
   unitPrice: number
   unitPriceWithTax?: number
+  price?: number
+  priceWithTax?: number
+  sellingPrice?: number | null
+  sellingPriceWithTax?: number | null
   taxAmount?: number
   lineTotal: number
   lineTotalWithTax?: number
@@ -113,6 +119,17 @@ export interface OrderItem {
   price: number
   quantity: number
   lineTotal: number
+  basePrice?: number
+  priceWithTax?: number
+  sellingPrice?: number | null
+  sellingPriceWithTax?: number | null
+  variantDetails?: {
+    price: number
+    basePrice: number
+    priceWithTax: number
+    sellingPrice: number | null
+    sellingPriceWithTax: number | null
+  }
 }
 
 export interface Order {

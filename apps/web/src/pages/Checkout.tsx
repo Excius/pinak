@@ -409,7 +409,14 @@ const Checkout: React.FC = () => {
                             {getItemVariant(item) && <p className="text-[11px] text-text-muted mt-0.5">{getItemVariant(item)}</p>}
                             <div className="flex items-center justify-between mt-1">
                               <span className="text-xs text-text-muted">Qty: {item.quantity}</span>
-                              <span className="text-sm font-bold text-primary">{formatPaise(item.lineTotal)}</span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-bold text-primary">{formatPaise(item.lineTotal)}</span>
+                                {item.price && item.sellingPrice != null && (
+                                  <span className="text-xs text-text-muted line-through">
+                                    {formatPaise(item.price * item.quantity)}
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -472,7 +479,7 @@ const Checkout: React.FC = () => {
                   )}
                   <div className="flex justify-between">
                     <span className="text-text-muted">Shipping</span>
-                    <span className="text-green-400 font-medium text-xs">FREE</span>
+                    <span className="text-text-main-light font-medium">100</span>
                   </div>
                   {discountAmount > 0 && (
                     <div className="flex justify-between text-green-400">
@@ -482,7 +489,7 @@ const Checkout: React.FC = () => {
                   )}
                   <div className="border-t border-primary/10 pt-3 mt-3 flex justify-between items-center">
                     <span className="font-bold text-text-main-light">Total</span>
-                    <span className="text-xl font-bold text-primary">{formatPaise(finalTotal)}</span>
+                    <span className="text-xl font-bold text-primary">{formatPaise(finalTotal+10000)}</span>
                   </div>
                 </div>
 

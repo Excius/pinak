@@ -6,7 +6,10 @@ import {
   updateProductAdmin,
   updateProductVariantAdmin,
   createProductVariantAdmin,
+  deleteProductVariantAdmin,
   addProductImageAdmin,
+  deleteProductImageAdmin,
+  setPrimaryImageAdmin,
   setProductCategoriesAdmin,
   getRelatedProductsAdmin,
   addRelatedProductAdmin,
@@ -179,12 +182,25 @@ const ProductForm = () => {
 
   const handleUpdateVariant = async (variant: AdminProductVariant) => {
     try {
+      // Validate sellingPrice
+      if (variant.sellingPrice != null && variant.sellingPrice !== undefined) {
+        if (variant.sellingPrice < 0) {
+          setSaveMessage({ type: 'error', text: 'Selling price must be >= 0' })
+          return
+        }
+        if (variant.sellingPrice > variant.price) {
+          setSaveMessage({ type: 'error', text: 'Selling price cannot be higher than the main MRP price' })
+          return
+        }
+      }
+
       if (!variant.id) {
         // Create new variant
         if (!id) return; // Need product ID
         const created = await createProductVariantAdmin(id, {
           sku: variant.sku,
           price: variant.price,
+          sellingPrice: variant.sellingPrice !== undefined ? variant.sellingPrice : null,
           stock: variant.stock,
           optionValueIds: variant.optionValueIds
         })
@@ -196,6 +212,7 @@ const ProductForm = () => {
         // Update existing variant
         const updated = await updateProductVariantAdmin(variant.id, {
           price: variant.price,
+          sellingPrice: variant.sellingPrice !== undefined ? variant.sellingPrice : null,
           stock: variant.stock,
           sku: variant.sku,
           optionValueIds: variant.optionValueIds
@@ -206,8 +223,24 @@ const ProductForm = () => {
         }))
       }
       setEditingVariant(null)
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to save variant', err)
+      const msg = err?.response?.data?.message || err?.message || 'Failed to save variant'
+      setSaveMessage({ type: 'error', text: msg })
+    }
+  }
+
+  const handleDeleteVariant = async (variantId: string) => {
+    if (!window.confirm('Are you sure you want to delete this variant?')) return
+    try {
+      await deleteProductVariantAdmin(variantId)
+      setFormData(prev => ({
+        ...prev,
+        variants: prev.variants?.filter(v => v.id !== variantId)
+      }))
+    } catch (err) {
+      console.error('Failed to delete variant', err)
+      setSaveMessage({ type: 'error', text: 'Failed to delete variant.' })
     }
   }
 
@@ -230,6 +263,39 @@ const ProductForm = () => {
       }
     } catch (err) {
       console.error('Image upload failed', err)
+    }
+  }
+
+  const handleDeleteImage = async (imageId: string, variantId: string) => {
+    if (!window.confirm('Are you sure you want to delete this image?')) return
+    try {
+      await deleteProductImageAdmin(imageId)
+      if (id) {
+        const product = await getProductByIdAdmin(id)
+        setFormData(product)
+        if (editingVariant?.id === variantId) {
+          const refreshedVariant = product.variants?.find(v => v.id === variantId)
+          if (refreshedVariant) setEditingVariant(refreshedVariant)
+        }
+      }
+    } catch (err) {
+      console.error('Image delete failed', err)
+    }
+  }
+
+  const handleSetPrimaryImage = async (imageId: string, variantId: string) => {
+    try {
+      await setPrimaryImageAdmin(imageId)
+      if (id) {
+        const product = await getProductByIdAdmin(id)
+        setFormData(product)
+        if (editingVariant?.id === variantId) {
+          const refreshedVariant = product.variants?.find(v => v.id === variantId)
+          if (refreshedVariant) setEditingVariant(refreshedVariant)
+        }
+      }
+    } catch (err) {
+      console.error('Set primary image failed', err)
     }
   }
 
@@ -314,9 +380,9 @@ const ProductForm = () => {
 
       {/* â”€â”€ Variant Edit Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {editingVariant && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setEditingVariant(null)} />
-          <div className="relative bg-background-light border border-primary/20 rounded-2xl p-8 w-full max-w-md shadow-2xl">
+          <div className="relative bg-background-light border border-primary/20 rounded-2xl p-8 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl">
             <h3 className="text-lg font-bold text-text-main-light mb-4">
               {editingVariant.id ? `Edit Variant: ${editingVariant.sku}` : 'Add New Variant'}
             </h3>
@@ -330,19 +396,36 @@ const ProductForm = () => {
                   className="w-full bg-background-main border border-primary/20 rounded-xl px-4 py-3 text-text-main-light outline-none focus:border-primary"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-text-muted uppercase">Price (â‚¹)</label>
+                  <label className="text-xs font-bold text-text-muted uppercase">Price / MRP (₹) *</label>
                   <input
                     type="number"
                     value={editingVariant.price !== undefined ? editingVariant.price / 100 : ''}
                     onChange={e => setEditingVariant({ ...editingVariant, price: Math.round(Number(e.target.value) * 100) })}
                     className="w-full bg-background-main border border-primary/20 rounded-xl px-4 py-3 text-text-main-light outline-none focus:border-primary"
-                    placeholder="Enter price in Rupees"
+                    placeholder="MRP (₹)"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-text-muted uppercase">Stock</label>
+                  <label className="text-xs font-bold text-text-muted uppercase">Selling Price (₹)</label>
+                  <input
+                    type="number"
+                    value={editingVariant.sellingPrice != null ? editingVariant.sellingPrice / 100 : ''}
+                    onChange={e => {
+                      const val = e.target.value.trim()
+                      setEditingVariant({
+                        ...editingVariant,
+                        sellingPrice: val === '' ? null : Math.round(Number(val) * 100)
+                      })
+                    }}
+                    className="w-full bg-background-main border border-primary/20 rounded-xl px-4 py-3 text-text-main-light outline-none focus:border-primary"
+                    placeholder="Optional (Discounted)"
+                  />
+                  <p className="text-[10px] text-text-muted">Empty to remove discount</p>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-text-muted uppercase">Stock *</label>
                   <input
                     type="number"
                     value={editingVariant.stock}
@@ -402,10 +485,35 @@ const ProductForm = () => {
                       />
                     </label>
                     {editingVariant.images?.length > 0 && (
-                      <div className="flex gap-2 overflow-x-auto py-2">
+                      <div className="grid grid-cols-3 gap-3 py-2">
                         {editingVariant.images.map(img => (
-                          <div key={img.id} className="w-14 h-14 rounded-lg border border-primary/10 overflow-hidden shrink-0">
-                            <img src={img.url} className="w-full h-full object-cover" alt="" />
+                          <div key={img.id} className={`relative group rounded-xl border-2 overflow-hidden ${img.isPrimary ? 'border-primary shadow-[0_0_8px_rgba(212,175,55,0.3)]' : 'border-primary/10'}`}>
+                            <div className="w-full aspect-square">
+                              <img src={img.url} className="w-full h-full object-cover" alt="" />
+                            </div>
+                            {img.isPrimary && (
+                              <div className="absolute top-1.5 left-1.5 bg-primary text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider">
+                                Primary
+                              </div>
+                            )}
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                              {!img.isPrimary && (
+                                <button
+                                  onClick={() => handleSetPrimaryImage(img.id, editingVariant.id)}
+                                  className="p-1.5 bg-primary/90 text-white rounded-lg hover:bg-primary transition-colors"
+                                  title="Set as primary image"
+                                >
+                                  <span className="material-icons-outlined text-sm">star</span>
+                                </button>
+                              )}
+                              <button
+                                onClick={() => handleDeleteImage(img.id, editingVariant.id)}
+                                className="p-1.5 bg-red-500/90 text-white rounded-lg hover:bg-red-500 transition-colors"
+                                title="Delete image"
+                              >
+                                <span className="material-icons-outlined text-sm">delete</span>
+                              </button>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -575,7 +683,7 @@ const ProductForm = () => {
                   <span className="text-xs text-text-muted">{(formData.variants?.length || 0)} variant{(formData.variants?.length !== 1) ? 's' : ''}</span>
                 </div>
                 <button
-                  onClick={() => openEditVariant({ id: '', sku: '', price: 0, stock: 0, compareAtPrice: null, isActive: true, lowStockThreshold: null, optionValues: [], images: [], optionValueIds: [] })}
+                  onClick={() => openEditVariant({ id: '', sku: '', price: 0, sellingPrice: null, stock: 0, compareAtPrice: null, isActive: true, lowStockThreshold: null, optionValues: [], images: [], optionValueIds: [] })}
                   className="px-3 py-1.5 bg-primary/10 text-primary text-xs font-bold rounded-lg hover:bg-primary/20 transition-colors"
                 >
                   + Add Variant
@@ -607,17 +715,34 @@ const ProductForm = () => {
                       </div>
                       <div className="flex items-center gap-6">
                         <div className="text-right">
-                          <p className="text-sm font-bold text-primary">{formatPaise(v.price ?? 0)}</p>
+                          {v.sellingPrice != null ? (
+                            <div>
+                              <p className="text-sm font-bold text-primary">{formatPaise(v.sellingPrice)}</p>
+                              <p className="text-[10px] text-text-muted line-through">{formatPaise(v.price ?? 0)}</p>
+                            </div>
+                          ) : (
+                            <p className="text-sm font-bold text-primary">{formatPaise(v.price ?? 0)}</p>
+                          )}
                           <p className="text-[10px] text-text-muted">
                             Stock: <span className={v.stock < 10 ? 'text-red-400' : 'text-green-400'}>{v.stock}</span>
                           </p>
                         </div>
-                        <button
-                          onClick={() => openEditVariant(v)}
-                          className="p-2 text-text-muted hover:text-primary transition-colors cursor-pointer rounded-lg hover:bg-primary/5"
-                        >
-                          <span className="material-icons-outlined text-xl">settings</span>
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => openEditVariant(v)}
+                            className="p-2 text-text-muted hover:text-primary transition-colors cursor-pointer rounded-lg hover:bg-primary/5"
+                            title="Edit Variant"
+                          >
+                            <span className="material-icons-outlined text-xl">settings</span>
+                          </button>
+                          <button
+                            onClick={() => handleDeleteVariant(v.id)}
+                            className="p-2 text-text-muted hover:text-red-500 transition-colors cursor-pointer rounded-lg hover:bg-red-500/5"
+                            title="Delete Variant"
+                          >
+                            <span className="material-icons-outlined text-xl">delete</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}

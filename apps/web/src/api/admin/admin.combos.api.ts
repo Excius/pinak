@@ -8,12 +8,17 @@ export interface ComboKitItem {
   quantity: number
   sortOrder: number
   originalPrice: number | null
+  originalPriceWithTax?: number | null
   discountedPrice: number | null
+  discountedPriceWithTax?: number | null
   isRequired: boolean
   productVariant?: {
     id: string
     sku: string
     price: number
+    priceWithTax?: number
+    sellingPrice?: number | null
+    sellingPriceWithTax?: number | null
     stock: number
     imageUrl: string | null
     product?: {
@@ -22,6 +27,18 @@ export interface ComboKitItem {
       frontImageUrl: string | null
     }
   } | null
+}
+
+export interface AdminComboKitImage {
+  id: string
+  comboKitId: string
+  url: string
+  altText: string | null
+  isPrimary: boolean
+  sortOrder: number
+  isDeleted?: boolean
+  createdAt?: string
+  updatedAt?: string
 }
 
 export interface AdminComboKit {
@@ -36,6 +53,7 @@ export interface AdminComboKit {
   discountValue: number | null
   tags: string[]
   imageUrl: string | null
+  images?: AdminComboKitImage[]
   viewCount: number
   purchasedCount: number
   isActive: boolean
@@ -111,27 +129,29 @@ export const removeComboKitItemAdmin = async (comboKitId: string, itemId: string
   await axiosInstance.delete(`/combo-kits/${comboKitId}/items/${itemId}`)
 }
 
-// ── Combo Kit Images CRUD ─────────────────────────────────────────────────
+// ── Combo Kit Images ───────────────────────────────────────────────────
 
-export interface AdminComboKitImage {
-  id: string
-  comboKitId: string
-  url: string
-  altText: string | null
-  isPrimary: boolean
-  sortOrder: number
-  createdAt: string
-  updatedAt: string
-}
-
-export const getAllComboKitImagesAdmin = async (comboKitId: string): Promise<AdminComboKitImage[]> => {
+export const getComboKitImagesAdmin = async (comboKitId: string): Promise<AdminComboKitImage[]> => {
   const { data: resp } = await axiosInstance.get(`/combo-kits/admin/${comboKitId}/images`)
   return resp?.data || []
 }
 
-export const addComboKitImageAdmin = async (comboKitId: string, formData: FormData): Promise<AdminComboKitImage> => {
-  const { data: resp } = await axiosInstance.post(`/combo-kits/admin/${comboKitId}/images`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
+export const addComboKitImageAdmin = async (
+  comboKitId: string,
+  payload: FormData | { file: File; altText?: string; isPrimary?: boolean }
+): Promise<AdminComboKitImage> => {
+  let body: FormData
+  if (typeof FormData !== 'undefined' && payload instanceof FormData) {
+    body = payload
+  } else {
+    body = new FormData()
+    const p = payload as { file: File; altText?: string; isPrimary?: boolean }
+    body.append('image', p.file)
+    if (p.altText) body.append('altText', p.altText)
+    if (p.isPrimary !== undefined) body.append('isPrimary', String(p.isPrimary))
+  }
+  const { data: resp } = await axiosInstance.post(`/combo-kits/admin/${comboKitId}/images`, body, {
+    headers: { 'Content-Type': 'multipart/form-data' }
   })
   return resp?.data
 }
@@ -142,8 +162,7 @@ export const setPrimaryComboKitImageAdmin = async (imageId: string) => {
 }
 
 export const deleteComboKitImageAdmin = async (imageId: string) => {
-  const { data: resp } = await axiosInstance.delete(`/combo-kits/admin/images/${imageId}`)
-  return resp?.data
+  await axiosInstance.delete(`/combo-kits/admin/images/${imageId}`)
 }
 
 // ── Featured Sections ─────────────────────────────────────────────────────
@@ -156,13 +175,8 @@ export interface AdminFeaturedSection {
   productCount?: number
   createdAt?: string
   updatedAt?: string
-  featuredSectionImages?: Array<{
-    id?: string
-    url: string
-    altText?: string | null
-    isPrimary?: boolean
-    sortOrder?: number
-  }>
+  images?: AdminFeaturedSectionImage[]
+  featuredSectionImages?: AdminFeaturedSectionImage[]
 }
 
 export const getAllFeaturedSectionsAdmin = async (): Promise<AdminFeaturedSection[]> => {

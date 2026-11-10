@@ -92,7 +92,17 @@ const OrderConfirmation: React.FC = () => {
                   <div key={item.id} className="flex justify-between items-center py-2">
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-text-main-light truncate">{item.productName}</p>
-                      <p className="text-xs text-text-muted mt-0.5">Quantity: {item.quantity}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <p className="text-xs text-text-muted">Quantity: {item.quantity}</p>
+                        {item.price && (
+                          <span className="text-xs text-text-muted">× {formatPaise(item.price)}</span>
+                        )}
+                        {item.basePrice && item.basePrice > item.price && (
+                          <span className="text-xs text-text-muted line-through">
+                            {formatPaise(item.priceWithTax ?? item.basePrice)}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <p className="text-sm font-bold text-primary font-mono ml-4">
                       {formatPaise(item.lineTotal)}

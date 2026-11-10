@@ -148,7 +148,14 @@ const OrderDetail: React.FC = () => {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-text-main-light truncate">{item.productName}</p>
                     <div className="flex items-center justify-between mt-1">
-                      <span className="text-xs text-text-muted">Qty: {item.quantity} × {formatPaise(item.price)}</span>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-xs text-text-muted">Qty: {item.quantity} × {formatPaise(item.price)}</span>
+                        {item.basePrice && item.basePrice > item.price && (
+                          <span className="text-xs text-text-muted line-through">
+                            {formatPaise(item.priceWithTax ?? item.basePrice)}
+                          </span>
+                        )}
+                      </div>
                       <span className="text-sm font-bold text-primary">{formatPaise(item.lineTotal)}</span>
                     </div>
                   </div>

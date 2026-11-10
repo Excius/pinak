@@ -35,6 +35,7 @@ const FeaturedSectionList = () => {
   const [form, setForm] = useState<FormData>(emptyForm)
   const [images, setImages] = useState<AdminFeaturedSectionImage[]>([])
   const [uploadingImage, setUploadingImage] = useState(false)
+  const [imageError, setImageError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
 
@@ -55,25 +56,28 @@ const FeaturedSectionList = () => {
     setEditing(null)
     setForm(emptyForm)
     setImages([])
+    setImageError(null)
     setShowModal(true)
   }
 
   const openEdit = async (section: AdminFeaturedSection) => {
     setEditing(section)
     setForm({ title: section.title, type: section.type, priority: section.priority })
+    setImageError(null)
+    setImages(section.images || section.featuredSectionImages || [])
     setShowModal(true)
     try {
       const imgs = await getAllFeaturedSectionImagesAdmin(section.id)
       setImages(imgs)
     } catch (err) {
       console.error('Failed to fetch section images', err)
-      setImages([])
     }
   }
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !editing) return
+    setImageError(null)
     const data = new FormData()
     data.append('image', file)
     data.append('isPrimary', images.length === 0 ? 'true' : 'false')
@@ -82,8 +86,15 @@ const FeaturedSectionList = () => {
       const newImg = await addFeaturedSectionImageAdmin(editing.id, data)
       setImages(prev => [...prev, newImg])
       await fetchSections()
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to upload image', err)
+      const errorData = err?.response?.data
+      let msg = errorData?.message || 'Failed to upload image. Please try again.'
+      if (Array.isArray(errorData?.errors) && errorData.errors.length > 0) {
+        const details = errorData.errors.map((e: any) => `${e.field ? e.field + ': ' : ''}${e.message}`).join(', ')
+        msg = `${msg}: ${details}`
+      }
+      setImageError(msg)
     } finally {
       setUploadingImage(false)
       e.target.value = ''
@@ -101,6 +112,7 @@ const FeaturedSectionList = () => {
   }
 
   const handleDeleteImage = async (imgId: string) => {
+    if (!window.confirm('Are you sure you want to delete this image?')) return
     try {
       await deleteFeaturedSectionImageAdmin(imgId)
       setImages(prev => prev.filter(img => img.id !== imgId))
@@ -227,15 +239,43 @@ const FeaturedSectionList = () => {
                   )}
                 </div>
 
+                {imageError && (
+                  <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-xs text-red-400 flex items-center gap-2">
+                    <span className="material-icons-outlined text-base">error_outline</span>
+                    <span>{imageError}</span>
+                  </div>
+                )}
+
                 {!editing ? (
                   <p className="text-xs text-text-muted bg-background-main/50 p-3 rounded-xl border border-primary/10">
                     Save section first to upload and manage its banner images in S3.
                   </p>
                 ) : images.length === 0 ? (
-                  <div className="text-center py-6 border-2 border-dashed border-primary/20 rounded-xl bg-background-main/30">
-                    <span className="material-icons-outlined text-2xl text-primary/30 mb-1 block">image</span>
-                    <p className="text-xs text-text-muted">No images uploaded to S3 yet.</p>
-                  </div>
+                  <label className="flex flex-col items-center justify-center gap-2 p-6 bg-background-main/50 border-2 border-dashed border-primary/20 rounded-xl cursor-pointer hover:border-primary/50 hover:bg-primary/[0.02] transition-all group">
+                    {uploadingImage ? (
+                      <div className="flex items-center gap-2 text-primary text-sm font-medium">
+                        <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                        <span>Uploading to S3...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                          <span className="material-icons-outlined text-xl">cloud_upload</span>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-xs font-bold text-text-main-light">Click to upload section image</p>
+                          <p className="text-[11px] text-text-muted mt-0.5">PNG, JPG, WebP up to 5MB</p>
+                        </div>
+                      </>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={uploadingImage}
+                      onChange={handleImageUpload}
+                    />
+                  </label>
                 ) : (
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5 max-h-48 overflow-y-auto p-1">
                     {images.map(img => (
@@ -339,15 +379,15 @@ const FeaturedSectionList = () => {
                   key={section.id}
                   className="bg-background-light rounded-2xl border border-primary/10 p-6 hover:border-primary/30 transition-all group"
                 >
-                  {section.featuredSectionImages && section.featuredSectionImages.length > 0 && (
+                  {(section.images?.length || section.featuredSectionImages?.length) ? (
                     <div className="w-full h-28 rounded-xl overflow-hidden mb-4 border border-primary/10 bg-background-main">
                       <img
-                        src={section.featuredSectionImages.find(i => i.isPrimary)?.url || section.featuredSectionImages[0]?.url}
+                        src={(section.images || section.featuredSectionImages)?.find(i => i.isPrimary)?.url || (section.images || section.featuredSectionImages)?.[0]?.url}
                         alt={section.title}
                         className="w-full h-full object-cover"
                       />
                     </div>
-                  )}
+                  ) : null}
 
                   <div className="flex items-start justify-between mb-4">
                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center border ${meta.color}`}>

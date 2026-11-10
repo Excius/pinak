@@ -19,10 +19,11 @@ interface OptionFormData {
 interface ValueFormData {
   value: string
   sortOrder: number
+  swatchColorHex: string | null
 }
 
 const emptyOptionForm: OptionFormData = { name: '', sortOrder: 0 }
-const emptyValueForm: ValueFormData = { value: '', sortOrder: 0 }
+const emptyValueForm: ValueFormData = { value: '', sortOrder: 0, swatchColorHex: null }
 
 // ── Component ───────────────────────────────────────────────────────────
 
@@ -118,7 +119,11 @@ const OptionList = () => {
   const openEditValue = (optionId: string, val: AdminOptionValue) => {
     setValueParentId(optionId)
     setEditingValue(val)
-    setValueForm({ value: val.value, sortOrder: val.sortOrder })
+    setValueForm({
+      value: val.value,
+      sortOrder: val.sortOrder,
+      swatchColorHex: val.swatchColorHex ?? null,
+    })
     setShowValueModal(true)
   }
 
@@ -126,10 +131,15 @@ const OptionList = () => {
     if (!valueForm.value.trim() || !valueParentId) return
     setSavingValue(true)
     try {
+      const payload = {
+        value: valueForm.value.trim(),
+        sortOrder: valueForm.sortOrder,
+        swatchColorHex: valueForm.swatchColorHex?.trim() || null,
+      }
       if (editingValue) {
-        await updateOptionValue(editingValue.id, valueForm)
+        await updateOptionValue(editingValue.id, payload)
       } else {
-        await createOptionValue(valueParentId, valueForm)
+        await createOptionValue(valueParentId, payload)
       }
       setShowValueModal(false)
       await fetchOptions()
@@ -233,14 +243,80 @@ const OptionList = () => {
             </h3>
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-xs font-bold text-text-muted uppercase">Value *</label>
+                <label className="text-xs font-bold text-text-muted uppercase">Value Name *</label>
                 <input
                   value={valueForm.value}
                   onChange={e => setValueForm(prev => ({ ...prev, value: e.target.value }))}
-                  placeholder="e.g. Small, Red, 30ml"
+                  placeholder="e.g. Rose Nude, 30ml, Small"
                   className="w-full bg-background-main border border-primary/20 rounded-xl px-4 py-3 text-text-main-light outline-none focus:border-primary"
                 />
               </div>
+
+              {/* Color Swatch Hex with live picker & preview */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-text-muted uppercase">
+                    Swatch Color (Hex) — Optional
+                  </label>
+                  {valueForm.swatchColorHex && (
+                    <button
+                      type="button"
+                      onClick={() => setValueForm(prev => ({ ...prev, swatchColorHex: null }))}
+                      className="text-[11px] text-red-400 hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <span className="material-icons-outlined text-xs">close</span>
+                      Clear Color
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-3">
+                  {/* Color Picker input */}
+                  <div className="relative w-11 h-11 rounded-xl overflow-hidden border border-primary/20 shrink-0 cursor-pointer shadow-sm bg-background-main flex items-center justify-center">
+                    <input
+                      type="color"
+                      value={
+                        valueForm.swatchColorHex && /^#([A-Fa-f0-9]{6})$/.test(valueForm.swatchColorHex)
+                          ? valueForm.swatchColorHex
+                          : '#C96C7D'
+                      }
+                      onChange={e => setValueForm(prev => ({ ...prev, swatchColorHex: e.target.value.toUpperCase() }))}
+                      className="absolute -top-2 -left-2 w-16 h-16 cursor-pointer border-0 bg-transparent"
+                    />
+                  </div>
+
+                  {/* Text hex input */}
+                  <input
+                    type="text"
+                    placeholder="#C96C7D"
+                    value={valueForm.swatchColorHex || ''}
+                    onChange={e => {
+                      let val = e.target.value.trim()
+                      if (val && !val.startsWith('#')) val = '#' + val
+                      setValueForm(prev => ({ ...prev, swatchColorHex: val || null }))
+                    }}
+                    className="flex-1 bg-background-main border border-primary/20 rounded-xl px-4 py-3 text-text-main-light font-mono text-sm outline-none focus:border-primary"
+                  />
+
+                  {/* Live Preview circle */}
+                  <div
+                    className="w-11 h-11 rounded-full border border-white/20 shadow-inner flex items-center justify-center shrink-0 transition-all"
+                    style={{
+                      backgroundColor: valueForm.swatchColorHex || 'transparent',
+                      borderStyle: valueForm.swatchColorHex ? 'solid' : 'dashed',
+                    }}
+                    title={valueForm.swatchColorHex ? `Color: ${valueForm.swatchColorHex}` : 'No color selected'}
+                  >
+                    {!valueForm.swatchColorHex && (
+                      <span className="text-[10px] text-text-muted">None</span>
+                    )}
+                  </div>
+                </div>
+                <p className="text-[11px] text-text-muted">
+                  Use for colors/shades. Clear for non-color options (e.g. 50ml, Pack of 2).
+                </p>
+              </div>
+
               <div className="space-y-2">
                 <label className="text-xs font-bold text-text-muted uppercase">Sort Order</label>
                 <input
@@ -250,6 +326,7 @@ const OptionList = () => {
                   className="w-full bg-background-main border border-primary/20 rounded-xl px-4 py-3 text-text-main-light outline-none focus:border-primary"
                 />
               </div>
+
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={() => setShowValueModal(false)}
@@ -304,8 +381,10 @@ const OptionList = () => {
       {/* ── Header ───────────────────────────────────────────────────── */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-display font-bold text-text-main-light">Options</h1>
-          <p className="text-sm text-text-muted mt-1">Manage product options and their values (e.g. Size → S, M, L).</p>
+          <h1 className="text-2xl font-display font-bold text-text-main-light">Options & Swatches</h1>
+          <p className="text-sm text-text-muted mt-1">
+            Manage product options (e.g. Shade, Color, Size) and dynamic color swatches.
+          </p>
         </div>
         <button
           onClick={openCreateOption}
@@ -391,9 +470,24 @@ const OptionList = () => {
                       <div className="divide-y divide-primary/5">
                         {option.values.map(val => (
                           <div key={val.id} className="flex items-center px-6 py-3 pl-14 hover:bg-primary/[0.02] transition-colors">
-                            <span className="material-icons-outlined text-text-muted/40 text-sm mr-3">label</span>
+                            {val.swatchColorHex ? (
+                              <div
+                                className="w-5 h-5 rounded-full border border-white/20 shadow-sm mr-3 shrink-0"
+                                style={{ backgroundColor: val.swatchColorHex }}
+                                title={val.swatchColorHex}
+                              />
+                            ) : (
+                              <span className="material-icons-outlined text-text-muted/40 text-sm mr-3">label</span>
+                            )}
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm text-text-main-light">{val.value}</p>
+                              <div className="flex items-center gap-2">
+                                <p className="text-sm text-text-main-light font-medium">{val.value}</p>
+                                {val.swatchColorHex && (
+                                  <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-surface-dark border border-primary/10 text-primary">
+                                    {val.swatchColorHex}
+                                  </span>
+                                )}
+                              </div>
                               <p className="text-[10px] text-text-muted">Sort: {val.sortOrder}</p>
                             </div>
                             <div className="flex items-center gap-1 shrink-0">

@@ -206,9 +206,20 @@ const AdminDashboard: React.FC = () => {
                       </td>
                       <td className="p-4 text-right">
                         <div className="flex flex-col items-end">
-                          <span className="font-bold text-primary">
-                            {formatPaise(variant?.priceWithTax ?? variant?.price ?? 0)}
-                          </span>
+                          {variant?.sellingPrice != null ? (
+                            <>
+                              <span className="font-bold text-primary">
+                                {formatPaise(variant.sellingPriceWithTax ?? variant.sellingPrice)}
+                              </span>
+                              <span className="text-xs text-text-muted line-through">
+                                {formatPaise(variant.priceWithTax ?? variant.price)}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="font-bold text-primary">
+                              {formatPaise(variant?.priceWithTax ?? variant?.price ?? 0)}
+                            </span>
+                          )}
                           <span className="text-[10px] text-text-muted uppercase">incl. tax</span>
                         </div>
                       </td>

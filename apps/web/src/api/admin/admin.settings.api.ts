@@ -86,3 +86,49 @@ export const updateLengthClass = async (id: string, payload: { name?: string; un
 export const deleteLengthClass = async (id: string) => {
   await axiosInstance.delete(`/length-classes/admin/${id}`)
 }
+
+
+// ── Contact & General Settings ──────────────────────────────────────────
+
+export interface AdminSettingItem {
+  id: string
+  key: string
+  value: string
+  group: string
+  description?: string | null
+  isPublic: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export const listAdminSettings = async (
+  group?: string,
+): Promise<AdminSettingItem[]> => {
+  const { data: resp } = await axiosInstance.get('/settings/admin', {
+    params: group ? { group } : undefined,
+  })
+  return Array.isArray(resp?.data) ? resp.data : []
+}
+
+export const updateAdminSettings = async (
+  payload: Record<string, string>,
+): Promise<Record<string, string>> => {
+  const { data: resp } = await axiosInstance.put('/settings/admin', payload)
+  return (resp?.data || {}) as Record<string, string>
+}
+
+export const setAdminSetting = async (
+  key: string,
+  payload: {
+    value: string
+    group?: string
+    description?: string
+    isPublic?: boolean
+  },
+): Promise<AdminSettingItem> => {
+  const { data: resp } = await axiosInstance.put(
+    `/settings/admin/${encodeURIComponent(key)}`,
+    payload,
+  )
+  return resp?.data as AdminSettingItem
+}
