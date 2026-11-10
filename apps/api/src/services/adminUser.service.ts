@@ -22,7 +22,8 @@ export class AdminUserService {
 
   /** Order count and amount actually paid, per user, for a set of users (2 grouped queries). */
   private async orderStats(userIds: string[]) {
-    if (userIds.length === 0) return new Map<string, { orderCount: number; totalSpent: number }>();
+    if (userIds.length === 0)
+      return new Map<string, { orderCount: number; totalSpent: number }>();
     const [counts, paid] = await Promise.all([
       this.prisma.order.groupBy({
         by: ["userId"],
@@ -31,14 +32,20 @@ export class AdminUserService {
       }),
       this.prisma.order.groupBy({
         by: ["userId"],
-        where: { userId: { in: userIds }, isDeleted: false, paymentStatus: "COMPLETED", status: { not: "CANCELLED" } },
+        where: {
+          userId: { in: userIds },
+          isDeleted: false,
+          paymentStatus: "COMPLETED",
+          status: { not: "CANCELLED" },
+        },
         _sum: { totalAmount: true },
       }),
     ]);
     const stats = new Map<string, { orderCount: number; totalSpent: number }>();
     for (const id of userIds) stats.set(id, { orderCount: 0, totalSpent: 0 });
     for (const c of counts) stats.get(c.userId)!.orderCount = c._count._all;
-    for (const p of paid) stats.get(p.userId)!.totalSpent = p._sum.totalAmount ?? 0;
+    for (const p of paid)
+      stats.get(p.userId)!.totalSpent = p._sum.totalAmount ?? 0;
     return stats;
   }
 
@@ -62,7 +69,14 @@ export class AdminUserService {
         orderCount: stats.get(u.id)?.orderCount ?? 0,
         totalSpent: stats.get(u.id)?.totalSpent ?? 0,
       })),
-      pagination: { page, limit, total, totalPages, hasNext: page < totalPages, hasPrev: page > 1 },
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+      },
     };
   }
 
@@ -91,17 +105,26 @@ export class AdminUserService {
     status: "ACTIVE" | "INACTIVE" | "DELETED",
   ) {
     if (actor.id === targetId) {
-      throw new ValidationError("You cannot change the status of your own account");
+      throw new ValidationError(
+        "You cannot change the status of your own account",
+      );
     }
     const target = await this.users.getUserAnyStatus(targetId);
     if (!target) throw new NotFoundError("User not found");
-    if (target.status === status) return { id: target.id, status: target.status };
+    if (target.status === status)
+      return { id: target.id, status: target.status };
 
     // Never leave the store without an admin who can sign in
-    if (target.role === "ADMIN" && target.status === "ACTIVE" && status !== "ACTIVE") {
+    if (
+      target.role === "ADMIN" &&
+      target.status === "ACTIVE" &&
+      status !== "ACTIVE"
+    ) {
       const otherAdmins = await this.users.countActiveAdmins(targetId);
       if (otherAdmins === 0) {
-        throw new ValidationError("Cannot deactivate or delete the last active admin");
+        throw new ValidationError(
+          "Cannot deactivate or delete the last active admin",
+        );
       }
     }
 

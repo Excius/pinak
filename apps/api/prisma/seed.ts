@@ -14,10 +14,11 @@ const __dirname = path.dirname(__filename);
 // ---------------------------------------------------------------------------
 const defaultPages = [
   {
-    slug: 'about-us',
-    title: 'About Us',
-    metaTitle: 'About Us | Pinak Beauty',
-    metaDescription: 'Discover our story, craftsmanship and mission rooted in Indian traditions.',
+    slug: "about-us",
+    title: "About Us",
+    metaTitle: "About Us | Pinak Beauty",
+    metaDescription:
+      "Discover our story, craftsmanship and mission rooted in Indian traditions.",
     content: `# About Pinak Beauty
 
 Affordable luxury beauty rooted in rich Indian traditions and inspired by the timeless glow of nature.
@@ -35,10 +36,11 @@ To democratize luxury beauty by making premium, clean, and elegant cosmetic form
     isActive: true,
   },
   {
-    slug: 'privacy-policy',
-    title: 'Privacy Policy',
-    metaTitle: 'Privacy Policy | Pinak Beauty',
-    metaDescription: 'Learn how Pinak Beauty protects and respects your personal data.',
+    slug: "privacy-policy",
+    title: "Privacy Policy",
+    metaTitle: "Privacy Policy | Pinak Beauty",
+    metaDescription:
+      "Learn how Pinak Beauty protects and respects your personal data.",
     content: `# Privacy Policy
 
 *Last updated: November 2026*
@@ -64,10 +66,10 @@ If you have questions regarding this Privacy Policy, please email **support@pina
     isActive: true,
   },
   {
-    slug: 'terms-and-conditions',
-    title: 'Terms & Conditions',
-    metaTitle: 'Terms & Conditions | Pinak Beauty',
-    metaDescription: 'Terms governing the use of Pinak website and services.',
+    slug: "terms-and-conditions",
+    title: "Terms & Conditions",
+    metaTitle: "Terms & Conditions | Pinak Beauty",
+    metaDescription: "Terms governing the use of Pinak website and services.",
     content: `# Terms & Conditions
 
 *Last updated: November 2026*
@@ -88,10 +90,11 @@ You agree not to reproduce, duplicate, copy, sell, or exploit any portion of the
     isActive: true,
   },
   {
-    slug: 'shipping-policy',
-    title: 'Shipping & Delivery Policy',
-    metaTitle: 'Shipping & Delivery Policy | Pinak Beauty',
-    metaDescription: 'Everything you need to know about our shipping rates and delivery timelines.',
+    slug: "shipping-policy",
+    title: "Shipping & Delivery Policy",
+    metaTitle: "Shipping & Delivery Policy | Pinak Beauty",
+    metaDescription:
+      "Everything you need to know about our shipping rates and delivery timelines.",
     content: `# Shipping & Delivery Policy
 
 Thank you for choosing Pinak Beauty. Here are the details of our shipping policy:
@@ -111,10 +114,11 @@ Once your package is dispatched, you will receive an SMS and email notification 
     isActive: true,
   },
   {
-    slug: 'return-refund-policy',
-    title: 'Return & Refund Policy',
-    metaTitle: 'Return & Refund Policy | Pinak Beauty',
-    metaDescription: 'Our transparent 7-day return and hassle-free refund guidelines.',
+    slug: "return-refund-policy",
+    title: "Return & Refund Policy",
+    metaTitle: "Return & Refund Policy | Pinak Beauty",
+    metaDescription:
+      "Our transparent 7-day return and hassle-free refund guidelines.",
     content: `# Return & Refund Policy
 
 We want you to love your Pinak experience. If you are not completely satisfied, we are here to help.
@@ -133,58 +137,58 @@ We want you to love your Pinak experience. If you are not completely satisfied, 
 
 const defaultSettings = [
   {
-    key: 'WHATSAPP_NUMBER',
-    value: '+919876543210',
-    group: 'contact',
-    description: 'Customer support WhatsApp number for direct chat',
+    key: "WHATSAPP_NUMBER",
+    value: "+919876543210",
+    group: "contact",
+    description: "Customer support WhatsApp number for direct chat",
     isPublic: true,
   },
   {
-    key: 'WHATSAPP_DEFAULT_MESSAGE',
-    value: 'Hello! I would like to know more about Pinak products.',
-    group: 'contact',
-    description: 'Pre-filled WhatsApp greeting message',
+    key: "WHATSAPP_DEFAULT_MESSAGE",
+    value: "Hello! I would like to know more about Pinak products.",
+    group: "contact",
+    description: "Pre-filled WhatsApp greeting message",
     isPublic: true,
   },
   {
-    key: 'SUPPORT_EMAIL',
-    value: 'support@pinak.com',
-    group: 'contact',
-    description: 'Official customer support email',
+    key: "SUPPORT_EMAIL",
+    value: "support@pinak.com",
+    group: "contact",
+    description: "Official customer support email",
     isPublic: true,
   },
   {
-    key: 'SUPPORT_PHONE',
-    value: '+919876543210',
-    group: 'contact',
-    description: 'Customer support phone number',
+    key: "SUPPORT_PHONE",
+    value: "+919876543210",
+    group: "contact",
+    description: "Customer support phone number",
     isPublic: true,
   },
   // Shipping charge (paise) — editable in Admin → Settings → Shipping
   {
-    key: 'SHIPPING_FEE',
-    value: '10000',
-    group: 'shipping',
-    description: 'Flat shipping charge in paise for orders that need shipping',
+    key: "SHIPPING_FEE",
+    value: "10000",
+    group: "shipping",
+    description: "Flat shipping charge in paise for orders that need shipping",
     isPublic: true,
   },
   // Supplier details printed on invoices — editable in Admin → Settings → Supplier Details
   ...Object.entries({
-    SUPPLIER_COMPANY_NAME: 'Pinak Beauty & Care Pvt. Ltd.',
-    SUPPLIER_GSTIN: '27AAACP1234A1Z5',
-    SUPPLIER_PAN: 'AAACP1234A',
-    SUPPLIER_STATE: 'Maharashtra',
-    SUPPLIER_ADDRESS_LINE1: 'Building A, Tech Park, BKC',
-    SUPPLIER_ADDRESS_LINE2: '',
-    SUPPLIER_CITY: 'Mumbai',
-    SUPPLIER_PINCODE: '400051',
-    SUPPLIER_EMAIL: 'support@pinak.com',
-    SUPPLIER_PHONE: '+91-22-4000-1000',
+    SUPPLIER_COMPANY_NAME: "Pinak Beauty & Care Pvt. Ltd.",
+    SUPPLIER_GSTIN: "27AAACP1234A1Z5",
+    SUPPLIER_PAN: "AAACP1234A",
+    SUPPLIER_STATE: "Maharashtra",
+    SUPPLIER_ADDRESS_LINE1: "Building A, Tech Park, BKC",
+    SUPPLIER_ADDRESS_LINE2: "",
+    SUPPLIER_CITY: "Mumbai",
+    SUPPLIER_PINCODE: "400051",
+    SUPPLIER_EMAIL: "support@pinak.com",
+    SUPPLIER_PHONE: "+91-22-4000-1000",
   }).map(([key, value]) => ({
     key,
     value,
-    group: 'supplier',
-    description: 'Supplier details printed on tax invoices',
+    group: "supplier",
+    description: "Supplier details printed on tax invoices",
     isPublic: false,
   })),
 ];
@@ -216,8 +220,12 @@ async function cleanup() {
   await prisma.featuredSection.deleteMany();
 
   // Product-related (images, combo kits, variants, products)
-  try { await prisma.categoryImage.deleteMany(); } catch {}
-  try { await prisma.comboKitImage.deleteMany(); } catch {}
+  try {
+    await prisma.categoryImage.deleteMany();
+  } catch {}
+  try {
+    await prisma.comboKitImage.deleteMany();
+  } catch {}
   await prisma.variantFilterValue.deleteMany();
   await prisma.productImage.deleteMany();
   await prisma.comboKitItem.deleteMany();
@@ -537,7 +545,12 @@ async function main() {
 
   for (const [fgIndex, fg] of filterGroupsData.entries()) {
     const group = await prisma.filterGroup.create({
-      data: { name: fg.name, slug: fg.slug, sortOrder: fgIndex, isActive: true },
+      data: {
+        name: fg.name,
+        slug: fg.slug,
+        sortOrder: fgIndex,
+        isActive: true,
+      },
     });
 
     filterValueMap[fg.slug] = {};
@@ -547,7 +560,12 @@ async function main() {
         .replace(/[^\w\s-]/g, "")
         .replace(/\s+/g, "-");
       const fv = await prisma.filterValue.create({
-        data: { filterGroupId: group.id, name: v, slug: vSlug, sortOrder: vIndex },
+        data: {
+          filterGroupId: group.id,
+          name: v,
+          slug: vSlug,
+          sortOrder: vIndex,
+        },
       });
       filterValueMap[fg.slug][vSlug] = fv;
     }
@@ -1036,7 +1054,10 @@ async function main() {
         index > 0 && filterIds.length > 2 ? filterIds.slice(0, -1) : filterIds;
       if (idsForVariant.length) {
         await prisma.variantFilterValue.createMany({
-          data: idsForVariant.map((filterValueId) => ({ variantId, filterValueId })),
+          data: idsForVariant.map((filterValueId) => ({
+            variantId,
+            filterValueId,
+          })),
           skipDuplicates: true,
         });
       }
@@ -1077,24 +1098,47 @@ async function main() {
   }
 
   // Option / option-value ordering + swatch colours
-  await prisma.option.update({ where: { id: optionSize.id }, data: { sortOrder: 0 } });
-  await prisma.option.update({ where: { id: optionShade.id }, data: { sortOrder: 1 } });
+  await prisma.option.update({
+    where: { id: optionSize.id },
+    data: { sortOrder: 0 },
+  });
+  await prisma.option.update({
+    where: { id: optionShade.id },
+    data: { sortOrder: 1 },
+  });
   const shadeSwatches: Record<string, string> = {
-    "Light Beige": "#F5DEB3", "Medium Beige": "#E0C097", "Deep Beige": "#C19A6B",
-    "Ruby Red": "#9B111E", "Nude Pink": "#E8B4B8", "Deep Plum": "#5E2750",
-    "Black": "#111111", "Brown": "#6B4423", "Porcelain": "#F3E5DC",
-    "Ivory": "#FFFFF0", "Sand": "#C2B280", "Coral": "#FF7F50",
-    "Rose": "#E8A0BF", "Berry": "#8E2D56", "Jet Black": "#0A0A0A",
-    "Deep Brown": "#3B2417", "Warm Tones": "#D9A066", "Cool Tones": "#8FA3BF",
-    "Neutral": "#BDB5A6", "Smoky": "#5C5C5C",
+    "Light Beige": "#F5DEB3",
+    "Medium Beige": "#E0C097",
+    "Deep Beige": "#C19A6B",
+    "Ruby Red": "#9B111E",
+    "Nude Pink": "#E8B4B8",
+    "Deep Plum": "#5E2750",
+    Black: "#111111",
+    Brown: "#6B4423",
+    Porcelain: "#F3E5DC",
+    Ivory: "#FFFFF0",
+    Sand: "#C2B280",
+    Coral: "#FF7F50",
+    Rose: "#E8A0BF",
+    Berry: "#8E2D56",
+    "Jet Black": "#0A0A0A",
+    "Deep Brown": "#3B2417",
+    "Warm Tones": "#D9A066",
+    "Cool Tones": "#8FA3BF",
+    Neutral: "#BDB5A6",
+    Smoky: "#5C5C5C",
   };
-  for (const [index, name] of Object.keys(optionValueMap.Size ?? {}).entries()) {
+  for (const [index, name] of Object.keys(
+    optionValueMap.Size ?? {},
+  ).entries()) {
     await prisma.optionValue.update({
       where: { id: optionValueMap.Size[name].id },
       data: { sortOrder: index },
     });
   }
-  for (const [index, name] of Object.keys(optionValueMap.Shade ?? {}).entries()) {
+  for (const [index, name] of Object.keys(
+    optionValueMap.Shade ?? {},
+  ).entries()) {
     await prisma.optionValue.update({
       where: { id: optionValueMap.Shade[name].id },
       data: { sortOrder: index, swatchColorHex: shadeSwatches[name] ?? null },
@@ -1102,7 +1146,10 @@ async function main() {
   }
 
   // Size option values carry the measurements their variants inherit (weight in grams, size in mm)
-  const sizeMeasurements: Record<string, { weightGrams: number; l: number; w: number; h: number }> = {
+  const sizeMeasurements: Record<
+    string,
+    { weightGrams: number; l: number; w: number; h: number }
+  > = {
     "30ml": { weightGrams: 90, l: 40, w: 40, h: 105 },
     "35ml": { weightGrams: 100, l: 40, w: 40, h: 110 },
     "50ml": { weightGrams: 130, l: 45, w: 45, h: 120 },
@@ -1141,10 +1188,13 @@ async function main() {
     });
   }
   const finishForSku = (sku: string): string | null =>
-    sku.startsWith("VML") ? "Matte"
-    : sku.startsWith("RGF") || sku.startsWith("LGF") ? "Dewy"
-    : sku.startsWith("SEP") ? "Satin"
-    : null;
+    sku.startsWith("VML")
+      ? "Matte"
+      : sku.startsWith("RGF") || sku.startsWith("LGF")
+        ? "Dewy"
+        : sku.startsWith("SEP")
+          ? "Satin"
+          : null;
   for (const v of createdVariants) {
     const finish = finishForSku(v.sku);
     if (finish) {
@@ -1156,14 +1206,25 @@ async function main() {
 
   const ingredientsFor = (name: string): string => {
     const n = name.toLowerCase();
-    if (/lip|matte/.test(n)) return "Castor Oil, Shea Butter, Vitamin E, Jojoba Oil, Beeswax";
-    if (/foundation|glow/.test(n)) return "Squalane, Glycerin, Titanium Dioxide, Vitamin E, Hyaluronic Acid";
-    if (/serum|moistur|cream|balm/.test(n)) return "Niacinamide, Hyaluronic Acid, Vitamin C, Aloe Vera, Ceramides";
-    if (/mascara|lash|eye/.test(n)) return "Carnauba Wax, Panthenol, Iron Oxides, Castor Oil";
+    if (/lip|matte/.test(n))
+      return "Castor Oil, Shea Butter, Vitamin E, Jojoba Oil, Beeswax";
+    if (/foundation|glow/.test(n))
+      return "Squalane, Glycerin, Titanium Dioxide, Vitamin E, Hyaluronic Acid";
+    if (/serum|moistur|cream|balm/.test(n))
+      return "Niacinamide, Hyaluronic Acid, Vitamin C, Aloe Vera, Ceramides";
+    if (/mascara|lash|eye/.test(n))
+      return "Carnauba Wax, Panthenol, Iron Oxides, Castor Oil";
     return "Aqua, Glycerin, Tocopherol, Natural Extracts";
   };
   const roundToRupee = (paise: number) => Math.round(paise / 100) * 100;
-  const stockStatuses = ["IN_STOCK", "BACKORDER", "IN_STOCK", "PREORDER", "IN_STOCK", "OUT_OF_STOCK"] as const;
+  const stockStatuses = [
+    "IN_STOCK",
+    "BACKORDER",
+    "IN_STOCK",
+    "PREORDER",
+    "IN_STOCK",
+    "OUT_OF_STOCK",
+  ] as const;
 
   const seededProducts = await prisma.product.findMany({
     orderBy: { createdAt: "asc" },
@@ -1188,13 +1249,25 @@ async function main() {
       data: {
         keyIngredients: ingredientsFor(product.name),
         metaTitle: `${product.name} | ${brandName} | Pinak`,
-        metaDescription: `Shop ${product.name} by ${brandName}. ${product.description ?? ""}`.trim().slice(0, 160),
-        metaKeywords: [product.name.toLowerCase(), brandName.toLowerCase(), ...variantTags].join(", "),
+        metaDescription:
+          `Shop ${product.name} by ${brandName}. ${product.description ?? ""}`
+            .trim()
+            .slice(0, 160),
+        metaKeywords: [
+          product.name.toLowerCase(),
+          brandName.toLowerCase(),
+          ...variantTags,
+        ].join(", "),
         seoKeyword: product.slug,
         model: `PNK-${String(i + 1).padStart(3, "0")}`,
         ean: `8901234${String(100000 + i * 137).padStart(6, "0")}`,
         frontImageUrl: primaryImage,
-        tags: Array.from(new Set([...variantTags, brandName.toLowerCase().replace(/\s+/g, "-")])),
+        tags: Array.from(
+          new Set([
+            ...variantTags,
+            brandName.toLowerCase().replace(/\s+/g, "-"),
+          ]),
+        ),
         requiresShipping: true,
         outOfStockStatus: stockStatuses[i % stockStatuses.length],
         sortOrder: i,
@@ -1208,7 +1281,10 @@ async function main() {
       .filter((id): id is string => Boolean(id));
     if (parentIds.length) {
       await prisma.productCategory.createMany({
-        data: parentIds.map((categoryId) => ({ productId: product.id, categoryId })),
+        data: parentIds.map((categoryId) => ({
+          productId: product.id,
+          categoryId,
+        })),
         skipDuplicates: true,
       });
     }
@@ -1224,14 +1300,27 @@ async function main() {
           sellingPrice: onSale ? roundToRupee(variant.price * 0.85) : null,
           comparePrice: hasCompare ? roundToRupee(variant.price * 1.2) : null,
           // Weight/size normally come from the Size option value; one variant overrides to show it
-          ...(i === 0 && j === 0 ? { weightGrams: 135, weightClassId: gramId, dimensionLength: 48, dimensionWidth: 48, dimensionHeight: 118, lengthClassId: mmId } : {}),
+          ...(i === 0 && j === 0
+            ? {
+                weightGrams: 135,
+                weightClassId: gramId,
+                dimensionLength: 48,
+                dimensionWidth: 48,
+                dimensionHeight: 118,
+                lengthClassId: mmId,
+              }
+            : {}),
           // A variant that overrides its product's tax class (shows the per-variant tax option)
-          ...(i === 3 && j === 1 && taxClassMap["GST 5%"] ? { taxClassId: taxClassMap["GST 5%"].id } : {}),
+          ...(i === 3 && j === 1 && taxClassMap["GST 5%"]
+            ? { taxClassId: taxClassMap["GST 5%"].id }
+            : {}),
           // Stock edge cases for the inventory / alerts screens
           ...(i === 0 && isLastVariant ? { stock: 0 } : {}),
           ...(i === 1 && isLastVariant ? { stock: 3 } : {}),
           ...(i === 2 && isLastVariant ? { stock: 7 } : {}),
-          ...(i === 4 && isLastVariant && product.variants.length > 1 ? { isActive: false } : {}),
+          ...(i === 4 && isLastVariant && product.variants.length > 1
+            ? { isActive: false }
+            : {}),
         },
       });
 
@@ -1247,44 +1336,83 @@ async function main() {
       });
     }
   }
-  console.log("✅ Enriched products & variants (SEO, pricing, dimensions, images, finish option)");
+  console.log(
+    "✅ Enriched products & variants (SEO, pricing, dimensions, images, finish option)",
+  );
 
   // Products in the other lifecycle states the admin UI filters on
-  const catForExtras = await prisma.category.findFirst({ where: { slug: "lipstick" } });
-  const catForSkin = await prisma.category.findFirst({ where: { slug: "serums" } });
+  const catForExtras = await prisma.category.findFirst({
+    where: { slug: "lipstick" },
+  });
+  const catForSkin = await prisma.category.findFirst({
+    where: { slug: "serums" },
+  });
   const extraProducts = [
     {
-      name: "Rose Petal Lip Balm", slug: "rose-petal-lip-balm", brand: "LipLux",
-      state: "Pending verification (inactive import)", isActive: false, isDeleted: false,
-      outOfStockStatus: "IN_STOCK" as const, categoryId: catForExtras?.id, tax: "GST 18%",
+      name: "Rose Petal Lip Balm",
+      slug: "rose-petal-lip-balm",
+      brand: "LipLux",
+      state: "Pending verification (inactive import)",
+      isActive: false,
+      isDeleted: false,
+      outOfStockStatus: "IN_STOCK" as const,
+      categoryId: catForExtras?.id,
+      tax: "GST 18%",
       tags: ["HSN:3304", "imported", "lip-care"],
       variants: [{ sku: "RPLB-001", price: 19900, stock: 40 }],
     },
     {
-      name: "Imported Hand Cream", slug: "imported-hand-cream", brand: "SkinCare Plus",
-      state: "Pending verification (inactive import)", isActive: false, isDeleted: false,
-      outOfStockStatus: "IN_STOCK" as const, categoryId: catForSkin?.id, tax: "GST 18%",
+      name: "Imported Hand Cream",
+      slug: "imported-hand-cream",
+      brand: "SkinCare Plus",
+      state: "Pending verification (inactive import)",
+      isActive: false,
+      isDeleted: false,
+      outOfStockStatus: "IN_STOCK" as const,
+      categoryId: catForSkin?.id,
+      tax: "GST 18%",
       tags: ["HSN:3304", "imported", "hand-care"],
-      variants: [{ sku: "IHC-001", price: 24900, stock: 25, size: "50ml" }, { sku: "IHC-002", price: 39900, stock: 10, size: "100ml" }],
+      variants: [
+        { sku: "IHC-001", price: 24900, stock: 25, size: "50ml" },
+        { sku: "IHC-002", price: 39900, stock: 10, size: "100ml" },
+      ],
     },
     {
-      name: "Kohl Kajal Pencil (Discontinued)", slug: "kohl-kajal-pencil", brand: "EyeGlow",
-      state: "Archived / soft-deleted", isActive: false, isDeleted: true,
-      outOfStockStatus: "OUT_OF_STOCK" as const, categoryId: catForExtras?.id, tax: "GST 12%",
+      name: "Kohl Kajal Pencil (Discontinued)",
+      slug: "kohl-kajal-pencil",
+      brand: "EyeGlow",
+      state: "Archived / soft-deleted",
+      isActive: false,
+      isDeleted: true,
+      outOfStockStatus: "OUT_OF_STOCK" as const,
+      categoryId: catForExtras?.id,
+      tax: "GST 12%",
       tags: ["discontinued", "eyes"],
       variants: [{ sku: "KKP-001", price: 14900, stock: 0 }],
     },
     {
-      name: "Holiday Glow Palette (Pre-order)", slug: "holiday-glow-palette", brand: "GlowBeauty",
-      state: "Pre-order", isActive: true, isDeleted: false,
-      outOfStockStatus: "PREORDER" as const, categoryId: catForExtras?.id, tax: "GST 28%",
+      name: "Holiday Glow Palette (Pre-order)",
+      slug: "holiday-glow-palette",
+      brand: "GlowBeauty",
+      state: "Pre-order",
+      isActive: true,
+      isDeleted: false,
+      outOfStockStatus: "PREORDER" as const,
+      categoryId: catForExtras?.id,
+      tax: "GST 28%",
       tags: ["limited-edition", "holiday", "palette"],
       variants: [{ sku: "HGP-001", price: 249900, stock: 0 }],
     },
     {
-      name: "Travel Mini Serum (Sold Out)", slug: "travel-mini-serum", brand: "SkinCare Plus",
-      state: "Out of stock", isActive: true, isDeleted: false,
-      outOfStockStatus: "OUT_OF_STOCK" as const, categoryId: catForSkin?.id, tax: "GST 18%",
+      name: "Travel Mini Serum (Sold Out)",
+      slug: "travel-mini-serum",
+      brand: "SkinCare Plus",
+      state: "Out of stock",
+      isActive: true,
+      isDeleted: false,
+      outOfStockStatus: "OUT_OF_STOCK" as const,
+      categoryId: catForSkin?.id,
+      tax: "GST 18%",
       tags: ["travel", "serum"],
       variants: [{ sku: "TMS-001", price: 34900, stock: 0 }],
     },
@@ -1314,7 +1442,9 @@ async function main() {
         isDeleted: def.isDeleted,
         sortOrder: 100 + i,
         viewCount: 20 + i * 11,
-        ...(def.categoryId ? { categories: { create: [{ categoryId: def.categoryId }] } } : {}),
+        ...(def.categoryId
+          ? { categories: { create: [{ categoryId: def.categoryId }] } }
+          : {}),
       },
     });
     createdProducts.push({ id: product.id, slug: product.slug });
@@ -1338,7 +1468,10 @@ async function main() {
       const sizeValue = (v as { size?: string }).size;
       if (sizeValue && optionValueMap.Size?.[sizeValue]) {
         await prisma.variantOptionValue.create({
-          data: { variantId: variant.id, optionValueId: optionValueMap.Size[sizeValue].id },
+          data: {
+            variantId: variant.id,
+            optionValueId: optionValueMap.Size[sizeValue].id,
+          },
         });
       }
       await prisma.productImage.create({
@@ -1351,7 +1484,9 @@ async function main() {
       });
     }
   }
-  console.log(`✅ Created ${extraProducts.length} extra products (inactive / archived / pre-order / sold out)`);
+  console.log(
+    `✅ Created ${extraProducts.length} extra products (inactive / archived / pre-order / sold out)`,
+  );
 
   // -------------------------------------------------------------------------
   // 6. Related products
@@ -1615,7 +1750,9 @@ async function main() {
         role: u.role,
         isEmailVerified: u.isEmailVerified,
         hashPassword: PASSWORD_HASH,
-        status: (u as { status?: "ACTIVE" | "INACTIVE" | "DELETED" }).status ?? "ACTIVE",
+        status:
+          (u as { status?: "ACTIVE" | "INACTIVE" | "DELETED" }).status ??
+          "ACTIVE",
       },
     });
     createdUsers[u.username] = created;
@@ -1640,22 +1777,98 @@ async function main() {
     }>
   > = {
     johndoe: [
-      { fullName: "John Doe", addressLine1: "12, Linking Road", addressLine2: "Bandra West", city: "Mumbai", state: "Maharashtra", pincode: "400050", phone: "9820012345", label: "Home", isDefault: true },
-      { fullName: "John Doe", addressLine1: "Tower B, Lower Parel", addressLine2: "Kamala Mills", city: "Mumbai", state: "Maharashtra", pincode: "400013", phone: "9820012345", label: "Work", isDefault: false },
+      {
+        fullName: "John Doe",
+        addressLine1: "12, Linking Road",
+        addressLine2: "Bandra West",
+        city: "Mumbai",
+        state: "Maharashtra",
+        pincode: "400050",
+        phone: "9820012345",
+        label: "Home",
+        isDefault: true,
+      },
+      {
+        fullName: "John Doe",
+        addressLine1: "Tower B, Lower Parel",
+        addressLine2: "Kamala Mills",
+        city: "Mumbai",
+        state: "Maharashtra",
+        pincode: "400013",
+        phone: "9820012345",
+        label: "Work",
+        isDefault: false,
+      },
     ],
     janesmith: [
-      { fullName: "Jane Smith", addressLine1: "45, MG Road", addressLine2: "Near Metro Station", city: "Bengaluru", state: "Karnataka", pincode: "560001", phone: "9845098450", label: "Home", isDefault: true },
-      { fullName: "Jane Smith", addressLine1: "7, Park Street", city: "Kolkata", state: "West Bengal", pincode: "700016", phone: "9830098300", label: "Parents", isDefault: false },
+      {
+        fullName: "Jane Smith",
+        addressLine1: "45, MG Road",
+        addressLine2: "Near Metro Station",
+        city: "Bengaluru",
+        state: "Karnataka",
+        pincode: "560001",
+        phone: "9845098450",
+        label: "Home",
+        isDefault: true,
+      },
+      {
+        fullName: "Jane Smith",
+        addressLine1: "7, Park Street",
+        city: "Kolkata",
+        state: "West Bengal",
+        pincode: "700016",
+        phone: "9830098300",
+        label: "Parents",
+        isDefault: false,
+      },
     ],
     mikej: [
-      { fullName: "Mike Johnson", addressLine1: "221, Sector 18", city: "Noida", state: "Uttar Pradesh", pincode: "201301", phone: "9811122233", label: "Home", isDefault: true },
+      {
+        fullName: "Mike Johnson",
+        addressLine1: "221, Sector 18",
+        city: "Noida",
+        state: "Uttar Pradesh",
+        pincode: "201301",
+        phone: "9811122233",
+        label: "Home",
+        isDefault: true,
+      },
     ],
     sarahw: [
-      { fullName: "Sarah Wilson", addressLine1: "9, Jubilee Hills Road No. 36", city: "Hyderabad", state: "Telangana", pincode: "500033", phone: "9900011122", label: "Home", isDefault: true },
-      { fullName: "Sarah Wilson", addressLine1: "18, Anna Salai", addressLine2: "Teynampet", city: "Chennai", state: "Tamil Nadu", pincode: "600018", phone: "9900033344", label: "Office", isDefault: false },
+      {
+        fullName: "Sarah Wilson",
+        addressLine1: "9, Jubilee Hills Road No. 36",
+        city: "Hyderabad",
+        state: "Telangana",
+        pincode: "500033",
+        phone: "9900011122",
+        label: "Home",
+        isDefault: true,
+      },
+      {
+        fullName: "Sarah Wilson",
+        addressLine1: "18, Anna Salai",
+        addressLine2: "Teynampet",
+        city: "Chennai",
+        state: "Tamil Nadu",
+        pincode: "600018",
+        phone: "9900033344",
+        label: "Office",
+        isDefault: false,
+      },
     ],
     priyas: [
-      { fullName: "Priya Sharma", addressLine1: "B-14, Vasant Vihar", city: "New Delhi", state: "Delhi", pincode: "110057", phone: "9899988776", label: "Home", isDefault: true },
+      {
+        fullName: "Priya Sharma",
+        addressLine1: "B-14, Vasant Vihar",
+        city: "New Delhi",
+        state: "Delhi",
+        pincode: "110057",
+        phone: "9899988776",
+        label: "Home",
+        isDefault: true,
+      },
     ],
   };
   const seededAddresses: Record<string, { id: string }[]> = {};
@@ -2059,7 +2272,9 @@ async function main() {
       },
     ],
   });
-  console.log("✅ Created 7 coupons (3 live, 1 expired, 1 paused, 1 single-use, 1 trashed)");
+  console.log(
+    "✅ Created 7 coupons (3 live, 1 expired, 1 paused, 1 single-use, 1 trashed)",
+  );
 
   // -------------------------------------------------------------------------
   // 11. Orders with order items
@@ -2260,197 +2475,6 @@ async function main() {
   // -----------------------------------------------------------
 
   console.log("✅ Created 3 orders (DELIVERED, PROCESSING, SHIPPED)");
-
-
-  // -------------------------------------------------------------------------
-  // 11.1 More orders (pending / cancelled) + enrich all orders with GST,
-  //      addresses, invoices, gateway/payment data and coupon usage
-  // -------------------------------------------------------------------------
-  const priyaId = createdUsers["priyas"]?.id;
-  const extraOrderDefs: Array<{
-    userId: string | undefined;
-    status: "PENDING" | "CANCELLED";
-    paymentStatus: "PENDING" | "FAILED";
-    sku: string;
-    quantity: number;
-  }> = [
-    { userId: priyaId, status: "PENDING", paymentStatus: "PENDING", sku: "HFM-001", quantity: 1 },
-    { userId: janeId, status: "CANCELLED", paymentStatus: "FAILED", sku: "VML-001", quantity: 2 },
-  ];
-  for (const def of extraOrderDefs) {
-    const variant = skuToVariant[def.sku];
-    if (!def.userId || !variant) continue;
-    const subtotal = variant.price * def.quantity;
-    const order = await prisma.order.create({
-      data: {
-        userId: def.userId,
-        status: def.status,
-        paymentStatus: def.paymentStatus,
-        subtotalAmount: subtotal,
-        taxAmount: Math.round(subtotal * 0.18),
-        shippingAmount: 10000,
-        totalAmount: subtotal + Math.round(subtotal * 0.18) + 10000,
-      },
-    });
-    await prisma.orderItem.create({
-      data: {
-        orderId: order.id,
-        productId: await productIdBySku(def.sku),
-        productVariantId: variant.id,
-        productName: def.sku,
-        price: variant.price,
-        quantity: def.quantity,
-      },
-    });
-  }
-
-  const fyStart = now.getMonth() < 3 ? now.getFullYear() - 1 : now.getFullYear();
-  const invoicePrefix = `INV/${fyStart}-${String(fyStart + 1).slice(-2)}/`;
-  const paymentMethods = ["upi", "card", "netbanking", "wallet"];
-  const welcomeCoupon = await prisma.coupon.findFirst({ where: { code: "WELCOME10" } });
-  const ordersToEnrich = await prisma.order.findMany({
-    orderBy: { createdAt: "asc" },
-    include: { items: true, user: { select: { username: true } } },
-  });
-
-  let invoiceSeq = 0;
-  let couponApplied = false;
-  for (const [index, order] of ordersToEnrich.entries()) {
-    const shippingAddress = seededAddresses[order.user.username]?.[0]
-      ? await prisma.address.findUnique({ where: { id: seededAddresses[order.user.username][0].id } })
-      : null;
-    const addressSnapshot = shippingAddress
-      ? {
-          fullName: shippingAddress.fullName,
-          addressLine1: shippingAddress.addressLine1,
-          addressLine2: shippingAddress.addressLine2,
-          city: shippingAddress.city,
-          state: shippingAddress.state,
-          pincode: shippingAddress.pincode,
-          phone: shippingAddress.phone,
-        }
-      : null;
-
-    // First delivered order uses a coupon so CouponUsage / discounts are exercised
-    const useCoupon = !couponApplied && welcomeCoupon && order.status === "DELIVERED";
-    const discount = useCoupon
-      ? Math.min(Math.floor((order.subtotalAmount * 10) / 100), 50000)
-      : 0;
-    if (useCoupon) couponApplied = true;
-
-    const shipping = order.shippingAmount > 0 ? 10000 : 0;
-    const netSubtotal = Math.max(0, order.subtotalAmount - discount);
-    const gstPercentage = netSubtotal > 0 ? Number(((order.taxAmount / netSubtotal) * 100).toFixed(2)) : 0;
-    const total = netSubtotal + order.taxAmount + shipping;
-
-    // Item snapshots in the same shape order.service writes at checkout
-    for (const item of order.items) {
-      if (item.productVariantId) {
-        const variant = await prisma.productVariant.findUnique({
-          where: { id: item.productVariantId },
-          include: { optionValues: { include: { optionValue: { include: { option: true } } } } },
-        });
-        if (!variant) continue;
-        const taxRate = gstPercentage;
-        await prisma.orderItem.update({
-          where: { id: item.id },
-          data: {
-            variantDetails: {
-              itemType: "PRODUCT_VARIANT",
-              sku: variant.sku,
-              ean: variant.ean,
-              tags: variant.tags,
-              price: variant.price,
-              basePrice: variant.price,
-              priceWithTax: variant.price + Math.round((variant.price * taxRate) / 100),
-              sellingPrice: variant.sellingPrice,
-              sellingPriceWithTax:
-                variant.sellingPrice != null
-                  ? variant.sellingPrice + Math.round((variant.sellingPrice * taxRate) / 100)
-                  : null,
-              taxRate,
-              optionValues: variant.optionValues.map((ov) => ({
-                optionName: ov.optionValue.option.name,
-                valueName: ov.optionValue.value,
-              })),
-            },
-          },
-        });
-      } else if (item.comboKitId) {
-        await prisma.orderItem.update({
-          where: { id: item.id },
-          data: {
-            variantDetails: {
-              itemType: "COMBO_KIT",
-              price: item.price,
-              basePrice: item.price,
-              priceWithTax: item.price + Math.round((item.price * gstPercentage) / 100),
-              sellingPrice: null,
-              sellingPriceWithTax: null,
-              taxRate: gstPercentage,
-            },
-          },
-        });
-      }
-    }
-
-    const isPaid = order.paymentStatus === "COMPLETED";
-    const hasGatewayOrder = order.paymentStatus !== "PENDING" || order.status === "PENDING";
-    const suffix = order.id.slice(-10);
-    const invoiceNumber = isPaid
-      ? `${invoicePrefix}${String(++invoiceSeq).padStart(5, "0")}`
-      : null;
-
-    await prisma.order.update({
-      where: { id: order.id },
-      data: {
-        discountAmount: discount,
-        couponcode: useCoupon ? "WELCOME10" : null,
-        couponDiscount: discount,
-        shippingAmount: shipping,
-        totalAmount: total,
-        gstPercentage,
-        gstNumber: index === 0 ? "27ABCDE1234F1Z5" : null, // one B2B order
-        invoiceNumber,
-        invoiceDate: invoiceNumber ? order.createdAt : null,
-        gatewayOrderId: hasGatewayOrder ? `order_seed_${suffix}` : null,
-        gatewayPaymentId: isPaid ? `pay_seed_${suffix}` : null,
-        gatewaySignature: isPaid ? `seedsig${suffix}`.padEnd(64, "0") : null,
-        paymentMethod: isPaid ? paymentMethods[index % paymentMethods.length] : null,
-        getBreakup: {
-          taxBreakdown: order.items.map((item) => ({
-            rate: gstPercentage,
-            taxableValue: item.price * item.quantity,
-            discountAmount: 0,
-            amount: Math.round((item.price * item.quantity * gstPercentage) / 100),
-          })),
-          shippingAddress: addressSnapshot,
-          billingAddress: addressSnapshot,
-          ...(isPaid
-            ? { payment: { paymentId: `pay_seed_${suffix}`, status: "SUCCESS", updatedAt: order.createdAt.toISOString() } }
-            : {}),
-          ...(order.paymentStatus === "FAILED"
-            ? { paymentFailure: { reason: "Payment declined by bank", updatedAt: order.createdAt.toISOString() } }
-            : {}),
-          ...(order.status === "PENDING"
-            ? { reservationExpiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString() }
-            : {}),
-        },
-      },
-    });
-
-    if (useCoupon && welcomeCoupon) {
-      await prisma.couponUsage.create({
-        data: {
-          couponId: welcomeCoupon.id,
-          userId: order.userId,
-          oderId: order.id,
-          discountAmount: discount,
-        },
-      });
-    }
-  }
-  console.log(`✅ Enriched ${ordersToEnrich.length} orders (GST, addresses, invoices, gateway data, coupon usage)`);
 
   // -------------------------------------------------------------------------
   // 11.1 More orders (pending / cancelled) + enrich all orders with GST,
@@ -3011,16 +3035,75 @@ async function main() {
     const firstProduct = createdProducts[0];
     const firstOrder = ordersToEnrich[0];
     const auditEntries = [
-      firstProduct && { entity: "Product", entityId: firstProduct.id, action: "UPDATE", before: { isActive: false }, after: { isActive: true }, actorId: adminForAudit.id, actorRole: "ADMIN", source: "Admin Panel" },
-      firstProduct && { entity: "Product", entityId: firstProduct.id, action: "UPDATE", before: { stock: 30 }, after: { stock: 25 }, actorId: moderatorForAudit.id, actorRole: "MODERATOR", source: "Admin Panel" },
-      firstOrder && { entity: "Order", entityId: firstOrder.id, action: "UPDATE", before: { status: "PROCESSING" }, after: { status: "DELIVERED" }, actorId: adminForAudit.id, actorRole: "ADMIN", source: "Admin Panel" },
-      { entity: "Coupon", entityId: "WELCOME10", action: "CREATE", before: null, after: { code: "WELCOME10", discountValue: 10 }, actorId: adminForAudit.id, actorRole: "ADMIN", source: "API" },
-      { entity: "Product", entityId: "bulk-import", action: "CREATE", before: null, after: { imported: 2, status: "inactive" }, actorId: adminForAudit.id, actorRole: "ADMIN", source: "Admin Panel" },
-      { entity: "Order", entityId: "cron-reservation-cleanup", action: "UPDATE", before: null, after: { releasedReservations: 0 }, actorId: null, actorRole: "SYSTEM", source: "cron" },
+      firstProduct && {
+        entity: "Product",
+        entityId: firstProduct.id,
+        action: "UPDATE",
+        before: { isActive: false },
+        after: { isActive: true },
+        actorId: adminForAudit.id,
+        actorRole: "ADMIN",
+        source: "Admin Panel",
+      },
+      firstProduct && {
+        entity: "Product",
+        entityId: firstProduct.id,
+        action: "UPDATE",
+        before: { stock: 30 },
+        after: { stock: 25 },
+        actorId: moderatorForAudit.id,
+        actorRole: "MODERATOR",
+        source: "Admin Panel",
+      },
+      firstOrder && {
+        entity: "Order",
+        entityId: firstOrder.id,
+        action: "UPDATE",
+        before: { status: "PROCESSING" },
+        after: { status: "DELIVERED" },
+        actorId: adminForAudit.id,
+        actorRole: "ADMIN",
+        source: "Admin Panel",
+      },
+      {
+        entity: "Coupon",
+        entityId: "WELCOME10",
+        action: "CREATE",
+        before: null,
+        after: { code: "WELCOME10", discountValue: 10 },
+        actorId: adminForAudit.id,
+        actorRole: "ADMIN",
+        source: "API",
+      },
+      {
+        entity: "Product",
+        entityId: "bulk-import",
+        action: "CREATE",
+        before: null,
+        after: { imported: 2, status: "inactive" },
+        actorId: adminForAudit.id,
+        actorRole: "ADMIN",
+        source: "Admin Panel",
+      },
+      {
+        entity: "Order",
+        entityId: "cron-reservation-cleanup",
+        action: "UPDATE",
+        before: null,
+        after: { releasedReservations: 0 },
+        actorId: null,
+        actorRole: "SYSTEM",
+        source: "cron",
+      },
     ].filter(Boolean) as Array<{
-      entity: string; entityId: string; action: string;
-      before: object | null; after: object | null;
-      actorId: string | null; actorRole: string; source: string;
+      entity: string;
+      entityId: string;
+      action: string;
+      before: object | null;
+      after: object | null;
+      actorId: string | null;
+      actorRole: string;
+      source: string;
     }>;
     for (const entry of auditEntries) {
       await prisma.auditLog.create({

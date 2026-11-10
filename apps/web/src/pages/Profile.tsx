@@ -562,8 +562,14 @@ const Profile: React.FC = () => {
                 </div>
               ) : (
                 orders.slice(0, 5).map((order) => (
-                  <div key={order.id} className="profile-order-item" onClick={() => navigate(`/orders/${order.id}`)}>
-                    <div className={`profile-order-dot ${getStatusColor(order.status)}`} />
+                  <div
+                    key={order.id}
+                    className="profile-order-item"
+                    onClick={() => navigate(`/orders/${order.id}`)}
+                  >
+                    <div
+                      className={`profile-order-dot ${getStatusColor(order.status)}`}
+                    />
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-text-main-light text-sm">
                         Order #{order.id.slice(-8).toUpperCase()}

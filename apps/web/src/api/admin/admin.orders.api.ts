@@ -4,7 +4,13 @@ import axiosInstance from "../axiosInstance";
 
 export type OrderStatus =
   "PENDING" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED";
-export type PaymentStatus = "PENDING" | "COMPLETED" | "FAILED";
+export type PaymentStatus =
+  | "PENDING"
+  | "COMPLETED"
+  | "FAILED"
+  | "REFUNDING"
+  | "REFUNDED"
+  | "REFUND_FAILED";
 
 export interface AdminOrderItem {
   id: string;

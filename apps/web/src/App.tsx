@@ -1,49 +1,55 @@
-import './index.css'
-import { useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import { AuthProvider, useAuth } from './context/AuthContext'
-import { CartProvider } from './context/CartContext'
-import { Toaster } from 'react-hot-toast'
-import Landing from './pages/Landing'
-import Auth from './pages/Auth'
-import VerifyEmail from './pages/VerifyEmail'
-import ForgotPassword from './pages/ForgotPassword'
-import ResetPassword from './pages/ResetPassword'
-import GoogleCallback from './pages/GoogleCallback'
-import Profile from './pages/Profile'
-import Shop from './pages/Shop'
-import ProductDetail from './pages/ProductDetail'
-import CategoryPage from './pages/CategoryPage'
-import ComboKits from './pages/ComboKits'
-import ComboKitDetail from './pages/ComboKitDetail'
-import Wishlist from './pages/Wishlist'
-import SearchResults from './pages/SearchResults'
-import OrderConfirmation from './pages/OrderConfirmation'
-import Checkout from './pages/Checkout'
-import MyOrders from './pages/MyOrders'
-import OrderDetail from './pages/OrderDetail'
-import AdminLayout from './components/admin/AdminLayout'
-import AdminDashboard from './pages/admin/Dashboard'
-import AdminProductList from './pages/admin/products/ProductList'
-import AdminProductForm from './pages/admin/products/ProductForm'
-import AdminInventoryList from './pages/admin/products/InventoryList'
-import AdminCategoryList from './pages/admin/categories/CategoryList'
-import AdminBrandList from './pages/admin/brands/BrandList'
-import AdminComboKitList from './pages/admin/combos/ComboKitList'
-import AdminComboKitForm from './pages/admin/combos/ComboKitForm'
-import AdminFeaturedSections from './pages/admin/featured/FeaturedSectionList'
-import AdminOrderList from './pages/admin/orders/OrderList'
-import AdminSettings from './pages/admin/settings/SettingsPage'
-import AdminFilterGroupList from './pages/admin/filters/FilterGroupList'
-import AdminOptionList from './pages/admin/options/OptionList'
-import AdminCouponList from './pages/admin/coupons/CouponList'
-import AdminUserList from './pages/admin/users/UserList'
-import AdminDynamicAssetList from './pages/admin/dynamicAssets/DynamicAssetList'
-import StoreLocator from './pages/StoreLocator'
-import AdminStoreList from './pages/admin/stores/StoreList'
-import StaticPage from './pages/StaticPage'
-import AdminPageList from './pages/admin/pages/PageList'
-import WhatsAppWidget from './components/WhatsAppWidget'
+import "./index.css";
+import { useEffect } from "react";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import { CartProvider } from "./context/CartContext";
+import { Toaster } from "react-hot-toast";
+import Landing from "./pages/Landing";
+import Auth from "./pages/Auth";
+import VerifyEmail from "./pages/VerifyEmail";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import GoogleCallback from "./pages/GoogleCallback";
+import Profile from "./pages/Profile";
+import Shop from "./pages/Shop";
+import ProductDetail from "./pages/ProductDetail";
+import CategoryPage from "./pages/CategoryPage";
+import ComboKits from "./pages/ComboKits";
+import ComboKitDetail from "./pages/ComboKitDetail";
+import Wishlist from "./pages/Wishlist";
+import SearchResults from "./pages/SearchResults";
+import OrderConfirmation from "./pages/OrderConfirmation";
+import Checkout from "./pages/Checkout";
+import MyOrders from "./pages/MyOrders";
+import OrderDetail from "./pages/OrderDetail";
+import AdminLayout from "./components/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/Dashboard";
+import AdminProductList from "./pages/admin/products/ProductList";
+import AdminProductForm from "./pages/admin/products/ProductForm";
+import AdminInventoryList from "./pages/admin/products/InventoryList";
+import AdminCategoryList from "./pages/admin/categories/CategoryList";
+import AdminBrandList from "./pages/admin/brands/BrandList";
+import AdminComboKitList from "./pages/admin/combos/ComboKitList";
+import AdminComboKitForm from "./pages/admin/combos/ComboKitForm";
+import AdminFeaturedSections from "./pages/admin/featured/FeaturedSectionList";
+import AdminOrderList from "./pages/admin/orders/OrderList";
+import AdminSettings from "./pages/admin/settings/SettingsPage";
+import AdminFilterGroupList from "./pages/admin/filters/FilterGroupList";
+import AdminOptionList from "./pages/admin/options/OptionList";
+import AdminCouponList from "./pages/admin/coupons/CouponList";
+import AdminUserList from "./pages/admin/users/UserList";
+import AdminDynamicAssetList from "./pages/admin/dynamicAssets/DynamicAssetList";
+import StoreLocator from "./pages/StoreLocator";
+import AdminStoreList from "./pages/admin/stores/StoreList";
+import StaticPage from "./pages/StaticPage";
+import AdminPageList from "./pages/admin/pages/PageList";
+import WhatsAppWidget from "./components/WhatsAppWidget";
 
 // Protected route wrapper
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -108,15 +114,6 @@ function ScrollToTop() {
     window.scrollTo(0, 0);
   }, [pathname]);
   return null;
-}
-
-// Always start a newly opened page at the top instead of keeping the previous scroll position.
-function ScrollToTop() {
-  const { pathname } = useLocation()
-  useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [pathname])
-  return null
 }
 
 function AppRoutes() {

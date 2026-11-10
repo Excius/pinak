@@ -31,7 +31,10 @@ app.use(
     // Payment webhooks are signed over the exact bytes Razorpay sent, so keep the
     // raw body for those routes only (re-serialising parsed JSON can change it).
     verify: (req, _res, buf) => {
-      if (req.url?.includes("/webhooks/webhook/razorpay") || req.url?.includes("/payments/webhook/razorpay")) {
+      if (
+        req.url?.includes("/webhooks/webhook/razorpay") ||
+        req.url?.includes("/payments/webhook/razorpay")
+      ) {
         (req as express.Request).rawBody = Buffer.from(buf);
       }
     },

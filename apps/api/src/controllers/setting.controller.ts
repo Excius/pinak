@@ -54,21 +54,39 @@ export class SettingController {
 
   getShippingConfig = async (_req: Request, res: Response) => {
     const config = await this.service.getShippingConfig();
-    ResponseHandler.success(res, config, "Shipping settings fetched successfully");
+    ResponseHandler.success(
+      res,
+      config,
+      "Shipping settings fetched successfully",
+    );
   };
 
   updateShippingConfig = async (req: Request, res: Response) => {
-    const config = await this.service.updateShippingConfig(req.body.shippingFee);
-    ResponseHandler.success(res, config, "Shipping settings updated successfully");
+    const config = await this.service.updateShippingConfig(
+      req.body.shippingFee,
+    );
+    ResponseHandler.success(
+      res,
+      config,
+      "Shipping settings updated successfully",
+    );
   };
 
   getSupplierDetails = async (_req: Request, res: Response) => {
     const supplier = await this.service.getSupplierDetails();
-    ResponseHandler.success(res, supplier, "Supplier details fetched successfully");
+    ResponseHandler.success(
+      res,
+      supplier,
+      "Supplier details fetched successfully",
+    );
   };
 
   updateSupplierDetails = async (req: Request, res: Response) => {
     const supplier = await this.service.updateSupplierDetails(req.body);
-    ResponseHandler.success(res, supplier, "Supplier details updated successfully");
+    ResponseHandler.success(
+      res,
+      supplier,
+      "Supplier details updated successfully",
+    );
   };
 }

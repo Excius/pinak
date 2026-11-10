@@ -76,4 +76,7 @@ enum PaymentStatus {
   PENDING
   COMPLETED
   FAILED
+  REFUNDING
+  REFUNDED
+  REFUND_FAILED
 }

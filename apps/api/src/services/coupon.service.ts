@@ -148,30 +148,40 @@ export class CouponService {
     return this.toAdminCoupon(coupon);
   }
 
-  async applyCoupon(
-    orderId: string,
-    couponCode: string,
-    userId: string,
-    cartTotal: number,
+  /**
+   * Records the coupon redemption for an order whose payment just succeeded.
+   * Idempotent per order. The discount was already validated and applied when the
+   * order was created, so limits are not re-enforced here: the customer has paid
+   * the discounted price and the discount is honoured.
+   */
+  async recordUsageForOrder(
+    order: {
+      id: string;
+      userId: string;
+      couponcode: string | null;
+      couponDiscount: number;
+    },
     tx?: Prisma.TransactionClient,
   ) {
-    const validation = await this.validateCoupon(
-      couponCode,
-      userId,
-      cartTotal,
+    if (!order.couponcode || order.couponDiscount <= 0) return;
+
+    if (await this.couponRepository.findUsageByOrder(order.id, tx)) return;
+
+    const coupon = await this.couponRepository.findByCodeIncludingDeleted(
+      order.couponcode,
       tx,
     );
+    if (!coupon) return;
+
     await this.couponRepository.createUsage(
       {
-        couponId: validation.coupon.id,
-        userId,
-        orderId,
-        discountAmount: validation.discountAmount,
+        couponId: coupon.id,
+        userId: order.userId,
+        orderId: order.id,
+        discountAmount: order.couponDiscount,
       },
       tx,
     );
-
-    return validation;
   }
 
   // ── Admin CRUD ──────────────────────────────────────────────────────
@@ -203,11 +213,20 @@ export class CouponService {
       page,
       limit,
       search: query.search || undefined,
-      isActive: query.isActive === undefined ? undefined : query.isActive === "true",
+      isActive:
+        query.isActive === undefined ? undefined : query.isActive === "true",
       deleted: query.deleted === "true",
     });
+    const stats = await this.couponRepository.getUsageStats(
+      items.map((c) => c.id),
+    );
     return {
-      items,
+      items: items.map((c) => ({
+        ...c,
+        usageCount: stats.get(c.id)?.usageCount ?? 0,
+        totalDiscountGiven: stats.get(c.id)?.totalDiscountGiven ?? 0,
+        uniqueUsers: stats.get(c.id)?.uniqueUsers ?? 0,
+      })),
       pagination: {
         total,
         page,
@@ -287,7 +306,10 @@ export class CouponService {
 
   async softDeleteCouponAdmin(id: string) {
     await this.getCouponByIdOrThrow(id);
-    await this.couponRepository.update(id, { isDeleted: true, isActive: false });
+    await this.couponRepository.update(id, {
+      isDeleted: true,
+      isActive: false,
+    });
   }
 
   async restoreCouponAdmin(id: string) {

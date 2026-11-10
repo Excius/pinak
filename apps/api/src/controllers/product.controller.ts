@@ -320,7 +320,8 @@ export class ProductController {
   };
 
   getProductsByStatusAdmin = async (req: Request, res: Response) => {
-    const status = ((req.params.status as string) || "").toUpperCase() as "ACTIVE" | "INACTIVE";
+    const status = ((req.params.status as string) || "").toUpperCase() as
+      "ACTIVE" | "INACTIVE";
     const pagination: ProductPaginationOptions = {
       page: parseInt(req.query.page as string) || 1,
       limit: parseInt(req.query.limit as string) || 10,
@@ -629,7 +630,8 @@ export class ProductController {
   };
 
   exportInventory = async (req: Request, res: Response) => {
-    const status = req.query.status as "ALL" | "ACTIVE" | "INACTIVE" | undefined;
+    const status = req.query.status as
+      "ALL" | "ACTIVE" | "INACTIVE" | undefined;
     const brandId = req.query.brandId as string | undefined;
     const categoryId = req.query.categoryId as string | undefined;
     const search = req.query.search as string | undefined;
@@ -649,11 +651,7 @@ export class ProductController {
     });
 
     if (format === "json") {
-      ResponseHandler.success(
-        res,
-        result,
-        "Inventory exported successfully",
-      );
+      ResponseHandler.success(res, result, "Inventory exported successfully");
       return;
     }
 

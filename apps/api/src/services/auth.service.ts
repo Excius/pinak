@@ -40,7 +40,9 @@ export class AuthService {
     // accounts must not receive tokens.
     const account = await this.user.getUserById(userId);
     if (!account || account.status !== "ACTIVE") {
-      throw new UnauthorizedError("This account is not active. Please contact support.");
+      throw new UnauthorizedError(
+        "This account is not active. Please contact support.",
+      );
     }
 
     const session = await this.sessions.create({

@@ -1,22 +1,22 @@
-import React, { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   getOutOfStockProductsAdmin,
   getLowStockProductsAdmin,
-  type AdminProduct
-} from '../../../api/admin/admin.products.api'
-import { ImportInventoryModal } from './components/ImportInventoryModal'
-import { ExportInventoryModal } from './components/ExportInventoryModal'
+  type AdminProduct,
+} from "../../../api/admin/admin.products.api";
+import { ImportInventoryModal } from "./components/ImportInventoryModal";
+import { ExportInventoryModal } from "./components/ExportInventoryModal";
 
 type Tab = "low" | "out";
 
 const InventoryList: React.FC = () => {
-  const navigate = useNavigate()
-  const [products, setProducts] = useState<AdminProduct[]>([])
-  const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<Tab>('low')
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false)
-  const [isExportModalOpen, setIsExportModalOpen] = useState(false)
+  const navigate = useNavigate();
+  const [products, setProducts] = useState<AdminProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<Tab>("low");
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   useEffect(() => {
     fetchInventory();
@@ -50,8 +50,13 @@ const InventoryList: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold text-text-main-light">Inventory Alerts & Sheets</h1>
-          <p className="text-sm text-text-muted mt-1">Manage stock alerts, import supplier sheets, and export inventory spreadsheets.</p>
+          <h1 className="text-2xl font-display font-bold text-text-main-light">
+            Inventory Alerts & Sheets
+          </h1>
+          <p className="text-sm text-text-muted mt-1">
+            Manage stock alerts, import supplier sheets, and export inventory
+            spreadsheets.
+          </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
@@ -60,7 +65,9 @@ const InventoryList: React.FC = () => {
             onClick={() => setIsImportModalOpen(true)}
             className="px-4 py-2 bg-background-light hover:bg-background-main border border-primary/20 hover:border-primary/50 text-text-main-light rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
           >
-            <span className="material-icons-outlined text-primary text-[17px]">upload_file</span>
+            <span className="material-icons-outlined text-primary text-[17px]">
+              upload_file
+            </span>
             Import Sheet
           </button>
           <button
@@ -68,7 +75,9 @@ const InventoryList: React.FC = () => {
             onClick={() => setIsExportModalOpen(true)}
             className="px-4 py-2 bg-background-light hover:bg-background-main border border-primary/20 hover:border-primary/50 text-text-main-light rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
           >
-            <span className="material-icons-outlined text-primary text-[17px]">file_download</span>
+            <span className="material-icons-outlined text-primary text-[17px]">
+              file_download
+            </span>
             Export Sheet
           </button>
         </div>
@@ -218,7 +227,7 @@ const InventoryList: React.FC = () => {
         onClose={() => setIsImportModalOpen(false)}
         onSuccess={fetchInventory}
         onNavigateToInactive={() =>
-          navigate('/admin/products', { state: { tab: 'INACTIVE' } })
+          navigate("/admin/products", { state: { tab: "INACTIVE" } })
         }
       />
 

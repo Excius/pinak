@@ -195,7 +195,10 @@ export class InvoiceService {
     const customerState =
       shippingAddress.state || billingAddress.state || "Maharashtra";
     const customerStateCode = getStateCode(customerState);
-    const supplier = await getSupplierDetails(this.prisma, (state) => STATE_CODES[state.trim().toUpperCase()]);
+    const supplier = await getSupplierDetails(
+      this.prisma,
+      (state) => STATE_CODES[state.trim().toUpperCase()],
+    );
     const isSameState = customerStateCode === supplier.stateCode;
 
     // Format line items with CGST/SGST or IGST bifurcation
@@ -383,7 +386,7 @@ export class InvoiceService {
         <td class="meta-box">
           <div class="meta-title">Supplier Details</div>
           <strong>${data.supplier.companyName}</strong><br/>
-          ${[data.supplier.addressLine1, data.supplier.addressLine2].filter(Boolean).join(', ')}<br/>
+          ${[data.supplier.addressLine1, data.supplier.addressLine2].filter(Boolean).join(", ")}<br/>
           ${data.supplier.city}, ${data.supplier.state} - ${data.supplier.pincode}<br/>
           State Code: <strong>${data.supplier.stateCode}</strong> | PAN: <strong>${data.supplier.pan}</strong><br/>
           Email: ${data.supplier.email} | Phone: ${data.supplier.phone}
@@ -547,8 +550,12 @@ export class InvoiceService {
         .fontSize(9)
         .fillColor("#4b5563")
         .text(`${data.supplier.companyName}`, 40, y + 15)
-        .text(`${[data.supplier.addressLine1, data.supplier.addressLine2].filter(Boolean).join(', ')}, ${data.supplier.city}, ${data.supplier.state} - ${data.supplier.pincode}`)
-        .text(`State Code: ${data.supplier.stateCode} | PAN: ${data.supplier.pan}`)
+        .text(
+          `${[data.supplier.addressLine1, data.supplier.addressLine2].filter(Boolean).join(", ")}, ${data.supplier.city}, ${data.supplier.state} - ${data.supplier.pincode}`,
+        )
+        .text(
+          `State Code: ${data.supplier.stateCode} | PAN: ${data.supplier.pan}`,
+        )
         .text(`Email: ${data.supplier.email}`);
 
       doc.fontSize(10).fillColor("#111827").text("Invoice Details:", 320, y);

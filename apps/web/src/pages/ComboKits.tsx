@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import Layout from '../components/Layout'
-import { Skeleton } from '../components/Skeleton'
-import { getComboKits, getComboKitImageUrl } from '../api/combos.api'
-import type { ComboKit } from '../api/combos.api'
-import { formatPaise } from '../utils/currency'
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Layout from "../components/Layout";
+import { Skeleton } from "../components/Skeleton";
+import { getComboKits, getComboKitImageUrl } from "../api/combos.api";
+import type { ComboKit } from "../api/combos.api";
+import { formatPaise } from "../utils/currency";
 
 const ComboKits: React.FC = () => {
   const navigate = useNavigate();
@@ -134,12 +134,17 @@ const ComboKits: React.FC = () => {
                   {/* Details slide open on hover (desktop); on touch screens tapping opens the kit */}
                   <div className="max-h-0 opacity-0 overflow-hidden transition-all duration-300 ease-out group-hover:max-h-48 group-hover:opacity-100 group-hover:pt-3 space-y-3">
                     {combo.description && (
-                      <p className="text-sm text-text-muted line-clamp-2">{combo.description}</p>
+                      <p className="text-sm text-text-muted line-clamp-2">
+                        {combo.description}
+                      </p>
                     )}
                     <div className="flex items-center justify-between pt-1">
-                      <span className="text-2xl font-bold text-primary price-glow">{formatPaise(combo.priceWithTax ?? combo.price)}</span>
+                      <span className="text-2xl font-bold text-primary price-glow">
+                        {formatPaise(combo.priceWithTax ?? combo.price)}
+                      </span>
                       <span className="text-xs text-text-muted">
-                        {combo.purchasedCount > 0 && `${combo.purchasedCount} sold`}
+                        {combo.purchasedCount > 0 &&
+                          `${combo.purchasedCount} sold`}
                       </span>
                     </div>
                   </div>

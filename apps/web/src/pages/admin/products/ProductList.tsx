@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react'
-import { Link, useLocation } from 'react-router-dom'
-import toast from 'react-hot-toast'
+import React, { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
+import toast from "react-hot-toast";
 import {
   getAllProductsAdmin,
   getDeletedProductsAdmin,
@@ -10,31 +10,38 @@ import {
   hardDeleteProductAdmin,
   bulkUpdateProductStatusAdmin,
   getProductsByStatusAdmin,
-} from '../../../api/admin/admin.products.api'
-import type { AdminProduct, AdminProductListParams } from '../../../api/admin/admin.products.api'
-import { formatPaise } from '../../../utils/currency'
-import { ImportInventoryModal } from './components/ImportInventoryModal'
-import { ExportInventoryModal } from './components/ExportInventoryModal'
+} from "../../../api/admin/admin.products.api";
+import type {
+  AdminProduct,
+  AdminProductListParams,
+} from "../../../api/admin/admin.products.api";
+import { formatPaise } from "../../../utils/currency";
+import { ImportInventoryModal } from "./components/ImportInventoryModal";
+import { ExportInventoryModal } from "./components/ExportInventoryModal";
 
-type StatusFilter = 'ALL' | 'ACTIVE' | 'INACTIVE' | 'DELETED'
+type StatusFilter = "ALL" | "ACTIVE" | "INACTIVE" | "DELETED";
 
 const AdminProductList: React.FC = () => {
-  const [products, setProducts] = useState<AdminProduct[]>([])
-  const [total, setTotal] = useState(0)
-  const [loading, setLoading] = useState(true)
-  const location = useLocation()
+  const [products, setProducts] = useState<AdminProduct[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState<StatusFilter>(
-    (location.state as { tab?: StatusFilter } | null)?.tab ?? 'ALL',
-  )
-  const [params, setParams] = useState<AdminProductListParams>({ page: 1, limit: 15, search: '' })
+    (location.state as { tab?: StatusFilter } | null)?.tab ?? "ALL",
+  );
+  const [params, setParams] = useState<AdminProductListParams>({
+    page: 1,
+    limit: 15,
+    search: "",
+  });
 
   // Bulk selection state
-  const [selectedIds, setSelectedIds] = useState<string[]>([])
-  const [isBulkUpdating, setIsBulkUpdating] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
 
   // Modals state
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false)
-  const [isExportModalOpen, setIsExportModalOpen] = useState(false)
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   // Confirmation modals state
   const [softDeleteTarget, setSoftDeleteTarget] = useState<AdminProduct | null>(
@@ -52,61 +59,67 @@ const AdminProductList: React.FC = () => {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      if (activeTab === 'ACTIVE') {
-        const { items, total } = await getProductsByStatusAdmin('ACTIVE', params)
-        setProducts(items)
-        setTotal(total)
-      } else if (activeTab === 'INACTIVE') {
-        const { items, total } = await getProductsByStatusAdmin('INACTIVE', params)
-        setProducts(items)
-        setTotal(total)
-      } else if (activeTab === 'DELETED') {
-        const { items, total } = await getDeletedProductsAdmin(params)
-        setProducts(items)
-        setTotal(total)
+      if (activeTab === "ACTIVE") {
+        const { items, total } = await getProductsByStatusAdmin(
+          "ACTIVE",
+          params,
+        );
+        setProducts(items);
+        setTotal(total);
+      } else if (activeTab === "INACTIVE") {
+        const { items, total } = await getProductsByStatusAdmin(
+          "INACTIVE",
+          params,
+        );
+        setProducts(items);
+        setTotal(total);
+      } else if (activeTab === "DELETED") {
+        const { items, total } = await getDeletedProductsAdmin(params);
+        setProducts(items);
+        setTotal(total);
       } else {
         const { items, total } = await getAllProductsAdmin(params);
         setProducts(items);
         setTotal(total);
       }
     } catch (err) {
-      console.error('Failed to fetch products', err)
-      toast.error('Failed to load products')
+      console.error("Failed to fetch products", err);
+      toast.error("Failed to load products");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    setSelectedIds([])
-    fetchProducts()
-  }, [params, activeTab])
+    setSelectedIds([]);
+    fetchProducts();
+  }, [params, activeTab]);
 
   const handleStatusToggle = async (product: AdminProduct) => {
     try {
-      const nextStatus = !product.isActive
-      const updated = await updateProductStatusAdmin(product.id, nextStatus)
+      const nextStatus = !product.isActive;
+      const updated = await updateProductStatusAdmin(product.id, nextStatus);
       setProducts(
         products.map((p) =>
           p.id === product.id ? { ...p, isActive: updated.isActive } : p,
         ),
-      )
+      );
       toast.success(
         nextStatus
           ? `Product "${product.name}" activated!`
           : `Product "${product.name}" set to inactive.`,
-      )
+      );
       // If we are filtering by INACTIVE and activated the product, refresh list
-      if (activeTab === 'INACTIVE' && nextStatus) {
-        setProducts((prev) => prev.filter((p) => p.id !== product.id))
-        setTotal((prev) => Math.max(0, prev - 1))
-      } else if (activeTab === 'ACTIVE' && !nextStatus) {
-        setProducts((prev) => prev.filter((p) => p.id !== product.id))
-        setTotal((prev) => Math.max(0, prev - 1))
+      if (activeTab === "INACTIVE" && nextStatus) {
+        setProducts((prev) => prev.filter((p) => p.id !== product.id));
+        setTotal((prev) => Math.max(0, prev - 1));
+      } else if (activeTab === "ACTIVE" && !nextStatus) {
+        setProducts((prev) => prev.filter((p) => p.id !== product.id));
+        setTotal((prev) => Math.max(0, prev - 1));
       }
     } catch (err) {
-      console.error('Failed to update status', err)
-      toast.error('Failed to update product status')
+      console.error("Failed to update status", err);
+      toast.error("Failed to update product status");
     }
   };
 
@@ -202,38 +215,6 @@ const AdminProductList: React.FC = () => {
       setIsBulkUpdating(false);
     }
   };
-
-  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.checked) {
-      setSelectedIds(products.map((p) => p.id))
-    } else {
-      setSelectedIds([])
-    }
-  }
-
-  const handleSelectOne = (id: string) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
-    )
-  }
-
-  const handleBulkActivate = async (activate: boolean) => {
-    if (selectedIds.length === 0) return
-    try {
-      setIsBulkUpdating(true)
-      await bulkUpdateProductStatusAdmin(selectedIds, activate)
-      toast.success(
-        `Successfully ${activate ? 'activated' : 'deactivated'} ${selectedIds.length} products!`,
-      )
-      setSelectedIds([])
-      fetchProducts()
-    } catch (err) {
-      console.error('Failed bulk status update', err)
-      toast.error('Failed to update selected products')
-    } finally {
-      setIsBulkUpdating(false)
-    }
-  }
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setParams({ ...params, search: e.target.value, page: 1 });
@@ -360,7 +341,8 @@ const AdminProductList: React.FC = () => {
             Catalog & Inventory Management
           </h1>
           <p className="text-sm text-text-muted mt-1">
-            Manage your store products, verify imported items, and export inventory spreadsheets.
+            Manage your store products, verify imported items, and export
+            inventory spreadsheets.
           </p>
         </div>
 
@@ -427,31 +409,33 @@ const AdminProductList: React.FC = () => {
       {/* Status Filter Tabs */}
       <div className="flex flex-wrap gap-2 border-b border-primary/10 pb-1">
         {[
-          { key: 'ALL', label: 'All Products', icon: 'apps' },
-          { key: 'ACTIVE', label: 'Active in Store', icon: 'check_circle' },
+          { key: "ALL", label: "All Products", icon: "apps" },
+          { key: "ACTIVE", label: "Active in Store", icon: "check_circle" },
           {
-            key: 'INACTIVE',
-            label: 'Pending Verification (Inactive)',
-            icon: 'pending_actions',
-            badge: 'New Import',
+            key: "INACTIVE",
+            label: "Pending Verification (Inactive)",
+            icon: "pending_actions",
+            badge: "New Import",
           },
-          { key: 'DELETED', label: 'Archived / Deleted', icon: 'archive' },
+          { key: "DELETED", label: "Archived / Deleted", icon: "archive" },
         ].map((tab) => {
-          const isActive = activeTab === tab.key
+          const isActive = activeTab === tab.key;
           return (
             <button
               key={tab.key}
               onClick={() => {
-                setActiveTab(tab.key as StatusFilter)
-                setParams((prev) => ({ ...prev, page: 1 }))
+                setActiveTab(tab.key as StatusFilter);
+                setParams((prev) => ({ ...prev, page: 1 }));
               }}
               className={`px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer border ${
                 isActive
-                  ? 'bg-primary/10 text-primary border-primary/30 shadow-[0_0_10px_rgba(212,175,55,0.1)]'
-                  : 'text-text-muted hover:text-text-main-light border-transparent hover:bg-background-light/40'
+                  ? "bg-primary/10 text-primary border-primary/30 shadow-[0_0_10px_rgba(212,175,55,0.1)]"
+                  : "text-text-muted hover:text-text-main-light border-transparent hover:bg-background-light/40"
               }`}
             >
-              <span className="material-icons-outlined text-[17px]">{tab.icon}</span>
+              <span className="material-icons-outlined text-[17px]">
+                {tab.icon}
+              </span>
               {tab.label}
               {tab.badge && (
                 <span className="ml-1 px-1.5 py-0.5 rounded-md text-[10px] bg-yellow-500/20 text-yellow-400 font-extrabold normal-case">
@@ -459,7 +443,7 @@ const AdminProductList: React.FC = () => {
                 </span>
               )}
             </button>
-          )
+          );
         })}
       </div>
 
@@ -471,7 +455,8 @@ const AdminProductList: React.FC = () => {
               checklist
             </span>
             <span className="text-sm font-bold text-text-main-light">
-              {selectedIds.length} product{selectedIds.length > 1 ? 's' : ''} selected
+              {selectedIds.length} product{selectedIds.length > 1 ? "s" : ""}{" "}
+              selected
             </span>
           </div>
 
@@ -528,7 +513,7 @@ const AdminProductList: React.FC = () => {
             <span>
               Total: <strong className="text-primary">{total}</strong> Products
             </span>
-            {activeTab === 'INACTIVE' && (
+            {activeTab === "INACTIVE" && (
               <span className="px-2.5 py-1 rounded-md bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
                 Awaiting Verification
               </span>
@@ -545,7 +530,8 @@ const AdminProductList: React.FC = () => {
                   <input
                     type="checkbox"
                     checked={
-                      products.length > 0 && selectedIds.length === products.length
+                      products.length > 0 &&
+                      selectedIds.length === products.length
                     }
                     onChange={handleSelectAll}
                     className="rounded border-primary/30 text-primary focus:ring-primary cursor-pointer"
@@ -556,13 +542,18 @@ const AdminProductList: React.FC = () => {
                 <th className="px-6 py-4 font-bold">Status</th>
                 <th className="px-6 py-4 font-bold">Price / MRP</th>
                 <th className="px-6 py-4 font-bold">Stock</th>
-                <th className="px-6 py-4 font-bold text-right">Quick Verify & Actions</th>
+                <th className="px-6 py-4 font-bold text-right">
+                  Quick Verify & Actions
+                </th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-text-muted">
+                  <td
+                    colSpan={7}
+                    className="px-6 py-12 text-center text-text-muted"
+                  >
                     <span className="material-icons-outlined text-3xl animate-spin text-primary mb-2 block">
                       refresh
                     </span>
@@ -571,12 +562,15 @@ const AdminProductList: React.FC = () => {
                 </tr>
               ) : products.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-text-muted">
+                  <td
+                    colSpan={7}
+                    className="px-6 py-12 text-center text-text-muted"
+                  >
                     <span className="material-icons-outlined text-4xl mb-3 block text-primary/30">
                       inventory_2
                     </span>
                     No products found in this view.
-                    {activeTab === 'INACTIVE' && (
+                    {activeTab === "INACTIVE" && (
                       <p className="mt-2 text-xs text-primary font-bold">
                         All imported products have been verified and activated!
                       </p>
@@ -585,17 +579,19 @@ const AdminProductList: React.FC = () => {
                 </tr>
               ) : (
                 products.map((product) => {
-                  const isSelected = selectedIds.includes(product.id)
-                  const primaryVariant = product.variants?.[0]
-                  const hsnTag = product.tags?.find((t) => t.startsWith('HSN:'))
-                  const hsnCode = hsnTag ? hsnTag.replace('HSN:', '') : ''
+                  const isSelected = selectedIds.includes(product.id);
+                  const primaryVariant = product.variants?.[0];
+                  const hsnTag = product.tags?.find((t) =>
+                    t.startsWith("HSN:"),
+                  );
+                  const hsnCode = hsnTag ? hsnTag.replace("HSN:", "") : "";
 
                   return (
                     <tr
                       key={product.id}
                       className={`border-b border-primary/5 hover:bg-background-light/30 transition-colors ${
-                        product.isDeleted ? 'opacity-50' : ''
-                      } ${isSelected ? 'bg-primary/5' : ''}`}
+                        product.isDeleted ? "opacity-50" : ""
+                      } ${isSelected ? "bg-primary/5" : ""}`}
                     >
                       {/* Checkbox */}
                       <td className="px-4 py-4 text-center">
@@ -632,9 +628,9 @@ const AdminProductList: React.FC = () => {
                                 ? product.variants
                                     .slice(0, 2)
                                     .map((v: any) => v.sku)
-                                    .join(', ') +
-                                  (product.variants.length > 2 ? ' ...' : '')
-                                : 'NO SKU'}
+                                    .join(", ") +
+                                  (product.variants.length > 2 ? " ..." : "")
+                                : "NO SKU"}
                             </p>
                           </div>
                         </div>
@@ -643,7 +639,7 @@ const AdminProductList: React.FC = () => {
                       {/* Brand & HSN */}
                       <td className="px-6 py-4">
                         <span className="text-xs font-bold text-text-main-light block">
-                          {product.brand?.name || 'No Brand'}
+                          {product.brand?.name || "No Brand"}
                         </span>
                         {hsnCode && (
                           <span className="text-[11px] font-mono text-text-muted">
@@ -666,16 +662,18 @@ const AdminProductList: React.FC = () => {
                           <span
                             className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold ${
                               product.isActive
-                                ? 'bg-green-50 text-green-600'
-                                : 'bg-yellow-50 text-yellow-600'
+                                ? "bg-green-50 text-green-600"
+                                : "bg-yellow-50 text-yellow-600"
                             }`}
                           >
                             <span
                               className={`w-1.5 h-1.5 rounded-full ${
-                                product.isActive ? 'bg-green-600' : 'bg-yellow-600'
+                                product.isActive
+                                  ? "bg-green-600"
+                                  : "bg-yellow-600"
                               }`}
                             ></span>
-                            {product.isActive ? 'Active' : 'Inactive (Review)'}
+                            {product.isActive ? "Active" : "Inactive (Review)"}
                           </span>
                         )}
                       </td>
@@ -690,7 +688,7 @@ const AdminProductList: React.FC = () => {
                                 ),
                               ),
                             )
-                          : '--'}
+                          : "--"}
                       </td>
 
                       {/* Stock */}
@@ -698,8 +696,8 @@ const AdminProductList: React.FC = () => {
                         <span
                           className={`text-xs font-bold px-2 py-1 rounded-md ${
                             (primaryVariant?.stock ?? 0) > 0
-                              ? 'bg-background-main text-text-main-light'
-                              : 'bg-red-50 text-red-500'
+                              ? "bg-background-main text-text-main-light"
+                              : "bg-red-50 text-red-500"
                           }`}
                         >
                           {primaryVariant?.stock ?? 0} in stock
@@ -716,19 +714,19 @@ const AdminProductList: React.FC = () => {
                             disabled={product.isDeleted}
                             title={
                               product.isActive
-                                ? 'Click to make inactive'
-                                : 'Verify & Activate'
+                                ? "Click to make inactive"
+                                : "Verify & Activate"
                             }
                             className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
                               product.isActive
-                                ? 'bg-green-500/10 text-green-500 hover:bg-green-500/20'
-                                : 'bg-primary text-white shadow-[0_0_10px_rgba(212,175,55,0.4)] hover:shadow-[0_0_15px_rgba(212,175,55,0.6)]'
-                            } ${product.isDeleted ? 'opacity-40 cursor-not-allowed' : ''}`}
+                                ? "bg-green-500/10 text-green-500 hover:bg-green-500/20"
+                                : "bg-primary text-white shadow-[0_0_10px_rgba(212,175,55,0.4)] hover:shadow-[0_0_15px_rgba(212,175,55,0.6)]"
+                            } ${product.isDeleted ? "opacity-40 cursor-not-allowed" : ""}`}
                           >
                             <span className="material-icons-outlined text-[15px]">
-                              {product.isActive ? 'check' : 'publish'}
+                              {product.isActive ? "check" : "publish"}
                             </span>
-                            {product.isActive ? 'Active' : 'Activate'}
+                            {product.isActive ? "Active" : "Activate"}
                           </button>
 
                           {/* Edit Details */}
@@ -751,7 +749,9 @@ const AdminProductList: React.FC = () => {
                               className="p-2 rounded-lg transition-colors cursor-pointer text-green-500 hover:bg-green-50 disabled:opacity-50"
                               title="Restore"
                             >
-                              <span className="material-icons-outlined text-[19px]">restore</span>
+                              <span className="material-icons-outlined text-[19px]">
+                                restore
+                              </span>
                             </button>
                           ) : (
                             <button
@@ -760,7 +760,9 @@ const AdminProductList: React.FC = () => {
                               className="p-2 rounded-lg transition-colors cursor-pointer text-red-500 hover:bg-red-50"
                               title="Move to Trash"
                             >
-                              <span className="material-icons-outlined text-[19px]">delete</span>
+                              <span className="material-icons-outlined text-[19px]">
+                                delete
+                              </span>
                             </button>
                           )}
 
@@ -773,13 +775,15 @@ const AdminProductList: React.FC = () => {
                               className="p-2 rounded-lg transition-colors cursor-pointer text-red-600 hover:bg-red-50 disabled:opacity-50"
                               title="Delete permanently"
                             >
-                              <span className="material-icons-outlined text-[19px]">delete_forever</span>
+                              <span className="material-icons-outlined text-[19px]">
+                                delete_forever
+                              </span>
                             </button>
                           )}
                         </div>
                       </td>
                     </tr>
-                  )
+                  );
                 })
               )}
             </tbody>
@@ -794,14 +798,18 @@ const AdminProductList: React.FC = () => {
           <div className="flex gap-1.5">
             <button
               disabled={params.page === 1}
-              onClick={() => setParams({ ...params, page: (params.page || 1) - 1 })}
+              onClick={() =>
+                setParams({ ...params, page: (params.page || 1) - 1 })
+              }
               className="px-3.5 py-1.5 border border-primary/20 rounded-xl hover:bg-primary/5 disabled:opacity-50 text-xs font-bold transition-all cursor-pointer"
             >
               Previous
             </button>
             <button
               disabled={(params.page || 1) * (params.limit || 15) >= total}
-              onClick={() => setParams({ ...params, page: (params.page || 1) + 1 })}
+              onClick={() =>
+                setParams({ ...params, page: (params.page || 1) + 1 })
+              }
               className="px-3.5 py-1.5 border border-primary/20 rounded-xl hover:bg-primary/5 disabled:opacity-50 text-xs font-bold transition-all cursor-pointer"
             >
               Next
@@ -816,8 +824,8 @@ const AdminProductList: React.FC = () => {
         onClose={() => setIsImportModalOpen(false)}
         onSuccess={fetchProducts}
         onNavigateToInactive={() => {
-          setActiveTab('INACTIVE')
-          setParams((prev) => ({ ...prev, page: 1 }))
+          setActiveTab("INACTIVE");
+          setParams((prev) => ({ ...prev, page: 1 }));
         }}
       />
 

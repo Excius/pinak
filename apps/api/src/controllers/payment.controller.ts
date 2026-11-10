@@ -64,6 +64,16 @@ export class PaymentController {
           razorpayOrderId,
           reason,
         );
+      } else if (event === "refund.processed" || event === "refund.failed") {
+        // Razorpay confirms the outcome of a refund we started (order -> REFUNDED).
+        const refundEntity = req.body.payload?.refund?.entity;
+        if (refundEntity?.payment_id && refundEntity?.id) {
+          await this.orderService.handleRefundEvent(
+            refundEntity.payment_id,
+            { id: refundEntity.id },
+            event === "refund.processed" ? "processed" : "failed",
+          );
+        }
       }
 
       // Always return 200 OK to Razorpay so they stop retrying the webhook

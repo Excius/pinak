@@ -80,13 +80,13 @@ const BrandList = () => {
     if (!form.name.trim()) return;
     setSaving(true);
     try {
-      const formData = new FormData()
-      formData.append('name', form.name)
-      formData.append('isActive', String(form.isActive))
-      if (form.slug.trim()) formData.append('slug', form.slug)
+      const formData = new FormData();
+      formData.append("name", form.name);
+      formData.append("isActive", String(form.isActive));
+      if (form.slug.trim()) formData.append("slug", form.slug);
       // Logos are uploaded as a file (field `logo`); when no new file is chosen the existing logo is kept.
       if (logoFile) {
-        formData.append('logo', logoFile)
+        formData.append("logo", logoFile);
       }
 
       if (editing) {

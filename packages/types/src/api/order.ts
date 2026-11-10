@@ -10,7 +10,14 @@ const OrderStatusSchema = z.enum([
   "CANCELLED",
 ]);
 
-const PaymentStatusSchema = z.enum(["PENDING", "COMPLETED", "FAILED"]);
+const PaymentStatusSchema = z.enum([
+  "PENDING",
+  "COMPLETED",
+  "FAILED",
+  "REFUNDING",
+  "REFUNDED",
+  "REFUND_FAILED",
+]);
 
 const AddressSchema = z.object({
   fullName: z.string().trim().min(1, "Full name is required"),

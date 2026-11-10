@@ -3,24 +3,29 @@ import axiosInstance from "../axiosInstance";
 // ── Types ──────────────────────────────────────────────────────────────
 
 export interface AdminOptionValue {
-  id: string
-  optionId?: string
-  value: string
-  sortOrder: number
-  swatchColorHex?: string | null
+  id: string;
+  optionId?: string;
+  value: string;
+  sortOrder: number;
+  swatchColorHex?: string | null;
   /** Optional physical measurements for this choice; variants using it inherit them. */
-  weightGrams?: number | null
-  weightClassId?: string | null
-  dimensionLength?: number | null
-  dimensionWidth?: number | null
-  dimensionHeight?: number | null
-  lengthClassId?: string | null
+  weightGrams?: number | null;
+  weightClassId?: string | null;
+  dimensionLength?: number | null;
+  dimensionWidth?: number | null;
+  dimensionHeight?: number | null;
+  lengthClassId?: string | null;
 }
 
 export type OptionValueMeasurements = Pick<
   AdminOptionValue,
-  'weightGrams' | 'weightClassId' | 'dimensionLength' | 'dimensionWidth' | 'dimensionHeight' | 'lengthClassId'
->
+  | "weightGrams"
+  | "weightClassId"
+  | "dimensionLength"
+  | "dimensionWidth"
+  | "dimensionHeight"
+  | "lengthClassId"
+>;
 
 export interface AdminOption {
   id: string;
@@ -66,15 +71,15 @@ export const deleteOption = async (id: string): Promise<void> => {
 // ── Option Value CRUD ──────────────────────────────────────────────────
 
 export interface CreateOptionValuePayload extends OptionValueMeasurements {
-  value: string
-  sortOrder?: number
-  swatchColorHex?: string | null
+  value: string;
+  sortOrder?: number;
+  swatchColorHex?: string | null;
 }
 
 export interface UpdateOptionValuePayload extends OptionValueMeasurements {
-  value?: string
-  sortOrder?: number
-  swatchColorHex?: string | null
+  value?: string;
+  sortOrder?: number;
+  swatchColorHex?: string | null;
 }
 
 export const createOptionValue = async (

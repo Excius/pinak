@@ -3,6 +3,20 @@ import { NotFoundError, ValidationError } from "../lib/error.js";
 import redis from "../lib/redis.js";
 import appConfig from "../lib/config.js";
 
+/**
+ * Thrown when a paid order can no longer be fulfilled because the real stock was
+ * taken by another order after this reservation was created. Callers must cancel
+ * the order and refund the payment.
+ */
+export class InsufficientStockOnConfirmError extends ValidationError {
+  constructor(details?: unknown) {
+    super(
+      "Unable to confirm reservation due to insufficient actual stock",
+      details,
+    );
+  }
+}
+
 export type ReservationRequirement = {
   productVariantId?: string | null;
   comboKitId?: string | null;
@@ -329,15 +343,12 @@ export class StockReservationService {
       });
 
       if (result.count === 0) {
-        throw new ValidationError(
-          "Unable to confirm reservation due to insufficient actual stock",
-          [
-            {
-              field: "variantId",
-              message: variantId,
-            },
-          ],
-        );
+        throw new InsufficientStockOnConfirmError([
+          {
+            field: "variantId",
+            message: variantId,
+          },
+        ]);
       }
     }
 

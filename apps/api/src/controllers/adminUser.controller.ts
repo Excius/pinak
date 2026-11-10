@@ -12,7 +12,8 @@ export class AdminUserController {
     const limit = Number.parseInt(q.limit ?? "", 10);
     const data = await this.service.list({
       page: Number.isFinite(page) && page > 0 ? page : undefined,
-      limit: Number.isFinite(limit) && limit > 0 ? Math.min(limit, 100) : undefined,
+      limit:
+        Number.isFinite(limit) && limit > 0 ? Math.min(limit, 100) : undefined,
       search: q.search,
       role: q.role as "ADMIN" | "MODERATOR" | "USER" | undefined,
       status: q.status as "ACTIVE" | "INACTIVE" | "DELETED" | undefined,
@@ -37,7 +38,11 @@ export class AdminUserController {
   };
 
   remove = async (req: Request, res: Response) => {
-    await this.service.changeStatus(req.user!, req.params.id as string, "DELETED");
+    await this.service.changeStatus(
+      req.user!,
+      req.params.id as string,
+      "DELETED",
+    );
     ResponseHandler.success(res, {}, "User deleted successfully");
   };
 }

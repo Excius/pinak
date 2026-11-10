@@ -29,7 +29,7 @@ interface Address {
 interface OrderDetailsCardProps {
   orderId: string;
   status: "PENDING" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED";
-  paymentStatus: "PENDING" | "COMPLETED" | "FAILED";
+  paymentStatus: "PENDING" | "COMPLETED" | "FAILED" | "REFUNDING" | "REFUNDED" | "REFUND_FAILED";
   totalAmount: number;
   subtotalAmount: number;
   taxAmount: number;
@@ -100,6 +100,20 @@ export function OrderDetailsCard({
           bg: "bg-red-500/15",
           text: "text-red-400",
           label: "Payment Failed",
+        };
+      case "REFUNDING":
+      // A failed refund is handled by the store team; the customer just sees it as in progress.
+      case "REFUND_FAILED":
+        return {
+          bg: "bg-orange-500/15",
+          text: "text-orange-400",
+          label: "Refund in Progress",
+        };
+      case "REFUNDED":
+        return {
+          bg: "bg-blue-500/15",
+          text: "text-blue-400",
+          label: "Refunded",
         };
       case "PENDING":
       default:

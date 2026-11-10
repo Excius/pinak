@@ -17,13 +17,18 @@ let byId = new Map<string, TaxClassInfo>();
 let loadedAt = 0;
 
 export async function refreshTaxRates(db: PrismaClient): Promise<void> {
-  const rows = await db.taxClass.findMany({ select: { id: true, name: true, rate: true } });
+  const rows = await db.taxClass.findMany({
+    select: { id: true, name: true, rate: true },
+  });
   byId = new Map(rows.map((r) => [r.id, r]));
   loadedAt = Date.now();
 }
 
 /** Reloads the map if it is older than `maxAgeMs` (cheap: one tiny query). */
-export async function ensureTaxRates(db: PrismaClient, maxAgeMs = 10_000): Promise<void> {
+export async function ensureTaxRates(
+  db: PrismaClient,
+  maxAgeMs = 10_000,
+): Promise<void> {
   if (Date.now() - loadedAt > maxAgeMs) {
     await refreshTaxRates(db);
   }
@@ -31,9 +36,13 @@ export async function ensureTaxRates(db: PrismaClient, maxAgeMs = 10_000): Promi
 
 /** Keeps the map warm so display mappers rarely see a stale/empty map. */
 export function startTaxRateRefresh(db: PrismaClient, everyMs = 30_000): void {
-  refreshTaxRates(db).catch((err) => logger.warn({ err }, "Initial tax rate load failed"));
+  refreshTaxRates(db).catch((err) =>
+    logger.warn({ err }, "Initial tax rate load failed"),
+  );
   setInterval(() => {
-    refreshTaxRates(db).catch((err) => logger.warn({ err }, "Tax rate refresh failed"));
+    refreshTaxRates(db).catch((err) =>
+      logger.warn({ err }, "Tax rate refresh failed"),
+    );
   }, everyMs).unref();
 }
 
@@ -53,7 +62,9 @@ export function variantTaxClass(
     if (own) return { name: own.name, rate: own.rate, overridden: true };
   }
   const inherited = productTaxClass ?? variant?.product?.taxClass ?? null;
-  return inherited ? { name: inherited.name, rate: inherited.rate, overridden: false } : null;
+  return inherited
+    ? { name: inherited.name, rate: inherited.rate, overridden: false }
+    : null;
 }
 
 /** Tax rate (percent) that applies to a variant. */

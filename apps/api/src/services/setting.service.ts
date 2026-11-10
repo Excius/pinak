@@ -18,7 +18,8 @@ const DEFAULT_WHATSAPP_MESSAGE =
 const DEFAULT_SUPPORT_EMAIL = "support@pinak.com";
 const DEFAULT_SUPPORT_PHONE = "+919876543210";
 
-const stateCodeFor = (state: string) => INDIAN_STATES_AND_CODES[state.trim().toUpperCase()];
+const stateCodeFor = (state: string) =>
+  INDIAN_STATES_AND_CODES[state.trim().toUpperCase()];
 
 export class SettingService {
   constructor(private repo: SettingRepository) {}
@@ -127,11 +128,14 @@ export class SettingService {
     return { shippingFee: parseShippingFee(await this.loadStoreSettingsMap()) };
   }
 
-  async updateShippingConfig(shippingFee: number): Promise<{ shippingFee: number }> {
+  async updateShippingConfig(
+    shippingFee: number,
+  ): Promise<{ shippingFee: number }> {
     await this.repo.upsert(SHIPPING_FEE_KEY, {
       value: String(shippingFee),
       group: "shipping",
-      description: "Flat shipping charge in paise for orders that need shipping",
+      description:
+        "Flat shipping charge in paise for orders that need shipping",
       isPublic: true,
     });
     invalidateStoreSettingsCache();
@@ -147,7 +151,9 @@ export class SettingService {
   ): Promise<SupplierDetails> {
     const stateCode = stateCodeFor(input.state);
     if (!stateCode) {
-      throw new ValidationError("Must be a valid Indian state or union territory");
+      throw new ValidationError(
+        "Must be a valid Indian state or union territory",
+      );
     }
     // GSTIN begins with the 2-digit code of the registered state; a mismatch would
     // print contradictory details on every invoice and mis-split CGST/SGST vs IGST.
