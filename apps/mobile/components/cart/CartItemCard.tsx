@@ -26,8 +26,7 @@ export function CartItemCard({
   const name = isProductVariant ? product?.name : comboKit?.name;
   const imageUrl = isProductVariant
     ? variant?.image?.url
-    : comboKit?.imageUrl ??
-      comboKit?.items?.[0]?.productVariant?.image?.url;
+    : (comboKit?.imageUrl ?? comboKit?.items?.[0]?.productVariant?.image?.url);
   const brand = isProductVariant ? product?.brand?.name : null;
   const optionValues = isProductVariant ? variant?.optionValues : null;
 
